@@ -14,9 +14,10 @@ generated: { by: claude-code/web, at: 2026-11-02T13:10:00Z }
   werden 3 bis 5 Optionen vorgelegt. Die Optionen kommen beim Start des
   jeweiligen Arbeitspakets, nicht vorab.
 * **[E]** Live geht das System, wenn alle Arbeitspakete fertig sind (W17).
-* **[V]** Ein Arbeitspaket entspricht einem Feature-Branch
-  `feature/wNN-<kurzname>` und einem Pull Request. Basis-Branch und
-  Namenskonvention sind offen (O28).
+* **[E]** Ein Arbeitspaket entspricht einem Feature-Branch und einem Pull
+  Request gegen `main`. Branching-Modell, Merge-Art und Release stehen in
+  [Branching und Release](/ops/branching-release.md). Die Namenskonvention
+  `feature/wNN-<kurzname>` ist ein Vorschlag **[V]**.
 * **[V]** Die Reihenfolge folgt einem "Walking Skeleton": erst ein
   durchgängiger dünner Pfad (Artikel aus Dateien bis zur Seite), dann
   Memos, dann Client, dann Betrieb und Community.
@@ -27,9 +28,11 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 
 * [ ] Alle Akzeptanzkriterien des Pakets sind erfüllt und im Pull Request
   abgehakt.
-* [ ] CI ist grün: Lint, Typprüfung, Tests, `astro build`.
-* [ ] Tests decken die neue Logik ab, auch Fehlerfälle (kaputte Eingaben,
-  Ausfall einer Quelle).
+* [ ] CI ist grün: Lint, Typprüfung, Unit-, E2E- und Contract-Tests,
+  `astro build`. Die volle Suite läuft bei jedem Pull Request.
+* [ ] Die Tests entstanden zuerst (TDD) und decken die neue Logik ab, auch
+  Fehlerfälle (kaputte Eingaben, Ausfall einer Quelle). Pakete mit
+  Oberfläche haben E2E-Tests. Siehe [Teststrategie](/ops/testing.md).
 * [ ] Es sind keine Secrets im Repo (Secret-Scan ohne Treffer).
 * [ ] Der Browser lädt keine Fremdressourcen (Netzwerk- oder CSP-Test).
 * [ ] Die Entscheidungen des Pakets sind mit Optionen und Wahl im OKF-Bundle
@@ -74,15 +77,37 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 
 * Branch: `feature/w00-fundament`
 * Abhängig von: -
-* Entscheidungen: Basis-Branch (O28), Paketmanager und Node-Version, CI-
-  Anbieter, Test-Framework, Teststrategie für externe Dienste (O29),
-  Image-Build (O10), Entwicklungsablauf (O23).
+* Entschieden:
+  * **[E]** Basis-Branch ist `main`, angelegt aus dem Stand von Spezifikation
+    und Roadmap. Feature-Branches zweigen von `main` ab, Pull Requests gehen
+    gegen `main` (O28).
+  * **[E]** pnpm auf Node LTS.
+  * **[E]** CI mit GitHub Actions.
+  * **[E]** Teststrategie (O29): TDD mit Mocks, E2E-Tests und Contract-Tests
+    gegen echte, gepinnte Testinstanzen (Nextcloud, Memos, Remark42,
+    Mailpit). Vitest für Unit-Tests, Playwright für E2E-Tests.
+  * **[E]** Die volle Suite läuft bei jedem PR, ein Gate-Job mit
+    Pfaderkennung behandelt reine Doku-PRs (siehe
+    [Teststrategie](/ops/testing.md)).
+  * **[E]** Renovate (GitHub-App) mit Auto-Merge für Patch-Updates und 3 Tagen
+    Wartezeit, siehe [Branching und Release](/ops/branching-release.md).
+* Noch offen: genaue Node-Version, Lint-Werkzeuge, Registry für Docker-Images
+  (O10), Gruppierung und Zeitplan von Renovate (O31), Entwicklungsablauf
+  (O23), Branch-Protection-Option "Branch muss aktuell sein" (O33),
+  Sichtbarkeit des Repos (O34).
 * Umfang: Astro-Projekt mit TypeScript, Lint, Format, Test-Runner, CI,
   Dockerfile für den Build, Beispielinhalt (Fixtures).
 * DoD:
   * [ ] `docker build` erzeugt das Astro-Projekt reproduzierbar.
-  * [ ] CI führt Lint, Typprüfung, Tests und Build aus.
+  * [ ] CI führt Lint, Typprüfung, Unit-Tests (Vitest), E2E-Tests
+    (Playwright) und Build aus, und je Testart läuft ein Beispieltest.
+  * [ ] Ein Gate-Job mit Pfaderkennung ist der Pflicht-Check für `main`. Ein
+    reiner Doku-PR wird durch ihn ohne die schweren Tests grün, ein Code-PR
+    startet die volle Suite.
   * [ ] README mit Start- und Testanleitung.
+  * [ ] Die CI ist als Pflicht-Check für `main` eingetragen.
+  * [ ] `renovate.json` ist konfiguriert (Patch-Auto-Merge, 3 Tage Wartezeit),
+    die Renovate-App ist installiert, und ein Test-Update läuft durch die CI.
 
 ## W01 - Artikel-Modell und Frontmatter
 
@@ -112,7 +137,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 * Umfang: Abruf des Public Shares per WebDAV mit Token und Passwort in den
   Cache, Änderungserkennung.
 * DoD:
-  * [ ] Sync gegen eine echte oder nachgebildete Nextcloud-Instanz getestet.
+  * [ ] Sync ist mit Mocks getestet, ein Contract-Test gegen eine echte
+    Nextcloud-Testinstanz liegt vor.
   * [ ] Das Passwort kommt nur aus einem Secret.
   * [ ] Ohne Änderung wird kein Build ausgelöst.
   * [ ] Schlägt der Abruf fehl, bleibt der Cache unverändert.
@@ -148,6 +174,7 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] SVG, zu große Dateien und interne IP-Ziele werden abgelehnt.
   * [ ] Ein Abruffehler lässt vorhandene Memos nicht verschwinden.
   * [ ] Test mit einer Beispielantwort der API-Version.
+  * [ ] Ein Contract-Test gegen eine echte Memos-Testinstanz liegt vor.
 
 ## W05 - Statischer Feed, Blöcke, Tags, Sitemap
 
@@ -270,6 +297,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] Ohne Anmeldung kann nicht kommentiert werden.
   * [ ] Kommentare sind auf Posts und Memos möglich.
   * [ ] Daten von Remark42 sind gesichert (Volume, Backup-Test).
+  * [ ] Ein Contract-Test gegen eine echte Remark42-Testinstanz mit Mail-Sink
+    liegt vor.
 
 ## W14 - Webmentions: Empfang und Anzeige
 
@@ -284,6 +313,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] Mention-Text ist als Text bereinigt, kein HTML.
   * [ ] Avatar-Spiegelung hat SSRF- und Größenschutz oder entfällt.
   * [ ] Fällt webmention.io aus, bleiben vorhandene Mentions sichtbar.
+  * [ ] Das Posten und Löschen von Mentions als `admin` ist gegen die echte
+    Remark42-Testinstanz im Contract-Test abgesichert.
 
 ## W15 - Webmentions: Senden
 
@@ -309,6 +340,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] Laufbuch für Störungen (Quelle nicht erreichbar, Build kaputt,
     Domainwechsel).
   * [ ] Alle `[U]`-Punkte im Bundle sind geprüft oder bewusst akzeptiert.
+  * [ ] Der Tag-Workflow führt die volle Suite erneut aus und veröffentlicht
+    bei Rot keine Images.
 
 ## W17 - Go-live
 

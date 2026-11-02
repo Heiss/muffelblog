@@ -46,3 +46,5 @@ okf_version: "0.2"
 # Betrieb
 
 * [Build-Pipeline](/ops/pipeline.md) - Scheduler, Änderungserkennung, atomarer Austausch, Fehlerregeln
+* [Teststrategie](/ops/testing.md) - Vitest, Playwright, Contract-Tests, volle Suite pro PR
+* [Branching und Release](/ops/branching-release.md) - GitHub Flow, Squash-Merge, CalVer-Tags YY.M.MICRO, Auto-Updater
