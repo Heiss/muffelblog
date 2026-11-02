@@ -25,7 +25,7 @@ dagegen spricht.
 | O28 | Basis-Branch und Branch-Konvention | **[E] entschieden:** Basis ist `main`, aus dem Stand von Spezifikation und Roadmap angelegt. Konvention `feature/wNN-<kurzname>` ist ein Vorschlag **[V]**. | [Roadmap](/roadmap.md) |
 | O29 | Teststrategie für externe Dienste | **[E] entschieden:** hybrid, Mocks in CI, echte Testinstanzen lokal per Compose. Betrifft W02, W04, W13, W14. | [Roadmap](/roadmap.md) |
 | O30 | Default-Branch von GitHub | Aktuell der Sitzungs-Branch `ccr-01da7c96-avlx2l`, gewünscht `main`. Umstellung nur durch den Nutzer in den Repo-Einstellungen. | [Branching und Release](/ops/branching-release.md) |
-| O31 | Auto-Updater | **[E]** Pull Requests für Fremd-Images und pnpm-Abhängigkeiten, kein automatisches Ziehen auf dem Server. Offen: Renovate oder Dependabot, Regeln für automatisches Zusammenführen (insbesondere Patch-Updates), Verhalten bei Jahreswechsel-Tags. | [Branching und Release](/ops/branching-release.md) |
+| O31 | Auto-Updater | **[E]** Renovate als GitHub-App, Pull Requests für Fremd-Images und pnpm-Abhängigkeiten, Patch-Updates ohne Ausnahme automatisch gemergt, 3 Tage Wartezeit, kein automatisches Ziehen auf dem Server. Offen: Gruppierung der Updates, Zeitplan. Risiko: Auto-Merge setzt eine CI als Pflicht-Check voraus (erst ab W00), und ein Remark42-Patch kann Datenbankänderungen enthalten, deshalb Backup vor dem nächsten Tag. | [Branching und Release](/ops/branching-release.md) |
 | O27 | Auslegung von "standalone" | Der Nutzer schrieb "Der Dienst sollte standalone funktionieren, wenn etwas ausgeliefert wird". Eintrag: ausgelieferte Seite läuft ohne Nextcloud, Memos und Fremddienste. Das wurde nicht ausdrücklich bestätigt. | [System](/architecture/system.md) |
 
 # B. Inhalt und Verhalten

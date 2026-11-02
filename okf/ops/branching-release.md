@@ -75,13 +75,28 @@ Sitzungs-Branch löschen.
 
 # Auto-Updater
 
-* **[E]** Ein Auto-Updater öffnet Pull Requests für Fremd-Images (Remark42,
-  Caddy, Node-Basisimages) und für Abhängigkeiten des Astro-Projekts (pnpm).
-  Du nimmst sie ab.
+* **[E]** Renovate öffnet Pull Requests für Fremd-Images (Remark42, Caddy,
+  Node-Basisimages) und für Abhängigkeiten des Astro-Projekts (pnpm).
+* **[E]** Patch-Updates werden automatisch gemergt, ohne Ausnahmen (auch
+  Remark42, Astro und Pagefind). Minor- und Major-Updates nimmst du als Pull
+  Request ab.
+* **[E]** Renovate wartet nach Erscheinen einer Version 3 Tage, bevor es
+  merged (bei Renovate heißt die Einstellung `minimumReleaseAge`, aus dem
+  Gedächtnis, ungeprüft).
+* **[E]** Renovate läuft als GitHub-App. Die Installation für das Repo nimmst
+  du in GitHub vor.
+* **[V]** Auto-Merge gilt nur, wenn die CI als Pflicht-Check in der Branch-
+  Protection von `main` eingetragen ist und grün ist. Vor W00 gibt es keine
+  CI, bis dahin darf nichts automatisch gemergt werden.
+* **[V]** Auto-Merge ändert nur `main`. In den Betrieb gelangt eine Änderung
+  erst mit dem nächsten Tag. Vor jedem Tag wird geprüft, ob sich ein Fremd-
+  Image geändert hat. Bei einer geänderten Remark42-Version läuft vorher ein
+  Backup, weil auch Patch-Updates Datenbankänderungen enthalten können. Der
+  Nutzer hat bewusst keine Ausnahme für Remark42 gewünscht.
 * **[E]** Kein automatisches Ziehen und Starten von Images auf dem Server. Der
   Server zieht bewusst eine Version.
 * **[E]** Für eigene Images gibt es keinen Updater, denn es gibt kein
   getrenntes Deploy-Repo. Falls das später kommt, ist die SemVer-gültige
   Form der Tags bereits passend.
-* Welches Werkzeug (Renovate oder Dependabot) und welche Regeln für
-  automatisches Zusammenführen gelten, ist offen (O31).
+* Offen sind Details der Konfiguration, zum Beispiel Gruppierung von Updates
+  und Zeitplan (O31).

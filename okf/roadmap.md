@@ -85,14 +85,19 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     lokale Compose-Umgebung mit echten Testinstanzen (Nextcloud, Memos,
     Remark42, Mailpit) für Integrationsprüfungen.
 * Noch offen: genaue Node-Version, Test-Framework, Lint-Werkzeuge,
-  Registry für Docker-Images (O10), Auto-Updater-Werkzeug (O31),
-  Entwicklungsablauf (O23).
+  Registry für Docker-Images (O10), Gruppierung und Zeitplan von Renovate
+  (O31), Entwicklungsablauf (O23).
+  * **[E]** Renovate (GitHub-App) mit Auto-Merge für Patch-Updates und 3 Tagen
+    Wartezeit, siehe [Branching und Release](/ops/branching-release.md).
 * Umfang: Astro-Projekt mit TypeScript, Lint, Format, Test-Runner, CI,
   Dockerfile für den Build, Beispielinhalt (Fixtures).
 * DoD:
   * [ ] `docker build` erzeugt das Astro-Projekt reproduzierbar.
   * [ ] CI führt Lint, Typprüfung, Tests und Build aus.
   * [ ] README mit Start- und Testanleitung.
+  * [ ] Die CI ist als Pflicht-Check für `main` eingetragen.
+  * [ ] `renovate.json` ist konfiguriert (Patch-Auto-Merge, 3 Tage Wartezeit),
+    die Renovate-App ist installiert, und ein Test-Update läuft durch die CI.
 
 ## W01 - Artikel-Modell und Frontmatter
 
