@@ -59,7 +59,7 @@ dagegen spricht.
 | O23 | Entwicklungsablauf | Lokales Arbeiten (`astro dev` mit Beispieldaten), Tests, Linting des Frontmatter-Schemas. |
 | O24 | 404-Seite, `robots.txt` | Nicht besprochen. |
 | O25 | Ungeprüfte Fakten | siehe Abschnitt D. |
-| O35 | Themes | **[E]** Mehrere Themes im Stil bekannter Editor-Themes (siehe [Themes](/frontend/themes.md)). Offen: endgültige Auswahl (Vorschlag: Hell, Dracula, Matrix, Solarized Dark/Light, Nord, Gruvbox, Monokai, Tokyo Night, Catppuccin), Standard-Theme, Syntaxfarben für Code-Blöcke je Theme, Umgang mit `prefers-color-scheme`, Schriften selbst hosten. |
+| O35 | Themes | **[E]** Mehrere Themes im Stil bekannter Editor-Themes (siehe [Themes](/frontend/themes.md)). **[E]** Alle zehn Themes der Vorschau bleiben, Standard ist Solarized Light. Offen: Syntaxfarben für Code-Blöcke je Theme, Umgang mit `prefers-color-scheme` (Vorschlag: bei dunkler Systemeinstellung Solarized Dark), Schriften selbst hosten. |
 
 # D. Ungeprüfte Fakten (müssen vor der Umsetzung belegt werden)
 

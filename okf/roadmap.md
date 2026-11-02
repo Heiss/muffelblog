@@ -273,8 +273,10 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] Ohne `localStorage` gelten Standardwerte.
   * [ ] Der Balken ist per Tastatur bedienbar.
   * [ ] Zurück-Navigation stellt die Scrollposition wieder her.
+  * [ ] Alle zehn Themes sind wählbar, Solarized Light ist der Standard.
   * [ ] Jedes Theme besteht den Kontrasttest (Text mindestens 4,5:1), und das
-    gewählte Theme bleibt nach dem Neuladen erhalten.
+    gewählte Theme bleibt nach dem Neuladen erhalten, ohne dass beim Laden
+    kurz das falsche Theme aufblitzt.
 
 ## W07 - build.json und Banner
 

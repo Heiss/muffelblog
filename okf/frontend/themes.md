@@ -19,12 +19,13 @@ unverändert, nur die CSS-Dateien unterscheiden sich.
 * **[E]** Es gibt mehrere Themes, die sich nur im CSS unterscheiden.
 * **[E]** Sie orientieren sich an bekannten Editor-Themes (zum Beispiel
   Dracula) und enthalten einen Matrix-Stil in Grün.
+* **[E]** Alle zehn Themes der Vorschau bleiben im Angebot, damit jeder
+  Besucher das nutzen kann, was er will: Hell (bisheriges Aussehen), Dracula,
+  Matrix, Solarized Dark, Solarized Light, Nord, Gruvbox, Monokai, Tokyo
+  Night, Catppuccin Mocha.
+* **[E]** Das Standard-Theme ist Solarized Light.
 
 # Vorschlag (aus der Vorschau, noch nicht bestätigt)
-
-* **[V]** Zehn Themes: Hell (bisheriges Aussehen), Dracula, Matrix,
-  Solarized Dark, Solarized Light, Nord, Gruvbox, Monokai, Tokyo Night,
-  Catppuccin Mocha.
 * **[V]** Umsetzung: Pro Theme ein Block mit CSS-Variablen unter
   `[data-theme="<name>"]`, im echten Aufbau je eine CSS-Datei. Variablen:
   `--bg`, `--panel`, `--line`, `--fg`, `--dim`, `--ac`, `--on-ac`, `--tint`,
@@ -34,7 +35,13 @@ unverändert, nur die CSS-Dateien unterscheiden sich.
   Metazeilen in einer Monospace-Schrift, Matrix ist komplett Monospace mit
   eckigen Kanten und leichtem Glühen auf Titeln.
 * **[V]** Umschalter im Seitenkopf, die Wahl bleibt im Browser erhalten. Ohne
-  gespeicherte Wahl entscheidet die Systemeinstellung (hell oder dunkel).
+  gespeicherte Wahl gilt der Standard Solarized Light. Ob Besucher mit dunkler
+  Systemeinstellung stattdessen Solarized Dark als Gegenstück bekommen, ist
+  offen (O35).
+* **[V]** Damit beim Laden nicht kurz das falsche Theme aufblitzt, setzt ein
+  kleines Skript im `<head>` das Attribut `data-theme` vor dem ersten Zeichnen.
+  Wegen `script-src 'self'` liegt es als eigene Datei vor und wird blockierend
+  geladen, nicht inline.
 * **[V]** Alle Schriften kommen von der eigenen Domain, keine Google Fonts. Die
   Vorschau lädt sie nur aus technischen Gründen von Google.
 
@@ -48,5 +55,5 @@ unverändert, nur die CSS-Dateien unterscheiden sich.
 
 # Offene Punkte
 
-Auswahl der Themes, Standard-Theme, Syntaxfarben für Code-Blöcke je Theme,
-Verhalten bei `prefers-color-scheme` und die Schriftdateien selbst hosten: O35.
+Syntaxfarben für Code-Blöcke je Theme, Verhalten bei `prefers-color-scheme`
+(dunkle Systemeinstellung) und die Schriftdateien selbst hosten: O35.
