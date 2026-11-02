@@ -1,11 +1,10 @@
 ---
-import { SITE_LANG, loadArticles, pageTitle } from '@muffelblog/core';
-import type { Article } from '@muffelblog/core';
-import { contentDir } from '../../lib/content';
+import { SITE_LANG, pageTitle } from '@muffelblog/core';
+import { getContent } from '../../lib/articles';
+import type { RenderedArticle } from '../../lib/articles';
 
 export async function getStaticPaths() {
-  const { articles, warnings } = await loadArticles(contentDir());
-  for (const warnung of warnings) console.warn(`[inhalt] ${warnung}`);
+  const { articles } = await getContent();
   return articles.map((article) => ({
     params: { slug: article.slug },
     props: { article },
@@ -13,7 +12,7 @@ export async function getStaticPaths() {
 }
 
 interface Props {
-  article: Article;
+  article: RenderedArticle;
 }
 
 const { article } = Astro.props;
@@ -47,8 +46,37 @@ const datum = new Intl.DateTimeFormat('de-DE', {
             ))}
           </ul>
         )}
-        <!-- Der Text wird erst in W03 gerendert und bereinigt. -->
+        <div class="inhalt" set:html={article.html} />
       </article>
     </main>
   </body>
 </html>
+
+<style is:global>
+  .inhalt img {
+    max-width: 100%;
+    height: auto;
+  }
+  .inhalt table {
+    border-collapse: collapse;
+  }
+  .inhalt th,
+  .inhalt td {
+    border: 1px solid currentColor;
+    padding: 0.25rem 0.5rem;
+  }
+  .inhalt .embed {
+    border: 1px dashed currentColor;
+    padding: 1rem;
+  }
+  .embed-frame {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+  }
+</style>
+
+<script>
+  import '../../scripts/embed';
+</script>

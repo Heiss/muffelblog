@@ -45,8 +45,10 @@ der Compose-Datei.
 
 * `Authorization: Basic ...` wird auf allen öffentlichen Routen von Remark42
   abgewiesen. Der Builder spricht Remark42 direkt im internen Netz an.
-* Caddy setzt eine strikte Content-Security-Policy: `script-src 'self'`, keine
-  Fremdquellen. Das Widget kommt vom eigenen Host.
+* Caddy setzt eine strikte Content-Security-Policy: `script-src 'self'`.
+  `img-src` enthält `'self'` und die Bild-Hosts aus `policy.ts`, `frame-src`
+  die Hosts der Einbettungs-Regeln. Das Widget kommt vom eigenen Host. Die
+  Hosts werden aus derselben Liste erzeugt wie die Prüfung im Build.
 * `build.json` wird mit `Cache-Control: no-cache` und ETag ausgeliefert, damit
   bedingte Abfragen mit 304 antworten. Alle anderen Assets sind gehasht und
   langfristig cachebar.

@@ -1,8 +1,8 @@
 name: CI
 
 on:
+  # Pull Requests gegen jeden Branch, damit auch gestapelte PRs geprüft werden.
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 

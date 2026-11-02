@@ -221,7 +221,9 @@ describe('loadArticles (Fixtures)', () => {
         'groesse-und-masse',
         'hallo-welt',
         'ohne-datum',
+        'rendering-demo',
         'tief',
+        'unsicher',
         'zeit-ohne-zone',
       ].sort(),
     );
