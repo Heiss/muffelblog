@@ -7,7 +7,7 @@ status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-Die IDs (O1 bis O27) werden in den anderen Konzepten referenziert. Jeder Punkt
+Die IDs (O1 bis O29) werden in den anderen Konzepten referenziert. Jeder Punkt
 nennt, was der Spezifikation heute dazu eingetragen ist ("Eintrag") und was
 dagegen spricht.
 
@@ -22,6 +22,8 @@ dagegen spricht.
 | O8 | Versionen: "immer neueste" gegen Pinning | Der Nutzer will für Memos und Nextcloud die neueste Version. Eine API-Änderung kann den Build brechen. Remark42, Caddy und Node sollten gepinnt sein. Widerspruch bleibt für Memos. | [Docker](/architecture/docker.md) |
 | O9 | Reverse-Proxy, Domain, Remark42-Host | Läuft schon ein Proxy auf dem Server (Traefik, nginx)? Caddy ist nur ein Vorschlag. Remark42 braucht die öffentliche URL, vermutlich Subdomain. Betrieb unter Pfad ungeprüft. Domain steht aus. | [Docker](/architecture/docker.md) |
 | O10 | Image-Build | Bauen auf dem Server (`compose build`) oder in CI mit Registry? Das Repo hat noch keinen Inhalt außer dieser Spezifikation, Struktur des Codes ist offen. | [Docker](/architecture/docker.md) |
+| O28 | Basis-Branch und Branch-Konvention | Das Repo hat nur den Branch dieser Sitzung. Für Feature-Branches und Pull Requests braucht es einen Basis-Branch. Eintrag in der [Roadmap](/roadmap.md): `feature/wNN-<kurzname>`. | [Roadmap](/roadmap.md) |
+| O29 | Teststrategie für externe Dienste | Echte Testinstanzen (Nextcloud, Memos, Remark42, Mail-Sink) oder Mocks? Beides mischen? Betrifft W02, W04, W13, W14. | [Roadmap](/roadmap.md) |
 | O27 | Auslegung von "standalone" | Der Nutzer schrieb "Der Dienst sollte standalone funktionieren, wenn etwas ausgeliefert wird". Eintrag: ausgelieferte Seite läuft ohne Nextcloud, Memos und Fremddienste. Das wurde nicht ausdrücklich bestätigt. | [System](/architecture/system.md) |
 
 # B. Inhalt und Verhalten

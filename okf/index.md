@@ -7,6 +7,10 @@ okf_version: "0.2"
 * [Überblick und Ziele](/overview.md) - Zweck, Umfang, Legende der Kennzeichnungen (E/V/U)
 * [Offene Punkte](/open-points.md) - Ergebnis der kritischen Durchsicht, priorisiert
 
+# Planung
+
+* [Roadmap](/roadmap.md) - Arbeitspakete W00 bis W17 mit Abhängigkeiten und Definition of Done
+
 # Architektur
 
 * [Systemarchitektur](/architecture/system.md) - Komponenten, Datenflüsse, Grundregeln
