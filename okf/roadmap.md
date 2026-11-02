@@ -29,8 +29,9 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 * [ ] Alle Akzeptanzkriterien des Pakets sind erfüllt und im Pull Request
   abgehakt.
 * [ ] CI ist grün: Lint, Typprüfung, Tests, `astro build`.
-* [ ] Tests decken die neue Logik ab, auch Fehlerfälle (kaputte Eingaben,
-  Ausfall einer Quelle).
+* [ ] Die Tests entstanden zuerst (TDD) und decken die neue Logik ab, auch
+  Fehlerfälle (kaputte Eingaben, Ausfall einer Quelle). Pakete mit
+  Oberfläche haben E2E-Tests. Siehe [Teststrategie](/ops/testing.md).
 * [ ] Es sind keine Secrets im Repo (Secret-Scan ohne Treffer).
 * [ ] Der Browser lädt keine Fremdressourcen (Netzwerk- oder CSP-Test).
 * [ ] Die Entscheidungen des Pakets sind mit Optionen und Wahl im OKF-Bundle
@@ -84,7 +85,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * **[E]** Teststrategie hybrid (O29): Mocks und Beispielantworten in CI,
     lokale Compose-Umgebung mit echten Testinstanzen (Nextcloud, Memos,
     Remark42, Mailpit) für Integrationsprüfungen.
-* Noch offen: genaue Node-Version, Test-Framework, Lint-Werkzeuge,
+* Noch offen: genaue Node-Version, Test-Framework, E2E-Werkzeug (O32),
+  Lint-Werkzeuge,
   Registry für Docker-Images (O10), Gruppierung und Zeitplan von Renovate
   (O31), Entwicklungsablauf (O23).
   * **[E]** Renovate (GitHub-App) mit Auto-Merge für Patch-Updates und 3 Tagen
@@ -93,7 +95,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   Dockerfile für den Build, Beispielinhalt (Fixtures).
 * DoD:
   * [ ] `docker build` erzeugt das Astro-Projekt reproduzierbar.
-  * [ ] CI führt Lint, Typprüfung, Tests und Build aus.
+  * [ ] CI führt Lint, Typprüfung, Unit-Tests, E2E-Tests und Build aus, und
+    je Testart läuft ein Beispieltest.
   * [ ] README mit Start- und Testanleitung.
   * [ ] Die CI ist als Pflicht-Check für `main` eingetragen.
   * [ ] `renovate.json` ist konfiguriert (Patch-Auto-Merge, 3 Tage Wartezeit),
@@ -127,7 +130,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 * Umfang: Abruf des Public Shares per WebDAV mit Token und Passwort in den
   Cache, Änderungserkennung.
 * DoD:
-  * [ ] Sync gegen eine echte oder nachgebildete Nextcloud-Instanz getestet.
+  * [ ] Sync ist mit Mocks getestet, ein Contract-Test gegen eine echte
+    Nextcloud-Testinstanz liegt vor.
   * [ ] Das Passwort kommt nur aus einem Secret.
   * [ ] Ohne Änderung wird kein Build ausgelöst.
   * [ ] Schlägt der Abruf fehl, bleibt der Cache unverändert.
@@ -163,6 +167,7 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] SVG, zu große Dateien und interne IP-Ziele werden abgelehnt.
   * [ ] Ein Abruffehler lässt vorhandene Memos nicht verschwinden.
   * [ ] Test mit einer Beispielantwort der API-Version.
+  * [ ] Ein Contract-Test gegen eine echte Memos-Testinstanz liegt vor.
 
 ## W05 - Statischer Feed, Blöcke, Tags, Sitemap
 
@@ -285,6 +290,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] Ohne Anmeldung kann nicht kommentiert werden.
   * [ ] Kommentare sind auf Posts und Memos möglich.
   * [ ] Daten von Remark42 sind gesichert (Volume, Backup-Test).
+  * [ ] Ein Contract-Test gegen eine echte Remark42-Testinstanz mit Mail-Sink
+    liegt vor.
 
 ## W14 - Webmentions: Empfang und Anzeige
 
@@ -299,6 +306,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] Mention-Text ist als Text bereinigt, kein HTML.
   * [ ] Avatar-Spiegelung hat SSRF- und Größenschutz oder entfällt.
   * [ ] Fällt webmention.io aus, bleiben vorhandene Mentions sichtbar.
+  * [ ] Das Posten und Löschen von Mentions als `admin` ist gegen die echte
+    Remark42-Testinstanz im Contract-Test abgesichert.
 
 ## W15 - Webmentions: Senden
 
@@ -324,6 +333,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] Laufbuch für Störungen (Quelle nicht erreichbar, Build kaputt,
     Domainwechsel).
   * [ ] Alle `[U]`-Punkte im Bundle sind geprüft oder bewusst akzeptiert.
+  * [ ] Der Tag-Workflow führt die Contract-Tests aus und veröffentlicht bei
+    Rot keine Images.
 
 ## W17 - Go-live
 

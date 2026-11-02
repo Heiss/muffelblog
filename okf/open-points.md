@@ -7,7 +7,7 @@ status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-Die IDs (O1 bis O31) werden in den anderen Konzepten referenziert. Jeder Punkt
+Die IDs (O1 bis O32) werden in den anderen Konzepten referenziert. Jeder Punkt
 nennt, was der Spezifikation heute dazu eingetragen ist ("Eintrag") und was
 dagegen spricht.
 
@@ -23,7 +23,8 @@ dagegen spricht.
 | O9 | Reverse-Proxy, Domain, Remark42-Host | Läuft schon ein Proxy auf dem Server (Traefik, nginx)? Caddy ist nur ein Vorschlag. Remark42 braucht die öffentliche URL, vermutlich Subdomain. Betrieb unter Pfad ungeprüft. Domain steht aus. | [Docker](/architecture/docker.md) |
 | O10 | Image-Build | Teilentscheidung **[E]**: CI läuft mit GitHub Actions. Ebenfalls **[E]**: Images werden nur auf einem CalVer-Tag `YY.M.MICRO` (z. B. `26.11.0`) in CI gebaut und in eine Registry gelegt (siehe [Branching und Release](/ops/branching-release.md)). Offen: welche Registry (Vorschlag GHCR). | [Docker](/architecture/docker.md) |
 | O28 | Basis-Branch und Branch-Konvention | **[E] entschieden:** Basis ist `main`, aus dem Stand von Spezifikation und Roadmap angelegt. Konvention `feature/wNN-<kurzname>` ist ein Vorschlag **[V]**. | [Roadmap](/roadmap.md) |
-| O29 | Teststrategie für externe Dienste | **[E] entschieden:** hybrid, Mocks in CI, echte Testinstanzen lokal per Compose. Betrifft W02, W04, W13, W14. | [Roadmap](/roadmap.md) |
+| O29 | Teststrategie für externe Dienste | **[E] entschieden:** hybrid, Mocks in CI, echte Testinstanzen per Compose. TDD mit Mocks und E2E-Tests sind verbindlich, Contract-Tests laufen nur vor jedem Tag. Siehe [Teststrategie](/ops/testing.md). Betrifft W02, W04, W13, W14. |
+| O32 | Test-Werkzeuge und webmention.io-Test | Welches Test-Framework und welches E2E-Werkzeug? Gibt es zusätzlich einen Lesetest gegen den echten webmention.io-Dienst, obwohl er extern und möglicherweise wackelig ist? | [Teststrategie](/ops/testing.md) | [Roadmap](/roadmap.md) |
 | O30 | Default-Branch von GitHub | Aktuell der Sitzungs-Branch `ccr-01da7c96-avlx2l`, gewünscht `main`. Umstellung nur durch den Nutzer in den Repo-Einstellungen. | [Branching und Release](/ops/branching-release.md) |
 | O31 | Auto-Updater | **[E]** Renovate als GitHub-App, Pull Requests für Fremd-Images und pnpm-Abhängigkeiten, Patch-Updates ohne Ausnahme automatisch gemergt, 3 Tage Wartezeit, kein automatisches Ziehen auf dem Server. Offen: Gruppierung der Updates, Zeitplan. Risiko: Auto-Merge setzt eine CI als Pflicht-Check voraus (erst ab W00), und ein Remark42-Patch kann Datenbankänderungen enthalten, deshalb Backup vor dem nächsten Tag. | [Branching und Release](/ops/branching-release.md) |
 | O27 | Auslegung von "standalone" | Der Nutzer schrieb "Der Dienst sollte standalone funktionieren, wenn etwas ausgeliefert wird". Eintrag: ausgelieferte Seite läuft ohne Nextcloud, Memos und Fremddienste. Das wurde nicht ausdrücklich bestätigt. | [System](/architecture/system.md) |
