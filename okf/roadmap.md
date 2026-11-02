@@ -107,23 +107,24 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     als Playwright-`webServer`. Die E2E-Tests servieren `dist/` mit `sirv-cli`.
   * Corepack gehört seit Node 25 nicht mehr zur Auslieferung. Das Dockerfile
     installiert pnpm über npm in der Version aus `package.json`.
-  * Dass das Image `node:26-slim` existiert, ist nicht geprüft (Docker Hub war
-    aus der Entwicklungsumgebung nicht erreichbar, es gab keinen Docker-Daemon).
-  * Die Versionen der Actions (`actions/checkout@v4` und weitere) sind aus dem
-    Gedächtnis gesetzt und nicht gegen die neuesten Releases geprüft. Renovate
-    hebt sie an.
+  * Das Image `node:26-slim` existiert und das Dockerfile baut: Der Job
+    "Docker-Build der Seite" lief im ersten CI-Lauf auf GitHub erfolgreich
+    (Lauf 41472880143). In der Entwicklungsumgebung war das wegen fehlendem
+    Docker-Daemon nicht prüfbar.
+  * Die Actions (`actions/checkout@v4`, `pnpm/action-setup@v4`,
+    `actions/setup-node@v4`) laufen. Ob neuere Hauptversionen existieren, ist
+    nicht geprüft. Renovate hebt sie an.
 * DoD (Stand Umsetzung):
-  * [ ] `docker build` erzeugt das Astro-Projekt reproduzierbar. Die Schritte
-    des Dockerfiles (`pnpm fetch`, Offline-Install, Build) liefen in einer
-    sauberen Kopie erfolgreich. Der echte Image-Build läuft erst im CI-Job.
-  * [ ] CI führt Lint, Typprüfung, Unit-Tests (Vitest), E2E-Tests
-    (Playwright) und Build aus, und je Testart läuft ein Beispieltest. Lokal
-    mit Node 26 grün (5 Unit-Tests, 2 E2E-Tests), der Lauf in GitHub Actions
-    steht aus.
-  * [ ] Ein Gate-Job mit Pfaderkennung ist der Pflicht-Check für `main`. Die
-    Pfadlogik ist lokal getestet, der Lauf auf GitHub steht aus. Ein
-    reiner Doku-PR wird durch ihn ohne die schweren Tests grün, ein Code-PR
-    startet die volle Suite.
+  * [x] `docker build` erzeugt das Astro-Projekt reproduzierbar. Der Job
+    "Docker-Build der Seite" lief auf GitHub erfolgreich und prüft, dass
+    `out/index.html` existiert.
+  * [x] CI führt Lint, Typprüfung, Unit-Tests (Vitest), E2E-Tests
+    (Playwright) und Build aus, und je Testart läuft ein Beispieltest. Der
+    erste Lauf auf GitHub war grün (5 Unit-Tests, 2 E2E-Tests).
+  * [ ] Ein Gate-Job mit Pfaderkennung ist der Pflicht-Check für `main`. Der
+    Code-Pfad (volle Suite) lief auf GitHub grün. Der Doku-Pfad (schwere Jobs
+    übersprungen, Gate grün) ist bisher nur lokal getestet, der Nachweis auf
+    GitHub steht aus.
   * [x] README mit Start- und Testanleitung.
   * [ ] Die CI ist als Pflicht-Check für `main` eingetragen (Einstellung durch
     den Nutzer, Name des Checks: "CI Gate").
