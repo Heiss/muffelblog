@@ -46,7 +46,9 @@ dabei nur: frei von dem, was die Tests sehen.
 * **[V]** Suche liefert Posts und Memos, keine Treffer aus den Blöcken.
 * **[V]** Seite funktioniert ohne JavaScript (Weiter-Link, statische
   Kommentare).
-* **[V]** Der Browser stellt keine Anfrage an Fremddomains.
+* **[V]** Startseite und Artikel ohne Fremdinhalt stellen keine Anfrage an
+  Fremddomains. Artikel mit Fremdinhalt rufen nur freigegebene Hosts auf,
+  Einbettungen erst nach dem Klick.
 
 # Umfang der Contract-Tests (Vorschlag)
 

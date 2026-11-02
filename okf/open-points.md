@@ -7,7 +7,7 @@ status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-Die IDs (O1 bis O34) werden in den anderen Konzepten referenziert. Jeder Punkt
+Die IDs (O1 bis O35) werden in den anderen Konzepten referenziert. Jeder Punkt
 nennt, was der Spezifikation heute dazu eingetragen ist ("Eintrag") und was
 dagegen spricht.
 
@@ -18,7 +18,7 @@ dagegen spricht.
 | O1 | Block-Quellen der Split-View | Drei Reihen technischer Blöcke (gemischt, Memos, Posts), Blockgröße 20. Der Nutzer hat nur die gemischten Blöcke bestätigt, die Split-View braucht aber pro Spalte eine eigene Liste. | [Feed](/frontend/feed.md) |
 | O2 | Datumsformat und Zeitzone | **[E] entschieden:** reines Datum = 12:00 Uhr Berlin, Uhrzeit ohne Zone = Berliner Ortszeit, mit Zone gilt der Zeitpunkt. | [Frontmatter](/content/frontmatter.md) |
 | O3 | Zustand des Mention-Sync | Bei Verlust der Statusdatei würden alle Mentions doppelt gepostet. Vorschlag: Marker (Quell-URL) im Kommentartext, aus dem der Zustand aus Remark42 wiederhergestellt wird. | [Webmentions](/community/webmentions.md) |
-| O5 | Fremdinhalte in Markdown | Remote-Bilder, iframes und Einbettungen in Artikeln: spiegeln, blockieren oder erlauben? Die Regel "nichts von anderen Diensten laden" und die CSP sprechen für spiegeln oder blockieren. | [Medien](/content/media.md) |
+| O5 | Fremdinhalte in Markdown | **[E] entschieden:** In Artikeln erlaubt, aber nur aus Freigabelisten. Bilder: `upload.wikimedia.org`, `raw.githubusercontent.com`, `user-images.githubusercontent.com`. Einbettungen: `www.youtube-nocookie.com`, erst nach Klick. Memos bleiben strikt (Bilder gespiegelt). Das weicht von der früheren Regel "nichts von anderen Diensten laden" ab. Risiko: IP-Adressen der Besucher gehen an die Bild-Hosts (O15). | [Medien](/content/media.md) |
 | O8 | Versionen: "immer neueste" gegen Pinning | Der Nutzer will für Memos und Nextcloud die neueste Version. Eine API-Änderung kann den Build brechen. Remark42, Caddy und Node sollten gepinnt sein. Widerspruch bleibt für Memos. | [Docker](/architecture/docker.md) |
 | O9 | Reverse-Proxy, Domain, Remark42-Host | Läuft schon ein Proxy auf dem Server (Traefik, nginx)? Caddy ist nur ein Vorschlag. Remark42 braucht die öffentliche URL, vermutlich Subdomain. Betrieb unter Pfad ungeprüft. Domain steht aus. | [Docker](/architecture/docker.md) |
 | O10 | Image-Build | Teilentscheidung **[E]**: CI läuft mit GitHub Actions. Das Dockerfile für die Seite liegt vor (W00) und baut in der CI (`node:26-slim` existiert). Ebenfalls **[E]**: Images werden nur auf einem CalVer-Tag `YY.M.MICRO` (z. B. `26.11.0`) in CI gebaut und in eine Registry gelegt (siehe [Branching und Release](/ops/branching-release.md)). Offen: welche Registry (Vorschlag GHCR). | [Docker](/architecture/docker.md) |
@@ -37,7 +37,7 @@ dagegen spricht.
 |---|---|---|
 | O4 | Remark42-Darstellung | Standardsortierung im Widget und Darstellung des Autors `admin` sind ungeprüft. Die Zeitleiste mit Mentions funktioniert nur bei Sortierung nach Zeit. |
 | O6 | Anhänge, die keine Bilder sind | Audio, Video, PDF in Memos: spiegeln, verlinken auf die Memos-Instanz (widerspricht der Regel) oder weglassen? |
-| O7 | Bildgrößen und Formate | Responsive Größen und WebP/AVIF per Astro-Bildverarbeitung? Eintrag nur: EXIF entfernen, SVG ablehnen. |
+| O7 | Bildgrößen und Formate | **[E] entschieden:** Lokale Artikelbilder in mehreren Breiten (480 bis 1920) als WebP, EXIF und Farbprofil entfernt, SVG abgelehnt. Umgesetzt mit `sharp`. |
 | O11 | Webmentions: Sender und Microformats | Implementierung des Senders offen. `h-entry`/`h-card`, `rel=me`, IndieAuth wurden nicht besprochen, sind für sinnvolle Anzeige aber nötig. |
 | O12 | Senden aus Memos | Der Nutzer sagte "ja auf jeden Fall" für Senden und "auch für Memo-Seiten" für Mentions. Senden aus Memos ist eine Annahme. |
 | O13 | Tag-Regeln | **[E] teilweise entschieden:** Tags durchgehend kleingeschrieben, auch in der Anzeige. Offen: verschachtelte Memos-Tags (`#a/b`), zählen Inline-`#tags` in Artikeln? Gemeinsamer Namensraum für Posts und Memos ist ein Vorschlag. |
@@ -59,6 +59,7 @@ dagegen spricht.
 | O23 | Entwicklungsablauf | Lokales Arbeiten (`astro dev` mit Beispieldaten), Tests, Linting des Frontmatter-Schemas. |
 | O24 | 404-Seite, `robots.txt` | Nicht besprochen. |
 | O25 | Ungeprüfte Fakten | siehe Abschnitt D. |
+| O35 | Themes | **[E]** Mehrere Themes im Stil bekannter Editor-Themes (siehe [Themes](/frontend/themes.md)). Offen: endgültige Auswahl (Vorschlag: Hell, Dracula, Matrix, Solarized Dark/Light, Nord, Gruvbox, Monokai, Tokyo Night, Catppuccin), Standard-Theme, Syntaxfarben für Code-Blöcke je Theme, Umgang mit `prefers-color-scheme`, Schriften selbst hosten. |
 
 # D. Ungeprüfte Fakten (müssen vor der Umsetzung belegt werden)
 

@@ -21,9 +21,13 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 | Kommentare (Remark42) | fremd | HTML nur über Allowlist, auch wenn Remark42 selbst bereinigt |
 | Avatare und Memo-Bilder | fremd bzw. eigen | Typ- und Größenprüfung, EXIF entfernen, SVG ablehnen |
 
-**[V]** Das Rendering des Markdown läuft über eine feste Pipeline mit
-Allowlist für HTML (zum Beispiel `rehype-sanitize`). Rohes HTML im Markdown
-ist standardmäßig aus.
+**[E]** Das Rendering des Markdown läuft über eine feste Pipeline
+(`packages/core/src/render.ts`): Markdown (mit GFM), rohes HTML geparst, dann
+eine Allowlist (`rehype-sanitize`), danach die Prüfung von Bildern, Links und
+Einbettungen. Rohes HTML bleibt nur im Rahmen der Allowlist erhalten: Skripte,
+Ereignis-Attribute, `javascript:`- und `data:`-Verweise, Formulare, Stile, SVG,
+Objekte und Kommentare entfallen samt Inhalt. Externe Links bekommen
+`rel="noopener noreferrer"`, Überschriften rücken eine Ebene nach unten.
 
 # SSRF-Schutz
 
@@ -41,5 +45,6 @@ ist standardmäßig aus.
 
 # Content-Security-Policy
 
-**[V]** `script-src 'self'`, `img-src 'self'`, keine Fremdquellen. Das passt
-zur Regel, dass der Browser nichts von Drittdiensten lädt.
+**[V]** `script-src 'self'`. `img-src` mit `'self'` und den freigegebenen
+Bild-Hosts, `frame-src` mit den freigegebenen Einbettungs-Hosts (siehe
+[Medien](/content/media.md)). Es gibt keine weiteren Fremdquellen.

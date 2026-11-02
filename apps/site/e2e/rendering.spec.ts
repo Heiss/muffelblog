@@ -1,0 +1,159 @@
+import { expect, test, type Page } from '@playwright/test';
+
+// 1x1-PNG, damit die freigegebene Fremdquelle im Test nicht ins Netz muss.
+const PIXEL = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+  'base64',
+);
+
+/** Fängt Anfragen an Fremdserver ab, damit sie nicht ins Netz gehen, und merkt sie sich. */
+async function fremdAbfangen(page: Page): Promise<string[]> {
+  const gesehen: string[] = [];
+  await page.route(/^https?:\/\/(?!localhost)/, (route) => {
+    gesehen.push(route.request().url());
+    return route.fulfill({
+      status: 200,
+      contentType:
+        route.request().resourceType() === 'image' ? 'image/png' : 'text/html',
+      body:
+        route.request().resourceType() === 'image'
+          ? PIXEL
+          : '<!doctype html><title>Fremd</title>',
+    });
+  });
+  return gesehen;
+}
+
+test.describe('Rendering-Demo (/p/rendering-demo/)', () => {
+  test('rendert Markdown mit angepassten Überschriften, Liste, Tabelle und Code', async ({
+    page,
+  }) => {
+    await fremdAbfangen(page);
+    await page.goto('/p/rendering-demo/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Rendering-Demo',
+    );
+    await expect(page.locator('.inhalt h2')).toHaveText('Abschnitt');
+    await expect(page.locator('.inhalt li')).toHaveText([
+      'Punkt eins',
+      'Punkt zwei',
+    ]);
+    await expect(page.locator('.inhalt table td')).toHaveText(['a', '1']);
+    await expect(page.locator('.inhalt pre code.language-ts')).toContainText(
+      'const x = 1;',
+    );
+    const link = page.getByRole('link', { name: 'externen Link' });
+    await expect(link).toHaveAttribute('href', 'https://example.org/seite');
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  test('liefert lokale Bilder als WebP in mehreren Breiten von der eigenen Domain', async ({
+    page,
+    request,
+  }) => {
+    await fremdAbfangen(page);
+    await page.goto('/p/rendering-demo/');
+    const bild = page.locator('.inhalt img[alt="Testbild"]');
+    await expect(bild).toHaveAttribute(
+      'srcset',
+      /\/media\/[0-9a-f]{16}-480\.webp 480w, \/media\/[0-9a-f]{16}-960\.webp 960w/,
+    );
+    await expect(bild).toHaveAttribute('width', '960');
+    await expect(bild).toHaveAttribute('height', '480');
+    await expect(bild).toHaveAttribute('loading', 'lazy');
+    const src = await bild.getAttribute('src');
+    expect(src).toMatch(/^\/media\/[0-9a-f]{16}-960\.webp$/);
+    const antwort = await request.get(src ?? '');
+    expect(antwort.status()).toBe(200);
+    expect(antwort.headers()['content-type']).toBe('image/webp');
+    const koerper = await antwort.body();
+    expect(koerper.subarray(0, 4).toString('latin1')).toBe('RIFF');
+    expect(koerper.subarray(8, 12).toString('latin1')).toBe('WEBP');
+  });
+
+  test('lädt freigegebene Remote-Bilder, entfernt andere und meldet fehlende', async ({
+    page,
+  }) => {
+    const fremd = await fremdAbfangen(page);
+    await page.goto('/p/rendering-demo/');
+    await page.waitForLoadState('networkidle');
+
+    const wiki = page.locator('.inhalt img[alt="Wikimedia"]');
+    await expect(wiki).toHaveAttribute(
+      'src',
+      'https://upload.wikimedia.org/wikipedia/commons/a/a9/Example.jpg',
+    );
+    await expect(wiki).toHaveAttribute('referrerpolicy', 'no-referrer');
+
+    await expect(page.locator('.inhalt img[alt="Tracker"]')).toHaveCount(0);
+    expect(fremd.filter((u) => u.includes('tracker.example'))).toEqual([]);
+    expect(fremd).toEqual([
+      'https://upload.wikimedia.org/wikipedia/commons/a/a9/Example.jpg',
+    ]);
+
+    await expect(page.locator('.inhalt .bild-fehlt')).toHaveText(
+      '[Bild fehlt: Fehlt]',
+    );
+  });
+
+  test('lädt Einbettungen erst nach dem Klick', async ({ page }) => {
+    const fremd = await fremdAbfangen(page);
+    await page.goto('/p/rendering-demo/');
+    await page.waitForLoadState('networkidle');
+
+    const platzhalter = page.locator('.inhalt .embed');
+    await expect(platzhalter).toContainText('YouTube');
+    await expect(page.locator('.inhalt iframe')).toHaveCount(0);
+    expect(fremd.filter((u) => u.includes('youtube'))).toEqual([]);
+    await expect(
+      page.getByRole('link', { name: 'Auf YouTube öffnen' }),
+    ).toHaveAttribute('href', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+
+    await page.getByRole('button', { name: 'Inhalt laden' }).click();
+    const frame = page.locator('.inhalt iframe');
+    await expect(frame).toHaveAttribute(
+      'src',
+      'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+    );
+    await expect(frame).toHaveAttribute(
+      'sandbox',
+      'allow-scripts allow-same-origin allow-presentation',
+    );
+    await expect(frame).toHaveAttribute('referrerpolicy', 'no-referrer');
+    await expect
+      .poll(() =>
+        fremd.some((u) => u.startsWith('https://www.youtube-nocookie.com/')),
+      )
+      .toBe(true);
+  });
+});
+
+test.describe('Unsicherer Inhalt (/p/unsicher/)', () => {
+  test('führt nichts aus und lädt nichts von Fremdservern', async ({
+    page,
+  }) => {
+    const fremd = await fremdAbfangen(page);
+    await page.goto('/p/unsicher/');
+    await page.waitForLoadState('networkidle');
+
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __pwned?: number }).__pwned,
+      ),
+    ).toBeUndefined();
+    await expect(page.locator('.inhalt script')).toHaveCount(0);
+    await expect(page.locator('.inhalt iframe')).toHaveCount(0);
+    await expect(page.locator('.inhalt form')).toHaveCount(0);
+    await expect(page.locator('.inhalt [onerror]')).toHaveCount(0);
+
+    const verweis = page.getByText('Gefährlicher Link');
+    await expect(verweis).toBeVisible();
+    expect(await page.locator('.inhalt a[href^="javascript:" i]').count()).toBe(
+      0,
+    );
+
+    await expect(page.locator('.inhalt')).toContainText('Text vorher.');
+    await expect(page.locator('.inhalt')).toContainText('Text nachher.');
+    expect(fremd).toEqual([]);
+  });
+});
