@@ -21,9 +21,9 @@ dagegen spricht.
 | O5 | Fremdinhalte in Markdown | Remote-Bilder, iframes und Einbettungen in Artikeln: spiegeln, blockieren oder erlauben? Die Regel "nichts von anderen Diensten laden" und die CSP sprechen für spiegeln oder blockieren. | [Medien](/content/media.md) |
 | O8 | Versionen: "immer neueste" gegen Pinning | Der Nutzer will für Memos und Nextcloud die neueste Version. Eine API-Änderung kann den Build brechen. Remark42, Caddy und Node sollten gepinnt sein. Widerspruch bleibt für Memos. | [Docker](/architecture/docker.md) |
 | O9 | Reverse-Proxy, Domain, Remark42-Host | Läuft schon ein Proxy auf dem Server (Traefik, nginx)? Caddy ist nur ein Vorschlag. Remark42 braucht die öffentliche URL, vermutlich Subdomain. Betrieb unter Pfad ungeprüft. Domain steht aus. | [Docker](/architecture/docker.md) |
-| O10 | Image-Build | Bauen auf dem Server (`compose build`) oder in CI mit Registry? Das Repo hat noch keinen Inhalt außer dieser Spezifikation, Struktur des Codes ist offen. | [Docker](/architecture/docker.md) |
-| O28 | Basis-Branch und Branch-Konvention | Das Repo hat nur den Branch dieser Sitzung. Für Feature-Branches und Pull Requests braucht es einen Basis-Branch. Eintrag in der [Roadmap](/roadmap.md): `feature/wNN-<kurzname>`. | [Roadmap](/roadmap.md) |
-| O29 | Teststrategie für externe Dienste | Echte Testinstanzen (Nextcloud, Memos, Remark42, Mail-Sink) oder Mocks? Beides mischen? Betrifft W02, W04, W13, W14. | [Roadmap](/roadmap.md) |
+| O10 | Image-Build | Teilentscheidung **[E]**: CI läuft mit GitHub Actions. Offen: Images auf dem Server bauen (`compose build`) oder in CI bauen und über eine Registry (zum Beispiel GHCR) verteilen. | [Docker](/architecture/docker.md) |
+| O28 | Basis-Branch und Branch-Konvention | **[E] entschieden:** Basis ist `main`, aus dem Stand von Spezifikation und Roadmap angelegt. Konvention `feature/wNN-<kurzname>` ist ein Vorschlag **[V]**. | [Roadmap](/roadmap.md) |
+| O29 | Teststrategie für externe Dienste | **[E] entschieden:** hybrid, Mocks in CI, echte Testinstanzen lokal per Compose. Betrifft W02, W04, W13, W14. | [Roadmap](/roadmap.md) |
 | O27 | Auslegung von "standalone" | Der Nutzer schrieb "Der Dienst sollte standalone funktionieren, wenn etwas ausgeliefert wird". Eintrag: ausgelieferte Seite läuft ohne Nextcloud, Memos und Fremddienste. Das wurde nicht ausdrücklich bestätigt. | [System](/architecture/system.md) |
 
 # B. Inhalt und Verhalten

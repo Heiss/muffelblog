@@ -74,9 +74,17 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 
 * Branch: `feature/w00-fundament`
 * Abhängig von: -
-* Entscheidungen: Basis-Branch (O28), Paketmanager und Node-Version, CI-
-  Anbieter, Test-Framework, Teststrategie für externe Dienste (O29),
-  Image-Build (O10), Entwicklungsablauf (O23).
+* Entschieden:
+  * **[E]** Basis-Branch ist `main`, angelegt aus dem Stand von Spezifikation
+    und Roadmap. Feature-Branches zweigen von `main` ab, Pull Requests gehen
+    gegen `main` (O28).
+  * **[E]** pnpm auf Node LTS.
+  * **[E]** CI mit GitHub Actions.
+  * **[E]** Teststrategie hybrid (O29): Mocks und Beispielantworten in CI,
+    lokale Compose-Umgebung mit echten Testinstanzen (Nextcloud, Memos,
+    Remark42, Mailpit) für Integrationsprüfungen.
+* Noch offen: genaue Node-Version, Test-Framework, Lint-Werkzeuge,
+  Registry für Docker-Images (O10), Entwicklungsablauf (O23).
 * Umfang: Astro-Projekt mit TypeScript, Lint, Format, Test-Runner, CI,
   Dockerfile für den Build, Beispielinhalt (Fixtures).
 * DoD:
