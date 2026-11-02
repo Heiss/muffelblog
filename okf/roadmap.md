@@ -136,20 +136,37 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 
 * Branch: `feature/w01-frontmatter`
 * Abhängig von: W00
-* Entscheidungen: Datumsformat und Zeitzone (O2), doppelte Slugs (O26),
-  Tag-Regeln (O13), Zurückziehen von Artikeln (O21).
+* Entschieden (siehe [Frontmatter](/content/frontmatter.md)):
+  * **[E]** Datum (O2): Reines Datum gilt als 12:00 Uhr Berlin, Uhrzeit ohne
+    Zone als Berliner Ortszeit.
+  * **[E]** Doppelte Slugs (O26): Suffix `-2`, `-3`, der ältere Artikel behält
+    den Slug.
+  * **[E]** Tags (O13): durchgehend kleingeschrieben, auch in der Anzeige.
+  * **[E]** Zurückgezogene Artikel (O21): einfach weg, 404.
 * Umfang: Loader für einen lokalen Markdown-Ordner, Schema nach
   [Frontmatter](/content/frontmatter.md), Slug mit Transliteration, Fallbacks,
-  Ausschlüsse (siehe [Nextcloud-Quelle](/content/nextcloud-source.md)).
-* DoD:
-  * [ ] `publish` zählt nur als Boolean `true`.
-  * [ ] Fehlendes oder ungültiges `date` fällt auf das Änderungsdatum zurück
+  Ausschlüsse (siehe [Nextcloud-Quelle](/content/nextcloud-source.md)). Der
+  Artikeltext wird noch nicht gerendert, das folgt in W03. Die Seiten
+  `/p/<slug>/` zeigen Titel, Datum und Tags.
+* DoD (Stand Umsetzung, lokal mit Node 26 belegt; der CI-Lauf steht aus):
+  * [x] `publish` zählt nur als Boolean `true` (Unit-Tests mit `"true"`,
+    `yes`, `1`, `false`, `null`).
+  * [x] Fehlendes oder ungültiges `date` fällt auf das Änderungsdatum zurück
     und warnt.
-  * [ ] Eine kaputte Datei überspringt nur sich selbst und wird geloggt.
-  * [ ] Doppelte Slugs verhalten sich nach der gewählten Regel.
-  * [ ] Fixtures decken ab: gültig, ungültiges YAML, Konfliktkopie,
-    Wikilink, Umlaut-Slug.
-  * [ ] Der Build erzeugt `/p/<slug>/` für die Fixtures.
+  * [x] Eine kaputte Datei überspringt nur sich selbst und wird geloggt.
+  * [x] Doppelte Slugs verhalten sich nach der gewählten Regel.
+  * [x] Fixtures decken ab: gültig, ungültiges YAML, Konfliktkopie,
+    Wikilink, Umlaut-Slug (außerdem Unterordner, verstecktes Verzeichnis,
+    Uhrzeit mit und ohne Zone, doppelter Slug).
+  * [x] Der Build erzeugt `/p/<slug>/` für die Fixtures. 14 E2E-Tests prüfen
+    die erzeugten Seiten und, dass nicht veröffentlichte Artikel 404
+    liefern (der Test schlägt nachweislich fehl, wenn ein Artikel zu Unrecht
+    veröffentlicht wird).
+* Befunde bei der Umsetzung:
+  * Chromium meldet eine leere 404-Antwort bei `page.goto` als Netzwerkfehler.
+    Die Prüfung auf 404 nutzt deshalb direkte HTTP-Anfragen.
+  * Die Prüfung auf Wikilinks ignoriert Code-Blöcke und Inline-Code.
+  * Die Muster für Nextcloud-Konfliktkopien sind weiter ungeprüft (O25, W02).
 
 ## W02 - Nextcloud-Sync
 

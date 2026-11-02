@@ -16,7 +16,7 @@ dagegen spricht.
 | ID | Thema | Eintrag / Problem | Auswirkung |
 |---|---|---|---|
 | O1 | Block-Quellen der Split-View | Drei Reihen technischer Blöcke (gemischt, Memos, Posts), Blockgröße 20. Der Nutzer hat nur die gemischten Blöcke bestätigt, die Split-View braucht aber pro Spalte eine eigene Liste. | [Feed](/frontend/feed.md) |
-| O2 | Datumsformat und Zeitzone | Offen. Obsidian schreibt oft nur ein Datum ohne Uhrzeit. Memos haben eine Uhrzeit. Bei gleichem Tag ist die Reihenfolge unklar. Anzeige und Sortierung brauchen eine feste Zeitzone (Vorschlag: Europe/Berlin). | [Frontmatter](/content/frontmatter.md) |
+| O2 | Datumsformat und Zeitzone | **[E] entschieden:** reines Datum = 12:00 Uhr Berlin, Uhrzeit ohne Zone = Berliner Ortszeit, mit Zone gilt der Zeitpunkt. | [Frontmatter](/content/frontmatter.md) |
 | O3 | Zustand des Mention-Sync | Bei Verlust der Statusdatei würden alle Mentions doppelt gepostet. Vorschlag: Marker (Quell-URL) im Kommentartext, aus dem der Zustand aus Remark42 wiederhergestellt wird. | [Webmentions](/community/webmentions.md) |
 | O5 | Fremdinhalte in Markdown | Remote-Bilder, iframes und Einbettungen in Artikeln: spiegeln, blockieren oder erlauben? Die Regel "nichts von anderen Diensten laden" und die CSP sprechen für spiegeln oder blockieren. | [Medien](/content/media.md) |
 | O8 | Versionen: "immer neueste" gegen Pinning | Der Nutzer will für Memos und Nextcloud die neueste Version. Eine API-Änderung kann den Build brechen. Remark42, Caddy und Node sollten gepinnt sein. Widerspruch bleibt für Memos. | [Docker](/architecture/docker.md) |
@@ -40,11 +40,11 @@ dagegen spricht.
 | O7 | Bildgrößen und Formate | Responsive Größen und WebP/AVIF per Astro-Bildverarbeitung? Eintrag nur: EXIF entfernen, SVG ablehnen. |
 | O11 | Webmentions: Sender und Microformats | Implementierung des Senders offen. `h-entry`/`h-card`, `rel=me`, IndieAuth wurden nicht besprochen, sind für sinnvolle Anzeige aber nötig. |
 | O12 | Senden aus Memos | Der Nutzer sagte "ja auf jeden Fall" für Senden und "auch für Memo-Seiten" für Mentions. Senden aus Memos ist eine Annahme. |
-| O13 | Tag-Regeln | Groß-/Kleinschreibung, Umlaute, verschachtelte Memos-Tags (`#a/b`), zählen Inline-`#tags` in Artikeln? Gemeinsamer Namensraum für Posts und Memos ist ein Vorschlag. |
+| O13 | Tag-Regeln | **[E] teilweise entschieden:** Tags durchgehend kleingeschrieben, auch in der Anzeige. Offen: verschachtelte Memos-Tags (`#a/b`), zählen Inline-`#tags` in Artikeln? Gemeinsamer Namensraum für Posts und Memos ist ein Vorschlag. |
 | O14 | Memo-Datum | `createTime` oder `displayTime`? Titel-Ableitung bei Memos, die nur ein Bild enthalten. |
 | O20 | Feed-Darstellung von Posts, RSS-Umfang | Länge des Auszugs, Anzahl RSS-Einträge, Volltext oder Auszug. |
-| O21 | Zurückgezogene Artikel | `publish` entfernt: Seite 404 oder 410, Löschbenachrichtigung per Webmention? |
-| O26 | Doppelte Slugs | Beide ablehnen (Build-Fehler für diese Dateien) oder die ältere behalten? |
+| O21 | Zurückgezogene Artikel | **[E] entschieden:** einfach weg (404), kein gespeicherter Zustand. Offen: ob beim Zurückziehen eine Löschbenachrichtigung per Webmention gesendet wird (W15). |
+| O26 | Doppelte Slugs | **[E] entschieden:** Suffix `-2`, `-3`, der ältere Artikel behält den Slug. Risiko: Kommt ein Artikel mit älterem Datum und gleichem Slug dazu, tauschen die URLs. Ein `slug:` im Frontmatter vermeidet das. |
 
 # C. Betrieb, Recht, Gestaltung
 
