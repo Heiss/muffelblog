@@ -254,8 +254,9 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     bricht ab, die letzte gute Version bleibt online.
   * [x] Test mit Beispielantworten in der Form der API (Fixtures und
     nachgebildete Antworten).
-  * [ ] Ein Contract-Test gegen eine echte Memos-Testinstanz liegt vor. Er ist
-    geschrieben und als CI-Job eingebunden, der Lauf steht aus.
+  * [x] Ein Contract-Test gegen eine echte Memos-Testinstanz liegt vor
+    (`neosmemo/memos:26.11.0` als Service-Container, 5 Tests, in der CI grün).
+    Er zeigte, dass Memos zu `#a/b` auch den Tag `a` liefert.
 * Befunde bei der Umsetzung:
   * Memos hat seit 26.10.0 die Pfade `/api/...` statt `/api/v1/...`.
   * Anonymer Zugriff klappt nur, wenn der Zugriffsmodus der Instanz auf PUBLIC

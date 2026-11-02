@@ -35,7 +35,10 @@ sources:
   gespiegelt, alles andere nicht (siehe [Medien](/content/media.md)).
 * **[E]** Alt-Text von Bildern: Dateiname ohne Endung.
 * **[E]** Verschachtelte Tags (`#a/b`) bleiben ein Tag `a/b`, die URL-Form ist
-  `a-b`.
+  `a-b`. Belegt durch den Contract-Test: Memos liefert für `#a/b` die Tags `a`
+  und `a/b`. Der Eltern-Tag `a` wird deshalb verworfen, wenn derselbe Eintrag
+  einen Tag `a/...` hat. Schrieb man `#a` und `#a/b` ausdrücklich beide,
+  geht `a` damit verloren.
 
 # API (aus dem Quellcode belegt, Version 26.11.0)
 
@@ -74,13 +77,14 @@ sources:
 * Beschreibung: Klartext des Memos, höchstens 160 Zeichen, an einer Wortgrenze
   gekürzt. Ohne Text bleibt sie leer.
 * Tags kommen aus dem Feld `tags` der API und werden wie alle Tags
-  kleingeschrieben.
+  kleingeschrieben. Der Contract-Test läuft gegen eine echte Instanz 26.11.0
+  (Image `neosmemo/memos:26.11.0`, Anmeldung, Zugriffsmodus PUBLIC, Memos und
+  Anhang per REST angelegt) und bestätigt Pfade, Feldnamen, den anonymen Abruf
+  und die Dateiroute (siehe [Teststrategie](/ops/testing.md)).
 * Die Seitenreihenfolge ist neueste zuerst.
 
 # Offene Punkte
 
-* **[U]** Ob `tags` verschachtelte Tags wie `a/b` unverändert liefert, prüft der
-  Contract-Test gegen eine echte Instanz (siehe [Teststrategie](/ops/testing.md)).
 * **[U]** Stabilität der `uid` über die Zeit ist nicht belegt.
 * **[U]** Das Verhalten von Anhängen, die extern gespeichert sind (`externalLink`),
   auf der Dateiroute ist nicht belegt. Der Builder lädt sie nicht.

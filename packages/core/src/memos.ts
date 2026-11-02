@@ -450,11 +450,16 @@ export async function buildMemoEntries(
       continue;
     }
 
-    const tags: string[] = [];
+    const alleTags: string[] = [];
     for (const tag of roh.tags ?? []) {
       const normal = normalizeTag(tag);
-      if (normal !== null && !tags.includes(normal)) tags.push(normal);
+      if (normal !== null && !alleTags.includes(normal)) alleTags.push(normal);
     }
+    // Memos erzeugt für "#a/b" selbst den Eltern-Tag "a". Ein verschachtelter Tag
+    // bleibt hier ein einzelner Tag, also fallen solche Eltern-Tags weg.
+    const tags = alleTags.filter(
+      (tag) => !alleTags.some((anderer) => anderer.startsWith(`${tag}/`)),
+    );
 
     const gerendert = await renderMarkdown(roh.content, {
       articlePath: `memos/${uid}.md`,

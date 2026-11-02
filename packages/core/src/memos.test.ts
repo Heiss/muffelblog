@@ -369,6 +369,22 @@ describe('buildMemoEntries: Grunddaten', () => {
     expect(memos[0]?.tags).toEqual(['tooling', 'a/b', 'über größe']);
   });
 
+  it('entfernt Eltern-Tags, die Memos aus verschachtelten Tags selbst erzeugt', async () => {
+    // Memos liefert für "#a/b" die Tags "a" und "a/b" (belegt durch den Contract-Test).
+    const quelle = fakeQuelle([
+      rohMemo('v', { tags: ['contract', 'a', 'a/b'] }),
+      rohMemo('w', { tags: ['x', 'x/y', 'x/y/z', 'andere'] }),
+      rohMemo('u', { tags: ['a'] }),
+      rohMemo('t', { tags: ['ab', 'a/b'] }),
+    ]);
+    const { memos } = await buildMemoEntries(quelle, new Map());
+    const tags = Object.fromEntries(memos.map((m) => [m.uid, m.tags]));
+    expect(tags.v).toEqual(['contract', 'a/b']);
+    expect(tags.w).toEqual(['x/y/z', 'andere']);
+    expect(tags.u).toEqual(['a']);
+    expect(tags.t).toEqual(['ab', 'a/b']);
+  });
+
   it('sortiert nach Datum, neueste zuerst', async () => {
     const quelle = fakeQuelle([
       rohMemo('alt', { createTime: '2026-01-01T10:00:00Z' }),

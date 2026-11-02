@@ -66,9 +66,10 @@ dagegen spricht.
 
 * Memos: Aus dem Quellcode belegt (Version 26.11.0): öffentliche Liste und Anhänge
   sind ohne Token abrufbar, wenn der Zugriffsmodus PUBLIC ist, Pfade und Felder
-  stehen in [Memos](/content/memos-source.md). Noch ungeprüft gegen eine echte
-  Instanz: Tags verschachtelter Memos, Stabilität der `uid`, externe Anhänge.
-  Der Contract-Test in der CI soll das klären.
+  stehen in [Memos](/content/memos-source.md). Durch den Contract-Test gegen
+  eine echte Instanz 26.11.0 belegt: Pfade, Feldnamen, anonymer Abruf und
+  Dateiroute, außerdem dass Memos zu `#a/b` auch den Tag `a` liefert. Noch
+  ungeprüft: Stabilität der `uid`, externe Anhänge.
 * Nextcloud: Public-Share-WebDAV mit Token und Passwort, Verhalten von
   `getlastmodified`, Konfliktdatei-Muster.
 * webmention.io: öffentliche API ohne Token, Parameter `since`, Verhalten bei

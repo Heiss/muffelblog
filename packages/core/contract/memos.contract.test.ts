@@ -180,7 +180,10 @@ describe.skipIf(!BASIS)('Memos (echte Instanz)', () => {
     expect(memo?.visibility).toBe('PUBLIC');
     expect(memo?.content).toContain('öffentliches Memo');
     expect(memo?.tags).toContain('contract');
-    console.info(`Von Memos gelieferte Tags: ${JSON.stringify(memo?.tags)}`);
+    // Belegt: Memos liefert für "#a/b" auch den Eltern-Tag "a".
+    expect(memo?.tags).toEqual(
+      expect.arrayContaining(['contract', 'a', 'a/b']),
+    );
     expect(memo?.attachments?.map((a) => a.filename)).toEqual(['IMG_CI.png']);
     expect(memo?.attachments?.[0]?.name).toBe(anhangName);
   });
@@ -206,6 +209,7 @@ describe.skipIf(!BASIS)('Memos (echte Instanz)', () => {
     expect(warnings).toEqual([]);
     expect(memos).toHaveLength(1);
     const html = memos[0]?.html ?? '';
+    expect(memos[0]?.tags).toEqual(['contract', 'a/b']);
     expect(html).toContain('öffentliches Memo');
     expect(html).toMatch(/<img [^>]*alt="IMG CI"/);
     expect(html).not.toContain(String(BASIS));
