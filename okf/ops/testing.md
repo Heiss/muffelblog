@@ -1,10 +1,10 @@
 ---
 type: Policy
 title: Teststrategie
-description: Verbindliche Testarten, Takt der Contract-Tests und die Rolle der Tests für den Auto-Merge.
-tags: [tests, tdd, e2e, contract-tests, ci]
+description: Verbindliche Testarten, Werkzeuge, Takt der Suite und die Rolle der Tests für Pflicht-Checks und Auto-Merge.
+tags: [tests, tdd, e2e, contract-tests, ci, vitest, playwright]
 status: draft
-generated: { by: claude-code/web, at: 2026-11-02T14:10:00Z }
+generated: { by: claude-code/web, at: 2026-11-02T14:40:00Z }
 ---
 
 # Entscheidungen
@@ -12,19 +12,29 @@ generated: { by: claude-code/web, at: 2026-11-02T14:10:00Z }
 * **[E]** TDD mit Mocks für die Logik: Der Test entsteht zuerst. Das betrifft
   Loader, Frontmatter-Schema, Slugs, Bereinigung, Scheduler und Mention-Sync.
   Externe Dienste werden durch Mocks und Beispielantworten ersetzt.
-* **[E]** E2E-Tests im Browser gegen die gebaute Seite.
+* **[E]** Unit-Tests mit Vitest.
+* **[E]** E2E-Tests mit Playwright, im Browser gegen die gebaute Seite.
 * **[E]** Contract-Tests gegen echte Testinstanzen (Nextcloud, Memos,
-  Remark42, Mail-Sink als Container) laufen **nur vor jedem Tag**, nicht
-  nachts und nicht bei jedem Pull Request.
+  Remark42, Mail-Sink als Container).
+* **[E]** Die gesamte Suite läuft bei jedem Pull Request, damit kein Fehler in
+  `main` gelangt. Das ersetzt die frühere Fassung "Contract-Tests nur vor
+  jedem Tag".
+* **[E]** Die Testinstanzen sind gepinnt. Renovate aktualisiert ihre
+  Versionen per Pull Request, und diese Pull Requests durchlaufen die volle
+  Suite.
+* **[E]** Der Tag-Workflow führt die Suite erneut aus, bevor Images
+  veröffentlicht werden.
+* **[E]** Reine Dokumentations-PRs (nur `okf/` oder README) werden über einen
+  Gate-Job mit Pfaderkennung behandelt: Der Pflicht-Check läuft immer, startet
+  die schweren Tests aber nur, wenn Code betroffen ist.
 * **[E]** Visuelle Regression gehört nicht dazu.
-* **[E]** Hybride Strategie aus O29 bleibt: Mocks in der CI, echte
-  Testinstanzen in einer lokalen Compose-Umgebung.
 
-# Zweck gegenüber dem Auto-Merge
+# Zweck
 
-Der Nutzer will mit TDD und E2E-Tests das Risiko der automatisch gemergten
-Patch-Updates senken (siehe [Branching und Release](/ops/branching-release.md)).
-Das gelingt nur für das, was die Tests abdecken.
+Der Nutzer will mit TDD, E2E- und Contract-Tests das Risiko von Fehlern in
+`main` und der automatisch gemergten Patch-Updates senken (siehe
+[Branching und Release](/ops/branching-release.md)). "Fehlerfrei" bedeutet
+dabei nur: frei von dem, was die Tests sehen.
 
 # Umfang der E2E-Tests (Vorschlag)
 
@@ -46,7 +56,7 @@ Das gelingt nur für das, was die Tests abdecken.
 * **[V]** Remark42: `find`, Kommentar als `admin` posten, Kommentar löschen,
   Login-Mail im Mail-Sink.
 * **[V]** webmention.io lässt sich nicht lokal betreiben. Dort bleibt es bei
-  Mocks, ob zusätzlich ein Lesetest gegen den echten Dienst läuft, ist offen
+  Mocks. Ob zusätzlich ein Lesetest gegen den echten Dienst läuft, ist offen
   (O32).
 
 # Regeln
@@ -54,24 +64,34 @@ Das gelingt nur für das, was die Tests abdecken.
 * **[V]** Kein Test wird übersprungen oder deaktiviert, damit die CI grün wird.
 * **[V]** Tests prüfen Verhalten, nicht Markup. HTML-Snapshots des
   Astro-Outputs sind nicht die einzige Prüfung.
-* **[V]** Der Tag-Workflow führt vorher die Contract-Tests aus. Sind sie rot,
-  werden keine Images veröffentlicht.
-* **[V]** Pflicht-Checks für `main`: Lint, Typprüfung, Unit-Tests, E2E-Tests und
-  Build. Die Contract-Tests sind kein Pflicht-Check.
+* **[V]** Pflicht-Checks für `main`: der Gate-Job, der je nach Änderung Lint,
+  Typprüfung, Unit-, E2E- und Contract-Tests und den Build auslöst. Der Gate-
+  Job ist immer vorhanden, damit GitHub den Merge nicht wegen eines
+  fehlenden Checks blockiert.
+* **[V]** Der Tag-Workflow baut Images erst nach grüner Suite.
 
 # Risiken
 
-* **Brüche fallen spät auf:** Ein Remark42-Patch, den Renovate automatisch
-  nach `main` merged, wird erst vor dem nächsten Tag gegen eine echte Instanz
-  geprüft.
-* **Betrieb gegen Testinstanzen:** Im Betrieb läuft der Builder gegen die
-  echten, jeweils neuesten Memos- und Nextcloud-Instanzen. Eine Änderung
-  dort ändert die API unabhängig von unserem Code. Die Contract-Tests vor dem
-  Tag zeigen das nur, wenn die Testinstanzen dieselbe Version haben. Sonst
-  bleibt als Schutz die Regel "bei Abruffehler bleibt die letzte gute Version
-  online" und das Alerting (O18).
+* **Laufzeit und Kosten:** Nextcloud, Memos, Remark42 und der Mail-Sink starten
+  in jedem Lauf, auch bei jedem Renovate-PR. Ob das Repo öffentlich ist,
+  entscheidet über die verfügbaren CI-Minuten (O34).
+* **Wackelige Tests blockieren alles:** Eine instabile Contract- oder E2E-
+  Prüfung hält jeden PR und jedes automatische Update auf. Überspringen ist
+  verboten, die Tests müssen also stabil sein.
+* **Gepinnte Testinstanzen gegen "neueste" im Betrieb:** Im Betrieb laufen die
+  echten Memos- und Nextcloud-Instanzen in der jeweils neuesten Version.
+  Eine API-Änderung dort fällt in der Suite erst auf, wenn Renovate die
+  gepinnte Testversion anhebt (frühestens nach 3 Tagen Wartezeit). In der
+  Zwischenzeit schützen nur die Regel "bei Abruffehler bleibt die letzte
+  gute Version online" und das Alerting (O18). Ein Nachtlauf gegen `latest`
+  wurde bewusst nicht gewählt.
 * **Mocks driften:** Sie bleiben grün, wenn sich die echte API ändert. Das
-  sehen nur die Contract-Tests, in unserem Takt also erst vor dem Tag.
-* **Nicht abgedeckt:** Datenbankmigrationen von Remark42 und die Zustellung
-  der Login-Mails über Migadu prüft kein Mock und kein Browser-Test.
-* **Flaky E2E:** Wackelige Tests halten alle Renovate-PRs auf.
+  sehen nur die Contract-Tests.
+* **Nicht abgedeckt:** Datenbankmigrationen von Remark42 beim Wechsel einer
+  Version und die Zustellung der Login-Mails über Migadu prüft weder ein Mock
+  noch ein Browser-Test. Der Mail-Sink prüft den Versand, nicht die
+  Zustellbarkeit.
+* **Semantische Konflikte:** Zwei gleichzeitig grüne PRs können zusammen
+  einen Fehler in `main` erzeugen. Die Branch-Protection-Option "Branch muss
+  aktuell sein" verhindert das, kostet bei vielen Renovate-PRs aber
+  Neuaufsetzen (O33).

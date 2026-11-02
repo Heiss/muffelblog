@@ -28,7 +28,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 
 * [ ] Alle Akzeptanzkriterien des Pakets sind erfüllt und im Pull Request
   abgehakt.
-* [ ] CI ist grün: Lint, Typprüfung, Tests, `astro build`.
+* [ ] CI ist grün: Lint, Typprüfung, Unit-, E2E- und Contract-Tests,
+  `astro build`. Die volle Suite läuft bei jedem Pull Request.
 * [ ] Die Tests entstanden zuerst (TDD) und decken die neue Logik ab, auch
   Fehlerfälle (kaputte Eingaben, Ausfall einer Quelle). Pakete mit
   Oberfläche haben E2E-Tests. Siehe [Teststrategie](/ops/testing.md).
@@ -82,21 +83,27 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     gegen `main` (O28).
   * **[E]** pnpm auf Node LTS.
   * **[E]** CI mit GitHub Actions.
-  * **[E]** Teststrategie hybrid (O29): Mocks und Beispielantworten in CI,
-    lokale Compose-Umgebung mit echten Testinstanzen (Nextcloud, Memos,
-    Remark42, Mailpit) für Integrationsprüfungen.
-* Noch offen: genaue Node-Version, Test-Framework, E2E-Werkzeug (O32),
-  Lint-Werkzeuge,
-  Registry für Docker-Images (O10), Gruppierung und Zeitplan von Renovate
-  (O31), Entwicklungsablauf (O23).
+  * **[E]** Teststrategie (O29): TDD mit Mocks, E2E-Tests und Contract-Tests
+    gegen echte, gepinnte Testinstanzen (Nextcloud, Memos, Remark42,
+    Mailpit). Vitest für Unit-Tests, Playwright für E2E-Tests.
+  * **[E]** Die volle Suite läuft bei jedem PR, ein Gate-Job mit
+    Pfaderkennung behandelt reine Doku-PRs (siehe
+    [Teststrategie](/ops/testing.md)).
   * **[E]** Renovate (GitHub-App) mit Auto-Merge für Patch-Updates und 3 Tagen
     Wartezeit, siehe [Branching und Release](/ops/branching-release.md).
+* Noch offen: genaue Node-Version, Lint-Werkzeuge, Registry für Docker-Images
+  (O10), Gruppierung und Zeitplan von Renovate (O31), Entwicklungsablauf
+  (O23), Branch-Protection-Option "Branch muss aktuell sein" (O33),
+  Sichtbarkeit des Repos (O34).
 * Umfang: Astro-Projekt mit TypeScript, Lint, Format, Test-Runner, CI,
   Dockerfile für den Build, Beispielinhalt (Fixtures).
 * DoD:
   * [ ] `docker build` erzeugt das Astro-Projekt reproduzierbar.
-  * [ ] CI führt Lint, Typprüfung, Unit-Tests, E2E-Tests und Build aus, und
-    je Testart läuft ein Beispieltest.
+  * [ ] CI führt Lint, Typprüfung, Unit-Tests (Vitest), E2E-Tests
+    (Playwright) und Build aus, und je Testart läuft ein Beispieltest.
+  * [ ] Ein Gate-Job mit Pfaderkennung ist der Pflicht-Check für `main`. Ein
+    reiner Doku-PR wird durch ihn ohne die schweren Tests grün, ein Code-PR
+    startet die volle Suite.
   * [ ] README mit Start- und Testanleitung.
   * [ ] Die CI ist als Pflicht-Check für `main` eingetragen.
   * [ ] `renovate.json` ist konfiguriert (Patch-Auto-Merge, 3 Tage Wartezeit),
@@ -333,8 +340,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] Laufbuch für Störungen (Quelle nicht erreichbar, Build kaputt,
     Domainwechsel).
   * [ ] Alle `[U]`-Punkte im Bundle sind geprüft oder bewusst akzeptiert.
-  * [ ] Der Tag-Workflow führt die Contract-Tests aus und veröffentlicht bei
-    Rot keine Images.
+  * [ ] Der Tag-Workflow führt die volle Suite erneut aus und veröffentlicht
+    bei Rot keine Images.
 
 ## W17 - Go-live
 

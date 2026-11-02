@@ -31,9 +31,9 @@ generated: { by: claude-code/web, at: 2026-11-02T13:40:00Z }
 # Vorschläge
 
 * **[V]** Branch-Namen: `feature/wNN-<kurzname>`.
-* **[V]** Der Tag-Workflow führt vor dem Bauen der Images die Contract-Tests
-  aus (siehe [Teststrategie](/ops/testing.md)). Sind sie rot, erscheinen keine
-  Images.
+* **[E]** Der Tag-Workflow führt vor dem Bauen der Images die volle Suite
+  erneut aus (siehe [Teststrategie](/ops/testing.md)). Ist sie rot, erscheinen
+  keine Images.
 * **[V]** Schutz für `main`: Pull Request Pflicht, CI muss grün sein. Keine
   Pflicht-Reviews, weil sie sich bei gleichem Konto von Autor und Prüfer
   selbst blockieren würden (ungeprüft). Die Abnahme ist der Merge durch den

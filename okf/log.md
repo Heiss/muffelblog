@@ -1,7 +1,8 @@
 # Update Log
 
 ## 2026-11-02
-* **Creation**: [Teststrategie](/ops/testing.md): TDD mit Mocks, E2E-Tests, Contract-Tests nur vor jedem Tag; Roadmap-Kriterien ergänzt.
+* **Update**: [Teststrategie](/ops/testing.md): Vitest und Playwright, volle Suite bei jedem PR und erneut beim Tag, gepinnte Testinstanzen, Gate-Job für Doku-PRs.
+* **Creation**: [Teststrategie](/ops/testing.md) angelegt (TDD mit Mocks, E2E-Tests, Contract-Tests); Roadmap-Kriterien ergänzt.
 * **Update**: Renovate (GitHub-App) mit Auto-Merge für Patch-Updates, 3 Tage Wartezeit, ohne Ausnahmen entschieden (O31); W00 um Renovate-Kriterien ergänzt.
 * **Update**: Release-Tags von `vX.Y.Z` auf CalVer `YY.M.MICRO` ohne `v` umgestellt (SemVer-gültig), Auto-Updater-Regeln ergänzt, siehe [Branching und Release](/ops/branching-release.md).
 * **Creation**: [Branching und Release](/ops/branching-release.md) angelegt: GitHub Flow, Squash-Merge, Tags `vX.Y.Z`, Images nur auf Tag.
