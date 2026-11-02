@@ -1,0 +1,54 @@
+---
+import { SITE_LANG, loadArticles, pageTitle } from '@muffelblog/core';
+import type { Article } from '@muffelblog/core';
+import { contentDir } from '../../lib/content';
+
+export async function getStaticPaths() {
+  const { articles, warnings } = await loadArticles(contentDir());
+  for (const warnung of warnings) console.warn(`[inhalt] ${warnung}`);
+  return articles.map((article) => ({
+    params: { slug: article.slug },
+    props: { article },
+  }));
+}
+
+interface Props {
+  article: Article;
+}
+
+const { article } = Astro.props;
+const datum = new Intl.DateTimeFormat('de-DE', {
+  dateStyle: 'long',
+  timeZone: 'Europe/Berlin',
+}).format(article.date);
+---
+
+<!doctype html>
+<html lang={SITE_LANG}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle(article.title)}</title>
+    {article.description && (
+      <meta name="description" content={article.description} />
+    )}
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>{article.title}</h1>
+        <p>
+          <time datetime={article.date.toISOString()}>{datum}</time>
+        </p>
+        {article.tags.length > 0 && (
+          <ul aria-label="Tags">
+            {article.tags.map((tag) => (
+              <li>{tag}</li>
+            ))}
+          </ul>
+        )}
+        <!-- Der Text wird erst in W03 gerendert und bereinigt. -->
+      </article>
+    </main>
+  </body>
+</html>
