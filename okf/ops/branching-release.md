@@ -44,6 +44,11 @@ generated: { by: claude-code/web, at: 2026-11-02T13:40:00Z }
   nacheinander gemergt: Der Vorgänger kommt zuerst nach `main`, dann wird der
   Folge-Branch davon aufgesetzt. Das vermeidet Konflikte durch Squash-Merge
   bei gestapelten Branches.
+* **[V]** Wird ein PR vorübergehend auf einen Feature-Branch gestapelt, prüft
+  die CI ihn trotzdem: Der Workflow läuft für Pull Requests gegen jeden
+  Branch, nicht nur gegen `main`. Nach dem Merge des Vorgängers wird der Basis-
+  Branch auf `main` umgestellt. Eine Änderung des Basis-Branchs löst die CI
+  nicht erneut aus, dafür braucht es einen Push.
 
 # Default-Branch
 
