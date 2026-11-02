@@ -33,6 +33,11 @@ export interface RenderOptions {
   articlePath: string;
   /** Löst ein Bild (Pfad relativ zum Inhaltsordner) auf und liefert die Varianten. */
   resolveImage: (rootRelativePath: string) => Promise<ImageResolveResult>;
+  /**
+   * `allowlist` (Standard): Remote-Bilder und Einbettungen der Freigabelisten bleiben.
+   * `none`: Fremdinhalte werden immer entfernt, zum Beispiel bei Memos.
+   */
+  remoteContent?: 'allowlist' | 'none';
 }
 
 export interface RenderResult {
@@ -162,7 +167,10 @@ function rehypeInhalt(options: RenderOptions, warnings: string[]) {
 
     for (const [knoten, eltern] of frames) {
       const quelle = String(knoten.properties?.src ?? '');
-      const treffer = quelle === '' ? null : matchEmbed(quelle);
+      const treffer =
+        quelle === '' || options.remoteContent === 'none'
+          ? null
+          : matchEmbed(quelle);
       if (treffer === null) {
         warnings.push(
           `${options.articlePath}: Einbettung ${quelle === '' ? 'ohne Adresse' : hostVon(quelle)} ist nicht freigegeben und wird entfernt`,
@@ -211,7 +219,7 @@ function rehypeInhalt(options: RenderOptions, warnings: string[]) {
       }
 
       if (/^[a-z][a-z0-9+.-]*:/i.test(quelle) || quelle.startsWith('//')) {
-        if (!isAllowedImageUrl(quelle)) {
+        if (options.remoteContent === 'none' || !isAllowedImageUrl(quelle)) {
           warnings.push(
             `${options.articlePath}: Bild von ${hostVon(quelle)} ist nicht freigegeben und wird entfernt`,
           );

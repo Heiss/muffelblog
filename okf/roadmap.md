@@ -228,19 +228,41 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 
 * Branch: `feature/w04-memos`
 * Abhängig von: W03
-* Entscheidungen: Memo-Datum (O14), Nicht-Bild-Anhänge (O6), Versionspflege
-  (O8), Prüfung der Memos-API (O25).
+* Entschieden (siehe [Memos](/content/memos-source.md)):
+  * **[E]** Titel immer aus Datum und Uhrzeit.
+  * **[E]** PDF, Audio und Video werden mit Größenlimit gespiegelt (O6).
+  * **[E]** Alt-Text aus dem Dateinamen, `#a/b` bleibt ein Tag.
+  * Memo-Datum (O14): `createTime`, weil die API kein `displayTime` hat.
 * Umfang: Content-Loader für öffentliche Memos, Seiten `/m/<uid>/`, Titel und
-  Description aus dem Text, Inline-Tags, Bilder spiegeln mit EXIF-Entfernung,
-  Typ-, Größen- und SSRF-Schutz (siehe [Memos](/content/memos-source.md)).
-* DoD:
-  * [ ] Nur `PUBLIC`-Memos erscheinen.
-  * [ ] Kein Link und keine Ressource zeigt auf die Memos-Instanz.
-  * [ ] Gespiegelte Bilder haben keine EXIF-/GPS-Daten.
-  * [ ] SVG, zu große Dateien und interne IP-Ziele werden abgelehnt.
-  * [ ] Ein Abruffehler lässt vorhandene Memos nicht verschwinden.
-  * [ ] Test mit einer Beispielantwort der API-Version.
-  * [ ] Ein Contract-Test gegen eine echte Memos-Testinstanz liegt vor.
+  Description, Tags, Anhänge spiegeln (Bilder als WebP ohne EXIF; PDF, Audio,
+  Video mit Dateikennung und Größenlimit), strenger Rendermodus (siehe
+  [Memos](/content/memos-source.md), [Medien](/content/media.md)).
+* DoD (Stand Umsetzung): lokal mit Node 26 belegt. Der Contract-Test läuft nur
+  in der CI, weil hier kein Docker-Daemon verfügbar ist.
+  * [x] Nur `PUBLIC`-Memos erscheinen (zusätzlich zum Filter der API wird die
+    Sichtbarkeit jedes Eintrags geprüft; Tests mit PRIVATE und PROTECTED).
+  * [x] Kein Link und keine Ressource zeigt auf die Memos-Instanz (Unit-Tests,
+    E2E und Contract-Test prüfen das HTML).
+  * [x] Gespiegelte Bilder haben keine EXIF-/GPS-Daten (gleiche Verarbeitung wie
+    bei Artikelbildern).
+  * [x] SVG, HTML, zu große Dateien und Dateien, deren Inhalt nicht zur Endung
+    passt, werden abgewiesen; Weiterleitungen werden nicht befolgt.
+  * [ ] Interne IP-Ziele werden abgelehnt. Die Basisadresse ist Konfiguration
+    des Betreibers und Weiterleitungen sind gesperrt; ein allgemeiner
+    SSRF-Schutz für fremde URLs folgt mit den Mention-Avataren (W14).
+  * [x] Ein Abruffehler lässt vorhandene Memos nicht verschwinden: Der Build
+    bricht ab, die letzte gute Version bleibt online.
+  * [x] Test mit Beispielantworten in der Form der API (Fixtures und
+    nachgebildete Antworten).
+  * [ ] Ein Contract-Test gegen eine echte Memos-Testinstanz liegt vor. Er ist
+    geschrieben und als CI-Job eingebunden, der Lauf steht aus.
+* Befunde bei der Umsetzung:
+  * Memos hat seit 26.10.0 die Pfade `/api/...` statt `/api/v1/...`.
+  * Anonymer Zugriff klappt nur, wenn der Zugriffsmodus der Instanz auf PUBLIC
+    steht.
+  * Der Build verlangt jetzt ausdrücklich `CONTENT_DIR` und `MEMOS_URL`.
+    Beispieldaten gibt es nur mit `MUFFEL_FIXTURES=1`; der Befehl `pnpm build`
+    im Repo-Root setzt das, der echte Build ist `pnpm build:site`.
 
 ## W05 - Statischer Feed, Blöcke, Tags, Sitemap
 

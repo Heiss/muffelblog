@@ -57,6 +57,10 @@ der Compose-Datei.
 
 **[E]** Die Absenderadresse für Login-Mails kommt per Umgebungsvariable.
 
+**[E]** Der Build der Seite liest `CONTENT_DIR` (synchronisierter Nextcloud-
+Ordner) und `MEMOS_URL` (Adresse der Memos-Instanz, intern erreichbar). Fehlt eine
+der beiden, bricht der Build ab.
+
 **[V]** Secrets nicht ins Repo, sondern als Docker-Secrets oder `.env` auf dem
 Server:
 

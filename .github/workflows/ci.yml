@@ -95,12 +95,34 @@ jobs:
       - name: Ergebnis prüfen
         run: test -s out/index.html
 
+  contract:
+    name: Contract-Tests
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    services:
+      memos:
+        image: neosmemo/memos:26.11.0
+        ports:
+          - 5230:5230
+    env:
+      MEMOS_CONTRACT_URL: http://localhost:5230
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:contract
+
   # Pflicht-Check für main. Läuft immer, damit GitHub den Merge nicht wegen
   # eines nie gemeldeten Checks blockiert, und entscheidet selbst, ob
-  # übersprungene Jobs in Ordnung sind. Contract-Tests kommen mit W02 dazu.
+  # übersprungene Jobs in Ordnung sind.
   gate:
     name: CI Gate
-    needs: [changes, check, e2e, docker]
+    needs: [changes, check, e2e, docker, contract]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -111,13 +133,14 @@ jobs:
           CHECK: ${{ needs.check.result }}
           E2E: ${{ needs.e2e.result }}
           DOCKER: ${{ needs.docker.result }}
+          CONTRACT: ${{ needs.contract.result }}
         run: |
           if [ "$CHANGES" != "success" ]; then
             echo "Änderungserkennung fehlgeschlagen: $CHANGES"
             exit 1
           fi
           if [ "$CODE" = "true" ]; then
-            for result in "$CHECK" "$E2E" "$DOCKER"; do
+            for result in "$CHECK" "$E2E" "$DOCKER" "$CONTRACT"; do
               if [ "$result" != "success" ]; then
                 echo "Ein Pflicht-Job ist nicht erfolgreich: $result"
                 exit 1

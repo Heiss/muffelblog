@@ -55,6 +55,11 @@ dabei nur: frei von dem, was die Tests sehen.
 * **[V]** Nextcloud: Public Share per WebDAV mit Token und Passwort,
   Konfliktkopien, Verhalten von `getlastmodified`.
 * **[V]** Memos: öffentliche Liste, Anhänge, Felder, die der Loader liest.
+  Umgesetzt als `packages/core/contract/memos.contract.test.ts` und CI-Job
+  "Contract-Tests" mit einer Memos-Instanz als Service-Container
+  (`neosmemo/memos:26.11.0`, das Tag ist aus der Release-Konfiguration
+  abgeleitet, nicht geprüft). Der Test legt den ersten Benutzer an, stellt den
+  Zugriffsmodus auf PUBLIC und erzeugt Memos mit Anhang.
 * **[V]** Remark42: `find`, Kommentar als `admin` posten, Kommentar löschen,
   Login-Mail im Mail-Sink.
 * **[V]** webmention.io lässt sich nicht lokal betreiben. Dort bleibt es bei

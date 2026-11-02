@@ -1,3 +1,4 @@
+import { contentTypeForMediaFile } from '@muffelblog/core';
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { getContent } from '../../lib/articles';
 
@@ -8,9 +9,12 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const GET: APIRoute = async ({ params }) => {
   const { media } = await getContent();
-  const data = media.get(params.file ?? '');
-  if (!data) return new Response(null, { status: 404 });
+  const file = params.file ?? '';
+  const data = media.get(file);
+  const contentType = contentTypeForMediaFile(file);
+  // Nur bekannte Typen ausliefern, damit nie ein aktiver Inhaltstyp entsteht.
+  if (!data || contentType === null) return new Response(null, { status: 404 });
   return new Response(new Uint8Array(data), {
-    headers: { 'Content-Type': 'image/webp' },
+    headers: { 'Content-Type': contentType },
   });
 };

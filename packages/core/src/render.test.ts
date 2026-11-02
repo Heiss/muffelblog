@@ -299,3 +299,33 @@ describe('Lokale Bilder', () => {
     expect(warnings[0]).toContain('SVG');
   });
 });
+
+describe('Strenger Modus (remoteContent: none), zum Beispiel für Memos', () => {
+  const streng = { ...optionen(), remoteContent: 'none' as const };
+
+  it('entfernt auch Bilder freigegebener Hosts', async () => {
+    const { html, warnings } = await renderMarkdown(
+      '![Alt](https://upload.wikimedia.org/a/b.jpg)\n',
+      streng,
+    );
+    expect(html).not.toContain('<img');
+    expect(html).not.toContain('wikimedia');
+    expect(html).toContain('Alt');
+    expect(warnings.length).toBe(1);
+  });
+
+  it('entfernt auch erlaubte Einbettungen', async () => {
+    const { html, warnings } = await renderMarkdown(
+      '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"></iframe>\n',
+      streng,
+    );
+    expect(html).not.toContain('data-embed-src');
+    expect(html).not.toContain('<iframe');
+    expect(warnings.length).toBe(1);
+  });
+
+  it('behält lokale Aufrufe über den Auflöser bei, wenn er sie liefert', async () => {
+    const { html } = await renderMarkdown('![Foto](bild.png)\n', streng);
+    expect(html).toContain('src="/media/abc-960.webp"');
+  });
+});
