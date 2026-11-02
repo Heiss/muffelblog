@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-02
+* **Update**: W00 umgesetzt (Branch `feature/w00-fundament`): Workspace, Astro-Gerüst, Vitest, Playwright, ESLint, Prettier, Dockerfile, CI mit Gate-Job, Renovate-Konfiguration; Befunde und offene Abnahmepunkte in der [Roadmap](/roadmap.md).
 * **Update**: [Teststrategie](/ops/testing.md): Vitest und Playwright, volle Suite bei jedem PR und erneut beim Tag, gepinnte Testinstanzen, Gate-Job für Doku-PRs.
 * **Creation**: [Teststrategie](/ops/testing.md) angelegt (TDD mit Mocks, E2E-Tests, Contract-Tests); Roadmap-Kriterien ergänzt.
 * **Update**: Renovate (GitHub-App) mit Auto-Merge für Patch-Updates, 3 Tage Wartezeit, ohne Ausnahmen entschieden (O31); W00 um Renovate-Kriterien ergänzt.

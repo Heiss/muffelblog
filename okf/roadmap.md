@@ -81,7 +81,11 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * **[E]** Basis-Branch ist `main`, angelegt aus dem Stand von Spezifikation
     und Roadmap. Feature-Branches zweigen von `main` ab, Pull Requests gehen
     gegen `main` (O28).
-  * **[E]** pnpm auf Node LTS.
+  * **[E]** pnpm auf Node 26 (LTS-Linie "Lithium" laut Release-Liste vom
+    2026-11-02).
+  * **[E]** pnpm-Workspace mit `apps/site` (Astro), `apps/builder` (Scheduler,
+    Sync, Mention-Jobs) und `packages/core` (gemeinsamer Code).
+  * **[E]** ESLint und Prettier.
   * **[E]** CI mit GitHub Actions.
   * **[E]** Teststrategie (O29): TDD mit Mocks, E2E-Tests und Contract-Tests
     gegen echte, gepinnte Testinstanzen (Nextcloud, Memos, Remark42,
@@ -91,23 +95,41 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     [Teststrategie](/ops/testing.md)).
   * **[E]** Renovate (GitHub-App) mit Auto-Merge für Patch-Updates und 3 Tagen
     Wartezeit, siehe [Branching und Release](/ops/branching-release.md).
-* Noch offen: genaue Node-Version, Lint-Werkzeuge, Registry für Docker-Images
-  (O10), Gruppierung und Zeitplan von Renovate (O31), Entwicklungsablauf
-  (O23), Branch-Protection-Option "Branch muss aktuell sein" (O33),
-  Sichtbarkeit des Repos (O34).
+* Noch offen: Registry für Docker-Images (O10), Gruppierung und Zeitplan von
+  Renovate (O31), Entwicklungsablauf (O23), Branch-Protection-Option "Branch
+  muss aktuell sein" (O33), Sichtbarkeit des Repos (O34).
 * Umfang: Astro-Projekt mit TypeScript, Lint, Format, Test-Runner, CI,
   Dockerfile für den Build, Beispielinhalt (Fixtures).
-* DoD:
-  * [ ] `docker build` erzeugt das Astro-Projekt reproduzierbar.
+* Befunde bei der Umsetzung:
+  * Astro 7 verlangt Node 22.23.4 oder neuer. `astro check` unterstützt
+    TypeScript 7 nicht, deshalb ist TypeScript auf `~6.0.3` festgelegt.
+  * `astro preview` startet ohne Terminal im Hintergrund und eignet sich nicht
+    als Playwright-`webServer`. Die E2E-Tests servieren `dist/` mit `sirv-cli`.
+  * Corepack gehört seit Node 25 nicht mehr zur Auslieferung. Das Dockerfile
+    installiert pnpm über npm in der Version aus `package.json`.
+  * Dass das Image `node:26-slim` existiert, ist nicht geprüft (Docker Hub war
+    aus der Entwicklungsumgebung nicht erreichbar, es gab keinen Docker-Daemon).
+  * Die Versionen der Actions (`actions/checkout@v4` und weitere) sind aus dem
+    Gedächtnis gesetzt und nicht gegen die neuesten Releases geprüft. Renovate
+    hebt sie an.
+* DoD (Stand Umsetzung):
+  * [ ] `docker build` erzeugt das Astro-Projekt reproduzierbar. Die Schritte
+    des Dockerfiles (`pnpm fetch`, Offline-Install, Build) liefen in einer
+    sauberen Kopie erfolgreich. Der echte Image-Build läuft erst im CI-Job.
   * [ ] CI führt Lint, Typprüfung, Unit-Tests (Vitest), E2E-Tests
-    (Playwright) und Build aus, und je Testart läuft ein Beispieltest.
-  * [ ] Ein Gate-Job mit Pfaderkennung ist der Pflicht-Check für `main`. Ein
+    (Playwright) und Build aus, und je Testart läuft ein Beispieltest. Lokal
+    mit Node 26 grün (5 Unit-Tests, 2 E2E-Tests), der Lauf in GitHub Actions
+    steht aus.
+  * [ ] Ein Gate-Job mit Pfaderkennung ist der Pflicht-Check für `main`. Die
+    Pfadlogik ist lokal getestet, der Lauf auf GitHub steht aus. Ein
     reiner Doku-PR wird durch ihn ohne die schweren Tests grün, ein Code-PR
     startet die volle Suite.
-  * [ ] README mit Start- und Testanleitung.
-  * [ ] Die CI ist als Pflicht-Check für `main` eingetragen.
+  * [x] README mit Start- und Testanleitung.
+  * [ ] Die CI ist als Pflicht-Check für `main` eingetragen (Einstellung durch
+    den Nutzer, Name des Checks: "CI Gate").
   * [ ] `renovate.json` ist konfiguriert (Patch-Auto-Merge, 3 Tage Wartezeit),
     die Renovate-App ist installiert, und ein Test-Update läuft durch die CI.
+    Die Datei liegt vor, die App-Installation steht aus.
 
 ## W01 - Artikel-Modell und Frontmatter
 
