@@ -39,7 +39,9 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   braucht Remark42. Das ist meine Auslegung von "standalone", unbestätigt
   (O27).
 * **[E]** Der Browser lädt zur Laufzeit nichts von Drittdiensten. Das Remark42-
-  Widget wird vom eigenen Server geladen.
+  Widget wird vom eigenen Server geladen. Ausnahme sind Artikel: Sie dürfen
+  Remote-Bilder und Einbettungen aus Freigabelisten enthalten, Einbettungen
+  erst nach Klick (siehe [Medien](/content/media.md)).
 * **[V]** Schlägt ein Abruf beim Build fehl, wird der Build abgebrochen und die
   letzte gute Version bleibt online. Ein leerer Abruf darf nie als "alles
   gelöscht" gelten.

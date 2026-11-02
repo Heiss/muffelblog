@@ -28,6 +28,7 @@ okf_version: "0.2"
 * [Feed](/frontend/feed.md) - Kombinierter Feed, Split-View, Filter, Endless Scroll
 * [Live-Update](/frontend/live-update.md) - build.json und Banner "N neue Einträge"
 * [URLs und SEO](/frontend/urls-seo.md) - URL-Schema, Canonical, Sitemap
+* [Themes](/frontend/themes.md) - Farbschemata im Stil bekannter Editor-Themes
 
 # Funktionen
 

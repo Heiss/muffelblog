@@ -1,0 +1,82 @@
+---
+import { SITE_LANG, pageTitle } from '@muffelblog/core';
+import { getContent } from '../../lib/articles';
+import type { RenderedArticle } from '../../lib/articles';
+
+export async function getStaticPaths() {
+  const { articles } = await getContent();
+  return articles.map((article) => ({
+    params: { slug: article.slug },
+    props: { article },
+  }));
+}
+
+interface Props {
+  article: RenderedArticle;
+}
+
+const { article } = Astro.props;
+const datum = new Intl.DateTimeFormat('de-DE', {
+  dateStyle: 'long',
+  timeZone: 'Europe/Berlin',
+}).format(article.date);
+---
+
+<!doctype html>
+<html lang={SITE_LANG}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle(article.title)}</title>
+    {article.description && (
+      <meta name="description" content={article.description} />
+    )}
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>{article.title}</h1>
+        <p>
+          <time datetime={article.date.toISOString()}>{datum}</time>
+        </p>
+        {article.tags.length > 0 && (
+          <ul aria-label="Tags">
+            {article.tags.map((tag) => (
+              <li>{tag}</li>
+            ))}
+          </ul>
+        )}
+        <div class="inhalt" set:html={article.html} />
+      </article>
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  .inhalt img {
+    max-width: 100%;
+    height: auto;
+  }
+  .inhalt table {
+    border-collapse: collapse;
+  }
+  .inhalt th,
+  .inhalt td {
+    border: 1px solid currentColor;
+    padding: 0.25rem 0.5rem;
+  }
+  .inhalt .embed {
+    border: 1px dashed currentColor;
+    padding: 1rem;
+  }
+  .embed-frame {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+  }
+</style>
+
+<script>
+  import '../../scripts/embed';
+</script>

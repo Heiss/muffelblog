@@ -12,7 +12,8 @@
   "dependencies": {
     "@astrojs/check": "^0.9.12",
     "@muffelblog/core": "workspace:*",
-    "astro": "^7.4.5"
+    "astro": "^7.4.5",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@emnapi/core": "^1.11.3",

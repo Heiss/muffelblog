@@ -44,7 +44,9 @@ Diese Spezifikation trennt Bestätigtes von Vorschlägen:
 
 * Keine Wikilinks, kein Digital-Garden-Graph.
 * Keine Kommentare auf der Memos-Instanz selbst.
-* Keine Laufzeit-Requests des Browsers an Drittdienste.
+* Keine Laufzeit-Requests des Browsers an Drittdienste. Ausnahme: Artikel mit
+  Remote-Bildern und Einbettungen aus Freigabelisten (siehe
+  [Medien](/content/media.md)).
 
 # Gliederung
 

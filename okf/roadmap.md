@@ -136,20 +136,37 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 
 * Branch: `feature/w01-frontmatter`
 * Abhängig von: W00
-* Entscheidungen: Datumsformat und Zeitzone (O2), doppelte Slugs (O26),
-  Tag-Regeln (O13), Zurückziehen von Artikeln (O21).
+* Entschieden (siehe [Frontmatter](/content/frontmatter.md)):
+  * **[E]** Datum (O2): Reines Datum gilt als 12:00 Uhr Berlin, Uhrzeit ohne
+    Zone als Berliner Ortszeit.
+  * **[E]** Doppelte Slugs (O26): Suffix `-2`, `-3`, der ältere Artikel behält
+    den Slug.
+  * **[E]** Tags (O13): durchgehend kleingeschrieben, auch in der Anzeige.
+  * **[E]** Zurückgezogene Artikel (O21): einfach weg, 404.
 * Umfang: Loader für einen lokalen Markdown-Ordner, Schema nach
   [Frontmatter](/content/frontmatter.md), Slug mit Transliteration, Fallbacks,
-  Ausschlüsse (siehe [Nextcloud-Quelle](/content/nextcloud-source.md)).
-* DoD:
-  * [ ] `publish` zählt nur als Boolean `true`.
-  * [ ] Fehlendes oder ungültiges `date` fällt auf das Änderungsdatum zurück
+  Ausschlüsse (siehe [Nextcloud-Quelle](/content/nextcloud-source.md)). Der
+  Artikeltext wird noch nicht gerendert, das folgt in W03. Die Seiten
+  `/p/<slug>/` zeigen Titel, Datum und Tags.
+* DoD (Stand Umsetzung, lokal mit Node 26 belegt; der CI-Lauf steht aus):
+  * [x] `publish` zählt nur als Boolean `true` (Unit-Tests mit `"true"`,
+    `yes`, `1`, `false`, `null`).
+  * [x] Fehlendes oder ungültiges `date` fällt auf das Änderungsdatum zurück
     und warnt.
-  * [ ] Eine kaputte Datei überspringt nur sich selbst und wird geloggt.
-  * [ ] Doppelte Slugs verhalten sich nach der gewählten Regel.
-  * [ ] Fixtures decken ab: gültig, ungültiges YAML, Konfliktkopie,
-    Wikilink, Umlaut-Slug.
-  * [ ] Der Build erzeugt `/p/<slug>/` für die Fixtures.
+  * [x] Eine kaputte Datei überspringt nur sich selbst und wird geloggt.
+  * [x] Doppelte Slugs verhalten sich nach der gewählten Regel.
+  * [x] Fixtures decken ab: gültig, ungültiges YAML, Konfliktkopie,
+    Wikilink, Umlaut-Slug (außerdem Unterordner, verstecktes Verzeichnis,
+    Uhrzeit mit und ohne Zone, doppelter Slug).
+  * [x] Der Build erzeugt `/p/<slug>/` für die Fixtures. 14 E2E-Tests prüfen
+    die erzeugten Seiten und, dass nicht veröffentlichte Artikel 404
+    liefern (der Test schlägt nachweislich fehl, wenn ein Artikel zu Unrecht
+    veröffentlicht wird).
+* Befunde bei der Umsetzung:
+  * Chromium meldet eine leere 404-Antwort bei `page.goto` als Netzwerkfehler.
+    Die Prüfung auf 404 nutzt deshalb direkte HTTP-Anfragen.
+  * Die Prüfung auf Wikilinks ignoriert Code-Blöcke und Inline-Code.
+  * Die Muster für Nextcloud-Konfliktkopien sind weiter ungeprüft (O25, W02).
 
 ## W02 - Nextcloud-Sync
 
@@ -171,15 +188,41 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 
 * Branch: `feature/w03-rendering`
 * Abhängig von: W01
-* Entscheidungen: Fremdinhalte (O5), Bildgrößen und Formate (O7).
+* Entschieden (siehe [Medien](/content/media.md)):
+  * **[E]** Fremdinhalte in Artikeln (O5) sind erlaubt, aber nur aus
+    Freigabelisten: Bilder von `upload.wikimedia.org`,
+    `raw.githubusercontent.com` und `user-images.githubusercontent.com`,
+    Einbettungen nur von `www.youtube-nocookie.com` und erst nach Klick.
+    Memos bleiben strikt (Bilder gespiegelt).
+  * **[E]** Lokale Artikelbilder (O7): verkleinern, WebP, EXIF entfernen.
 * Umfang: Markdown-Pipeline mit HTML-Allowlist, relative Bilder aus dem
   Nextcloud-Ordner, Erkennung von Wikilink-Syntax (siehe
   [Bereinigung](/security/sanitization.md), [Medien](/content/media.md)).
-* DoD:
-  * [ ] Rohes HTML und Skripte im Markdown erscheinen nicht in der Ausgabe.
-  * [ ] Nur referenzierte Bilder gelangen in den Build.
-  * [ ] Fehlende Bilder warnen, brechen aber nicht ab.
-  * [ ] Wikilinks führen zu einer Warnung statt kaputtem HTML.
+* DoD (Stand Umsetzung, lokal mit Node 26 belegt; der CI-Lauf steht aus):
+  * [x] Rohes HTML und Skripte im Markdown erscheinen nicht in der Ausgabe.
+    Unit-Tests prüfen Skripte, Ereignis-Attribute, gefährliche Verweise,
+    Formulare, Stile, SVG, Objekte und Kommentare. Schaltet man die
+    Bereinigung ab, schlagen fünf Tests fehl. Ein E2E-Test prüft im Browser,
+    dass nichts ausgeführt und nichts von Fremdservern geladen wird.
+  * [x] Nur referenzierte Bilder gelangen in den Build. Der Auflöser erzeugt
+    nur Dateien für Bilder, die ein veröffentlichter Artikel verwendet.
+  * [x] Fehlende Bilder warnen, brechen aber nicht ab (Platzhalter mit
+    Alt-Text).
+  * [x] Wikilinks führen zu einer Warnung statt kaputtem HTML (aus W01).
+  * [x] Remote-Bilder und Einbettungen nur von freigegebenen Hosts, ähnlich
+    aussehende Hosts, `http`, Zugangsdaten und fremde Ports werden abgewiesen.
+  * [x] Lokale Bilder: WebP in mehreren Breiten bis 1920 px, EXIF und
+    Farbprofil entfernt, Ausrichtung angewandt, Pfade außerhalb des Ordners,
+    versteckte Ordner, SVG und Verweise (Symlinks) aus dem Ordner heraus
+    werden abgewiesen.
+* Befunde bei der Umsetzung:
+  * `astro build` bindet `sharp` als nativen Baustein nicht ein. Das Paket
+    muss deshalb auch in `apps/site` als Abhängigkeit stehen.
+  * Das Rendern von Markdown mit `<script>`, `<style>` und Verwandtem entfernt
+    deren Inhalt mit (`strip` in der Bereinigung), sonst bliebe der Code als
+    Text stehen.
+  * Obsidian schreibt Pfade je nach Einstellung relativ zur Notiz oder ab der
+    Ordnerwurzel. Der Auflöser probiert beide Wege.
 
 ## W04 - Memos-Quelle und Bild-Spiegelung
 
@@ -220,7 +263,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 * Abhängig von: W05
 * Entscheidungen: Gestaltung (O16), Verhalten bei Tastatur und Screenreader.
 * Umfang: Endless Scroll, Filter im Unified-Modus, Split-View ab 1024px mit
-  verschiebbarem Balken und ausblendbaren Seiten, Zustand im Browser.
+  verschiebbarem Balken und ausblendbaren Seiten, Zustand im Browser,
+  umschaltbare Themes (siehe [Themes](/frontend/themes.md)).
 * DoD:
   * [ ] Endless Scroll lädt Blöcke nach, ohne Doppelungen.
   * [ ] Ab 1024px lassen sich Modus, Verhältnis und ausgeblendete Seite
@@ -229,6 +273,10 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] Ohne `localStorage` gelten Standardwerte.
   * [ ] Der Balken ist per Tastatur bedienbar.
   * [ ] Zurück-Navigation stellt die Scrollposition wieder her.
+  * [ ] Alle zehn Themes sind wählbar, Solarized Light ist der Standard.
+  * [ ] Jedes Theme besteht den Kontrasttest (Text mindestens 4,5:1), und das
+    gewählte Theme bleibt nach dem Neuladen erhalten, ohne dass beim Laden
+    kurz das falsche Theme aufblitzt.
 
 ## W07 - build.json und Banner
 
