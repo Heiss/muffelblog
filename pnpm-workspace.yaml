@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Postinstall-Skripte nur für ausdrücklich erlaubte Pakete.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp

@@ -81,7 +81,11 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * **[E]** Basis-Branch ist `main`, angelegt aus dem Stand von Spezifikation
     und Roadmap. Feature-Branches zweigen von `main` ab, Pull Requests gehen
     gegen `main` (O28).
-  * **[E]** pnpm auf Node LTS.
+  * **[E]** pnpm auf Node 26 (LTS-Linie "Lithium" laut Release-Liste vom
+    2026-11-02).
+  * **[E]** pnpm-Workspace mit `apps/site` (Astro), `apps/builder` (Scheduler,
+    Sync, Mention-Jobs) und `packages/core` (gemeinsamer Code).
+  * **[E]** ESLint und Prettier.
   * **[E]** CI mit GitHub Actions.
   * **[E]** Teststrategie (O29): TDD mit Mocks, E2E-Tests und Contract-Tests
     gegen echte, gepinnte Testinstanzen (Nextcloud, Memos, Remark42,
@@ -91,23 +95,42 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     [Teststrategie](/ops/testing.md)).
   * **[E]** Renovate (GitHub-App) mit Auto-Merge für Patch-Updates und 3 Tagen
     Wartezeit, siehe [Branching und Release](/ops/branching-release.md).
-* Noch offen: genaue Node-Version, Lint-Werkzeuge, Registry für Docker-Images
-  (O10), Gruppierung und Zeitplan von Renovate (O31), Entwicklungsablauf
-  (O23), Branch-Protection-Option "Branch muss aktuell sein" (O33),
-  Sichtbarkeit des Repos (O34).
+* Noch offen: Registry für Docker-Images (O10), Gruppierung und Zeitplan von
+  Renovate (O31), Entwicklungsablauf (O23), Branch-Protection-Option "Branch
+  muss aktuell sein" (O33), Sichtbarkeit des Repos (O34).
 * Umfang: Astro-Projekt mit TypeScript, Lint, Format, Test-Runner, CI,
   Dockerfile für den Build, Beispielinhalt (Fixtures).
-* DoD:
-  * [ ] `docker build` erzeugt das Astro-Projekt reproduzierbar.
-  * [ ] CI führt Lint, Typprüfung, Unit-Tests (Vitest), E2E-Tests
-    (Playwright) und Build aus, und je Testart läuft ein Beispieltest.
-  * [ ] Ein Gate-Job mit Pfaderkennung ist der Pflicht-Check für `main`. Ein
-    reiner Doku-PR wird durch ihn ohne die schweren Tests grün, ein Code-PR
-    startet die volle Suite.
-  * [ ] README mit Start- und Testanleitung.
-  * [ ] Die CI ist als Pflicht-Check für `main` eingetragen.
+* Befunde bei der Umsetzung:
+  * Astro 7 verlangt Node 22.23.4 oder neuer. `astro check` unterstützt
+    TypeScript 7 nicht, deshalb ist TypeScript auf `~6.0.3` festgelegt.
+  * `astro preview` startet ohne Terminal im Hintergrund und eignet sich nicht
+    als Playwright-`webServer`. Die E2E-Tests servieren `dist/` mit `sirv-cli`.
+  * Corepack gehört seit Node 25 nicht mehr zur Auslieferung. Das Dockerfile
+    installiert pnpm über npm in der Version aus `package.json`.
+  * Das Image `node:26-slim` existiert und das Dockerfile baut: Der Job
+    "Docker-Build der Seite" lief im ersten CI-Lauf auf GitHub erfolgreich
+    (Lauf 41472880143). In der Entwicklungsumgebung war das wegen fehlendem
+    Docker-Daemon nicht prüfbar.
+  * Die Actions (`actions/checkout@v4`, `pnpm/action-setup@v4`,
+    `actions/setup-node@v4`) laufen. Ob neuere Hauptversionen existieren, ist
+    nicht geprüft. Renovate hebt sie an.
+* DoD (Stand Umsetzung):
+  * [x] `docker build` erzeugt das Astro-Projekt reproduzierbar. Der Job
+    "Docker-Build der Seite" lief auf GitHub erfolgreich und prüft, dass
+    `out/index.html` existiert.
+  * [x] CI führt Lint, Typprüfung, Unit-Tests (Vitest), E2E-Tests
+    (Playwright) und Build aus, und je Testart läuft ein Beispieltest. Der
+    erste Lauf auf GitHub war grün (5 Unit-Tests, 2 E2E-Tests).
+  * [ ] Ein Gate-Job mit Pfaderkennung ist der Pflicht-Check für `main`. Der
+    Code-Pfad (volle Suite) lief auf GitHub grün. Der Doku-Pfad (schwere Jobs
+    übersprungen, Gate grün) ist bisher nur lokal getestet, der Nachweis auf
+    GitHub steht aus.
+  * [x] README mit Start- und Testanleitung.
+  * [ ] Die CI ist als Pflicht-Check für `main` eingetragen (Einstellung durch
+    den Nutzer, Name des Checks: "CI Gate").
   * [ ] `renovate.json` ist konfiguriert (Patch-Auto-Merge, 3 Tage Wartezeit),
     die Renovate-App ist installiert, und ein Test-Update läuft durch die CI.
+    Die Datei liegt vor, die App-Installation steht aus.
 
 ## W01 - Artikel-Modell und Frontmatter
 

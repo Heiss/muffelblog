@@ -1,0 +1,8 @@
+.git
+**/node_modules
+**/dist
+**/.astro
+**/playwright-report
+**/test-results
+okf
+.github
