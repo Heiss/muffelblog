@@ -46,3 +46,4 @@ okf_version: "0.2"
 # Betrieb
 
 * [Build-Pipeline](/ops/pipeline.md) - Scheduler, Änderungserkennung, atomarer Austausch, Fehlerregeln
+* [Branching und Release](/ops/branching-release.md) - GitHub Flow, Squash-Merge, Tags vX.Y.Z

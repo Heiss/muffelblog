@@ -14,9 +14,10 @@ generated: { by: claude-code/web, at: 2026-11-02T13:10:00Z }
   werden 3 bis 5 Optionen vorgelegt. Die Optionen kommen beim Start des
   jeweiligen Arbeitspakets, nicht vorab.
 * **[E]** Live geht das System, wenn alle Arbeitspakete fertig sind (W17).
-* **[V]** Ein Arbeitspaket entspricht einem Feature-Branch
-  `feature/wNN-<kurzname>` und einem Pull Request. Basis-Branch und
-  Namenskonvention sind offen (O28).
+* **[E]** Ein Arbeitspaket entspricht einem Feature-Branch und einem Pull
+  Request gegen `main`. Branching-Modell, Merge-Art und Release stehen in
+  [Branching und Release](/ops/branching-release.md). Die Namenskonvention
+  `feature/wNN-<kurzname>` ist ein Vorschlag **[V]**.
 * **[V]** Die Reihenfolge folgt einem "Walking Skeleton": erst ein
   durchgängiger dünner Pfad (Artikel aus Dateien bis zur Seite), dann
   Memos, dann Client, dann Betrieb und Community.
