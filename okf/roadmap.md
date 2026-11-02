@@ -85,7 +85,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     lokale Compose-Umgebung mit echten Testinstanzen (Nextcloud, Memos,
     Remark42, Mailpit) für Integrationsprüfungen.
 * Noch offen: genaue Node-Version, Test-Framework, Lint-Werkzeuge,
-  Registry für Docker-Images (O10), Entwicklungsablauf (O23).
+  Registry für Docker-Images (O10), Auto-Updater-Werkzeug (O31),
+  Entwicklungsablauf (O23).
 * Umfang: Astro-Projekt mit TypeScript, Lint, Format, Test-Runner, CI,
   Dockerfile für den Build, Beispielinhalt (Fixtures).
 * DoD:

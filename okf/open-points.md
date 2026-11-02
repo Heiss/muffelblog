@@ -7,7 +7,7 @@ status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-Die IDs (O1 bis O30) werden in den anderen Konzepten referenziert. Jeder Punkt
+Die IDs (O1 bis O31) werden in den anderen Konzepten referenziert. Jeder Punkt
 nennt, was der Spezifikation heute dazu eingetragen ist ("Eintrag") und was
 dagegen spricht.
 
@@ -21,10 +21,11 @@ dagegen spricht.
 | O5 | Fremdinhalte in Markdown | Remote-Bilder, iframes und Einbettungen in Artikeln: spiegeln, blockieren oder erlauben? Die Regel "nichts von anderen Diensten laden" und die CSP sprechen für spiegeln oder blockieren. | [Medien](/content/media.md) |
 | O8 | Versionen: "immer neueste" gegen Pinning | Der Nutzer will für Memos und Nextcloud die neueste Version. Eine API-Änderung kann den Build brechen. Remark42, Caddy und Node sollten gepinnt sein. Widerspruch bleibt für Memos. | [Docker](/architecture/docker.md) |
 | O9 | Reverse-Proxy, Domain, Remark42-Host | Läuft schon ein Proxy auf dem Server (Traefik, nginx)? Caddy ist nur ein Vorschlag. Remark42 braucht die öffentliche URL, vermutlich Subdomain. Betrieb unter Pfad ungeprüft. Domain steht aus. | [Docker](/architecture/docker.md) |
-| O10 | Image-Build | Teilentscheidung **[E]**: CI läuft mit GitHub Actions. Ebenfalls **[E]**: Images werden nur auf einem CalVer-Tag `YY.0M.MICRO` (z. B. `26.11.0`) in CI gebaut und in eine Registry gelegt (siehe [Branching und Release](/ops/branching-release.md)). Offen: welche Registry (Vorschlag GHCR). | [Docker](/architecture/docker.md) |
+| O10 | Image-Build | Teilentscheidung **[E]**: CI läuft mit GitHub Actions. Ebenfalls **[E]**: Images werden nur auf einem CalVer-Tag `YY.M.MICRO` (z. B. `26.11.0`) in CI gebaut und in eine Registry gelegt (siehe [Branching und Release](/ops/branching-release.md)). Offen: welche Registry (Vorschlag GHCR). | [Docker](/architecture/docker.md) |
 | O28 | Basis-Branch und Branch-Konvention | **[E] entschieden:** Basis ist `main`, aus dem Stand von Spezifikation und Roadmap angelegt. Konvention `feature/wNN-<kurzname>` ist ein Vorschlag **[V]**. | [Roadmap](/roadmap.md) |
 | O29 | Teststrategie für externe Dienste | **[E] entschieden:** hybrid, Mocks in CI, echte Testinstanzen lokal per Compose. Betrifft W02, W04, W13, W14. | [Roadmap](/roadmap.md) |
 | O30 | Default-Branch von GitHub | Aktuell der Sitzungs-Branch `ccr-01da7c96-avlx2l`, gewünscht `main`. Umstellung nur durch den Nutzer in den Repo-Einstellungen. | [Branching und Release](/ops/branching-release.md) |
+| O31 | Auto-Updater | **[E]** Pull Requests für Fremd-Images und pnpm-Abhängigkeiten, kein automatisches Ziehen auf dem Server. Offen: Renovate oder Dependabot, Regeln für automatisches Zusammenführen (insbesondere Patch-Updates), Verhalten bei Jahreswechsel-Tags. | [Branching und Release](/ops/branching-release.md) |
 | O27 | Auslegung von "standalone" | Der Nutzer schrieb "Der Dienst sollte standalone funktionieren, wenn etwas ausgeliefert wird". Eintrag: ausgelieferte Seite läuft ohne Nextcloud, Memos und Fremddienste. Das wurde nicht ausdrücklich bestätigt. | [System](/architecture/system.md) |
 
 # B. Inhalt und Verhalten

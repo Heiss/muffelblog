@@ -15,11 +15,13 @@ generated: { by: claude-code/web, at: 2026-11-02T13:40:00Z }
     Request gegen `main`, danach wird der Branch gelöscht.
 * **[E]** Pull Requests werden per Squash-Merge gemergt: ein Commit pro
   Arbeitspaket, lineare Historie.
-* **[E]** Release des Codes: Git-Tag in CalVer `YY.0M.MICRO`, zum Beispiel
-  `26.11.0`, ohne `v`-Präfix. `YY` ist das Jahr zweistellig, `0M` der Monat
-  zweistellig, `MICRO` zählt die Releases innerhalb des Monats ab 0. Es gibt
-  keine API, die jemand einbindet, deshalb zählt das Alter der Version, nicht
-  die Kompatibilität. Git-Tag und Image-Tag sind identisch.
+* **[E]** Release des Codes: Git-Tag in CalVer `YY.M.MICRO`, zum Beispiel
+  `26.11.0` oder `26.1.0`, ohne `v`-Präfix. `YY` ist das Jahr zweistellig, `M`
+  der Monat ohne führende Null, `MICRO` zählt die Releases innerhalb des
+  Monats ab 0. Die Form ist gültiges SemVer (Major = Jahr, Minor = Monat,
+  Patch = Zähler), damit Auto-Updater die Tags verstehen. Es gibt keine API,
+  die jemand einbindet, deshalb zählt das Alter der Version, nicht die
+  Kompatibilität. Git-Tag und Image-Tag sind identisch.
 * **[E]** Die CI baut und veröffentlicht die Docker-Images nur auf einem Tag,
   nicht bei jedem Merge. Der Server zieht bewusst eine Version, ein Rollback
   ist der vorherige Tag.
@@ -61,8 +63,25 @@ Sitzungs-Branch löschen.
   es gibt keine Konsumenten. Ein Bruch, der Betrieb oder Konfiguration
   betrifft (zum Beispiel ein neues Secret), gehört deshalb in die
   Release-Notiz des Tags.
-* Die führende Null im Monat (`26.01.0`) ist kein gültiges SemVer. Werkzeuge,
-  die SemVer erwarten, würden den Tag ablehnen. Hier nutzt nichts SemVer. Die
-  Schreibweise sortiert dafür alphabetisch richtig (`26.09` vor `26.10`).
+* Ohne führende Null im Monat sortiert eine reine Textsortierung falsch
+  (`26.10.0` vor `26.9.0`). SemVer-fähige Werkzeuge vergleichen numerisch und
+  sind nicht betroffen.
+* Updater leiten Major, Minor und Patch aus der Position ab. Der Jahreswechsel
+  (`26.12.0` zu `27.1.0`) gilt als "Major", ein Monatswechsel als "Minor". Für
+  unsere eigenen Images ist das heute ohne Folgen, weil keine Updater sie
+  verwenden (siehe unten).
 * Mit höchstens einem Release pro Monat bleibt `MICRO` bei 0. Mehrere Releases
   im selben Monat zählen hoch. Der Zähler beginnt jeden Monat neu bei 0.
+
+# Auto-Updater
+
+* **[E]** Ein Auto-Updater öffnet Pull Requests für Fremd-Images (Remark42,
+  Caddy, Node-Basisimages) und für Abhängigkeiten des Astro-Projekts (pnpm).
+  Du nimmst sie ab.
+* **[E]** Kein automatisches Ziehen und Starten von Images auf dem Server. Der
+  Server zieht bewusst eine Version.
+* **[E]** Für eigene Images gibt es keinen Updater, denn es gibt kein
+  getrenntes Deploy-Repo. Falls das später kommt, ist die SemVer-gültige
+  Form der Tags bereits passend.
+* Welches Werkzeug (Renovate oder Dependabot) und welche Regeln für
+  automatisches Zusammenführen gelten, ist offen (O31).
