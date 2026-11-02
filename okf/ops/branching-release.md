@@ -83,9 +83,18 @@ Sitzungs-Branch löschen.
 * **[E]** Patch-Updates werden automatisch gemergt, ohne Ausnahmen (auch
   Remark42, Astro und Pagefind). Minor- und Major-Updates nimmst du als Pull
   Request ab.
+* **[E]** Auto-Merge bleibt auf Patch-Updates beschränkt. Das wurde nach den
+  ersten Renovate-PRs bestätigt: Ein Minor-Update (pnpm `10.28.0` zu
+  `10.34.9`) und Major-Updates werden nicht automatisch gemergt, Renovate
+  vermerkt in diesen PRs "Automerge: Disabled by config". Eine Erweiterung auf
+  Minor-Updates wurde wegen der noch dünnen Test-Suite verschoben.
+* **[E]** TypeScript bleibt bei Version 6 (`allowedVersions: "<7"` in
+  `renovate.json`), weil `astro check` TypeScript 7 nicht unterstützt. Die
+  Regel entstand aus dem Renovate-PR #7.
 * **[E]** Renovate wartet nach Erscheinen einer Version 3 Tage, bevor es
-  merged (bei Renovate heißt die Einstellung `minimumReleaseAge`, aus dem
-  Gedächtnis, ungeprüft).
+  merged (`minimumReleaseAge`). Dass die Option existiert, bestätigt der
+  Validator `renovate-config-validator --strict`. Ob die Wartezeit mit
+  GitHubs Auto-Merge tatsächlich eingehalten wird, ist ungeprüft.
 * **[E]** Renovate läuft als GitHub-App. Die Installation für das Repo nimmst
   du in GitHub vor.
 * **[V]** Auto-Merge gilt nur, wenn die CI als Pflicht-Check in der Branch-

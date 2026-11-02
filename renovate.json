@@ -6,6 +6,11 @@
     {
       "matchUpdateTypes": ["patch"],
       "automerge": true
+    },
+    {
+      "description": "astro check unterstützt TypeScript 7 nicht, deshalb bleibt TypeScript bei Version 6.",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
     }
   ]
 }

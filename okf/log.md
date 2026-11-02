@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-02
+* **Update**: Renovate läuft. Auto-Merge bleibt auf Patch beschränkt, TypeScript wird bei Version 6 gehalten (O31), siehe [Branching und Release](/ops/branching-release.md).
 * **Update**: Erster CI-Lauf von W00 auf GitHub grün (Docker-Build, Lint/Typen/Unit/Build, E2E, Gate); Roadmap-Kriterien nachgezogen.
 * **Update**: W00 umgesetzt (Branch `feature/w00-fundament`): Workspace, Astro-Gerüst, Vitest, Playwright, ESLint, Prettier, Dockerfile, CI mit Gate-Job, Renovate-Konfiguration; Befunde und offene Abnahmepunkte in der [Roadmap](/roadmap.md).
 * **Update**: [Teststrategie](/ops/testing.md): Vitest und Playwright, volle Suite bei jedem PR und erneut beim Tag, gepinnte Testinstanzen, Gate-Job für Doku-PRs.
