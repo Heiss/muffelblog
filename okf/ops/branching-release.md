@@ -15,9 +15,14 @@ generated: { by: claude-code/web, at: 2026-11-02T13:40:00Z }
     Request gegen `main`, danach wird der Branch gelöscht.
 * **[E]** Pull Requests werden per Squash-Merge gemergt: ein Commit pro
   Arbeitspaket, lineare Historie.
-* **[E]** Release des Codes: Git-Tag `vX.Y.Z`. Die CI baut und veröffentlicht
-  die Docker-Images nur auf einem Tag, nicht bei jedem Merge. Der Server
-  zieht bewusst eine Version, ein Rollback ist der vorherige Tag.
+* **[E]** Release des Codes: Git-Tag in CalVer `YY.0M.MICRO`, zum Beispiel
+  `26.11.0`, ohne `v`-Präfix. `YY` ist das Jahr zweistellig, `0M` der Monat
+  zweistellig, `MICRO` zählt die Releases innerhalb des Monats ab 0. Es gibt
+  keine API, die jemand einbindet, deshalb zählt das Alter der Version, nicht
+  die Kompatibilität. Git-Tag und Image-Tag sind identisch.
+* **[E]** Die CI baut und veröffentlicht die Docker-Images nur auf einem Tag,
+  nicht bei jedem Merge. Der Server zieht bewusst eine Version, ein Rollback
+  ist der vorherige Tag.
 * **[E]** Inhalte (Artikel, Memos, Mentions) brauchen kein Release. Der
   Scheduler baut sie automatisch (siehe [Pipeline](/ops/pipeline.md)).
 
@@ -28,7 +33,6 @@ generated: { by: claude-code/web, at: 2026-11-02T13:40:00Z }
   Pflicht-Reviews, weil sie sich bei gleichem Konto von Autor und Prüfer
   selbst blockieren würden (ungeprüft). Die Abnahme ist der Merge durch den
   Nutzer.
-* **[V]** Der Go-live ist der Tag `v1.0.0`.
 * **[V]** Remark42-Upgrades laufen als eigenes Release mit einem Backup
   davor, weil Datenbankänderungen nicht ohne Backup rückgängig zu machen sind.
 * **[V]** Abhängige Arbeitspakete (zum Beispiel W01, W03, W04) werden
@@ -53,5 +57,12 @@ Sitzungs-Branch löschen.
   noch nicht gewählt.
 * Parallele Pull Requests ändern alle `okf/log.md` und `okf/open-points.md`.
   Konflikte dort sind wahrscheinlich und werden per Rebase gelöst.
-* SemVer hat ohne API-Konsumenten wenig Aussagekraft. Ein Wechsel auf CalVer
-  wäre gleichwertig und ist als Option erfasst.
+* CalVer sagt nichts über Brüche aus. Für diesen Dienst ist das gewollt, denn
+  es gibt keine Konsumenten. Ein Bruch, der Betrieb oder Konfiguration
+  betrifft (zum Beispiel ein neues Secret), gehört deshalb in die
+  Release-Notiz des Tags.
+* Die führende Null im Monat (`26.01.0`) ist kein gültiges SemVer. Werkzeuge,
+  die SemVer erwarten, würden den Tag ablehnen. Hier nutzt nichts SemVer. Die
+  Schreibweise sortiert dafür alphabetisch richtig (`26.09` vor `26.10`).
+* Mit höchstens einem Release pro Monat bleibt `MICRO` bei 0. Mehrere Releases
+  im selben Monat zählen hoch. Der Zähler beginnt jeden Monat neu bei 0.
