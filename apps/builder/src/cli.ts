@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { cp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { readSettings } from '@muffelblog/core';
 import { runRelease } from './release.ts';
@@ -22,12 +23,24 @@ function run(
   });
 }
 
-/** Astro build into the release folder, then the search index over the result. */
+/**
+ * Astro build and search index in a staging folder inside the container, then
+ * a copy into the release folder. Astro moves files with `rename`, which fails
+ * across file systems (EXDEV) when the release folder is on a Docker volume.
+ */
 export function siteSteps(repoRoot: string): Step[] {
   const site = path.join(repoRoot, 'apps', 'site');
+  const staging = path.join(site, '.release-staging');
   return [
-    (dir) => run('pnpm', ['exec', 'astro', 'build', '--outDir', dir], site),
-    (dir) => run('pnpm', ['exec', 'pagefind', '--site', dir], site),
+    async () => {
+      await rm(staging, { recursive: true, force: true });
+      await run('pnpm', ['exec', 'astro', 'build', '--outDir', staging], site);
+      await run('pnpm', ['exec', 'pagefind', '--site', staging], site);
+    },
+    async (dir) => {
+      await cp(staging, dir, { recursive: true });
+      await rm(staging, { recursive: true, force: true });
+    },
   ];
 }
 
