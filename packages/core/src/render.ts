@@ -10,6 +10,7 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
+import { common, createLowlight } from 'lowlight';
 import { visit } from 'unist-util-visit';
 import { isAllowedImageUrl, matchEmbed } from './policy.ts';
 
@@ -44,6 +45,8 @@ export interface RenderResult {
   html: string;
   warnings: string[];
 }
+
+const lowlight = createLowlight(common);
 
 const BILD_GROESSEN = '(min-width: 760px) 720px, 100vw';
 
@@ -159,6 +162,30 @@ function rehypeInhalt(options: RenderOptions, warnings: string[]) {
             rel: ['noopener', 'noreferrer'],
           };
       }
+    });
+
+    // Färbt Code mit bekannter Sprache über Klassen (`hljs-*`). Das läuft nach
+    // der Bereinigung, die Klassen stammen also nur aus dem Färben, nicht aus
+    // dem Text. Ohne Sprachangabe wird nicht geraten.
+    visit(baum, 'element', (knoten, _index, eltern) => {
+      if (knoten.tagName !== 'code' || (eltern as Element)?.tagName !== 'pre')
+        return;
+      const klassen = Array.isArray(knoten.properties?.className)
+        ? knoten.properties.className.map(String)
+        : [];
+      const sprache = klassen
+        .find((k) => k.startsWith('language-'))
+        ?.slice('language-'.length);
+      if (!sprache || !lowlight.registered(sprache)) return;
+      const quelle = knoten.children
+        .map((kind) => (kind.type === 'text' ? kind.value : ''))
+        .join('');
+      const ergebnis = lowlight.highlight(sprache, quelle);
+      knoten.children = ergebnis.children as ElementContent[];
+      knoten.properties = {
+        ...knoten.properties,
+        className: [...klassen, 'hljs'],
+      };
     });
 
     for (const [knoten, eltern] of eingaben) {

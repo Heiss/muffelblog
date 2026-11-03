@@ -1,0 +1,232 @@
+/* Farben, Rundung und Schriften je Theme. Jeder Text erreicht mindestens 4,5:1
+   (geprüft in lib/themes.test.ts). Die Kennungen stehen in lib/themes.ts. */
+
+[data-theme='solarized-light'] {
+  --color-scheme: light;
+  --bg: #fdf6e3;
+  --panel: #eee8d5;
+  --line: #93a1a1;
+  --fg: #3f5560;
+  --dim: #4b616a;
+  --ac: #175c94;
+  --on-ac: #fdf6e3;
+  --tint: #f5eed8;
+  --radius: 4px;
+  --pill: 4px;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-head: 'Source Serif 4', Georgia, serif;
+  --font-meta: 'Source Sans 3', system-ui, sans-serif;
+  --tok-keyword: #5f7000;
+  --tok-string: #1d6f69;
+  --tok-comment: #566b72;
+  --tok-number: #a8331a;
+  --tok-title: #175c94;
+  --tok-type: #8a4b00;
+}
+
+[data-theme='hell'] {
+  --color-scheme: light;
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --line: #aab1bc;
+  --fg: #14181f;
+  --dim: #4a5361;
+  --ac: #145a70;
+  --on-ac: #ffffff;
+  --tint: #eef3f5;
+  --radius: 10px;
+  --pill: 22px;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-head: 'Source Serif 4', Georgia, serif;
+  --font-meta: 'Source Sans 3', system-ui, sans-serif;
+  --tok-keyword: #7a2e8f;
+  --tok-string: #0b6a3b;
+  --tok-comment: #5a6472;
+  --tok-number: #a24a00;
+  --tok-title: #145a70;
+  --tok-type: #8a3b00;
+}
+
+[data-theme='solarized-dark'] {
+  --color-scheme: dark;
+  --bg: #002b36;
+  --panel: #073642;
+  --line: #586e75;
+  --fg: #a5b3b3;
+  --dim: #a0adad;
+  --ac: #5fb3e8;
+  --on-ac: #002b36;
+  --tint: #0a3f4d;
+  --radius: 4px;
+  --pill: 4px;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-head: 'Source Serif 4', Georgia, serif;
+  --font-meta: 'Source Sans 3', system-ui, sans-serif;
+  --tok-keyword: #a3b800;
+  --tok-string: #3bc4b9;
+  --tok-comment: #93a1a1;
+  --tok-number: #ff8f78;
+  --tok-title: #5fb3e8;
+  --tok-type: #e0b04a;
+}
+
+[data-theme='dracula'] {
+  --color-scheme: dark;
+  --bg: #282a36;
+  --panel: #21222c;
+  --line: #6272a4;
+  --fg: #f8f8f2;
+  --dim: #b8c0e0;
+  --ac: #bd93f9;
+  --on-ac: #282a36;
+  --tint: #343746;
+  --radius: 6px;
+  --pill: 6px;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-head: 'JetBrains Mono', ui-monospace, monospace;
+  --font-meta: 'JetBrains Mono', ui-monospace, monospace;
+  --tok-keyword: #ff79c6;
+  --tok-string: #f1fa8c;
+  --tok-comment: #8e9ed0;
+  --tok-number: #bd93f9;
+  --tok-title: #50fa7b;
+  --tok-type: #8be9fd;
+}
+
+[data-theme='matrix'] {
+  --color-scheme: dark;
+  --bg: #000a02;
+  --panel: #031307;
+  --line: #168a35;
+  --fg: #3dff74;
+  --dim: #2fcf5b;
+  --ac: #00ff41;
+  --on-ac: #001a06;
+  --tint: #06240d;
+  --radius: 0px;
+  --pill: 0px;
+  --font-body: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-head: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-meta: 'IBM Plex Mono', ui-monospace, monospace;
+  --tok-keyword: #00ff41;
+  --tok-string: #9dffb4;
+  --tok-comment: #3fae5a;
+  --tok-number: #c8ffd4;
+  --tok-title: #7dff9b;
+  --tok-type: #5fe0a0;
+}
+
+[data-theme='nord'] {
+  --color-scheme: dark;
+  --bg: #2e3440;
+  --panel: #3b4252;
+  --line: #4c566a;
+  --fg: #eceff4;
+  --dim: #d8dee9;
+  --ac: #88c0d0;
+  --on-ac: #2e3440;
+  --tint: #3b4252;
+  --radius: 8px;
+  --pill: 18px;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-head: 'Source Sans 3', system-ui, sans-serif;
+  --font-meta: 'Source Sans 3', system-ui, sans-serif;
+  --tok-keyword: #98b8da;
+  --tok-string: #a3be8c;
+  --tok-comment: #a9b4c8;
+  --tok-number: #c9a3c0;
+  --tok-title: #88c0d0;
+  --tok-type: #ebcb8b;
+}
+
+[data-theme='gruvbox'] {
+  --color-scheme: dark;
+  --bg: #282828;
+  --panel: #3c3836;
+  --line: #665c54;
+  --fg: #ebdbb2;
+  --dim: #bdae93;
+  --ac: #fabd2f;
+  --on-ac: #282828;
+  --tint: #32302f;
+  --radius: 2px;
+  --pill: 2px;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-head: 'JetBrains Mono', ui-monospace, monospace;
+  --font-meta: 'JetBrains Mono', ui-monospace, monospace;
+  --tok-keyword: #ff7a66;
+  --tok-string: #b8bb26;
+  --tok-comment: #b5a68e;
+  --tok-number: #e090a5;
+  --tok-title: #fabd2f;
+  --tok-type: #8ec07c;
+}
+
+[data-theme='monokai'] {
+  --color-scheme: dark;
+  --bg: #272822;
+  --panel: #3e3d32;
+  --line: #75715e;
+  --fg: #f8f8f2;
+  --dim: #cfcfc2;
+  --ac: #a6e22e;
+  --on-ac: #272822;
+  --tint: #33342b;
+  --radius: 3px;
+  --pill: 3px;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-head: 'JetBrains Mono', ui-monospace, monospace;
+  --font-meta: 'JetBrains Mono', ui-monospace, monospace;
+  --tok-keyword: #ff85ad;
+  --tok-string: #e6db74;
+  --tok-comment: #b0ab92;
+  --tok-number: #c4a1ff;
+  --tok-title: #a6e22e;
+  --tok-type: #66d9ef;
+}
+
+[data-theme='tokyo-night'] {
+  --color-scheme: dark;
+  --bg: #1a1b26;
+  --panel: #24283b;
+  --line: #565f89;
+  --fg: #c0caf5;
+  --dim: #9aa5ce;
+  --ac: #7aa2f7;
+  --on-ac: #1a1b26;
+  --tint: #292e42;
+  --radius: 10px;
+  --pill: 10px;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-head: 'JetBrains Mono', ui-monospace, monospace;
+  --font-meta: 'JetBrains Mono', ui-monospace, monospace;
+  --tok-keyword: #bb9af7;
+  --tok-string: #9ece6a;
+  --tok-comment: #8995c2;
+  --tok-number: #ff9e64;
+  --tok-title: #7aa2f7;
+  --tok-type: #2ac3de;
+}
+
+[data-theme='catppuccin'] {
+  --color-scheme: dark;
+  --bg: #1e1e2e;
+  --panel: #313244;
+  --line: #6c7086;
+  --fg: #cdd6f4;
+  --dim: #a6adc8;
+  --ac: #cba6f7;
+  --on-ac: #1e1e2e;
+  --tint: #2a2b3c;
+  --radius: 14px;
+  --pill: 22px;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-head: 'Source Sans 3', system-ui, sans-serif;
+  --font-meta: 'Source Sans 3', system-ui, sans-serif;
+  --tok-keyword: #cba6f7;
+  --tok-string: #a6e3a1;
+  --tok-comment: #9fa5bd;
+  --tok-number: #fab387;
+  --tok-title: #89b4fa;
+  --tok-type: #f9e2af;
+}
