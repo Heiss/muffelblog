@@ -26,7 +26,11 @@ const date = new Intl.DateTimeFormat(messages.locale, {
 ---
 
 <Base title={article.title} description={article.description}>
-  <article>
+  <article data-pagefind-body>
+    <meta
+      data-pagefind-filter="kind[content]"
+      content={messages.filter.terms}
+    />
     <p class="kind">
       <a href="/glossary/">{messages.glossary.term}</a>
     </p>
@@ -37,7 +41,7 @@ const date = new Intl.DateTimeFormat(messages.locale, {
     {article.tags.length > 0 && (
       <ul aria-label={messages.tags.label} class="tags">
         {article.tags.map((tag) => (
-          <li>{tag}</li>
+          <li data-pagefind-filter="tag">{tag}</li>
         ))}
       </ul>
     )}

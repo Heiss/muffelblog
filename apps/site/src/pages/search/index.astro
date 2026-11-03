@@ -1,0 +1,45 @@
+---
+import { messages } from '../../i18n/messages';
+import Base from '../../layouts/Base.astro';
+
+const t = messages.search;
+---
+
+<Base title={t.title}>
+  <h1>{t.title}</h1>
+  <div
+    data-search
+    data-label-all={t.all}
+    data-kind-order={JSON.stringify([
+      messages.filter.long,
+      messages.filter.short,
+      messages.filter.terms,
+    ])}
+    data-unavailable={t.unavailable}
+    data-summary-none={t.summary.none}
+    data-summary-one={t.summary.one}
+    data-summary-many={t.summary.many}
+    hidden
+  >
+    <input
+      type="search"
+      data-search-input
+      placeholder={t.placeholder}
+      aria-label={t.title}
+      autocomplete="off"
+    />
+    <div data-search-kind role="group" aria-label={t.kind}></div>
+    <label>
+      <span>{t.tag}</span>
+      <select data-search-tag hidden></select>
+    </label>
+    <p data-search-summary role="status"></p>
+    <div data-search-results></div>
+    <p data-search-error role="alert" hidden></p>
+  </div>
+  <p data-search-nojs>{t.needsJs}</p>
+</Base>
+
+<script>
+  import '../../scripts/search';
+</script>

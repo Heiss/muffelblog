@@ -11,6 +11,21 @@ export const messages = {
     home: 'Start',
     tags: 'Tags',
     glossary: 'Glossar',
+    search: 'Suche',
+  },
+  search: {
+    title: 'Suche',
+    placeholder: 'Suchen …',
+    kind: 'Art',
+    tag: 'Tag',
+    needsJs: 'Die Suche braucht JavaScript.',
+    unavailable: 'Der Suchindex ist nicht verfügbar. Er entsteht beim Build.',
+    summary: {
+      none: 'Keine Treffer für „{term}“.',
+      one: '1 Treffer für „{term}“.',
+      many: '{count} Treffer für „{term}“.',
+    },
+    all: 'Alle',
   },
   theme: {
     label: 'Farbschema',

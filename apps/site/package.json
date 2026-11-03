@@ -4,12 +4,12 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "typecheck": "astro check",
     "test:e2e": "playwright test",
     "dev:demo": "MUFFEL_FIXTURES=demo astro dev",
-    "screenshots": "MUFFEL_FIXTURES=demo astro build && node scripts/screenshots.mjs"
+    "screenshots": "MUFFEL_FIXTURES=demo pnpm build && node scripts/screenshots.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.12",
@@ -25,6 +25,7 @@
     "@emnapi/core": "^1.11.3",
     "@emnapi/runtime": "^1.11.3",
     "@types/node": "^26.6.6",
+    "pagefind": "^1.6.0",
     "sirv-cli": "^3.0.1",
     "typescript": "~6.0.3"
   }
