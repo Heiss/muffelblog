@@ -1,611 +1,600 @@
 ---
 type: Roadmap
-title: Roadmap und Definition of Done
-description: Arbeitspakete mit Abhängigkeiten, Entscheidungsbedarf und Abnahmekriterien für den schrittweisen Aufbau auf Feature-Branches.
-tags: [roadmap, planung, definition-of-done]
+title: Roadmap and definition of done
+description: Work packages with dependencies, decisions needed and acceptance criteria for the step-by-step build on feature branches.
+tags: [roadmap, planning, definition-of-done]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T13:10:00Z }
 ---
 
-# Vorgehen
+# Approach
 
-* **[E]** Das System wird schrittweise auf Feature-Branches aufgebaut.
-* **[E]** Entscheidungen trifft der Nutzer unterwegs. Zu jeder Entscheidung
-  werden 3 bis 5 Optionen vorgelegt. Die Optionen kommen beim Start des
-  jeweiligen Arbeitspakets, nicht vorab.
-* **[E]** Live geht das System, wenn alle Arbeitspakete fertig sind (W17).
-* **[E]** Ein Arbeitspaket entspricht einem Feature-Branch und einem Pull
-  Request gegen `main`. Branching-Modell, Merge-Art und Release stehen in
-  [Branching und Release](/ops/branching-release.md). Die Namenskonvention
-  `feature/wNN-<kurzname>` ist ein Vorschlag **[V]**.
-* **[V]** Die Reihenfolge folgt einem "Walking Skeleton": erst ein
-  durchgängiger dünner Pfad (Artikel aus Dateien bis zur Seite), dann
-  Memos, dann Client, dann Betrieb und Community.
+* **[E]** The system is built step by step on feature branches.
+* **[E]** The user makes decisions along the way. For every decision 3 to 5
+  options are presented. The options come at the start of the respective work
+  package, not in advance.
+* **[E]** The system goes live when all work packages are done (W17).
+* **[E]** A work package corresponds to one feature branch and one pull request
+  against `main`. Branching model, merge method and release are in
+  [Branching and release](/ops/branching-release.md). The naming convention
+  `feature/wNN-<short name>` is a proposal **[V]**.
+* **[V]** The order follows a "walking skeleton": first one continuous thin path
+  (articles from files to the page), then memos, then client, then operation and
+  community.
 
-# Globale Definition of Done
+# Global definition of done
 
-Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
+Applies to every work package in addition to its own criteria:
 
-* [ ] Alle Akzeptanzkriterien des Pakets sind erfüllt und im Pull Request
-  abgehakt.
-* [ ] CI ist grün: Lint, Typprüfung, Unit-, E2E- und Contract-Tests,
-  `astro build`. Die volle Suite läuft bei jedem Pull Request.
-* [ ] Die Tests entstanden zuerst (TDD) und decken die neue Logik ab, auch
-  Fehlerfälle (kaputte Eingaben, Ausfall einer Quelle). Pakete mit
-  Oberfläche haben E2E-Tests. Siehe [Teststrategie](/ops/testing.md).
-* [ ] Es sind keine Secrets im Repo (Secret-Scan ohne Treffer).
-* [ ] Der Browser lädt keine Fremdressourcen (Netzwerk- oder CSP-Test).
-* [ ] Die Entscheidungen des Pakets sind mit Optionen und Wahl im OKF-Bundle
-  festgehalten, `[U]`-Punkte sind geprüft und auf `[E]` oder `[V]` gesetzt,
-  `log.md` und `open-points.md` sind aktualisiert.
-* [ ] Der Nutzer hat den Pull Request abgenommen.
+* [ ] All acceptance criteria of the package are met and ticked off in the pull
+  request.
+* [ ] The CI is green: lint, type check, unit, E2E and contract tests,
+  `astro build`. The full suite runs on every pull request.
+* [ ] The tests came first (TDD) and cover the new logic, also error cases
+  (broken input, failure of a source). Packages with a UI have E2E tests. See
+  [Test strategy](/ops/testing.md).
+* [ ] There are no secrets in the repo (secret scan without findings).
+* [ ] The browser loads no foreign resources (network or CSP test).
+* [ ] The decisions of the package are recorded with options and choice in the
+  OKF bundle, `[U]` points are checked and set to `[E]` or `[V]`, `log.md` and
+  `open-points.md` are updated.
+* [ ] The user has accepted the pull request.
 
-# Abhängigkeiten
+# Dependencies
 
-| Paket | Thema | Hängt ab von | Parallel zu |
+| Package | Topic | Depends on | In parallel with |
 |---|---|---|---|
-| W00 | Fundament | - | - |
-| W01 | Artikel-Modell und Frontmatter | W00 | W11 |
-| W02 | Nextcloud-Sync | W00 | W01, W03 |
-| W03 | Rendering, Bereinigung, Artikel-Bilder | W01 | W02 |
-| W04 | Memos-Quelle und Bild-Spiegelung | W03 | W11 |
-| W05 | Statischer Feed, Blöcke, Tags, Sitemap | W01, W04 | W11 |
-| W06a | Feed-Client: Endless Scroll, Filter, Rücksprung | W05 | W08, W09, W10, W11 |
-| W06c | Themes | W06a | W08, W09, W10, W11 |
-| W07 | build.json und Banner | W05, W06a | W08, W09, W10 |
-| W08 | Suche (Pagefind) | W05 | W06, W09, W10 |
+| W00 | Foundation | - | - |
+| W01 | Article model and frontmatter | W00 | W11 |
+| W02 | Nextcloud sync | W00 | W01, W03 |
+| W03 | Rendering, sanitizing, article images | W01 | W02 |
+| W04 | Memos source and image mirroring | W03 | W11 |
+| W05 | Static feed, blocks, tags, sitemap | W01, W04 | W11 |
+| W06a | Feed client: endless scroll, filter, going back | W05 | W08, W09, W10, W11 |
+| W06c | Layout and themes | W06a | W08, W09, W10, W11 |
+| W07 | build.json and banner | W05, W06a | W08, W09, W10 |
+| W08 | Search (Pagefind) | W05 | W06, W09, W10 |
 | W09 | RSS | W05 | W06, W08, W10 |
-| W10 | SEO, Microformats, statische Seiten | W05 | W06, W08, W09 |
-| W11 | Docker-Gerüst | W00 | W01 bis W10 |
-| W12 | Build-Pipeline und Scheduler | W02, W04, W11 | W06 bis W10 |
-| W13 | Kommentare (Remark42) | W05, W11, W12 | W07 bis W10 |
-| W14 | Webmentions Empfang und Anzeige | W13, W10; **Domain** | - |
-| W15 | Webmentions Senden | W14 | - |
-| W16 | Härtung und Betrieb | W12, W13, W14, W15 | - |
-| W17 | Go-live | alle | - |
-| W18 | Codequalität, Komplexität, Mutationstests | W05; später ausbauen | W06c bis W16 |
-| W19 | Glossar: Eintragsart, `/g/`, Buchstabenansicht, Feed-Filter | W05, W06a | W07 bis W11 |
-| W20 | Verlinkung und Backlinks | W03, W19 | W07 bis W11 |
-| W21 | Wissensgraph | W20 | W07 bis W11 |
+| W10 | SEO, microformats, static pages | W05 | W06, W08, W09 |
+| W11 | Docker scaffold | W00 | W01 to W10 |
+| W12 | Build pipeline and scheduler | W02, W04, W11 | W06 to W10 |
+| W13 | Comments (Remark42) | W05, W11, W12 | W07 to W10 |
+| W14 | Webmentions receiving and display | W13, W10; **domain** | - |
+| W15 | Webmentions sending | W14 | - |
+| W16 | Hardening and operation | W12, W13, W14, W15 | - |
+| W17 | Go-live | all | - |
+| W18 | Code quality, complexity, mutation tests | W05; extend later | W06c to W16 |
+| W19 | Glossary: kind of content, `/g/`, letter view, feed filter | W05, W06a | W07 to W11 |
+| W20 | Linking and backlinks | W03, W19 | W07 to W11 |
+| W21 | Knowledge graph | W20 | W07 to W11 |
 | W22 | English as development language (translation in several PRs) | - | - |
-| W23 | UI language per `MUFFEL_LANG` (de, en) | W22 | W07 bis W11 |
+| W23 | UI language per `MUFFEL_LANG` (de, en) | W22 | W07 to W11 |
 
-**Kritischer Pfad:** W00, W01, W03, W04, W05, W12, W13, W14, W15, W16, W17.
+**Critical path:** W00, W01, W03, W04, W05, W12, W13, W14, W15, W16, W17.
 
-**Externe Blocker**
-* **Domain:** spätestens vor W14 nötig (`rel=me`, IndieAuth, Webmention-Ziele,
-  absolute URLs). Davor reicht eine Testdomain (O9, O29).
-* **Testinstanzen:** Für W02, W04, W13 und W14 braucht es Nextcloud, Memos,
-  Remark42 und einen Mail-Sink als Testumgebung oder Mocks (O29).
+**External blockers**
+* **Domain:** needed at the latest before W14 (`rel=me`, IndieAuth, webmention
+  targets, absolute URLs). Before that a test domain is enough (O9, O29).
+* **Test instances:** W02, W04, W13 and W14 need Nextcloud, Memos, Remark42 and a
+  mail sink as a test environment or mocks (O29).
 
-# Arbeitspakete
+# Work packages
 
-## W00 - Fundament
+## W00 - Foundation
 
 * Branch: `feature/w00-fundament`
-* Abhängig von: -
-* Entschieden:
-  * **[E]** Basis-Branch ist `main`, angelegt aus dem Stand von Spezifikation
-    und Roadmap. Feature-Branches zweigen von `main` ab, Pull Requests gehen
-    gegen `main` (O28).
-  * **[E]** pnpm auf Node 26 (LTS-Linie "Lithium" laut Release-Liste vom
+* Depends on: -
+* Decided:
+  * **[E]** The base branch is `main`, created from the state of specification
+    and roadmap. Feature branches branch off `main`, pull requests go against
+    `main` (O28).
+  * **[E]** pnpm on Node 26 (LTS line "Lithium" according to the release list of
     2026-11-02).
-  * **[E]** pnpm-Workspace mit `apps/site` (Astro), `apps/builder` (Scheduler,
-    Sync, Mention-Jobs) und `packages/core` (gemeinsamer Code).
-  * **[E]** ESLint und Prettier.
-  * **[E]** CI mit GitHub Actions.
-  * **[E]** Teststrategie (O29): TDD mit Mocks, E2E-Tests und Contract-Tests
-    gegen echte, gepinnte Testinstanzen (Nextcloud, Memos, Remark42,
-    Mailpit). Vitest für Unit-Tests, Playwright für E2E-Tests.
-  * **[E]** Die volle Suite läuft bei jedem PR, ein Gate-Job mit
-    Pfaderkennung behandelt reine Doku-PRs (siehe
-    [Teststrategie](/ops/testing.md)).
-  * **[E]** Renovate (GitHub-App) mit Auto-Merge für Patch-Updates und 3 Tagen
-    Wartezeit, siehe [Branching und Release](/ops/branching-release.md).
-* Noch offen: Registry für Docker-Images (O10), Gruppierung und Zeitplan von
-  Renovate (O31), Entwicklungsablauf (O23), Branch-Protection-Option "Branch
-  muss aktuell sein" (O33), Sichtbarkeit des Repos (O34).
-* Umfang: Astro-Projekt mit TypeScript, Lint, Format, Test-Runner, CI,
-  Dockerfile für den Build, Beispielinhalt (Fixtures).
-* Befunde bei der Umsetzung:
-  * Astro 7 verlangt Node 22.23.4 oder neuer. `astro check` unterstützt
-    TypeScript 7 nicht, deshalb ist TypeScript auf `~6.0.3` festgelegt.
-  * `astro preview` startet ohne Terminal im Hintergrund und eignet sich nicht
-    als Playwright-`webServer`. Die E2E-Tests servieren `dist/` mit `sirv-cli`.
-  * Corepack gehört seit Node 25 nicht mehr zur Auslieferung. Das Dockerfile
-    installiert pnpm über npm in der Version aus `package.json`.
-  * Das Image `node:26-slim` existiert und das Dockerfile baut: Der Job
-    "Docker-Build der Seite" lief im ersten CI-Lauf auf GitHub erfolgreich
-    (Lauf 41472880143). In der Entwicklungsumgebung war das wegen fehlendem
-    Docker-Daemon nicht prüfbar.
-  * Die Actions (`actions/checkout@v4`, `pnpm/action-setup@v4`,
-    `actions/setup-node@v4`) laufen. Ob neuere Hauptversionen existieren, ist
-    nicht geprüft. Renovate hebt sie an.
-* DoD (Stand Umsetzung):
-  * [x] `docker build` erzeugt das Astro-Projekt reproduzierbar. Der Job
-    "Docker-Build der Seite" lief auf GitHub erfolgreich und prüft, dass
-    `out/index.html` existiert.
-  * [x] CI führt Lint, Typprüfung, Unit-Tests (Vitest), E2E-Tests
-    (Playwright) und Build aus, und je Testart läuft ein Beispieltest. Der
-    erste Lauf auf GitHub war grün (5 Unit-Tests, 2 E2E-Tests).
-  * [ ] Ein Gate-Job mit Pfaderkennung ist der Pflicht-Check für `main`. Der
-    Code-Pfad (volle Suite) lief auf GitHub grün. Der Doku-Pfad (schwere Jobs
-    übersprungen, Gate grün) ist bisher nur lokal getestet, der Nachweis auf
-    GitHub steht aus.
-  * [x] README mit Start- und Testanleitung.
-  * [ ] Die CI ist als Pflicht-Check für `main` eingetragen (Einstellung durch
-    den Nutzer, Name des Checks: "CI Gate").
-  * [ ] `renovate.json` ist konfiguriert (Patch-Auto-Merge, 3 Tage Wartezeit),
-    die Renovate-App ist installiert, und ein Test-Update läuft durch die CI.
-    Die Datei liegt vor, die App-Installation steht aus.
+  * **[E]** pnpm workspace with `apps/site` (Astro), `apps/builder` (scheduler,
+    sync, mention jobs) and `packages/core` (shared code).
+  * **[E]** ESLint and Prettier.
+  * **[E]** CI with GitHub Actions.
+  * **[E]** Test strategy (O29): TDD with mocks, E2E tests and contract tests
+    against real, pinned test instances (Nextcloud, Memos, Remark42, Mailpit).
+    Vitest for unit tests, Playwright for E2E tests.
+  * **[E]** The full suite runs on every PR, a gate job with path detection
+    handles pure documentation PRs (see [Test strategy](/ops/testing.md)).
+  * **[E]** Renovate (GitHub app) with auto-merge for patch updates and 3 days of
+    waiting, see [Branching and release](/ops/branching-release.md).
+* Still open: registry for Docker images (O10), grouping and schedule of
+  Renovate (O31), development workflow (O23), branch protection option "branch
+  must be up to date" (O33), visibility of the repo (O34).
+* Scope: Astro project with TypeScript, lint, format, test runner, CI,
+  Dockerfile for the build, sample content (fixtures).
+* Findings during implementation:
+  * Astro 7 requires Node 22.23.4 or newer. `astro check` does not support
+    TypeScript 7, so TypeScript is pinned to `~6.0.3`.
+  * `astro preview` starts itself in the background without a terminal and is not
+    suitable as a Playwright `webServer`. The E2E tests serve `dist/` with
+    `sirv-cli`.
+  * Corepack has not been part of Node since version 25. The Dockerfile installs
+    pnpm through npm in the version from `package.json`.
+  * The image `node:26-slim` exists and the Dockerfile builds: the job "Docker
+    build of the site" ran successfully in the first CI run on GitHub (run
+    41472880143). In the development environment this could not be checked
+    because of a missing Docker daemon.
+  * The actions (`actions/checkout@v4`, `pnpm/action-setup@v4`,
+    `actions/setup-node@v4`) run. Whether newer major versions exist has not been
+    checked. Renovate raises them.
+* DoD (state of implementation):
+  * [x] `docker build` creates the Astro project reproducibly. The job "Docker
+    build of the site" ran successfully on GitHub and checks that
+    `out/index.html` exists.
+  * [x] CI runs lint, type check, unit tests (Vitest), E2E tests (Playwright)
+    and build, and one sample test runs per kind of test. The first run on
+    GitHub was green (5 unit tests, 2 E2E tests).
+  * [x] A gate job with path detection is the required check for `main`. The code
+    path (full suite) ran green on GitHub. The documentation path (heavy jobs
+    skipped, gate green) was confirmed on GitHub with the pull request of W22a.
+  * [x] README with start and test instructions.
+  * [ ] The CI is entered as a required check for `main` (a setting by the user,
+    name of the check: "CI Gate").
+  * [x] `renovate.json` is configured (patch auto-merge, 3 days of waiting), the
+    Renovate app is installed and running (see O31).
 
-## W01 - Artikel-Modell und Frontmatter
+## W01 - Article model and frontmatter
 
 * Branch: `feature/w01-frontmatter`
-* Abhängig von: W00
-* Entschieden (siehe [Frontmatter](/content/frontmatter.md)):
-  * **[E]** Datum (O2): Reines Datum gilt als 12:00 Uhr Berlin, Uhrzeit ohne
-    Zone als Berliner Ortszeit.
-  * **[E]** Doppelte Slugs (O26): Suffix `-2`, `-3`, der ältere Artikel behält
-    den Slug.
-  * **[E]** Tags (O13): durchgehend kleingeschrieben, auch in der Anzeige.
-  * **[E]** Zurückgezogene Artikel (O21): einfach weg, 404.
-* Umfang: Loader für einen lokalen Markdown-Ordner, Schema nach
-  [Frontmatter](/content/frontmatter.md), Slug mit Transliteration, Fallbacks,
-  Ausschlüsse (siehe [Nextcloud-Quelle](/content/nextcloud-source.md)). Der
-  Artikeltext wird noch nicht gerendert, das folgt in W03. Die Seiten
-  `/p/<slug>/` zeigen Titel, Datum und Tags.
-* DoD (Stand Umsetzung, lokal mit Node 26 belegt; der CI-Lauf steht aus):
-  * [x] `publish` zählt nur als Boolean `true` (Unit-Tests mit `"true"`,
+* Depends on: W00
+* Decided (see [Frontmatter](/content/frontmatter.md)):
+  * **[E]** Date (O2): a plain date counts as 12:00 Berlin time, a time without a
+    zone as Berlin local time.
+  * **[E]** Duplicate slugs (O26): suffix `-2`, `-3`, the older article keeps the
+    slug.
+  * **[E]** Tags (O13): lowercased throughout, also in the display.
+  * **[E]** Withdrawn articles (O21): simply gone, 404.
+* Scope: loader for a local Markdown folder, schema according to
+  [Frontmatter](/content/frontmatter.md), slug with transliteration, fallbacks,
+  exclusions (see [Nextcloud source](/content/nextcloud-source.md)). The article
+  text is not rendered yet, that follows in W03. The pages `/p/<slug>/` show
+  title, date and tags.
+* DoD (state of implementation, proven locally with Node 26; the CI run is
+  pending):
+  * [x] `publish` counts only as the boolean `true` (unit tests with `"true"`,
     `yes`, `1`, `false`, `null`).
-  * [x] Fehlendes oder ungültiges `date` fällt auf das Änderungsdatum zurück
-    und warnt.
-  * [x] Eine kaputte Datei überspringt nur sich selbst und wird geloggt.
-  * [x] Doppelte Slugs verhalten sich nach der gewählten Regel.
-  * [x] Fixtures decken ab: gültig, ungültiges YAML, Konfliktkopie,
-    Wikilink, Umlaut-Slug (außerdem Unterordner, verstecktes Verzeichnis,
-    Uhrzeit mit und ohne Zone, doppelter Slug).
-  * [x] Der Build erzeugt `/p/<slug>/` für die Fixtures. 14 E2E-Tests prüfen
-    die erzeugten Seiten und, dass nicht veröffentlichte Artikel 404
-    liefern (der Test schlägt nachweislich fehl, wenn ein Artikel zu Unrecht
-    veröffentlicht wird).
-* Befunde bei der Umsetzung:
-  * Chromium meldet eine leere 404-Antwort bei `page.goto` als Netzwerkfehler.
-    Die Prüfung auf 404 nutzt deshalb direkte HTTP-Anfragen.
-  * Die Prüfung auf Wikilinks ignoriert Code-Blöcke und Inline-Code.
-  * Die Muster für Nextcloud-Konfliktkopien sind weiter ungeprüft (O25, W02).
+  * [x] A missing or invalid `date` falls back to the modification date and
+    warns.
+  * [x] A broken file skips only itself and is logged.
+  * [x] Duplicate slugs behave according to the chosen rule.
+  * [x] Fixtures cover: valid, invalid YAML, conflict copy, wikilink, umlaut
+    slug (also subfolder, hidden directory, time with and without a zone,
+    duplicate slug).
+  * [x] The build creates `/p/<slug>/` for the fixtures. 14 E2E tests check the
+    generated pages and that unpublished articles give 404 (the test demonstrably
+    fails if an article is published wrongly).
+* Findings during implementation:
+  * Chromium reports an empty 404 response on `page.goto` as a network error. The
+    check for 404 therefore uses direct HTTP requests.
+  * The check for wikilinks ignores code blocks and inline code.
+  * The patterns for Nextcloud conflict copies remain unchecked (O25, W02).
 
-## W02 - Nextcloud-Sync
+## W02 - Nextcloud sync
 
 * Branch: `feature/w02-nextcloud-sync`
-* Abhängig von: W00
-* Entscheidungen: Sync-Werkzeug, Verhalten bei Teilausfall, Umgang mit
-  gelöschten Dateien, Prüfung der ungeprüften Fakten (O25).
-* Umfang: Abruf des Public Shares per WebDAV mit Token und Passwort in den
-  Cache, Änderungserkennung.
+* Depends on: W00
+* Decisions: sync tool, behavior on partial failure, handling of deleted files,
+  checking the unverified facts (O25).
+* Scope: fetching the public share through WebDAV with token and password into
+  the cache, change detection.
 * DoD:
-  * [ ] Sync ist mit Mocks getestet, ein Contract-Test gegen eine echte
-    Nextcloud-Testinstanz liegt vor.
-  * [ ] Das Passwort kommt nur aus einem Secret.
-  * [ ] Ohne Änderung wird kein Build ausgelöst.
-  * [ ] Schlägt der Abruf fehl, bleibt der Cache unverändert.
-  * [ ] Das Verhalten von `getlastmodified` ist dokumentiert.
+  * [ ] The sync is tested with mocks, a contract test against a real Nextcloud
+    test instance exists.
+  * [ ] The password comes only from a secret.
+  * [ ] Without a change no build is triggered.
+  * [ ] If fetching fails, the cache stays unchanged.
+  * [ ] The behavior of `getlastmodified` is documented.
 
-## W03 - Rendering, Bereinigung, Artikel-Bilder
+## W03 - Rendering, sanitizing, article images
 
 * Branch: `feature/w03-rendering`
-* Abhängig von: W01
-* Entschieden (siehe [Medien](/content/media.md)):
-  * **[E]** Fremdinhalte in Artikeln (O5) sind erlaubt, aber nur aus
-    Freigabelisten: Bilder von `upload.wikimedia.org`,
-    `raw.githubusercontent.com` und `user-images.githubusercontent.com`,
-    Einbettungen nur von `www.youtube-nocookie.com` und erst nach Klick.
-    Memos bleiben strikt (Bilder gespiegelt).
-  * **[E]** Lokale Artikelbilder (O7): verkleinern, WebP, EXIF entfernen.
-* Umfang: Markdown-Pipeline mit HTML-Allowlist, relative Bilder aus dem
-  Nextcloud-Ordner, Erkennung von Wikilink-Syntax (siehe
-  [Bereinigung](/security/sanitization.md), [Medien](/content/media.md)).
-* DoD (Stand Umsetzung, lokal mit Node 26 belegt; der CI-Lauf steht aus):
-  * [x] Rohes HTML und Skripte im Markdown erscheinen nicht in der Ausgabe.
-    Unit-Tests prüfen Skripte, Ereignis-Attribute, gefährliche Verweise,
-    Formulare, Stile, SVG, Objekte und Kommentare. Schaltet man die
-    Bereinigung ab, schlagen fünf Tests fehl. Ein E2E-Test prüft im Browser,
-    dass nichts ausgeführt und nichts von Fremdservern geladen wird.
-  * [x] Nur referenzierte Bilder gelangen in den Build. Der Auflöser erzeugt
-    nur Dateien für Bilder, die ein veröffentlichter Artikel verwendet.
-  * [x] Fehlende Bilder warnen, brechen aber nicht ab (Platzhalter mit
-    Alt-Text).
-  * [x] Wikilinks führen zu einer Warnung statt kaputtem HTML (aus W01).
-  * [x] Remote-Bilder und Einbettungen nur von freigegebenen Hosts, ähnlich
-    aussehende Hosts, `http`, Zugangsdaten und fremde Ports werden abgewiesen.
-  * [x] Lokale Bilder: WebP in mehreren Breiten bis 1920 px, EXIF und
-    Farbprofil entfernt, Ausrichtung angewandt, Pfade außerhalb des Ordners,
-    versteckte Ordner, SVG und Verweise (Symlinks) aus dem Ordner heraus
-    werden abgewiesen.
-* Befunde bei der Umsetzung:
-  * `astro build` bindet `sharp` als nativen Baustein nicht ein. Das Paket
-    muss deshalb auch in `apps/site` als Abhängigkeit stehen.
-  * Das Rendern von Markdown mit `<script>`, `<style>` und Verwandtem entfernt
-    deren Inhalt mit (`strip` in der Bereinigung), sonst bliebe der Code als
-    Text stehen.
-  * Obsidian schreibt Pfade je nach Einstellung relativ zur Notiz oder ab der
-    Ordnerwurzel. Der Auflöser probiert beide Wege.
+* Depends on: W01
+* Decided (see [Media](/content/media.md)):
+  * **[E]** Foreign content in articles (O5) is allowed, but only from allowlists:
+    images from `upload.wikimedia.org`, `raw.githubusercontent.com` and
+    `user-images.githubusercontent.com`, embeds only from
+    `www.youtube-nocookie.com` and only after a click. Memos stay strict (images
+    mirrored).
+  * **[E]** Local article images (O7): scale down, WebP, remove EXIF.
+* Scope: Markdown pipeline with an HTML allowlist, relative images from the
+  Nextcloud folder, detection of wikilink syntax (see
+  [Sanitizing](/security/sanitization.md), [Media](/content/media.md)).
+* DoD (state of implementation, proven locally with Node 26; the CI run is
+  pending):
+  * [x] Raw HTML and scripts in the Markdown do not appear in the output. Unit
+    tests check scripts, event attributes, dangerous links, forms, styles, SVG,
+    objects and comments. If sanitizing is switched off, five tests fail. An E2E
+    test checks in the browser that nothing is executed and nothing is loaded
+    from foreign servers.
+  * [x] Only referenced images reach the build. The resolver creates files only
+    for images that a published article uses.
+  * [x] Missing images warn but do not abort (placeholder with alt text).
+  * [x] Wikilinks lead to a warning instead of broken HTML (from W01).
+  * [x] Remote images and embeds only from allowed hosts, look-alike hosts,
+    `http`, credentials and foreign ports are rejected.
+  * [x] Local images: WebP in several widths up to 1920 px, EXIF and color
+    profile removed, orientation applied, paths outside the folder, hidden
+    folders, SVG and links (symlinks) out of the folder are rejected.
+* Findings during implementation:
+  * `astro build` does not include `sharp` as a native module. The package must
+    therefore also be a dependency in `apps/site`.
+  * Rendering Markdown with `<script>`, `<style>` and the like removes their
+    content as well (`strip` in sanitizing), otherwise the code would stay as
+    text.
+  * Depending on the setting, Obsidian writes paths relative to the note or from
+    the folder root. The resolver tries both ways.
 
-## W04 - Memos-Quelle und Bild-Spiegelung
+## W04 - Memos source and image mirroring
 
 * Branch: `feature/w04-memos`
-* Abhängig von: W03
-* Entschieden (siehe [Memos](/content/memos-source.md)):
-  * **[E]** Titel immer aus Datum und Uhrzeit.
-  * **[E]** PDF, Audio und Video werden mit Größenlimit gespiegelt (O6).
-  * **[E]** Alt-Text aus dem Dateinamen, `#a/b` bleibt ein Tag.
-  * Memo-Datum (O14): `createTime`, weil die API kein `displayTime` hat.
-* Umfang: Content-Loader für öffentliche Memos, Seiten `/m/<uid>/`, Titel und
-  Description, Tags, Anhänge spiegeln (Bilder als WebP ohne EXIF; PDF, Audio,
-  Video mit Dateikennung und Größenlimit), strenger Rendermodus (siehe
-  [Memos](/content/memos-source.md), [Medien](/content/media.md)).
-* DoD (Stand Umsetzung): lokal mit Node 26 belegt. Der Contract-Test läuft nur
-  in der CI, weil hier kein Docker-Daemon verfügbar ist.
-  * [x] Nur `PUBLIC`-Memos erscheinen (zusätzlich zum Filter der API wird die
-    Sichtbarkeit jedes Eintrags geprüft; Tests mit PRIVATE und PROTECTED).
-  * [x] Kein Link und keine Ressource zeigt auf die Memos-Instanz (Unit-Tests,
-    E2E und Contract-Test prüfen das HTML).
-  * [x] Gespiegelte Bilder haben keine EXIF-/GPS-Daten (gleiche Verarbeitung wie
-    bei Artikelbildern).
-  * [x] SVG, HTML, zu große Dateien und Dateien, deren Inhalt nicht zur Endung
-    passt, werden abgewiesen; Weiterleitungen werden nicht befolgt.
-  * [ ] Interne IP-Ziele werden abgelehnt. Die Basisadresse ist Konfiguration
-    des Betreibers und Weiterleitungen sind gesperrt; ein allgemeiner
-    SSRF-Schutz für fremde URLs folgt mit den Mention-Avataren (W14).
-  * [x] Ein Abruffehler lässt vorhandene Memos nicht verschwinden: Der Build
-    bricht ab, die letzte gute Version bleibt online.
-  * [x] Test mit Beispielantworten in der Form der API (Fixtures und
-    nachgebildete Antworten).
-  * [x] Ein Contract-Test gegen eine echte Memos-Testinstanz liegt vor
-    (`neosmemo/memos:26.11.0` als Service-Container, 5 Tests, in der CI grün).
-    Er zeigte, dass Memos zu `#a/b` auch den Tag `a` liefert.
-* Befunde bei der Umsetzung:
-  * Memos hat seit 26.10.0 die Pfade `/api/...` statt `/api/v1/...`.
-  * Anonymer Zugriff klappt nur, wenn der Zugriffsmodus der Instanz auf PUBLIC
-    steht.
-  * Der Build verlangt jetzt ausdrücklich `CONTENT_DIR` und `MEMOS_URL`.
-    Beispieldaten gibt es nur mit `MUFFEL_FIXTURES=1`; der Befehl `pnpm build`
-    im Repo-Root setzt das, der echte Build ist `pnpm build:site`.
+* Depends on: W03
+* Decided (see [Memos](/content/memos-source.md)):
+  * **[E]** The title is always built from date and time.
+  * **[E]** PDF, audio and video are mirrored with a size limit (O6).
+  * **[E]** Alt text from the file name, `#a/b` stays one tag.
+  * Memo date (O14): `createTime`, because the API has no `displayTime`.
+* Scope: content loader for public memos, pages `/m/<uid>/`, title and
+  description, tags, mirroring attachments (images as WebP without EXIF; PDF,
+  audio, video with file signature and size limit), strict render mode (see
+  [Memos](/content/memos-source.md), [Media](/content/media.md)).
+* DoD (state of implementation): proven locally with Node 26. The contract test
+  runs only in the CI, because no Docker daemon is available here.
+  * [x] Only `PUBLIC` memos appear (in addition to the filter of the API the
+    visibility of every entry is checked; tests with PRIVATE and PROTECTED).
+  * [x] No link and no resource points to the Memos instance (unit tests, E2E and
+    contract test check the HTML).
+  * [x] Mirrored images have no EXIF/GPS data (same processing as for article
+    images).
+  * [x] SVG, HTML, files that are too large and files whose content does not
+    match the extension are rejected; redirects are not followed.
+  * [ ] Internal IP targets are rejected. The base address is configuration of
+    the operator and redirects are blocked; a general SSRF protection for
+    foreign URLs follows with the mention avatars (W14).
+  * [x] A fetch error does not make existing memos disappear: the build stops,
+    the last good version stays online.
+  * [x] Test with sample responses in the shape of the API (fixtures and imitated
+    responses).
+  * [x] A contract test against a real Memos test instance exists
+    (`neosmemo/memos:26.11.0` as a service container, 5 tests, green in the CI).
+    It showed that Memos also returns the tag `a` for `#a/b`.
+* Findings during implementation:
+  * Since 26.10.0 Memos has the paths `/api/...` instead of `/api/v1/...`.
+  * Anonymous access works only if the access mode of the instance is PUBLIC.
+  * The build now explicitly requires `CONTENT_DIR` and `MEMOS_URL`. Sample data
+    exists only with `MUFFEL_FIXTURES=1`; the command `pnpm build` in the repo
+    root sets that, the real build is `pnpm build:site`.
 
-## W05 - Statischer Feed, Blöcke, Tags, Sitemap
+## W05 - Static feed, blocks, tags, sitemap
 
 * Branch: `feature/w05-feed-statisch`
-* Abhängig von: W01, W04
-* Entschieden:
-  * **[E]** Blockgröße 20 Einträge (O1).
-  * **[E]** Auszug eines Artikels: Beschreibung, sonst Textanfang (höchstens
-    200 Zeichen, an der Wortgrenze gekürzt). Memos erscheinen vollständig (O20).
-  * **[E]** Tag-Seiten: Übersicht `/tag/` und je Tag eine Liste `/tag/<tag>/`
-    mit Blöcken `/tag/<tag>/seite/N/` (O13).
-* Umfang: Startseite, technische Blöcke `/seite/N/` in drei Reihen
-  (`/`, `/memos/`, `/posts/`), `noindex, follow` ab Seite 2, Canonical (nur mit
-  `SITE_URL`), Tag-Seiten, Sitemap (nur mit `SITE_URL`), siehe
-  [Feed](/frontend/feed.md) und [URLs und SEO](/frontend/urls-seo.md).
+* Depends on: W01, W04
+* Decided:
+  * **[E]** Block size 20 entries (O1).
+  * **[E]** Excerpt of an article: description, otherwise the start of the text
+    (at most 200 characters, cut at a word boundary). Memos appear in full (O20).
+  * **[E]** Tag pages: overview `/tag/` and one list per tag `/tag/<tag>/` with
+    blocks `/tag/<tag>/page/N/` (O13).
+* Scope: home page, technical blocks `/page/N/` in three series (`/`, `/memos/`,
+  `/posts/`), `noindex, follow` from page 2, canonical (only with `SITE_URL`),
+  tag pages, sitemap (only with `SITE_URL`), see [Feed](/frontend/feed.md) and
+  [URLs and SEO](/frontend/urls-seo.md).
 * DoD:
-  * [x] Posts und Memos erscheinen gemeinsam, rein chronologisch (Unit-Test
-    und E2E über alle Blöcke, ohne Doppelungen).
-  * [x] `/seite/N/` ist nicht in der Sitemap. Pagefind kommt in W08, dort ist
-    `data-pagefind-ignore` für die Blöcke nachzuziehen.
-  * [x] Seite 1 hat keine eigene Route: `/seite/1/` gibt 404, die erste Seite
-    ist `/`. Damit entfällt der Canonical von `/seite/1/` auf `/`.
-  * [x] Ohne JavaScript führt der Weiter-Link durch alle Einträge (E2E mit
-    abgeschaltetem JavaScript). Ein `<noscript>`-Link ist unnötig, weil die
-    Links normale Anker sind.
-  * [x] Seiten haben `lang="de"`.
-* Befunde bei der Umsetzung:
-  * Der Test-Build nutzt Blöcke zu 4 Einträgen (`MUFFEL_FEED_PAGE_SIZE=4`, siehe
-    [Konfiguration](/ops/config.md)), sonst hätten die 15 Beispieleinträge nur
-    eine Seite.
-  * Ohne `SITE_URL` (Domain offen, O9) gibt es weder Sitemap noch Canonical.
-    Mit `SITE_URL` entstehen beide, lokal geprüft, aber nicht in der CI.
-  * Tags, deren URL-Form gleich ist (`a/b` und `a-b`), teilen sich eine Seite.
-  * Artikelseiten `/p/<slug>/` und Memo-Seiten nutzen das neue Grundlayout
-    noch nicht (Navigation fehlt dort), das folgt mit W06/W10.
+  * [x] Posts and memos appear together, purely chronological (unit test and E2E
+    across all blocks, without duplicates).
+  * [x] `/page/N/` is not in the sitemap. Pagefind comes in W08, there
+    `data-pagefind-ignore` for the blocks has to be added.
+  * [x] Page 1 has no route of its own: `/page/1/` gives 404, the first page is
+    `/`. So the canonical from `/page/1/` to `/` is dropped.
+  * [x] Without JavaScript the next link leads through all entries (E2E with
+    JavaScript switched off). A `<noscript>` link is unnecessary because the
+    links are normal anchors.
+  * [x] Pages have `lang="de"`.
+* Findings during implementation:
+  * The test build uses blocks of 4 entries (`MUFFEL_FEED_PAGE_SIZE=4`, see
+    [Configuration](/ops/config.md)), otherwise the 15 sample entries would make
+    only one page.
+  * Without `SITE_URL` (domain open, O9) there is neither a sitemap nor a
+    canonical. With `SITE_URL` both appear, checked locally but not in the CI.
+  * Tags whose URL form is the same (`a/b` and `a-b`) share a page.
+  * Article pages `/p/<slug>/` and memo pages did not use the new base layout yet
+    at that time (navigation was missing there); W06c changed that.
 
-## W06 - Feed-Client (in zwei Pull Requests)
+## W06 - Feed client (in two pull requests)
 
-* Entschieden **[E]**: Zuschnitt in zwei Pull Requests W06a (Endless Scroll,
-  Filter, Rücksprung) und W06c (Themes). **W06b (Split-View) entfällt** auf
-  Wunsch des Nutzers (2026-11-03): Unified mit Filter genügt, die Split-View
-  wäre zusätzliche Komplexität.
-* Entschieden **[E]**: Ein Filterwechsel baut die Liste neu auf und springt nach
-  oben. Der Filter bleibt erhalten.
-* Entschieden **[E]**: Ohne gespeicherte Wahl nimmt die Seite bei dunkler
-  Systemeinstellung Solarized Dark, sonst Solarized Light. Eine gespeicherte
-  Wahl gewinnt.
+* Decided **[E]**: split into two pull requests W06a (endless scroll, filter,
+  going back) and W06c (layout and themes). **W06b (split view) is dropped** at
+  the request of the user (2026-11-03): unified with a filter is enough, the
+  split view would be additional complexity.
+* Decided **[E]**: a change of the filter rebuilds the list and jumps to the top.
+  The filter is kept.
+* Decided **[E]**: without a stored choice the site takes Solarized Dark with a
+  dark system setting, otherwise Solarized Light. A stored choice wins.
 
-### W06a - Endless Scroll, Filter, Rücksprung
+### W06a - Endless scroll, filter, going back
 
 * Branch: `feature/w06-feed-client`
-* Abhängig von: W05
-* Umfang: Nachladen per `IntersectionObserver`, Filter Alle / Lang / Kurz (umbenannt am 2026-11-03)
-  im Unified-Modus, Speicherung des Filters, Wiederherstellen von Blöcken und
-  Scrollposition beim Rücksprung.
+* Depends on: W05
+* Scope: loading more through an `IntersectionObserver`, filter All / Lang /
+  Kurz (renamed on 2026-11-03) in the unified mode, storing the filter,
+  restoring blocks and scroll position when going back.
 * DoD:
-  * [x] Endless Scroll lädt Blöcke nach, ohne Doppelungen (E2E über alle
-    4 Blöcke, Reihenfolge geprüft).
-  * [x] Ohne JavaScript bleiben Weiter-Link und Filter normale Links.
-  * [x] Ohne nutzbaren `localStorage` gelten Standardwerte.
-  * [x] Zurück-Navigation stellt geladene Blöcke und Scrollposition wieder
-    her.
-  * [x] Nachladefehler zeigen einen Hinweis mit normalem Link als Ausweg.
-  * [x] Nachgeladen werden nur Adressen der eigenen Seite in der Form der
-    Blöcke (Unit-Test für die Prüfung).
-* Befunde bei der Umsetzung:
-  * Der Filter ändert die Adresse per `replaceState` auf die Reihe
-    (`/memos/`, `/posts/`, `/`). Ein Neuladen von `/memos/` zeigt dann
-    dieselbe Liste. Auf `/` gewinnt ein gespeicherter Filter, eine
-    ausdrücklich aufgerufene Reihe nicht. Beim Aufruf von `/` mit gespeichertem
-    Filter erscheint kurz der gemischte Strom, bevor er ersetzt wird.
-  * Mit JavaScript ist der Pager (auch "Neuere Einträge") verborgen.
+  * [x] Endless scroll loads blocks without duplicates (E2E across all 4 blocks,
+    order checked).
+  * [x] Without JavaScript the next link and the filter stay normal links.
+  * [x] Without usable `localStorage` the defaults apply.
+  * [x] Navigating back restores loaded blocks and scroll position.
+  * [x] Loading errors show a hint with a normal link as a way out.
+  * [x] Only addresses of the own site in the shape of the blocks are loaded
+    (unit test for the check).
+* Findings during implementation:
+  * The filter changes the address through `replaceState` to the series (`/memos/`,
+    `/posts/`, `/`). Reloading `/memos/` then shows the same list. On `/` a
+    stored filter wins, an explicitly opened series does not. When opening `/`
+    with a stored filter, the mixed stream briefly appears before it is replaced.
+  * With JavaScript the pager (also "newer entries") is hidden.
 
-### W06c - Layout und Themes
+### W06c - Layout and themes
 
 * Branch: `feature/w06c-themes`
-* Abhängig von: W06a
-* Entschieden **[E]**:
-  * Layout und Themes in einem Pull Request, weil Themes ohne Layout nichts zum
-    Färben haben.
-  * Schriften je Theme selbst hosten (Pakete `@fontsource/*`, Lizenz OFL-1.1,
-    nur der Zeichensatz `latin`). Nichts kommt von Dritten.
-  * Umschalter als Auswahlfeld in der Kopfleiste.
-  * Code-Blöcke bekommen Syntaxfarben je Theme, gefärbt beim Build.
-* Umsetzung:
-  * Zehn Themes als Blöcke mit CSS-Variablen in `styles/themes.css`, Liste und
-    Regeln in `lib/themes.ts`.
-  * `/theme-init.js` ist ein kurzes, blockierendes Skript im `<head>`, das
-    `data-theme` vor dem ersten Zeichnen setzt. Es wird aus derselben Liste
-    erzeugt, damit sie nicht auseinanderläuft.
-  * Gefärbt wird mit `lowlight` (highlight.js) nach der Bereinigung. Die Klassen
-    `hljs-*` stammen nur aus dem Färben, nicht aus dem Text. Ohne Sprachangabe
-    wird nicht geraten.
+* Depends on: W06a
+* Decided **[E]**:
+  * Layout and themes in one pull request, because themes have nothing to color
+    without a layout.
+  * Self-host fonts per theme (packages `@fontsource/*`, license OFL-1.1, only
+    the character set `latin`). Nothing comes from third parties.
+  * The switcher is a select field in the header.
+  * Code blocks get syntax colors per theme, colored at build time.
+* Implementation:
+  * Ten themes as blocks with CSS variables in `styles/themes.css`, list and
+    rules in `lib/themes.ts`.
+  * `/theme-init.js` is a short, blocking script in the `<head>` that sets
+    `data-theme` before the first paint. It is generated from the same list, so
+    they cannot drift apart.
+  * Coloring uses `lowlight` (highlight.js) after sanitizing. The classes
+    `hljs-*` come only from the coloring, not from the text. Without a language
+    nothing is guessed.
 * DoD:
-  * [x] Alle zehn Themes sind wählbar, Solarized Light ist der Standard, bei
-    dunkler Systemeinstellung Solarized Dark, eine gespeicherte Wahl gewinnt.
-  * [x] Jedes Theme besteht den Kontrasttest (Text, gedämpfter Text, Akzent,
-    Text auf Akzent und alle sechs Code-Farben mindestens 4,5:1), geprüft in
+  * [x] All ten themes can be chosen, Solarized Light is the default, with a dark
+    system setting Solarized Dark, a stored choice wins.
+  * [x] Every theme passes the contrast test (text, muted text, accent, text on
+    accent and all six code colors at least 4.5:1), checked in
     `lib/themes.test.ts`.
-  * [x] Das gewählte Theme bleibt nach dem Neuladen und auf anderen Seiten
-    erhalten. Ein E2E-Test blockiert alle anderen Skripte und prüft, dass
-    `data-theme` trotzdem schon gesetzt ist.
-  * [x] Ohne `localStorage` und ohne JavaScript gilt der Standard, der
-    Umschalter ist ohne JavaScript verborgen.
-  * [x] Schriften kommen von der eigenen Domain (E2E: keine Fremdanfrage,
-    Matrix lädt IBM Plex Mono).
-  * [x] Auf 360 Pixel Breite gibt es keinen waagerechten Bildlauf.
-  * [x] Die Bilder der README sind mit dem neuen Aussehen neu aufgenommen
-    (`pnpm screenshots`, PR #19, auf Wunsch des Nutzers erst nach W06c).
-* Befunde bei der Umsetzung:
-  * Autorenstile mit `display` überschreiben das Attribut `hidden`. Eine
-    globale Regel `[hidden] { display: none !important }` ist nötig, sonst
-    blieben der Pager und der Umschalter ohne JavaScript sichtbar.
-  * Die Pakete liefern je Schrift `woff2` und `woff`. Beide landen in `dist`
-    (insgesamt rund 480 KB), geladen wird nur `woff2` des aktiven Themes.
-  * Der Kontrast musste bei acht Farben nachgezogen werden, vor allem bei
-    Kommentar- und Schlüsselwortfarben (zum Beispiel Gruvbox, Monokai).
+  * [x] The chosen theme is kept after reloading and on other pages. An E2E test
+    blocks all other scripts and checks that `data-theme` is nevertheless
+    already set.
+  * [x] Without `localStorage` and without JavaScript the default applies, the
+    switcher is hidden without JavaScript.
+  * [x] Fonts come from the own domain (E2E: no foreign request, Matrix loads
+    IBM Plex Mono).
+  * [x] At 360 pixels width there is no horizontal scrolling.
+  * [x] The README images are retaken with the new look (`pnpm screenshots`, PR
+    #19, only after W06c at the request of the user).
+* Findings during implementation:
+  * Author styles with `display` override the attribute `hidden`. A global rule
+    `[hidden] { display: none !important }` is needed, otherwise the pager and
+    the switcher would stay visible without JavaScript.
+  * The packages deliver `woff2` and `woff` per font. Both end up in `dist` (about
+    480 KB in total), only the `woff2` of the active theme is loaded.
+  * The contrast had to be raised for eight colors, mainly comment and keyword
+    colors (for example Gruvbox, Monokai).
 
-## W07 - build.json und Banner
+## W07 - build.json and banner
 
 * Branch: `feature/w07-build-json`
-* Abhängig von: W05, W06
-* Entscheidungen: Anzahl der Einträge in `build.json`, Abfrageintervall,
-  Banner-Gestaltung.
+* Depends on: W05, W06
+* Decisions: number of entries in `build.json`, polling interval, design of the
+  banner.
 * DoD:
-  * [ ] `build.json` wird als letzte Datei eines Builds geschrieben.
-  * [ ] Bedingte Abfragen antworten mit 304.
-  * [ ] Das Banner zählt nur Einträge, die neuer sind als der neueste
-    geladene.
-  * [ ] Ein Klick scrollt nach oben und zeigt die neuen Einträge.
-  * [ ] Das Banner erscheint nicht, wenn sich nur Kommentare ändern.
-  * [ ] Es wird nur bei sichtbarem Tab abgefragt.
+  * [ ] `build.json` is written as the last file of a build.
+  * [ ] Conditional requests answer with 304.
+  * [ ] The banner counts only entries that are newer than the newest loaded
+    one.
+  * [ ] A click scrolls up and shows the new entries.
+  * [ ] The banner does not appear if only comments change.
+  * [ ] Polling happens only while the tab is visible.
 
-## W08 - Suche (Pagefind)
+## W08 - Search (Pagefind)
 
 * Branch: `feature/w08-suche`
-* Abhängig von: W05
-* Entscheidungen: Oberfläche (O16), Prüfung der deutschen Texte (O25).
+* Depends on: W05
+* Decisions: interface (O16), checking the German texts (O25).
 * DoD:
-  * [ ] Posts und Memos sind auffindbar, Filter nach Typ und Tag.
-  * [ ] Technische Blöcke sind nicht im Index, keine doppelten Treffer.
-  * [ ] Suche funktioniert ohne Fremdrequests.
+  * [ ] Posts and memos can be found, filter by type and tag.
+  * [ ] Technical blocks are not in the index, no duplicate hits.
+  * [ ] Search works without foreign requests.
 
 ## W09 - RSS
 
 * Branch: `feature/w09-rss`
-* Abhängig von: W05
-* Entscheidungen: Umfang und Auszug (O20), Domain-Platzhalter bis zur
-  Festlegung.
+* Depends on: W05
+* Decisions: scope and excerpt (O20), domain placeholder until it is set.
 * DoD:
-  * [ ] `/feed.xml` ist valide und kombiniert Posts und Memos.
-  * [ ] GUIDs sind stabil, unabhängig von Datum und Domain.
-  * [ ] Der Feed enthält keine Kommentare und Mentions.
+  * [ ] `/feed.xml` is valid and combines posts and memos.
+  * [ ] GUIDs are stable, independent of date and domain.
+  * [ ] The feed contains no comments and mentions.
 
-## W10 - SEO, Microformats, statische Seiten
+## W10 - SEO, microformats, static pages
 
 * Branch: `feature/w10-seo`
-* Abhängig von: W05
-* Entscheidungen: Open Graph (O17), Microformats (O11), Impressum und
-  Datenschutz (O15), 404 und `robots.txt` (O24).
+* Depends on: W05
+* Decisions: Open Graph (O17), microformats (O11), imprint and privacy policy
+  (O15), 404 and `robots.txt` (O24).
 * DoD:
-  * [ ] Jede Seite hat Title, Description und Canonical.
-  * [ ] Post- und Memo-Seiten tragen gültige `h-entry`-Auszeichnung.
-  * [ ] Statische Seiten wie Impressum sind veröffentlichbar.
-  * [ ] 404-Seite und `robots.txt` existieren.
+  * [ ] Every page has a title, description and canonical.
+  * [ ] Post and memo pages carry valid `h-entry` markup.
+  * [ ] Static pages such as the imprint can be published.
+  * [ ] A 404 page and `robots.txt` exist.
 
-## W11 - Docker-Gerüst
+## W11 - Docker scaffold
 
 * Branch: `feature/w11-docker`
-* Abhängig von: W00
-* Entscheidungen: Reverse-Proxy (O9), Image-Build (O10), Versionen (O8).
-* Umfang: Compose mit `web`, `builder`, `remark42` als Platzhalter, Volumes,
-  Secrets, Caddy-Regeln, Healthchecks (siehe [Docker](/architecture/docker.md)).
+* Depends on: W00
+* Decisions: reverse proxy (O9), image build (O10), versions (O8).
+* Scope: Compose with `web`, `builder`, `remark42` as placeholders, volumes,
+  secrets, Caddy rules, health checks (see [Docker](/architecture/docker.md)).
 * DoD:
-  * [ ] `docker compose up` startet alle Dienste in einer Testumgebung.
-  * [ ] Secrets stammen aus Secrets oder `.env`, nicht aus dem Repo.
-  * [ ] Die Auslieferung nutzt einen Symlink auf das aktuelle Release.
-  * [ ] Caddy lehnt Basic-Auth auf den Remark42-Routen von außen ab.
-  * [ ] CSP ohne Fremdquellen ist gesetzt.
+  * [ ] `docker compose up` starts all services in a test environment.
+  * [ ] Secrets come from secrets or `.env`, not from the repo.
+  * [ ] Delivery uses a symlink to the current release.
+  * [ ] Caddy rejects basic auth on the Remark42 routes from outside.
+  * [ ] A CSP without foreign sources is set.
 
-## W12 - Build-Pipeline und Scheduler
+## W12 - Build pipeline and scheduler
 
 * Branch: `feature/w12-pipeline`
-* Abhängig von: W02, W04, W11
-* Entscheidungen: Debounce-Zeit, Anzahl behaltener Releases, Meldekanal für
-  Fehler (O18).
+* Depends on: W02, W04, W11
+* Decisions: debounce time, number of releases kept, reporting channel for errors
+  (O18).
 * DoD:
-  * [ ] Alle 3 Minuten wird auf Änderungen geprüft, ohne Änderung kein Build.
-  * [ ] Release-Austausch ist atomar, `build.json` kommt zuletzt.
-  * [ ] Bei Abruffehler bleibt die letzte gute Version online.
-  * [ ] Frühere Releases bleiben für offene Tabs erhalten.
-  * [ ] Ein fehlgeschlagener Build wird gemeldet.
+  * [ ] Every 3 minutes changes are checked, without a change no build.
+  * [ ] The release swap is atomic, `build.json` comes last.
+  * [ ] On a fetch error the last good version stays online.
+  * [ ] Earlier releases are kept for open tabs.
+  * [ ] A failed build is reported.
 
-## W13 - Kommentare (Remark42)
+## W13 - Comments (Remark42)
 
 * Branch: `feature/w13-kommentare`
-* Abhängig von: W05, W11, W12
-* Entscheidungen: Hostname und Pfad (O9), Sortierung und Darstellung (O4),
-  Moderation (O22), Datenschutz (O15).
+* Depends on: W05, W11, W12
+* Decisions: host name and path (O9), sorting and display (O4), moderation
+  (O22), privacy (O15).
 * DoD:
-  * [ ] Login nur per E-Mail, die Mail kommt über Migadu an (in einer
-    Testumgebung mit Mail-Sink).
-  * [ ] Das Widget lädt nur vom eigenen Host.
-  * [ ] Die statische Kopie der Kommentare ist bereinigt und ohne JavaScript
-    sichtbar.
-  * [ ] Ohne Anmeldung kann nicht kommentiert werden.
-  * [ ] Kommentare sind auf Posts und Memos möglich.
-  * [ ] Daten von Remark42 sind gesichert (Volume, Backup-Test).
-  * [ ] Ein Contract-Test gegen eine echte Remark42-Testinstanz mit Mail-Sink
-    liegt vor.
+  * [ ] Login only by email, the mail arrives through Migadu (in a test
+    environment with a mail sink).
+  * [ ] The widget loads only from the own host.
+  * [ ] The static copy of the comments is sanitized and visible without
+    JavaScript.
+  * [ ] Without login no commenting is possible.
+  * [ ] Comments are possible on posts and memos.
+  * [ ] The data of Remark42 is backed up (volume, backup test).
+  * [ ] A contract test against a real Remark42 test instance with a mail sink
+    exists.
 
-## W14 - Webmentions: Empfang und Anzeige
+## W14 - Webmentions: receiving and display
 
 * Branch: `feature/w14-webmentions-empfang`
-* Abhängig von: W13, W10, Domain
-* Entscheidungen: Zustand und Wiederherstellung (O3), Kommentartext,
-  Prüfung der webmention.io-API (O25).
+* Depends on: W13, W10, domain
+* Decisions: state and recovery (O3), comment text, checking the webmention.io
+  API (O25).
 * DoD:
-  * [ ] `rel=webmention` und `rel=me` sind gesetzt.
-  * [ ] Neue Mentions erscheinen als Kommentar in der Zeitleiste der Zielseite.
-  * [ ] Mentions werden nie doppelt gepostet, auch nach Verlust des Zustands.
-  * [ ] Mention-Text ist als Text bereinigt, kein HTML.
-  * [ ] Avatar-Spiegelung hat SSRF- und Größenschutz oder entfällt.
-  * [ ] Fällt webmention.io aus, bleiben vorhandene Mentions sichtbar.
-  * [ ] Das Posten und Löschen von Mentions als `admin` ist gegen die echte
-    Remark42-Testinstanz im Contract-Test abgesichert.
+  * [ ] `rel=webmention` and `rel=me` are set.
+  * [ ] New mentions appear as a comment in the timeline of the target page.
+  * [ ] Mentions are never posted twice, also after losing the state.
+  * [ ] The mention text is sanitized as text, no HTML.
+  * [ ] Avatar mirroring has SSRF and size protection or is dropped.
+  * [ ] If webmention.io fails, existing mentions stay visible.
+  * [ ] Posting and deleting mentions as `admin` is secured against the real
+    Remark42 test instance in the contract test.
 
-## W15 - Webmentions: Senden
+## W15 - Webmentions: sending
 
 * Branch: `feature/w15-webmentions-senden`
-* Abhängig von: W14
-* Entscheidungen: Senden aus Memos (O12), Sender-Implementierung (O11).
+* Depends on: W14
+* Decisions: sending from memos (O12), sender implementation (O11).
 * DoD:
-  * [ ] Gesendet wird erst nach der Auslieferung des neuen Builds.
-  * [ ] Gesendete Paare sind gespeichert, Rebuilds senden nicht erneut.
-  * [ ] Änderungen und Löschungen lösen eine erneute Benachrichtigung aus.
-  * [ ] Zeitlimits und Fehlerbehandlung für fremde Server.
+  * [ ] Sending happens only after the new build is served.
+  * [ ] Sent pairs are stored, rebuilds do not send again.
+  * [ ] Changes and deletions trigger a new notification.
+  * [ ] Time limits and error handling for foreign servers.
 
-## W16 - Härtung und Betrieb
+## W16 - Hardening and operation
 
 * Branch: `feature/w16-haertung`
-* Abhängig von: W12, W13, W14, W15
-* Entscheidungen: Backup-Ziel und Rhythmus, Alert-Kanal (O18), Statistik
-  (O19).
+* Depends on: W12, W13, W14, W15
+* Decisions: backup target and rhythm, alert channel (O18), statistics (O19).
 * DoD:
-  * [ ] Backup und Restore von Remark42 und Zustand sind getestet.
-  * [ ] Security-Review (Secrets, SSRF, Sanitizing, Header) ohne offene
-    Befunde.
-  * [ ] Laufbuch für Störungen (Quelle nicht erreichbar, Build kaputt,
-    Domainwechsel).
-  * [ ] Alle `[U]`-Punkte im Bundle sind geprüft oder bewusst akzeptiert.
-  * [ ] Der Tag-Workflow führt die volle Suite erneut aus und veröffentlicht
-    bei Rot keine Images.
+  * [ ] Backup and restore of Remark42 and state are tested.
+  * [ ] Security review (secrets, SSRF, sanitizing, headers) without open
+    findings.
+  * [ ] Runbook for disruptions (source not reachable, build broken, domain
+    change).
+  * [ ] All `[U]` points in the bundle are checked or accepted knowingly.
+  * [ ] The tag workflow runs the full suite again and publishes no images if
+    it is red.
 
 ## W17 - Go-live
 
 * Branch: `feature/w17-golive`
-* Abhängig von: alle
-* Entscheidungen: Domain und DNS (O9), SPF/DKIM/DMARC, Umgang mit alten
-  Mentions beim ersten Lauf, Veröffentlichung der ersten Inhalte.
+* Depends on: all
+* Decisions: domain and DNS (O9), SPF/DKIM/DMARC, handling of old mentions on the
+  first run, publishing the first content.
 * DoD:
-  * [ ] Domain, TLS und DNS sind eingerichtet, Login-Mails sind zustellbar.
-  * [ ] Impressum und Datenschutz sind veröffentlicht (O15).
-  * [ ] Erster Echtlauf mit den echten Quellen ist erfolgreich.
-  * [ ] Alle offenen Punkte in `open-points.md` sind entschieden oder
-    bewusst vertagt.
+  * [ ] Domain, TLS and DNS are set up, login mails are deliverable.
+  * [ ] Imprint and privacy policy are published (O15).
+  * [ ] The first real run with the real sources is successful.
+  * [ ] All open points in `open-points.md` are decided or postponed knowingly.
 
-## W18 - Codequalität, Komplexität, Mutationstests
+## W18 - Code quality, complexity, mutation tests
 
 * Branch: `feature/w18-qualitaet`
-* Abhängig von: W05 (genug Code zum Messen); bewusst nicht am Anfang
-* Anlass: Der Nutzer wünscht statische Analyse (Codequalität, Komplexität) und
-  später Mutationstests mit mehr als 80 %, damit der Code zu den TDD-Tests
-  passt.
-* Entscheidungen (offen, O37): Werkzeuge, Schwellen für Komplexität, ob die
-  Analyse die CI blockiert oder nur berichtet, Umfang und Laufzeit der
-  Mutationstests (alle Pakete oder nur `packages/core`), Zeitpunkt der
-  Einführung der 80-%-Schwelle.
-* DoD (Entwurf, **[V]**):
-  * [ ] Komplexitätsgrenzen sind in der Lint-Konfiguration gesetzt und die CI
-    prüft sie.
-  * [ ] Ein Bericht zur Codequalität liegt vor, bestehende Befunde sind
-    behoben oder bewusst akzeptiert.
-  * [ ] Mutationstests laufen für die gewählten Pakete, der Mutation Score
-    liegt bei mindestens 80 %, überlebende Mutanten sind bewertet.
-  * [ ] Laufzeit und CI-Kosten sind gemessen (siehe O34), der Lauf blockiert
-    Pull Requests nicht unnötig lange.
+* Depends on: W05 (enough code to measure); deliberately not at the start
+* Occasion: the user wants static analysis (code quality, complexity) and later
+  mutation tests with more than 80 %, so the code fits the TDD tests.
+* Decisions (open, O37): tools, thresholds for complexity, whether the analysis
+  blocks the CI or only reports, scope and run time of the mutation tests (all
+  packages or only `packages/core`), when to introduce the 80 % threshold.
+* DoD (draft, **[V]**):
+  * [ ] Complexity limits are set in the lint configuration and the CI checks
+    them.
+  * [ ] A report on code quality exists, existing findings are fixed or accepted
+    knowingly.
+  * [ ] Mutation tests run for the chosen packages, the mutation score is at
+    least 80 %, surviving mutants are assessed.
+  * [ ] Run time and CI costs are measured (see O34), the run does not block pull
+    requests for an unnecessarily long time.
 
-## W19 - Glossar
+## W19 - Glossary
 
 * Branch: `feature/w19-glossar`
-* Abhängig von: W05, W06a
-* Entschieden **[E]**: Feld `type: glossary`, Filter und Reihe **Begriffe**
-  (`/terms/`), Begriffe auch in Alle, aber gekennzeichnet.
-* Entscheidungen (O38): Begriff-Feld und Frageform des Titels, Sortierung der
-  Umlaute, Kommentare auf Begriffen.
-* Umfang: Eintragsart `glossar` im Loader, Seiten `/g/<slug>/`, Buchstabenansicht
-  `/glossary/`, dritte Art im Feed mit Filter, Aufnahme in Sitemap (siehe
-  [Glossar](/features/glossary.md)). Suche und RSS folgen in W08 und W09.
-* DoD (Entwurf, **[V]**):
-  * [ ] Eine Datei mit `type: glossary` und `publish: true` erzeugt `/g/<slug>/`;
-    ohne `type` bleibt sie ein Artikel.
-  * [ ] Begriffe erscheinen im Feed in zeitlicher Reihenfolge und sind filterbar.
-  * [ ] `/glossary/` gruppiert nach Buchstaben des Begriffs, Umlaute unter dem
-    Grundbuchstaben, die Leiste besteht aus echten Links.
-  * [ ] Doppelte Slugs im Glossar bekommen einen Zähler und stören `/p/` nicht.
-  * [ ] Ohne JavaScript ist alles erreichbar.
+* Depends on: W05, W06a
+* Decided **[E]**: field `type: glossary`, filter and series **Begriffe**
+  (`/terms/`), terms also in All, but marked.
+* Decisions (O38): term field and question form of the title, sorting of
+  umlauts, comments on terms.
+* Scope: kind of content `glossary` in the loader, pages `/g/<slug>/`, letter
+  view `/glossary/`, third kind in the feed with a filter, inclusion in the
+  sitemap (see [Glossary](/features/glossary.md)). Search and RSS follow in W08
+  and W09.
+* DoD (draft, **[V]**):
+  * [ ] A file with `type: glossary` and `publish: true` creates `/g/<slug>/`;
+    without `type` it stays an article.
+  * [ ] Terms appear in the feed in chronological order and can be filtered.
+  * [ ] `/glossary/` groups by letter of the term, umlauts under the base letter,
+    the bar consists of real links.
+  * [ ] Duplicate slugs in the glossary get a counter and do not disturb `/p/`.
+  * [ ] Everything is reachable without JavaScript.
 
-## W20 - Verlinkung und Backlinks
+## W20 - Linking and backlinks
 
 * Branch: `feature/w20-verlinkung`
-* Abhängig von: W03, W19
-* Umfang: Auflösung relativer Markdown-Links auf veröffentlichte Dateien zu
-  Seiten, Warnung bei toten Links, Kantenliste, Listen "Verweist auf" und
-  "Verlinkt von" auf Artikel- und Begriffsseiten.
-* DoD (Entwurf, **[V]**):
-  * [ ] Ein Link mit relativem Dateipfad als Ziel führt zur Seite des Ziels, auch bei `%20` und
-    zerlegten Umlauten im Pfad.
-  * [ ] Links auf nicht veröffentlichte oder unbekannte Dateien werden zu Text
-    mit Warnung, nie zu einem Link.
-  * [ ] Backlinks erscheinen als HTML-Liste, ohne Selbstbezug und Doppelte.
-  * [ ] Memos erscheinen weder als Quelle noch als Ziel.
+* Depends on: W03, W19
+* Scope: resolving relative Markdown links to published files into pages, a
+  warning on dead links, edge list, lists "links to" and "linked from" on article
+  and term pages.
+* DoD (draft, **[V]**):
+  * [ ] A link with a relative file path as its target leads to the page of the
+    target, also with `%20` and decomposed umlauts in the path.
+  * [ ] Links to unpublished or unknown files become text with a warning, never a
+    link.
+  * [ ] Backlinks appear as an HTML list, without self-references and
+    duplicates.
+  * [ ] Memos appear neither as a source nor as a target.
 
-## W21 - Wissensgraph
+## W21 - Knowledge graph
 
 * Branch: `feature/w21-graph`
-* Abhängig von: W20
-* Entscheidungen: Schwellwert für die Größe von `graph.json`, Layout,
-  Bedienung per Tastatur.
-* DoD (Entwurf, **[V]**):
-  * [ ] Der Build schreibt `graph.json` nur mit veröffentlichten Knoten.
-  * [ ] Lokaler Graph je Seite und Gesamtansicht `/graph/`, gezeichnet ohne
-    Fremdbibliothek und ohne Anfrage an Dritte.
-  * [ ] Jeder Knoten ist per Tastatur erreichbar, die Backlink-Listen bleiben
-    der Zugang ohne JavaScript.
+* Depends on: W20
+* Decisions: threshold for the size of `graph.json`, layout, keyboard operation.
+* DoD (draft, **[V]**):
+  * [ ] The build writes `graph.json` only with published nodes.
+  * [ ] A local graph per page and an overall view `/graph/`, drawn without a
+    foreign library and without a request to third parties.
+  * [ ] Every node is reachable by keyboard, the backlink lists remain the access
+    without JavaScript.
 
 ## W22 - English as development language
 
@@ -616,33 +605,33 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   demo content and W07 onward. No history rewrite.
 * Split:
   * **W22a** rules: `AGENTS.md`, README, the language concept, roadmap entry.
+    Done.
   * **W22b** `packages/core`: identifiers, comments, test names, log messages.
-    Done. Findings: the texts that end up in the pages (memo title
-    "Memo vom ...", PDF label, embed placeholder, "[Bild fehlt]") are still
-    German. They sit in one `UI` object per file (`render.ts`, `memos.ts`) and
-    move to the message catalog in W23. CSS classes in the generated HTML are
-    English now (`image-missing`, `memo-attachments`, `attachment`). The
-    fallback file name of `safeFileName` is `file`. The route `/seite/N/` stays
-    until W22c.
-  * **W22c** `apps/site`, E2E tests, workflow, scripts, UI strings collected
-    in one place (still German). Done. The routes are `/page/N/` now. All UI
-    texts of the site live in `apps/site/src/i18n/messages.ts` (German, one
-    object, becomes one catalog per language in W23). CSS classes and data
-    attributes are English (`entry`, `content`, `excerpt`, `site-header`,
-    `theme-picker`, `pager`, `data-feed-list`, `data-series`); the tag list is
-    styled through the class `tags`, not through its localized `aria-label`.
-    The CI job names are English (the required check `CI Gate` is unchanged).
-    Test files `artikel.spec.ts` and `startseite.spec.ts` are `article.spec.ts`
-    and `home.spec.ts`. The values stored in the browser for the filter changed
-    from `alle` to `all`; an old stored value falls back to `all`.
-  * **W22d** the OKF bundle (about 16,000 words), file by file.
+    Done. Findings: the texts that end up in the pages (memo title "Memo vom
+    ...", PDF label, embed placeholder, "[Bild fehlt]") are still German. They
+    sit in one `UI` object per file (`render.ts`, `memos.ts`) and move to the
+    message catalog in W23. CSS classes in the generated HTML are English now
+    (`image-missing`, `memo-attachments`, `attachment`). The fallback file name
+    of `safeFileName` is `file`.
+  * **W22c** `apps/site`, E2E tests, workflow, scripts, UI strings collected in
+    one place (still German). Done. The routes are `/page/N/` now. All UI texts
+    of the site live in `apps/site/src/i18n/messages.ts` (German, one object,
+    becomes one catalog per language in W23). CSS classes and data attributes
+    are English (`entry`, `content`, `excerpt`, `site-header`, `theme-picker`,
+    `pager`, `data-feed-list`, `data-series`); the tag list is styled through the
+    class `tags`, not through its localized `aria-label`. The CI job names are
+    English (the required check `CI Gate` is unchanged). The test files
+    `artikel.spec.ts` and `startseite.spec.ts` are `article.spec.ts` and
+    `home.spec.ts`. The values stored in the browser for the filter changed from
+    `alle` to `all`; an old stored value falls back to `all`.
+  * **W22d** the OKF bundle (about 17,000 words), file by file. Done.
 * DoD:
-  * [ ] `AGENTS.md`, README and the language rules are English.
-  * [ ] No German identifiers, comments or test names remain in `packages/`,
-    `apps/`, scripts and workflows. German text remains only where it is
-    content or UI text (fixtures, message catalog).
-  * [ ] The whole OKF bundle is English and `lint_okf` passes.
-  * [ ] All checks stay green after each part.
+  * [x] `AGENTS.md`, README and the language rules are English.
+  * [x] No German identifiers, comments or test names remain in `packages/`,
+    `apps/`, scripts and workflows. German text remains only where it is content
+    or UI text (fixtures, message catalog).
+  * [x] The whole OKF bundle is English and `lint_okf` passes.
+  * [x] All checks stay green after each part.
 
 ## W23 - UI language
 
