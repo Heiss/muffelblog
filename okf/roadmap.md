@@ -376,9 +376,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [x] Schriften kommen von der eigenen Domain (E2E: keine Fremdanfrage,
     Matrix lädt IBM Plex Mono).
   * [x] Auf 360 Pixel Breite gibt es keinen waagerechten Bildlauf.
-  * [ ] Die Bilder der README sind mit dem neuen Aussehen neu aufgenommen
-    (`pnpm screenshots`, Entwurf-PR #19, auf Wunsch des Nutzers erst nach W06c
-    gemergt).
+  * [x] Die Bilder der README sind mit dem neuen Aussehen neu aufgenommen
+    (`pnpm screenshots`, PR #19, auf Wunsch des Nutzers erst nach W06c).
 * Befunde bei der Umsetzung:
   * Autorenstile mit `display` überschreiben das Attribut `hidden`. Eine
     globale Regel `[hidden] { display: none !important }` ist nötig, sonst

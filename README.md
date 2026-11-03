@@ -3,6 +3,27 @@
 Statischer Blog mit Memos-Microblog. Die Spezifikation liegt als OKF-Bundle in
 [`okf/`](okf/index.md).
 
+## Vorschau
+
+Stand mit Beispieldaten. Nextcloud-Anbindung, Betrieb und Kommentare fehlen noch
+(siehe [Roadmap](okf/roadmap.md)). Es gibt zehn Farbschemata, Standard ist
+Solarized Light.
+
+| Feed, Solarized Light                           | Feed, Dracula                                     |
+| ----------------------------------------------- | ------------------------------------------------- |
+| ![Feed breit](docs/screenshots/feed-breit.webp) | ![Feed dunkel](docs/screenshots/feed-dunkel.webp) |
+
+| Feed mobil                                      | Artikel                                   | Artikel, Matrix                                         |
+| ----------------------------------------------- | ----------------------------------------- | ------------------------------------------------------- |
+| ![Feed mobil](docs/screenshots/feed-mobil.webp) | ![Artikel](docs/screenshots/artikel.webp) | ![Artikel Matrix](docs/screenshots/artikel-matrix.webp) |
+
+| Tags                                |
+| ----------------------------------- |
+| ![Tags](docs/screenshots/tags.webp) |
+
+Die Bilder entstehen aus der gebauten Seite mit Beispieldaten und lassen sich
+mit `pnpm screenshots` neu erzeugen (braucht einen Browser, siehe unten).
+
 ## Struktur
 
 | Pfad            | Inhalt                                    |
@@ -31,6 +52,7 @@ pnpm test                 # Unit-Tests (Vitest)
 pnpm build                # Seite bauen
 pnpm test:e2e             # E2E-Tests (Playwright) gegen apps/site/dist
 pnpm check                # lint, format:check, typecheck, test und build
+pnpm screenshots          # Bilder der README neu erzeugen (docs/screenshots)
 ```
 
 Für die E2E-Tests braucht Playwright einen Browser:
