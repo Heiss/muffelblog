@@ -7,38 +7,73 @@ interface Props {
   title?: string;
   heading: string;
   page: Page<FeedItem>;
+  /** Reihe, zu der die Seite gehört. Nur dort gibt es den Filter. */
+  reihe?: 'alle' | 'post' | 'memo';
   /** Hinweis, wenn der Block leer ist. */
   leer?: string;
 }
 
-const { title, heading, page, leer = 'Noch keine Einträge.' } = Astro.props;
+const {
+  title,
+  heading,
+  page,
+  reihe,
+  leer = 'Noch keine Einträge.',
+} = Astro.props;
 const seitentitel =
   page.page > 1
     ? `${title ?? heading}, Seite ${page.page}`
     : (title ?? undefined);
+const filter = [
+  { id: 'alle', name: 'Alle', href: '/' },
+  { id: 'post', name: 'Beiträge', href: '/posts/' },
+  { id: 'memo', name: 'Memos', href: '/memos/' },
+] as const;
 ---
 
 <Base title={seitentitel} noindex={page.page > 1}>
   <h1>{heading}</h1>
-  {page.items.length === 0 && <p>{leer}</p>}
-  {page.items.map((item) => (
-    <FeedEntry item={item} />
-  ))}
-  {(page.prev || page.next) && (
-    <nav aria-label="Seiten" class="seiten">
-      {page.prev && (
-        <a href={page.prev} rel="prev">
-          Neuere Einträge
-        </a>
-      )}
-      <span>
-        Seite {page.page} von {page.pages}
-      </span>
-      {page.next && (
-        <a href={page.next} rel="next">
-          Ältere Einträge
-        </a>
-      )}
-    </nav>
-  )}
+  <div data-feed data-reihe={reihe}>
+    {reihe && (
+      <nav aria-label="Filter" class="filter" data-filter>
+        {filter.map((f) => (
+          <a
+            href={f.href}
+            data-filter-id={f.id}
+            aria-current={f.id === reihe ? 'page' : undefined}
+          >
+            {f.name}
+          </a>
+        ))}
+      </nav>
+    )}
+    <div data-feed-liste>
+      {page.items.length === 0 && <p>{leer}</p>}
+      {page.items.map((item) => (
+        <FeedEntry item={item} />
+      ))}
+    </div>
+    <p data-feed-status role="status" hidden></p>
+    {(page.prev || page.next) && (
+      <nav aria-label="Seiten" class="seiten" data-pager>
+        {page.prev && (
+          <a href={page.prev} rel="prev">
+            Neuere Einträge
+          </a>
+        )}
+        <span>
+          Seite {page.page} von {page.pages}
+        </span>
+        {page.next && (
+          <a href={page.next} rel="next">
+            Ältere Einträge
+          </a>
+        )}
+      </nav>
+    )}
+  </div>
 </Base>
+
+<script>
+  import '../scripts/feed';
+</script>

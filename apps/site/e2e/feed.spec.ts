@@ -3,6 +3,10 @@ import type { Page } from '@playwright/test';
 
 // Der Test-Build nutzt Blöcke zu 4 Einträgen (MUFFEL_FEED_PAGE_SIZE), die Beispieldaten
 // haben 9 Artikel und 6 Memos.
+// Die statische Struktur (Blöcke, Weiter-Links) wird ohne JavaScript geprüft;
+// das Nachladen im Browser deckt feed-client.spec.ts ab.
+test.use({ javaScriptEnabled: false });
+
 const GESAMT = 15;
 const BLOCK = 4;
 
