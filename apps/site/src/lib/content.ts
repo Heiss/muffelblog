@@ -3,6 +3,7 @@ import path from 'node:path';
 import {
   createFixtureMemosSource,
   createHttpMemosSource,
+  readSettings,
 } from '@muffelblog/core';
 import type { MemosSource } from '@muffelblog/core';
 
@@ -60,6 +61,9 @@ export function contentConfig(
   }
   return {
     contentDir: env.CONTENT_DIR as string,
-    memos: createHttpMemosSource({ baseUrl: env.MEMOS_URL as string }),
+    memos: createHttpMemosSource({
+      baseUrl: env.MEMOS_URL as string,
+      timeoutMs: readSettings(env).memosTimeoutMs,
+    }),
   };
 }

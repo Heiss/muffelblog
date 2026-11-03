@@ -5,8 +5,8 @@ import {
   groupByTag,
   paginate,
   pagePath,
-  PAGE_SIZE,
 } from './feed.ts';
+import { DEFAULT_SETTINGS } from './config.ts';
 import type { Article } from './articles.ts';
 import type { MemoEntry } from './memos.ts';
 
@@ -88,6 +88,16 @@ describe('buildFeed', () => {
     expect(ohne?.excerpt).toBe('Titel Los geht es');
   });
 
+  it('kürzt den Textanfang auf die eingestellte Länge', () => {
+    const [eintrag] = buildFeed(
+      [artikel({ slug: 'a', html: `<p>${'wort '.repeat(50)}</p>` })],
+      [],
+      { excerptChars: 30 },
+    );
+    expect(eintrag?.excerpt.length).toBeLessThanOrEqual(30);
+    expect(eintrag?.excerpt.endsWith('…')).toBe(true);
+  });
+
   it('zeigt Memos vollständig und Artikel nur mit Auszug', () => {
     const feed = buildFeed([artikel({ slug: 'a' })], [memo({ uid: 'u' })]);
     const m = feed.find((e) => e.kind === 'memo');
@@ -127,7 +137,7 @@ describe('paginate', () => {
   const liste = Array.from({ length: 45 }, (_, i) => i);
 
   it('Blockgröße ist 20', () => {
-    expect(PAGE_SIZE).toBe(20);
+    expect(DEFAULT_SETTINGS.feedPageSize).toBe(20);
   });
 
   it('teilt in Blöcke und verlinkt vor und zurück', () => {

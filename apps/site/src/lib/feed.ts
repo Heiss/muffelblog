@@ -1,25 +1,14 @@
-import { PAGE_SIZE, buildFeed } from '@muffelblog/core';
+import { buildFeed } from '@muffelblog/core';
 import type { FeedItem } from '@muffelblog/core';
 import { getContent } from './articles';
+import { getSettings } from './settings';
 
 /** Der gemeinsame Feed aus Artikeln und Memos, neueste zuerst. */
 export async function getFeed(): Promise<FeedItem[]> {
   const { articles, memos } = await getContent();
-  return buildFeed(articles, memos);
-}
-
-/**
- * Einträge pro Block. Eine kleinere Größe gilt nur mit Beispieldaten
- * (`MUFFEL_FIXTURES=1`), damit E2E-Tests mehrere Blöcke sehen. Ein Build mit
- * echten Inhalten ignoriert sie.
- */
-export function pageSize(
-  env: Record<string, string | undefined> = process.env,
-): number {
-  if (env.MUFFEL_FIXTURES !== '1') return PAGE_SIZE;
-  const wert = env.MUFFEL_PAGE_SIZE;
-  if (wert === undefined || !/^[1-9]\d*$/.test(wert)) return PAGE_SIZE;
-  return Number(wert);
+  return buildFeed(articles, memos, {
+    excerptChars: getSettings().feedExcerptChars,
+  });
 }
 
 /** Seitenzahlen ab 2: Seite 1 liegt an der Basis und ist keine eigene Route. */

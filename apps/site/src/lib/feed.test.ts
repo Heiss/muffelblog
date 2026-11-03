@@ -1,24 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canonicalUrl, pageSize, restSeiten, sitemapXml } from './feed';
-
-describe('pageSize', () => {
-  it('nimmt 20, auch wenn eine Größe gesetzt ist, solange keine Beispieldaten laufen', () => {
-    expect(pageSize({})).toBe(20);
-    expect(pageSize({ MUFFEL_PAGE_SIZE: '3' })).toBe(20);
-  });
-
-  it('erlaubt eine kleinere Größe nur mit Beispieldaten', () => {
-    expect(pageSize({ MUFFEL_FIXTURES: '1', MUFFEL_PAGE_SIZE: '3' })).toBe(3);
-  });
-
-  it('weist ungültige Größen ab', () => {
-    for (const wert of ['0', '-1', '2.5', 'abc', '']) {
-      expect(pageSize({ MUFFEL_FIXTURES: '1', MUFFEL_PAGE_SIZE: wert })).toBe(
-        20,
-      );
-    }
-  });
-});
+import { canonicalUrl, restSeiten, sitemapXml } from './feed';
 
 describe('restSeiten', () => {
   it('liefert die Seiten ab 2', () => {

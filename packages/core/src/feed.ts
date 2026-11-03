@@ -1,10 +1,8 @@
 import type { Article } from './articles.ts';
+import { DEFAULT_SETTINGS } from './config.ts';
 import { plainExcerpt } from './excerpt.ts';
 import type { MemoEntry } from './memos.ts';
 import { tagSlug } from './slug.ts';
-
-/** Einträge pro Block (O13). */
-export const PAGE_SIZE = 20;
 
 export type FeedKind = 'post' | 'memo';
 
@@ -25,7 +23,9 @@ export interface FeedItem {
 export function buildFeed(
   articles: ReadonlyArray<Article & { html: string }>,
   memos: ReadonlyArray<MemoEntry>,
+  optionen: { excerptChars?: number } = {},
 ): FeedItem[] {
+  const auszugMax = optionen.excerptChars ?? DEFAULT_SETTINGS.feedExcerptChars;
   const items: FeedItem[] = [
     ...articles.map((a): FeedItem => ({
       kind: 'post',
@@ -34,7 +34,7 @@ export function buildFeed(
       title: a.title,
       date: a.date,
       tags: a.tags,
-      excerpt: a.description?.trim() || plainExcerpt(a.html),
+      excerpt: a.description?.trim() || plainExcerpt(a.html, auszugMax),
     })),
     ...memos.map((m): FeedItem => ({
       kind: 'memo',
@@ -75,7 +75,7 @@ export function paginate<T>(
   items: readonly T[],
   page: number,
   base: string,
-  size = PAGE_SIZE,
+  size = DEFAULT_SETTINGS.feedPageSize,
 ): Page<T> {
   const pages = Math.max(1, Math.ceil(items.length / size));
   if (!Number.isInteger(page) || page < 1 || page > pages) {

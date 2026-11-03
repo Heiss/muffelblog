@@ -1,9 +1,10 @@
 ---
 import { SITE_NAME, paginate } from '@muffelblog/core';
 import FeedSeite from '../components/FeedSeite.astro';
-import { getFeed, pageSize } from '../lib/feed';
+import { getFeed } from '../lib/feed';
+import { getSettings } from '../lib/settings';
 
-const page = paginate(await getFeed(), 1, '/', pageSize());
+const page = paginate(await getFeed(), 1, '/', getSettings().feedPageSize);
 ---
 
 <FeedSeite heading={SITE_NAME} {page} />
