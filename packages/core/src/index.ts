@@ -64,7 +64,6 @@ export type {
 export { toResolvedImage } from './media.ts';
 export { plainExcerpt } from './excerpt.ts';
 export {
-  PAGE_SIZE,
   buildFeed,
   filterKind,
   groupByTag,
@@ -72,3 +71,10 @@ export {
   paginate,
 } from './feed.ts';
 export type { FeedItem, FeedKind, Page, TagGroup } from './feed.ts';
+export {
+  ConfigError,
+  DEFAULT_SETTINGS,
+  SETTING_SPECS,
+  readSettings,
+} from './config.ts';
+export type { SettingSpec, Settings } from './config.ts';

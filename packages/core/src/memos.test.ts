@@ -353,6 +353,17 @@ describe('buildMemoEntries: Grunddaten', () => {
     expect(beschreibung).not.toContain('https');
   });
 
+  it('kürzt die Beschreibung auf die eingestellte Länge', async () => {
+    const quelle = fakeQuelle([rohMemo('d', { content: 'wort '.repeat(80) })]);
+    const { memos } = await buildMemoEntries(quelle, new Map(), {
+      descriptionChars: 40,
+    });
+    const beschreibung = memos[0]?.description ?? '';
+    expect(beschreibung.length).toBeLessThanOrEqual(41);
+    expect(beschreibung.endsWith('…')).toBe(true);
+    expect(beschreibung.length).toBeGreaterThan(20);
+  });
+
   it('lässt die Beschreibung leer, wenn es keinen Text gibt', async () => {
     const quelle = fakeQuelle([rohMemo('e', { content: '' })]);
     const { memos } = await buildMemoEntries(quelle, new Map());

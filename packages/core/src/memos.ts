@@ -1,3 +1,4 @@
+import { DEFAULT_SETTINGS } from './config.ts';
 import { createHash } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -63,7 +64,6 @@ export interface MemosSource {
 
 const MEMO_NAME = /^memos\/([A-Za-z0-9](?:[A-Za-z0-9-]{0,34}[A-Za-z0-9])?)$/;
 const ATTACHMENT_NAME = /^attachments\/([A-Za-z0-9][A-Za-z0-9_-]{0,63})$/;
-const MAX_FILE_BYTES = 25 * 1024 * 1024;
 
 function istObjekt(wert: unknown): wert is Record<string, unknown> {
   return typeof wert === 'object' && wert !== null && !Array.isArray(wert);
@@ -167,7 +167,7 @@ export function createHttpMemosSource(optionen: HttpMemosOptions): MemosSource {
   const abruf = optionen.fetch ?? globalThis.fetch;
   const pageSize = optionen.pageSize ?? 100;
   const maxPages = optionen.maxPages ?? 1000;
-  const timeoutMs = optionen.timeoutMs ?? 30_000;
+  const timeoutMs = optionen.timeoutMs ?? DEFAULT_SETTINGS.memosTimeoutMs;
 
   async function hole(url: string): Promise<Response> {
     try {
@@ -387,8 +387,8 @@ function formatiereGroesse(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`;
 }
 
-/** Kurzer Klartext aus Markdown, höchstens 160 Zeichen, an einer Wortgrenze gekürzt. */
-function beschreibung(markdown: string): string {
+/** Kurzer Klartext aus Markdown, höchstens `max` Zeichen, an einer Wortgrenze gekürzt. */
+function beschreibung(markdown: string, max: number): string {
   const baum = unified().use(remarkParse).use(remarkGfm).parse(markdown);
   const teile: string[] = [];
   visit(baum, (knoten) => {
@@ -396,15 +396,17 @@ function beschreibung(markdown: string): string {
       teile.push((knoten as { value: string }).value);
   });
   const text = teile.join(' ').replace(/\s+/g, ' ').trim();
-  if (text.length <= 160) return text;
-  const gekuerzt = text.slice(0, 160);
+  if (text.length <= max) return text;
+  const gekuerzt = text.slice(0, max);
   const ende = gekuerzt.lastIndexOf(' ');
-  return `${(ende > 80 ? gekuerzt.slice(0, ende) : gekuerzt).trimEnd()}…`;
+  return `${(ende > max / 2 ? gekuerzt.slice(0, ende) : gekuerzt).trimEnd()}…`;
 }
 
 export interface BuildMemosOptions {
   /** Höchstgröße je gespiegelter Datei in Bytes. Standard: 25 MB. */
   maxFileBytes?: number;
+  /** Höchstlänge der Beschreibung in Zeichen. Standard: 160. */
+  descriptionChars?: number;
   urlPrefix?: string;
 }
 
@@ -423,7 +425,9 @@ export async function buildMemoEntries(
   speicher: Map<string, Buffer>,
   optionen: BuildMemosOptions = {},
 ): Promise<{ memos: MemoEntry[]; warnings: string[] }> {
-  const maxBytes = optionen.maxFileBytes ?? MAX_FILE_BYTES;
+  const maxBytes = optionen.maxFileBytes ?? DEFAULT_SETTINGS.memosMaxFileBytes;
+  const beschreibungMax =
+    optionen.descriptionChars ?? DEFAULT_SETTINGS.memosDescriptionChars;
   const prefix = optionen.urlPrefix ?? '/media/';
   const liste = await quelle.listPublicMemos();
   const warnings = [...liste.warnings];
@@ -555,7 +559,7 @@ export async function buildMemoEntries(
       uid,
       path: `memos/${uid}`,
       title: `Memo vom ${DATUM_FORMAT.format(datum)}`,
-      description: beschreibung(roh.content),
+      description: beschreibung(roh.content, beschreibungMax),
       date: datum,
       tags,
       html: gerendert.html + medien,

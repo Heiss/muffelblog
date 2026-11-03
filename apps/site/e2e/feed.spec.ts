@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-// Der Test-Build nutzt Blöcke zu 4 Einträgen (MUFFEL_PAGE_SIZE), die Beispieldaten
+// Der Test-Build nutzt Blöcke zu 4 Einträgen (MUFFEL_FEED_PAGE_SIZE), die Beispieldaten
 // haben 9 Artikel und 6 Memos.
 const GESAMT = 15;
 const BLOCK = 4;

@@ -6,6 +6,7 @@ import {
 } from '@muffelblog/core';
 import type { Article, MemoEntry } from '@muffelblog/core';
 import { contentConfig } from './content';
+import { getSettings } from './settings';
 
 export interface RenderedArticle extends Article {
   html: string;
@@ -40,7 +41,10 @@ async function build(): Promise<Content> {
   }
 
   // Scheitert der Abruf der Memos, bricht der Build ab und die letzte gute Version bleibt online.
-  const memoErgebnis = await buildMemoEntries(config.memos, media);
+  const memoErgebnis = await buildMemoEntries(config.memos, media, {
+    maxFileBytes: getSettings().memosMaxFileBytes,
+    descriptionChars: getSettings().memosDescriptionChars,
+  });
   warnings.push(...memoErgebnis.warnings);
 
   for (const warnung of warnings) console.warn(`[inhalt] ${warnung}`);

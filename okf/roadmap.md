@@ -291,8 +291,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     Links normale Anker sind.
   * [x] Seiten haben `lang="de"`.
 * Befunde bei der Umsetzung:
-  * Der Test-Build nutzt Blöcke zu 4 Einträgen (`MUFFEL_PAGE_SIZE=4`, nur mit
-    `MUFFEL_FIXTURES=1` wirksam), sonst hätten die 15 Beispieleinträge nur
+  * Der Test-Build nutzt Blöcke zu 4 Einträgen (`MUFFEL_FEED_PAGE_SIZE=4`, siehe
+    [Konfiguration](/ops/config.md)), sonst hätten die 15 Beispieleinträge nur
     eine Seite.
   * Ohne `SITE_URL` (Domain offen, O9) gibt es weder Sitemap noch Canonical.
     Mit `SITE_URL` entstehen beide, lokal geprüft, aber nicht in der CI.

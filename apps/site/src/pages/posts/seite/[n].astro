@@ -1,18 +1,24 @@
 ---
 import { filterKind, paginate } from '@muffelblog/core';
 import FeedSeite from '../../../components/FeedSeite.astro';
-import { getFeed, pageSize, restSeiten } from '../../../lib/feed';
+import { getFeed, restSeiten } from '../../../lib/feed';
+import { getSettings } from '../../../lib/settings';
 
 export async function getStaticPaths() {
   const eintraege = filterKind(await getFeed(), 'post');
-  return restSeiten(eintraege.length, pageSize()).map((n) => ({
+  return restSeiten(eintraege.length, getSettings().feedPageSize).map((n) => ({
     params: { n: String(n) },
     props: { eintraege },
   }));
 }
 
 const { eintraege } = Astro.props;
-const page = paginate(eintraege, Number(Astro.params.n), '/posts/', pageSize());
+const page = paginate(
+  eintraege,
+  Number(Astro.params.n),
+  '/posts/',
+  getSettings().feedPageSize,
+);
 ---
 
 <FeedSeite title="Beiträge" heading="Beiträge" {page} />

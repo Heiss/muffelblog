@@ -1,3 +1,5 @@
+import { DEFAULT_SETTINGS } from './config.ts';
+
 const BENANNT: Record<string, string> = {
   lt: '<',
   gt: '>',
@@ -25,7 +27,10 @@ function entitaeten(text: string): string {
  * Code-Blöcke, Leerraum zusammengefasst, höchstens `max` Zeichen
  * (an einer Wortgrenze gekürzt, mit "…").
  */
-export function plainExcerpt(html: string, max = 200): string {
+export function plainExcerpt(
+  html: string,
+  max = DEFAULT_SETTINGS.feedExcerptChars,
+): string {
   const text = entitaeten(
     html
       .replace(/<(script|style|pre)\b[\s\S]*?<\/\1\s*>/gi, ' ')

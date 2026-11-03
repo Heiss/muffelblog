@@ -26,6 +26,16 @@ describe('contentConfig', () => {
     );
   });
 
+  it('bricht bei ungültigem Zeitlimit ab, statt es zu ignorieren', () => {
+    const env = { CONTENT_DIR: '/inhalt', MEMOS_URL: 'http://memos:5230' };
+    expect(() =>
+      contentConfig({ ...env, MUFFEL_MEMOS_TIMEOUT_MS: 'schnell' }),
+    ).toThrow(/MUFFEL_MEMOS_TIMEOUT_MS/);
+    expect(() =>
+      contentConfig({ ...env, MUFFEL_MEMOS_TIMEOUT_MS: '5000' }),
+    ).not.toThrow();
+  });
+
   it('übernimmt Ordner und Memos-Adresse aus der Umgebung', () => {
     const config = contentConfig({
       CONTENT_DIR: '/inhalt',
