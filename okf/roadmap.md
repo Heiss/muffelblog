@@ -351,6 +351,9 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] Jedes Theme besteht den Kontrasttest (Text mindestens 4,5:1), und das
     gewählte Theme bleibt nach dem Neuladen erhalten, ohne dass beim Laden
     kurz das falsche Theme aufblitzt.
+  * [ ] Die Bilder der README sind mit dem neuen Aussehen neu aufgenommen
+    (`pnpm screenshots`, Entwurf-PR #19, auf Wunsch des Nutzers erst nach W06c
+    gemergt).
 
 ## W07 - build.json und Banner
 
