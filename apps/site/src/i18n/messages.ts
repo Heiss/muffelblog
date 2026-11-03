@@ -27,6 +27,11 @@ export const messages = {
     },
     all: 'Alle',
   },
+  comments: {
+    title: 'Kommentare',
+    needsJs: 'Die Kommentare brauchen JavaScript.',
+    unavailable: 'Die Kommentare konnten nicht geladen werden.',
+  },
   footer: {
     label: 'Fußbereich',
     rss: 'RSS',

@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-03
+* **Update**: W13 widget part done: Remark42 comments on posts and memos from the own comments host, CSP extended by exactly that origin, `COMMENTS_URL`; static copy follows with the scheduler.
 * **Update**: W11 done and the release part of W12: `compose.yaml` (builder, Caddy, Remark42, Mailpit), `docker/Caddyfile` with strict CSP, atomic release swap, CI job "Compose stack".
 * **Update**: W10 done: static pages (`type: page`), footer, 404, `robots.txt`, Open Graph tags, `h-entry`/`h-card`; O11 partly, O17 partly, O24 closed, O15 structure done (text open).
 * **Update**: W09 done: `/feed.xml` (RSS 2.0) with full text for posts and memos, terms as short definition, stable GUIDs, `MUFFEL_RSS_ITEMS`; only with `SITE_URL`.
