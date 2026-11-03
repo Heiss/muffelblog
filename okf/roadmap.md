@@ -51,8 +51,7 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 | W04 | Memos-Quelle und Bild-Spiegelung | W03 | W11 |
 | W05 | Statischer Feed, Blöcke, Tags, Sitemap | W01, W04 | W11 |
 | W06a | Feed-Client: Endless Scroll, Filter, Rücksprung | W05 | W08, W09, W10, W11 |
-| W06b | Feed-Client: Split-View | W06a | W08, W09, W10, W11 |
-| W06c | Themes | W06a | W06b, W08, W09, W10, W11 |
+| W06c | Themes | W06a | W08, W09, W10, W11 |
 | W07 | build.json und Banner | W05, W06a | W08, W09, W10 |
 | W08 | Suche (Pagefind) | W05 | W06, W09, W10 |
 | W09 | RSS | W05 | W06, W08, W10 |
@@ -64,7 +63,10 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 | W15 | Webmentions Senden | W14 | - |
 | W16 | Härtung und Betrieb | W12, W13, W14, W15 | - |
 | W17 | Go-live | alle | - |
-| W18 | Codequalität, Komplexität, Mutationstests | W05; später ausbauen | W06b bis W16 |
+| W18 | Codequalität, Komplexität, Mutationstests | W05; später ausbauen | W06c bis W16 |
+| W19 | Glossar: Eintragsart, `/g/`, Buchstabenansicht, Feed-Filter | W05, W06a | W07 bis W11 |
+| W20 | Verlinkung und Backlinks | W03, W19 | W07 bis W11 |
+| W21 | Wissensgraph | W20 | W07 bis W11 |
 
 **Kritischer Pfad:** W00, W01, W03, W04, W05, W12, W13, W14, W15, W16, W17.
 
@@ -303,15 +305,14 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * Artikelseiten `/p/<slug>/` und Memo-Seiten nutzen das neue Grundlayout
     noch nicht (Navigation fehlt dort), das folgt mit W06/W10.
 
-## W06 - Feed-Client (in drei Pull Requests)
+## W06 - Feed-Client (in zwei Pull Requests)
 
-* Entschieden **[E]**: Zuschnitt in drei Pull Requests W06a (Endless Scroll,
-  Filter, Rücksprung), W06b (Split-View) und W06c (Themes).
-* Entschieden **[E]**: Die Spalten der Split-View holen ihre erste Seite per
-  `fetch` aus `/memos/` und `/posts/`. Ohne JavaScript bleibt der gemischte
-  Strom.
-* Entschieden **[E]**: Ein Moduswechsel baut die Liste neu auf und springt nach
-  oben. Modus, Verhältnis und Filter bleiben erhalten.
+* Entschieden **[E]**: Zuschnitt in zwei Pull Requests W06a (Endless Scroll,
+  Filter, Rücksprung) und W06c (Themes). **W06b (Split-View) entfällt** auf
+  Wunsch des Nutzers (2026-11-03): Unified mit Filter genügt, die Split-View
+  wäre zusätzliche Komplexität.
+* Entschieden **[E]**: Ein Filterwechsel baut die Liste neu auf und springt nach
+  oben. Der Filter bleibt erhalten.
 * Entschieden **[E]**: Ohne gespeicherte Wahl nimmt die Seite bei dunkler
   Systemeinstellung Solarized Dark, sonst Solarized Light. Eine gespeicherte
   Wahl gewinnt.
@@ -340,18 +341,6 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     ausdrücklich aufgerufene Reihe nicht. Beim Aufruf von `/` mit gespeichertem
     Filter erscheint kurz der gemischte Strom, bevor er ersetzt wird.
   * Mit JavaScript ist der Pager (auch "Neuere Einträge") verborgen.
-
-### W06b - Split-View
-
-* Branch: `feature/w06b-split-view`
-* Abhängig von: W06a
-* Entscheidungen: Tastaturbedienung des Balkens, Standardverhältnis, Verhalten
-  bei Fensterbreite um 1024px.
-* DoD:
-  * [ ] Ab 1024px lassen sich Modus, Verhältnis und ausgeblendete Seite
-    umschalten und bleiben nach dem Neuladen erhalten.
-  * [ ] Unter 1024px gibt es nur Unified mit Filter.
-  * [ ] Der Balken ist per Tastatur bedienbar.
 
 ### W06c - Themes
 
@@ -532,3 +521,50 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     liegt bei mindestens 80 %, überlebende Mutanten sind bewertet.
   * [ ] Laufzeit und CI-Kosten sind gemessen (siehe O34), der Lauf blockiert
     Pull Requests nicht unnötig lange.
+
+## W19 - Glossar
+
+* Branch: `feature/w19-glossar`
+* Abhängig von: W05, W06a
+* Entscheidungen (O38): Feldname und Wert von `typ`, Begriff-Feld und
+  Frageform des Titels, Pfad der Block-Reihe, Sortierung der Umlaute,
+  Kommentare auf Begriffen.
+* Umfang: Eintragsart `glossar` im Loader, Seiten `/g/<slug>/`, Buchstabenansicht
+  `/glossar/`, dritte Art im Feed mit Filter, Aufnahme in Sitemap (siehe
+  [Glossar](/features/glossary.md)). Suche und RSS folgen in W08 und W09.
+* DoD (Entwurf, **[V]**):
+  * [ ] Eine Datei mit `typ: glossar` und `publish: true` erzeugt `/g/<slug>/`;
+    ohne `typ` bleibt sie ein Artikel.
+  * [ ] Begriffe erscheinen im Feed in zeitlicher Reihenfolge und sind filterbar.
+  * [ ] `/glossar/` gruppiert nach Buchstaben des Begriffs, Umlaute unter dem
+    Grundbuchstaben, die Leiste besteht aus echten Links.
+  * [ ] Doppelte Slugs im Glossar bekommen einen Zähler und stören `/p/` nicht.
+  * [ ] Ohne JavaScript ist alles erreichbar.
+
+## W20 - Verlinkung und Backlinks
+
+* Branch: `feature/w20-verlinkung`
+* Abhängig von: W03, W19
+* Umfang: Auflösung relativer Markdown-Links auf veröffentlichte Dateien zu
+  Seiten, Warnung bei toten Links, Kantenliste, Listen "Verweist auf" und
+  "Verlinkt von" auf Artikel- und Begriffsseiten.
+* DoD (Entwurf, **[V]**):
+  * [ ] Ein Link mit relativem Dateipfad als Ziel führt zur Seite des Ziels, auch bei `%20` und
+    zerlegten Umlauten im Pfad.
+  * [ ] Links auf nicht veröffentlichte oder unbekannte Dateien werden zu Text
+    mit Warnung, nie zu einem Link.
+  * [ ] Backlinks erscheinen als HTML-Liste, ohne Selbstbezug und Doppelte.
+  * [ ] Memos erscheinen weder als Quelle noch als Ziel.
+
+## W21 - Wissensgraph
+
+* Branch: `feature/w21-graph`
+* Abhängig von: W20
+* Entscheidungen: Schwellwert für die Größe von `graph.json`, Layout,
+  Bedienung per Tastatur.
+* DoD (Entwurf, **[V]**):
+  * [ ] Der Build schreibt `graph.json` nur mit veröffentlichten Knoten.
+  * [ ] Lokaler Graph je Seite und Gesamtansicht `/graph/`, gezeichnet ohne
+    Fremdbibliothek und ohne Anfrage an Dritte.
+  * [ ] Jeder Knoten ist per Tastatur erreichbar, die Backlink-Listen bleiben
+    der Zugang ohne JavaScript.

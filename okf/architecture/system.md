@@ -50,5 +50,4 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 
 # Offen
 
-Siehe [Offene Punkte](/open-points.md), insbesondere O1 (Block-Quellen für die
-Split-View), O9 (Reverse-Proxy) und O10 (Image-Build).
+Siehe [Offene Punkte](/open-points.md), insbesondere O1 (Block-Reihen), O9 (Reverse-Proxy) und O10 (Image-Build).

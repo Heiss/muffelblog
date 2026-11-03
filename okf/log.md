@@ -1,6 +1,8 @@
 # Update Log
 
 ## 2026-11-03
+* **Creation**: [Glossar und Wissensgraph](/features/glossary.md) angelegt (Vorbild newworkglossar.de, Startseite ausgewertet); Arbeitspakete W19 bis W21, offener Punkt O38.
+* **Update**: Split-View gestrichen (W06b entfällt), Unified mit Filter bleibt, Nicht-Ziel "kein Graph" ersetzt, siehe [Feed](/frontend/feed.md).
 * **Update**: W06 in drei Pull Requests geteilt (W06a Endless Scroll, Filter, Rücksprung; W06b Split-View; W06c Themes); Entscheidungen zu Split-Daten, Moduswechsel und dunkler Systemeinstellung eingetragen.
 * **Update**: Arbeitspaket W18 (Codequalität, Komplexität, Mutationstests ab 80 %) und O37 aufgenommen, bewusst nicht am Anfang.
 * **Creation**: [Konfiguration](/ops/config.md) angelegt: Zahlenwerte für Feed und Memos als Umgebungsvariablen `MUFFEL_<BEREICH>_<NAME>`, ungültige Werte brechen den Build ab.

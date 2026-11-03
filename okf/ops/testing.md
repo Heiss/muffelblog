@@ -40,8 +40,8 @@ dabei nur: frei von dem, was die Tests sehen.
 
 * **[V]** Feed zeigt Posts und Memos chronologisch.
 * **[V]** Endless Scroll lädt Blöcke ohne Doppelungen nach.
-* **[V]** Split-View ab 1024px: Modus, Verhältnis und ausgeblendete Seite
-  bleiben nach dem Neuladen erhalten, unter 1024px nur Unified.
+* **[V]** Der Filter bleibt nach dem Neuladen erhalten, ohne `localStorage`
+  gilt der Standard.
 * **[V]** `build.json`-Banner erscheint nur bei neueren Einträgen.
 * **[V]** Suche liefert Posts und Memos, keine Treffer aus den Blöcken.
 * **[V]** Seite funktioniert ohne JavaScript (Weiter-Link, statische
