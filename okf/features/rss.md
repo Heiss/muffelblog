@@ -1,29 +1,29 @@
 ---
 type: Feature
 title: RSS
-description: Kombinierter RSS-Feed für Posts und Memos.
+description: Combined RSS feed for posts and memos.
 tags: [rss, feed]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-# Entscheidungen
+# Decisions
 
-* **[E]** Ein kombinierter Feed für Posts und Memos.
+* **[E]** One combined feed for posts and memos.
 
-# Umsetzung
+# Implementation
 
-* **[V]** `/feed.xml`, erzeugt beim Build mit dem Astro-RSS-Paket.
-* **[V]** Anzahl der Einträge begrenzt (Vorschlag: 50). Volltext oder Auszug
-  ist offen (O20).
-* **[V]** Die GUID ist der stabile Bezeichner `post:<slug>` bzw. `memo:<uid>`
-  mit `isPermaLink="false"` und hängt nicht am Datum und nicht an der Domain.
-  So bleiben GUIDs bei einem Domainwechsel oder einer Datumsänderung gleich.
-* **[V]** Memos haben keinen Titel, der Feed-Titel wird aus dem Text abgeleitet
-  (siehe [Memos](/content/memos-source.md)).
-* **[V]** Kommentare und Mentions erscheinen nicht im Feed.
+* **[V]** `/feed.xml`, created at build time with the Astro RSS package.
+* **[V]** Number of entries limited (proposal: 50). Full text or excerpt is
+  open (O20).
+* **[V]** The GUID is the stable identifier `post:<slug>` or `memo:<uid>` with
+  `isPermaLink="false"` and does not depend on the date or on the domain. So
+  GUIDs stay the same when the domain or a date changes.
+* **[V]** Memos have no title of their own, the feed title is derived from the
+  text (see [Memos](/content/memos-source.md)).
+* **[V]** Comments and mentions do not appear in the feed.
 
-# Risiko
+# Risk
 
-Ohne Domain (siehe [URLs und SEO](/frontend/urls-seo.md)) lassen sich keine
-absoluten Links erzeugen. Feeds brauchen absolute URLs.
+Without a domain (see [URLs and SEO](/frontend/urls-seo.md)) no absolute links
+can be created. Feeds need absolute URLs.

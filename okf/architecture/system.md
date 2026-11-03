@@ -1,53 +1,53 @@
 ---
 type: Architecture
-title: Systemarchitektur
-description: Komponenten, Datenflüsse und Grundregeln des statischen Blogs.
-tags: [architektur, build, astro]
+title: System architecture
+description: Components, data flows and basic rules of the static blog.
+tags: [architecture, build, astro]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-# Komponenten
+# Components
 
-| Komponente | Rolle | Läuft |
+| Component | Role | Runs |
 |---|---|---|
-| Nextcloud (extern) | Quelle der Artikel per Public-Share-WebDAV | extern |
-| Memos (extern) | Quelle der Microposts, Public-API | extern |
-| webmention.io (extern) | Empfang eingehender Webmentions | extern |
-| Builder | Sync, Astro-Build, Pagefind, Scheduler, Mention-Sync und -Versand | Docker |
-| Web | Auslieferung der statischen Dateien, Reverse-Proxy | Docker |
-| Remark42 | Kommentare, E-Mail-Login | Docker |
-| Migadu (extern) | SMTP für Login-Mails von Remark42 | extern |
+| Nextcloud (external) | Source of the articles through public-share WebDAV | external |
+| Memos (external) | Source of the microposts, public API | external |
+| webmention.io (external) | Receiving incoming webmentions | external |
+| Builder | Sync, Astro build, Pagefind, scheduler, mention sync and sending | Docker |
+| Web | Serving the static files, reverse proxy | Docker |
+| Remark42 | Comments, email login | Docker |
+| Migadu (external) | SMTP for the login mails of Remark42 | external |
 
-# Datenfluss
+# Data flow
 
-1. **[E]** Der Builder prüft alle 3 Minuten Nextcloud, Memos, webmention.io und
-   Remark42 auf Änderungen.
-2. **[E]** Gibt es Änderungen, baut Astro die komplette Seite neu. Astro baut
-   nicht inkrementell.
-3. **[E]** Pagefind indexiert das Ergebnis. Das Ergebnis ersetzt atomar die
-   bisher ausgelieferte Version (siehe [Pipeline](/ops/pipeline.md)).
-4. **[E]** Der Browser fragt `build.json` ab (siehe
-   [Live-Update](/frontend/live-update.md)).
-5. **[E]** Kommentare werden im Browser über das Remark42-Widget geladen und
-   gesendet. Zusätzlich liegt eine statische Kopie im HTML (SEO, ohne JS).
+1. **[E]** Every 3 minutes the builder checks Nextcloud, Memos, webmention.io
+   and Remark42 for changes.
+2. **[E]** If there are changes, Astro rebuilds the complete site. Astro does
+   not build incrementally.
+3. **[E]** Pagefind indexes the result. The result atomically replaces the
+   version served so far (see [Pipeline](/ops/pipeline.md)).
+4. **[E]** The browser polls `build.json` (see
+   [Live update](/frontend/live-update.md)).
+5. **[E]** Comments are loaded and sent in the browser through the Remark42
+   widget. In addition there is a static copy in the HTML (SEO, without JS).
 
-# Grundregeln
+# Basic rules
 
-* **[V]** Static-first: Jede Seite funktioniert ohne Fremddienste, ohne
-  Nextcloud und ohne Memos, sobald sie ausgeliefert ist. Nur Kommentieren
-  braucht Remark42. Das ist meine Auslegung von "standalone", unbestätigt
-  (O27).
-* **[E]** Der Browser lädt zur Laufzeit nichts von Drittdiensten. Das Remark42-
-  Widget wird vom eigenen Server geladen. Ausnahme sind Artikel: Sie dürfen
-  Remote-Bilder und Einbettungen aus Freigabelisten enthalten, Einbettungen
-  erst nach Klick (siehe [Medien](/content/media.md)).
-* **[V]** Schlägt ein Abruf beim Build fehl, wird der Build abgebrochen und die
-  letzte gute Version bleibt online. Ein leerer Abruf darf nie als "alles
-  gelöscht" gelten.
-* **[V]** Endpunkte, die Fremddaten holen (Mentions, Avatare, Memo-Bilder), sind
-  durch [Bereinigung](/security/sanitization.md) abgesichert.
+* **[V]** Static-first: every page works without foreign services, without
+  Nextcloud and without Memos once it is served. Only commenting needs
+  Remark42. This is my reading of "standalone", unconfirmed (O27).
+* **[E]** At run time the browser loads nothing from third-party services. The
+  Remark42 widget is loaded from the own server. Articles are an exception:
+  they may contain remote images and embeds from allowlists, embeds only after
+  a click (see [Media](/content/media.md)).
+* **[V]** If a fetch fails during the build, the build is aborted and the last
+  good version stays online. An empty fetch must never count as "everything
+  deleted".
+* **[V]** Endpoints that fetch foreign data (mentions, avatars, memo images)
+  are protected by [sanitizing](/security/sanitization.md).
 
-# Offen
+# Open
 
-Siehe [Offene Punkte](/open-points.md), insbesondere O1 (Block-Reihen), O9 (Reverse-Proxy) und O10 (Image-Build).
+See [Open points](/open-points.md), in particular O1 (block series), O9
+(reverse proxy) and O10 (image build).

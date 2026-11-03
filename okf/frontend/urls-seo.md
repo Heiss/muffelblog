@@ -1,52 +1,56 @@
 ---
 type: Reference
-title: URLs und SEO
-description: URL-Schema, Canonical-Regeln, Sitemap und SEO-Grundsätze.
+title: URLs and SEO
+description: URL scheme, canonical rules, sitemap and SEO principles.
 tags: [url, seo, sitemap, canonical]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-# URL-Schema
+# URL scheme
 
-| Seite | URL | Stand |
+| Page | URL | Status |
 |---|---|---|
-| Feed (Start) | `/` | **[E]** |
+| Feed (home) | `/` | **[E]** |
 | Post | `/p/<slug>/` | **[E]** |
 | Memo | `/m/<uid>/` | **[E]** |
-| Technische Blöcke (gemischt) | `/seite/N/` | **[E]** |
-| Technische Blöcke (Memos, Posts) | `/memos/seite/N/`, `/posts/seite/N/` | **[E]** |
-| Tag-Übersicht | `/tag/` | **[E]** |
-| Tag | `/tag/<tag>/`, Blöcke `/tag/<tag>/seite/N/` | **[E]** |
-| Suche | `/suche/` | **[V]** |
+| Glossary entry | `/g/<slug>/` | **[V]** |
+| Technical blocks (mixed) | `/page/N/` | **[E]** |
+| Technical blocks (memos, posts) | `/memos/page/N/`, `/posts/page/N/` | **[E]** |
+| Tag overview | `/tag/` | **[E]** |
+| Tag | `/tag/<tag>/`, blocks `/tag/<tag>/page/N/` | **[E]** |
+| Glossary (A to Z) | `/glossary/` | **[E]** |
+| Technical blocks (terms) | `/terms/`, `/terms/page/N/` | **[E]** |
+| Search | `/search/` | **[V]** |
 | RSS | `/feed.xml` | **[V]** |
-| Build-Signal | `/build.json` | **[E]** |
+| Build signal | `/build.json` | **[E]** |
 
-Die Namen Tag, Suche und RSS-Pfad sind Vorschläge zur kurzen und prägnanten
-Form, die der Nutzer gewünscht hat. Der Nutzer hat `/p/<slug>/` und
-`/m/<uid>/` bestätigt.
+The names for tag, search and the RSS path are proposals for the short and
+concise form the user asked for. The user confirmed `/p/<slug>/` and
+`/m/<uid>/`. All URLs are English and independent of the UI language (see
+[Languages](/ops/language.md)).
 
-# SEO-Regeln
+# SEO rules
 
-* **[E]** Jeder Post und jedes Memo hat eine eigene Seite zum Verlinken und
-  für Suchmaschinen.
-* **[V]** Der Slug trägt Schlüsselwörter und enthält kein Datum.
-* **[V]** Eine kanonische URL pro Seite, einheitlicher Slash am Ende.
-* **[E]** `lang="de"`, absolute Canonical-URLs und Sitemap mit Startseite,
-  Posts, Memos und Tags, aber ohne `/seite/N/`. Beides entsteht nur, wenn
-  `SITE_URL` gesetzt ist (Domain offen, O9).
-* **[V]** Memos haben keinen Titel. Titel und Description werden aus dem Text
-  abgeleitet (siehe [Memos](/content/memos-source.md)).
+* **[E]** Every post and every memo has a page of its own for linking and for
+  search engines.
+* **[V]** The slug carries keywords and contains no date.
+* **[V]** One canonical URL per page, a consistent trailing slash.
+* **[E]** `lang="de"`, absolute canonical URLs and a sitemap with the home
+  page, posts, memos and tags, but without `/page/N/`. Both exist only if
+  `SITE_URL` is set (domain open, O9).
+* **[V]** Memos have no title. Title and description are derived from the text
+  (see [Memos](/content/memos-source.md)).
 
 # Domain
 
-**[E]** Die Domain wird später festgelegt. Webmention-Ziele, Remark42-
-Zuordnung und RSS-Identifikatoren hängen an der URL und sollten vor dem ersten
-Kommentar und der ersten Mention feststehen. Für Remark42 beschreibt die
-API-Doku `POST /api/v1/admin/remap` zum Umziehen von Kommentaren. Webmentions
-an der alten Domain gehen verloren.
+**[E]** The domain is set later. Webmention targets, the Remark42 mapping and
+RSS identifiers depend on the URL and should be fixed before the first comment
+and the first mention. For Remark42 the API documentation describes
+`POST /api/v1/admin/remap` for moving comments. Webmentions at the old domain
+are lost.
 
-# Offen
+# Open
 
-Open Graph und Social Cards (O17), 404-Seite, `robots.txt`, Favicon (O16),
-Impressum und Datenschutz als eigene Seiten (O15).
+Open Graph and social cards (O17), 404 page, `robots.txt`, favicon (O16),
+imprint and privacy policy as pages of their own (O15).

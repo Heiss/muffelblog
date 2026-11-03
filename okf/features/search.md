@@ -1,30 +1,29 @@
 ---
 type: Feature
-title: Suche
-description: Volltextsuche mit Pagefind über Posts und Memos mit Filtern.
-tags: [suche, pagefind]
+title: Search
+description: Full-text search with Pagefind over posts and memos, with filters.
+tags: [search, pagefind]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-# Entscheidungen
+# Decisions
 
 * **[E]** Pagefind.
-* **[E]** Posts und Memos sind im Index, weil beide statische Seiten haben.
+* **[E]** Posts and memos are in the index because both have static pages.
 
-# Umsetzung
+# Implementation
 
-* **[V]** Pagefind läuft als CLI nach dem Astro-Build über das Ausgabe-
-  verzeichnis. Das Ergebnis liegt im Release, wird also mit ihm atomar
-  ausgetauscht.
-* **[V]** Filter: Typ (Post oder Memo) und Tag über `data-pagefind-filter`.
-* **[V]** Technische Blöcke (`/seite/N/`) sind mit `data-pagefind-ignore`
-  ausgeschlossen, sonst erscheinen Einträge doppelt.
-* **[V]** Kommentare und Mentions sind nicht im Index.
-* **[U]** Pagefind bietet eine deutschsprachige Oberfläche. Das ist nicht
-  geprüft.
+* **[V]** Pagefind runs as a CLI over the output directory after the Astro
+  build. The result is part of the release, so it is swapped atomically with
+  it.
+* **[V]** Filters: type (post or memo) and tag through `data-pagefind-filter`.
+* **[V]** The technical blocks (`/page/N/`) are excluded with
+  `data-pagefind-ignore`, otherwise entries would appear twice.
+* **[V]** Comments and mentions are not in the index.
+* **[U]** Pagefind offers a German user interface. This has not been checked.
 
-# Hinweis
+# Note
 
-Pagefind läuft im Browser mit WebAssembly und lädt seine Dateien von der
-eigenen Domain. Es gibt keine Fremdrequests.
+Pagefind runs in the browser with WebAssembly and loads its files from the own
+domain. There are no foreign requests.
