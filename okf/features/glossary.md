@@ -16,12 +16,18 @@ generated: { by: claude-code/web, at: 2026-11-03T12:30:00Z }
 * **[E]** Neue Glossareinträge erscheinen im zeitlichen Verlauf des Blogs. Dazu
   gibt es eine Auswahl nach Buchstaben und die Suche.
 * **[E]** Quelle ist derselbe Nextcloud-Ordner. Eine Markdown-Datei mit dem
-  Frontmatter-Feld `typ: glossar` ist ein Glossareintrag. Pipeline, Rendering
+  Frontmatter-Feld `type: glossary` ist ein Glossareintrag (Feldname und Wert
+  englisch wie die übrigen Felder, entschieden am 2026-11-03). Pipeline, Rendering
   und Bereinigung sind dieselben wie bei Artikeln.
 * **[E]** Verlinkung geschieht mit normalen Markdown-Links auf eigene Seiten,
   nicht mit Wikilinks. Die Regel "Wikilink = Datei überspringen" bleibt.
 * **[E]** Ein Wissensgraph zeigt die Verlinkung zwischen Begriffen und
   Beiträgen: ein lokaler Graph je Seite und eine Gesamtansicht `/graph/`.
+* **[E]** Filter im Feed: Alle, **Lang** (Blogbeiträge), **Kurz** (Memos) und
+  **Begriffe** (Glossar). Begriffe werden getrennt von den Blogbeiträgen
+  geführt: `Lang` enthält nie Begriffe. In **Alle** erscheinen Begriffe im
+  zeitlichen Verlauf, eigens als Begriff gekennzeichnet. Die Reihe heißt
+  `/begriffe/` und `/begriffe/seite/N/`.
 * **[E]** Die Split-View entfällt. Der Unified-Modus mit Filter bleibt die
   einzige Ansicht des Feeds (siehe [Feed](/frontend/feed.md)).
 
@@ -64,9 +70,6 @@ generated: { by: claude-code/web, at: 2026-11-03T12:30:00Z }
   echte Links (Sprungmarken), nicht nur Skript-Elemente. Umlaute zählen zum Grundbuchstaben (Ä unter A),
   Ziffern und Sonderzeichen unter `#`. Die Seite ist statisch und vollständig,
   bei der erwarteten Menge (einige hundert Begriffe) reicht eine Seite.
-* **[V]** Die Block-Reihe für den Filter braucht einen eigenen Pfad, der nicht
-  mit `/glossar/` kollidiert, zum Beispiel `/begriffe/` und
-  `/begriffe/seite/N/`.
 * **[V]** Die Suche findet Begriffe über Pagefind, mit Filter nach Art. RSS und
   Sitemap enthalten Begriffe.
 
@@ -108,7 +111,6 @@ generated: { by: claude-code/web, at: 2026-11-03T12:30:00Z }
 
 # Offen
 
-Siehe O38 in [Offene Punkte](/open-points.md): Feldname und Wert von `typ`,
-Pfad der Block-Reihe, Kommentare und Webmentions auf Begriffen, Sortierung der
+Siehe O38 in [Offene Punkte](/open-points.md): Kommentare und Webmentions auf Begriffen, Sortierung der
 Umlaute, Frageform des Titels und Name des Begriff-Felds, Anzeige von Memos im
 Graph, Aufbau einer einzelnen Begriffsseite im Vorbild (unbeobachtet).

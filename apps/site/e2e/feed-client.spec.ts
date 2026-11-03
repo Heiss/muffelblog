@@ -102,26 +102,26 @@ test.describe('Endless Scroll', () => {
 });
 
 test.describe('Filter im Unified-Modus', () => {
-  test('Memos zeigt nur Memos, behält die Adresse sauber und lädt nach', async ({
+  test('Kurz zeigt nur Memos, behält die Adresse sauber und lädt nach', async ({
     page,
   }) => {
     await page.goto('/');
     const filter = page.getByRole('navigation', { name: 'Filter' });
-    await filter.getByRole('link', { name: 'Memos' }).click();
+    await filter.getByRole('link', { name: 'Kurz' }).click();
     await expect(page).toHaveURL(/\/memos\/$/);
-    await expect(filter.getByRole('link', { name: 'Memos' })).toHaveAttribute(
+    await expect(filter.getByRole('link', { name: 'Kurz' })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    await expect(page).toHaveTitle('Memos – Muffelblog');
+    await expect(page).toHaveTitle('Kurz – Muffelblog');
     await ganzNachUnten(page, MEMOS);
     expect((await ids(page)).every((id) => id.startsWith('memo:'))).toBe(true);
   });
 
-  test('Beiträge und Alle wechseln zurück', async ({ page }) => {
+  test('Lang und Alle wechseln zurück', async ({ page }) => {
     await page.goto('/');
     const filter = page.getByRole('navigation', { name: 'Filter' });
-    await filter.getByRole('link', { name: 'Beiträge' }).click();
+    await filter.getByRole('link', { name: 'Lang' }).click();
     await ganzNachUnten(page, POSTS);
     expect((await ids(page)).every((id) => id.startsWith('post:'))).toBe(true);
     await filter.getByRole('link', { name: 'Alle' }).click();
@@ -135,7 +135,7 @@ test.describe('Filter im Unified-Modus', () => {
     await page.goto('/');
     await ganzNachUnten(page, GESAMT);
     const filter = page.getByRole('navigation', { name: 'Filter' });
-    await filter.getByRole('link', { name: 'Memos' }).click();
+    await filter.getByRole('link', { name: 'Kurz' }).click();
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     await expect(
       page.locator('[data-feed-liste] > article[data-kind="post"]'),
@@ -147,7 +147,7 @@ test.describe('Filter im Unified-Modus', () => {
   }) => {
     await page.goto('/');
     const filter = page.getByRole('navigation', { name: 'Filter' });
-    await filter.getByRole('link', { name: 'Memos' }).click();
+    await filter.getByRole('link', { name: 'Kurz' }).click();
     await expect(page).toHaveURL(/\/memos\/$/);
     await page.goto('/');
     await expect(page).toHaveURL(/\/memos\/$/);
@@ -165,7 +165,7 @@ test.describe('Filter im Unified-Modus', () => {
     await page.goto('/');
     await page
       .getByRole('navigation', { name: 'Filter' })
-      .getByRole('link', { name: 'Memos' })
+      .getByRole('link', { name: 'Kurz' })
       .click();
     await page.goto('/posts/');
     await expect(page).toHaveURL(/\/posts\/$/);
@@ -186,7 +186,7 @@ test.describe('Filter im Unified-Modus', () => {
     await expect(eintraege(page)).toHaveCount(4);
     await page
       .getByRole('navigation', { name: 'Filter' })
-      .getByRole('link', { name: 'Memos' })
+      .getByRole('link', { name: 'Kurz' })
       .click();
     await ganzNachUnten(page, MEMOS);
   });
@@ -197,7 +197,7 @@ test.describe('Filter im Unified-Modus', () => {
     await seite.goto('/');
     await seite
       .getByRole('navigation', { name: 'Filter' })
-      .getByRole('link', { name: 'Memos' })
+      .getByRole('link', { name: 'Kurz' })
       .click();
     await expect(seite).toHaveURL(/\/memos\/$/);
     await ohne.close();

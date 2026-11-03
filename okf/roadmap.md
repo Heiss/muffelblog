@@ -321,7 +321,7 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 
 * Branch: `feature/w06-feed-client`
 * Abhängig von: W05
-* Umfang: Nachladen per `IntersectionObserver`, Filter Alle / Beiträge / Memos
+* Umfang: Nachladen per `IntersectionObserver`, Filter Alle / Lang / Kurz (umbenannt am 2026-11-03)
   im Unified-Modus, Speicherung des Filters, Wiederherstellen von Blöcken und
   Scrollposition beim Rücksprung.
 * DoD:
@@ -561,15 +561,16 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 
 * Branch: `feature/w19-glossar`
 * Abhängig von: W05, W06a
-* Entscheidungen (O38): Feldname und Wert von `typ`, Begriff-Feld und
-  Frageform des Titels, Pfad der Block-Reihe, Sortierung der Umlaute,
-  Kommentare auf Begriffen.
+* Entschieden **[E]**: Feld `type: glossary`, Filter und Reihe **Begriffe**
+  (`/begriffe/`), Begriffe auch in Alle, aber gekennzeichnet.
+* Entscheidungen (O38): Begriff-Feld und Frageform des Titels, Sortierung der
+  Umlaute, Kommentare auf Begriffen.
 * Umfang: Eintragsart `glossar` im Loader, Seiten `/g/<slug>/`, Buchstabenansicht
   `/glossar/`, dritte Art im Feed mit Filter, Aufnahme in Sitemap (siehe
   [Glossar](/features/glossary.md)). Suche und RSS folgen in W08 und W09.
 * DoD (Entwurf, **[V]**):
-  * [ ] Eine Datei mit `typ: glossar` und `publish: true` erzeugt `/g/<slug>/`;
-    ohne `typ` bleibt sie ein Artikel.
+  * [ ] Eine Datei mit `type: glossary` und `publish: true` erzeugt `/g/<slug>/`;
+    ohne `type` bleibt sie ein Artikel.
   * [ ] Begriffe erscheinen im Feed in zeitlicher Reihenfolge und sind filterbar.
   * [ ] `/glossar/` gruppiert nach Buchstaben des Begriffs, Umlaute unter dem
     Grundbuchstaben, die Leiste besteht aus echten Links.

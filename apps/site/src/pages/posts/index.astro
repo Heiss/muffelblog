@@ -8,4 +8,4 @@ const eintraege = filterKind(await getFeed(), 'post');
 const page = paginate(eintraege, 1, '/posts/', getSettings().feedPageSize);
 ---
 
-<FeedSeite reihe="post" title="Beiträge" heading="Beiträge" {page} />
+<FeedSeite reihe="post" title="Lang" heading="Lang" {page} />
