@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-03
+* **Update**: Filter umbenannt: Kurz (Memos), Lang (Blogbeiträge), Begriffe (Glossar, getrennt von Lang, in Alle gekennzeichnet); Glossar-Feld `type: glossary`, siehe [Feed](/frontend/feed.md) und [Glossar](/features/glossary.md).
 * **Update**: W06c umgesetzt (Branch `feature/w06c-themes`): Grundlayout, zehn Themes mit selbst gehosteten Schriften, Umschalter, kein Aufblitzen, Syntaxfarben je Theme; O35 entschieden, siehe [Themes](/frontend/themes.md).
 * **Creation**: [Glossar und Wissensgraph](/features/glossary.md) angelegt (Vorbild newworkglossar.de, Startseite ausgewertet); Arbeitspakete W19 bis W21, offener Punkt O38.
 * **Update**: Split-View gestrichen (W06b entfällt), Unified mit Filter bleibt, Nicht-Ziel "kein Graph" ersetzt, siehe [Feed](/frontend/feed.md).

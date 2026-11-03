@@ -13,11 +13,16 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   chronologisch, neueste zuerst.
 * **[E]** Endless Scroll statt sichtbarer Pagination.
 * **[E]** Der Feed ist ein einziger Strom (Unified-Modus) mit Filter
-  (Alle / Posts / Memos, später auch Glossar). Der Filter bleibt im
+  (Alle / Lang / Kurz, später auch Begriffe). Der Filter bleibt im
   Browser-Speicher erhalten.
 * **[E]** Die Split-View (zwei Spalten mit verschiebbarem Balken) entfällt. Der
   Nutzer hält sie für unnötige Komplexität. Die Entscheidung vom Anfang ist
   damit ersetzt.
+* **[E]** Beschriftungen des Filters: **Kurz** für Memos, **Lang** für
+  Blogbeiträge und **Begriffe** für Glossareinträge. Die Beschriftung gilt in
+  der Anzeige, Überschriften und Seitentiteln. Die Adressen der Reihen bleiben
+  `/memos/` und `/posts/` (und für Begriffe `/begriffe/`), die Einzelseiten
+  `/m/<uid>/` und `/p/<slug>/`.
 * **[E]** Memos erscheinen vollständig mit Bildern.
 
 # Datenquelle für Endless Scroll

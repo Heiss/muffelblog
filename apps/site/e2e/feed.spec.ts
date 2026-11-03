@@ -132,7 +132,7 @@ test.describe('Filter nach Art', () => {
     page,
   }) => {
     await page.goto('/memos/');
-    await expect(page).toHaveTitle('Memos – Muffelblog');
+    await expect(page).toHaveTitle('Kurz – Muffelblog');
     const memos = await alleSeiten(page, '/memos/');
     expect(memos.length).toBeGreaterThan(0);
     expect(memos.every((z) => z.kind === 'memo')).toBe(true);

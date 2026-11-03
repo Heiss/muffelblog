@@ -8,4 +8,4 @@ const eintraege = filterKind(await getFeed(), 'memo');
 const page = paginate(eintraege, 1, '/memos/', getSettings().feedPageSize);
 ---
 
-<FeedSeite reihe="memo" title="Memos" heading="Memos" {page} />
+<FeedSeite reihe="memo" title="Kurz" heading="Kurz" {page} />
