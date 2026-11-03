@@ -27,6 +27,9 @@ export const messages = {
     },
     all: 'Alle',
   },
+  rss: {
+    description: 'Beiträge, Kurznotizen und Begriffe',
+  },
   theme: {
     label: 'Farbschema',
   },

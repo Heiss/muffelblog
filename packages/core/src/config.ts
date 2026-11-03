@@ -16,6 +16,8 @@ export interface Settings {
   memosTimeoutMs: number;
   /** Maximum size per mirrored memo file, in bytes. */
   memosMaxFileBytes: number;
+  /** Number of entries in the RSS feed. */
+  rssItems: number;
 }
 
 export interface SettingSpec {
@@ -82,6 +84,16 @@ export const SETTING_SPECS: readonly SettingSpec[] = [
     factor: MB,
     unit: 'MB',
     description: 'Maximum size per mirrored memo file',
+  },
+  {
+    key: 'rssItems',
+    env: 'MUFFEL_RSS_ITEMS',
+    default: 50,
+    min: 1,
+    max: 500,
+    factor: 1,
+    unit: 'entries',
+    description: 'Number of entries in the RSS feed',
   },
 ];
 

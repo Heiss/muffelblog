@@ -195,3 +195,11 @@ test.describe('Tags', () => {
 test('without SITE_URL there is no sitemap', async ({ request }) => {
   expect((await request.get('/sitemap.xml')).status()).toBe(404);
 });
+
+test('without SITE_URL there is no RSS feed and no feed link', async ({
+  request,
+}) => {
+  expect((await request.get('/feed.xml')).status()).toBe(404);
+  const html = await (await request.get('/')).text();
+  expect(html).not.toContain('application/rss+xml');
+});

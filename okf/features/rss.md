@@ -9,7 +9,11 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 
 # Decisions
 
-* **[E]** One combined feed for posts and memos.
+* **[E]** One combined feed for posts, memos and terms.
+* **[E]** (2026-11-03, O20) Full text for posts and memos in `content:encoded`
+  (root-relative addresses made absolute), terms with their short definition
+  only; 50 entries by default (`MUFFEL_RSS_ITEMS`).
+* **[E]** Without `SITE_URL` there is no `/feed.xml` and no feed link in the head.
 
 # Implementation
 
