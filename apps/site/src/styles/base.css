@@ -1,0 +1,381 @@
+/* Grundlayout. Farben, Rundung und Schriften kommen aus themes.css. */
+:root {
+  color-scheme: light;
+}
+
+/* Autorenstile mit display überschreiben sonst das hidden-Attribut. */
+[hidden] {
+  display: none !important;
+}
+
+html {
+  color-scheme: var(--color-scheme, light);
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--ac);
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 2px;
+}
+
+.kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 0.5rem;
+}
+
+.seitenname {
+  font-family: var(--font-head);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--fg);
+}
+
+.kopf nav {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+}
+
+.kopf nav a {
+  color: var(--dim);
+  text-decoration: none;
+  padding: 0.5rem 0;
+}
+
+.kopf nav a:hover,
+.kopf nav a[aria-current='page'] {
+  color: var(--fg);
+  text-decoration: underline;
+}
+
+.farbschema {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--dim);
+  font-family: var(--font-meta);
+  font-size: 0.875rem;
+}
+
+.farbschema select {
+  min-height: 2.5rem;
+  padding: 0 0.5rem;
+  font: inherit;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0.5rem 1rem 4rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-head);
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 1.9rem;
+  margin: 1.5rem 0 1rem;
+}
+
+[data-theme='matrix'] h1,
+[data-theme='matrix'] h2 {
+  text-shadow: 0 0 8px rgb(0 255 65 / 45%);
+}
+
+/* Filter */
+.filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.filter a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--pill);
+  background: var(--panel);
+  color: var(--fg);
+  font-family: var(--font-meta);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.filter a[aria-current='page'] {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+
+/* Einträge im Feed */
+.eintrag {
+  margin: 0 0 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.eintrag h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+}
+
+.eintrag h2 a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.eintrag h2 a:hover {
+  text-decoration: underline;
+}
+
+.eintrag p {
+  margin: 0.25rem 0;
+}
+
+.eintrag time,
+.meta {
+  color: var(--dim);
+  font-family: var(--font-meta);
+  font-size: 0.875rem;
+}
+
+.eintrag-memo {
+  background: var(--tint);
+}
+
+.auszug {
+  color: var(--fg);
+}
+
+[aria-label='Tags'],
+[aria-label='Alle Tags'] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+[aria-label='Tags'] li a,
+[aria-label='Tags'] li:not(:has(a)) {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  border: 1px solid var(--line);
+  border-radius: var(--pill);
+  font-family: var(--font-meta);
+  font-size: 0.8125rem;
+  color: var(--dim);
+  text-decoration: none;
+}
+
+[aria-label='Tags'] li a:hover {
+  color: var(--fg);
+  border-color: var(--ac);
+}
+
+article > [aria-label='Tags'] {
+  margin-bottom: 1.25rem;
+}
+
+[data-feed-status],
+.seiten {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  color: var(--dim);
+  font-family: var(--font-meta);
+  font-size: 0.9375rem;
+}
+
+/* Lesbarer Inhalt (Artikel, Memos) */
+.inhalt {
+  overflow-wrap: anywhere;
+}
+
+.inhalt > :first-child {
+  margin-top: 0;
+}
+
+.inhalt img,
+.inhalt video {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+
+.inhalt audio {
+  width: 100%;
+}
+
+.inhalt table {
+  border-collapse: collapse;
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.inhalt th,
+.inhalt td {
+  border: 1px solid var(--line);
+  padding: 0.25rem 0.625rem;
+  text-align: left;
+}
+
+.inhalt blockquote {
+  margin: 1rem 0;
+  padding: 0.25rem 1rem;
+  border-left: 3px solid var(--ac);
+  color: var(--dim);
+}
+
+.inhalt pre {
+  overflow-x: auto;
+  padding: 0.75rem 1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.inhalt code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.inhalt :not(pre) > code {
+  padding: 0.0625rem 0.3125rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) / 2);
+}
+
+.inhalt .embed {
+  padding: 1rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+
+.inhalt .embed button,
+.embed-start {
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  font: inherit;
+  color: var(--on-ac);
+  background: var(--ac);
+  border: 0;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.embed-frame {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+}
+
+.bild-fehlt {
+  color: var(--dim);
+}
+
+/* Farben des Quelltexts (Klassen aus lowlight) */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-meta {
+  color: var(--tok-keyword);
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-symbol,
+.hljs-addition {
+  color: var(--tok-string);
+}
+
+.hljs-comment,
+.hljs-quote,
+.hljs-deletion {
+  color: var(--tok-comment);
+  font-style: italic;
+}
+
+.hljs-number,
+.hljs-attr,
+.hljs-variable,
+.hljs-template-variable {
+  color: var(--tok-number);
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: var(--tok-title);
+}
+
+.hljs-type,
+.hljs-built_in,
+.hljs-class,
+.hljs-params,
+.hljs-attribute,
+.hljs-bullet {
+  color: var(--tok-type);
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .eintrag,
+  .filter a {
+    transition: border-color 0.15s;
+  }
+}

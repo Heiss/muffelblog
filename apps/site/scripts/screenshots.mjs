@@ -20,19 +20,50 @@ const PIXEL = Buffer.from(
 );
 
 const ansichten = [
-  { datei: 'feed-breit', pfad: '/', breite: 1280, hoehe: 900, skala: 1 },
-  { datei: 'feed-mobil', pfad: '/', breite: 390, hoehe: 844, skala: 2 },
+  {
+    datei: 'feed-breit',
+    theme: 'solarized-light',
+    pfad: '/',
+    breite: 1280,
+    hoehe: 900,
+    skala: 1,
+  },
+  {
+    datei: 'feed-dunkel',
+    theme: 'dracula',
+    pfad: '/',
+    breite: 1280,
+    hoehe: 900,
+    skala: 1,
+  },
+  {
+    datei: 'feed-mobil',
+    theme: 'solarized-light',
+    pfad: '/',
+    breite: 390,
+    hoehe: 844,
+    skala: 2,
+  },
   {
     datei: 'artikel',
+    theme: 'solarized-light',
     pfad: '/p/rendering-demo/',
     breite: 1280,
     hoehe: 1000,
     skala: 1,
   },
-  { datei: 'tags', pfad: '/tag/', breite: 1280, hoehe: 700, skala: 1 },
   {
-    datei: 'tag-seite',
-    pfad: '/tag/tooling/',
+    datei: 'artikel-matrix',
+    theme: 'matrix',
+    pfad: '/p/rendering-demo/',
+    breite: 1280,
+    hoehe: 1000,
+    skala: 1,
+  },
+  {
+    datei: 'tags',
+    theme: 'solarized-light',
+    pfad: '/tag/',
     breite: 1280,
     hoehe: 700,
     skala: 1,
@@ -80,11 +111,17 @@ try {
       timezoneId: 'Europe/Berlin',
     });
     const seite = await kontext.newPage();
+    // Das Theme wählt die Seite selbst aus dem Browser-Speicher, wie bei Besuchern.
+    await seite.addInitScript(
+      (id) => localStorage.setItem('muffel:theme', id),
+      a.theme,
+    );
     await seite.route(/^https?:\/\/(?!localhost)/, (route) =>
       route.fulfill({ status: 200, contentType: 'image/png', body: PIXEL }),
     );
     await seite.goto(`${ORIGIN}${a.pfad}`);
     await seite.waitForLoadState('networkidle');
+    await seite.evaluate(() => document.fonts.ready);
     const png = await seite.screenshot();
     await writeFile(
       path.join(ziel, `${a.datei}.webp`),

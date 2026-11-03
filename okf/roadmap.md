@@ -342,18 +342,50 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     Filter erscheint kurz der gemischte Strom, bevor er ersetzt wird.
   * Mit JavaScript ist der Pager (auch "Neuere Einträge") verborgen.
 
-### W06c - Themes
+### W06c - Layout und Themes
 
 * Branch: `feature/w06c-themes`
 * Abhängig von: W06a
+* Entschieden **[E]**:
+  * Layout und Themes in einem Pull Request, weil Themes ohne Layout nichts zum
+    Färben haben.
+  * Schriften je Theme selbst hosten (Pakete `@fontsource/*`, Lizenz OFL-1.1,
+    nur der Zeichensatz `latin`). Nichts kommt von Dritten.
+  * Umschalter als Auswahlfeld in der Kopfleiste.
+  * Code-Blöcke bekommen Syntaxfarben je Theme, gefärbt beim Build.
+* Umsetzung:
+  * Zehn Themes als Blöcke mit CSS-Variablen in `styles/themes.css`, Liste und
+    Regeln in `lib/themes.ts`.
+  * `/theme-init.js` ist ein kurzes, blockierendes Skript im `<head>`, das
+    `data-theme` vor dem ersten Zeichnen setzt. Es wird aus derselben Liste
+    erzeugt, damit sie nicht auseinanderläuft.
+  * Gefärbt wird mit `lowlight` (highlight.js) nach der Bereinigung. Die Klassen
+    `hljs-*` stammen nur aus dem Färben, nicht aus dem Text. Ohne Sprachangabe
+    wird nicht geraten.
 * DoD:
-  * [ ] Alle zehn Themes sind wählbar, Solarized Light ist der Standard.
-  * [ ] Jedes Theme besteht den Kontrasttest (Text mindestens 4,5:1), und das
-    gewählte Theme bleibt nach dem Neuladen erhalten, ohne dass beim Laden
-    kurz das falsche Theme aufblitzt.
-  * [ ] Die Bilder der README sind mit dem neuen Aussehen neu aufgenommen
-    (`pnpm screenshots`, Entwurf-PR #19, auf Wunsch des Nutzers erst nach W06c
-    gemergt).
+  * [x] Alle zehn Themes sind wählbar, Solarized Light ist der Standard, bei
+    dunkler Systemeinstellung Solarized Dark, eine gespeicherte Wahl gewinnt.
+  * [x] Jedes Theme besteht den Kontrasttest (Text, gedämpfter Text, Akzent,
+    Text auf Akzent und alle sechs Code-Farben mindestens 4,5:1), geprüft in
+    `lib/themes.test.ts`.
+  * [x] Das gewählte Theme bleibt nach dem Neuladen und auf anderen Seiten
+    erhalten. Ein E2E-Test blockiert alle anderen Skripte und prüft, dass
+    `data-theme` trotzdem schon gesetzt ist.
+  * [x] Ohne `localStorage` und ohne JavaScript gilt der Standard, der
+    Umschalter ist ohne JavaScript verborgen.
+  * [x] Schriften kommen von der eigenen Domain (E2E: keine Fremdanfrage,
+    Matrix lädt IBM Plex Mono).
+  * [x] Auf 360 Pixel Breite gibt es keinen waagerechten Bildlauf.
+  * [x] Die Bilder der README sind mit dem neuen Aussehen neu aufgenommen
+    (`pnpm screenshots`, PR #19, auf Wunsch des Nutzers erst nach W06c).
+* Befunde bei der Umsetzung:
+  * Autorenstile mit `display` überschreiben das Attribut `hidden`. Eine
+    globale Regel `[hidden] { display: none !important }` ist nötig, sonst
+    blieben der Pager und der Umschalter ohne JavaScript sichtbar.
+  * Die Pakete liefern je Schrift `woff2` und `woff`. Beide landen in `dist`
+    (insgesamt rund 480 KB), geladen wird nur `woff2` des aktiven Themes.
+  * Der Kontrast musste bei acht Farben nachgezogen werden, vor allem bei
+    Kommentar- und Schlüsselwortfarben (zum Beispiel Gruvbox, Monokai).
 
 ## W07 - build.json und Banner
 

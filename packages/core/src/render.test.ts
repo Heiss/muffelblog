@@ -46,9 +46,39 @@ describe('Markdown', () => {
     expect(html).toContain('type="checkbox"');
   });
 
-  it('behält Code-Blöcke mit Sprachangabe', async () => {
+  it('behält Code-Blöcke mit Sprachangabe und färbt sie über Klassen', async () => {
     const { html } = await render('```ts\nconst x = 1;\n```\n');
-    expect(html).toContain('<pre><code class="language-ts">');
+    expect(html).toContain('<pre><code class="language-ts');
+    expect(html).toContain('<span class="hljs-keyword">const</span>');
+    expect(html).toContain('<span class="hljs-number">1</span>');
+  });
+
+  it('lässt Code ohne oder mit unbekannter Sprache unverändert', async () => {
+    const ohne = await render('```\nconst x = 1;\n```\n');
+    expect(ohne.html).toContain('<pre><code>const x = 1;\n</code></pre>');
+    const fremd = await render('```gibtsnicht\nconst x = 1;\n```\n');
+    expect(fremd.html).not.toContain('hljs-');
+    expect(fremd.html).toContain('const x = 1;');
+  });
+
+  it('maskiert HTML im gefärbten Code und übernimmt keine eigenen Klassen', async () => {
+    const md =
+      '```html\n<script>alert(1)</script>\n```\n\n<span class="hljs-keyword" style="color:red" onclick="x()">roh</span>\n';
+    const { html } = await render(md);
+    expect(html).not.toMatch(/<script/i);
+    expect(html).toContain('&#x3C;');
+    expect(html).not.toContain('onclick');
+    expect(html).not.toContain('style=');
+    // Die rohe Klasse aus dem Text bleibt nicht stehen, nur die aus dem Färben.
+    expect(html).not.toContain('<span class="hljs-keyword">roh</span>');
+  });
+
+  it('färbt auch im strengen Memos-Modus', async () => {
+    const { html } = await renderMarkdown('```js\nlet a;\n```', {
+      ...optionen(),
+      remoteContent: 'none',
+    });
+    expect(html).toContain('hljs-keyword');
   });
 
   it('schiebt Überschriften eine Ebene nach unten, weil die Seite das h1 trägt', async () => {

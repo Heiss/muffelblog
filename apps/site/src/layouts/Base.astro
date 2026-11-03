@@ -1,6 +1,20 @@
 ---
+import '@fontsource/source-sans-3/latin-400.css';
+import '@fontsource/source-sans-3/latin-600.css';
+import '@fontsource/source-sans-3/latin-700.css';
+import '@fontsource/source-serif-4/latin-400.css';
+import '@fontsource/source-serif-4/latin-600.css';
+import '@fontsource/jetbrains-mono/latin-400.css';
+import '@fontsource/jetbrains-mono/latin-600.css';
+import '@fontsource/jetbrains-mono/latin-700.css';
+import '@fontsource/ibm-plex-mono/latin-400.css';
+import '@fontsource/ibm-plex-mono/latin-600.css';
+import '@fontsource/ibm-plex-mono/latin-700.css';
+import '../styles/themes.css';
+import '../styles/base.css';
 import { SITE_LANG, SITE_NAME, pageTitle } from '@muffelblog/core';
 import { canonicalUrl, siteUrl } from '../lib/feed';
+import { DEFAULT_LIGHT, THEMES } from '../lib/themes';
 
 interface Props {
   title?: string;
@@ -14,7 +28,7 @@ const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
 ---
 
 <!doctype html>
-<html lang={SITE_LANG}>
+<html lang={SITE_LANG} data-theme={DEFAULT_LIGHT}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -22,9 +36,11 @@ const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
     {description && <meta name="description" content={description} />}
     {canonical && <link rel="canonical" href={canonical} />}
     {noindex && <meta name="robots" content="noindex, follow" />}
+    <!-- Setzt data-theme vor dem ersten Zeichnen, daher blockierend und aus der eigenen Domain. -->
+    <script is:inline src="/theme-init.js"></script>
   </head>
   <body>
-    <header>
+    <header class="kopf">
       <a href="/" class="seitenname">
         {SITE_NAME}
       </a>
@@ -32,6 +48,14 @@ const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
         <a href="/">Start</a>
         <a href="/tag/">Tags</a>
       </nav>
+      <label class="farbschema" data-theme-switch hidden>
+        <span>Farbschema</span>
+        <select data-theme-select>
+          {THEMES.map((t) => (
+            <option value={t.id}>{t.label}</option>
+          ))}
+        </select>
+      </label>
     </header>
     <main>
       <slot />
@@ -39,16 +63,6 @@ const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
   </body>
 </html>
 
-<style is:global>
-  [hidden] {
-    display: none !important;
-  }
-  .inhalt img,
-  .inhalt video {
-    max-width: 100%;
-    height: auto;
-  }
-  .inhalt audio {
-    width: 100%;
-  }
-</style>
+<script>
+  import '../scripts/theme-switch';
+</script>

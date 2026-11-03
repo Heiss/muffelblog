@@ -26,8 +26,9 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 eine Allowlist (`rehype-sanitize`), danach die Prüfung von Bildern, Links und
 Einbettungen. Rohes HTML bleibt nur im Rahmen der Allowlist erhalten: Skripte,
 Ereignis-Attribute, `javascript:`- und `data:`-Verweise, Formulare, Stile, SVG,
-Objekte und Kommentare entfallen samt Inhalt. Externe Links bekommen
-`rel="noopener noreferrer"`, Überschriften rücken eine Ebene nach unten.
+Objekte und Kommentare entfallen samt Inhalt. Danach färbt `lowlight` Code-Blöcke mit bekannter Sprache über Klassen
+(`hljs-*`), nicht über Stile; die Klassen stammen nur aus dem Färben. Externe
+Links bekommen `rel="noopener noreferrer"`, Überschriften rücken eine Ebene nach unten.
 
 # SSRF-Schutz
 
