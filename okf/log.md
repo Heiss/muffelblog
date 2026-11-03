@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-02
+* **Update**: W04 umgesetzt (Branch `feature/w04-memos`): Memos-Quelle, Seiten `/m/<uid>/`, Anhänge spiegeln, Contract-Test mit CI-Job; Entscheidungen O6, O14 und Tag-Regel eingetragen, siehe [Memos](/content/memos-source.md).
 * **Update**: Themes: alle zehn bleiben, Standard ist Solarized Light (O35), siehe [Themes](/frontend/themes.md).
 * **Update**: W03 umgesetzt (Branch `feature/w03-rendering`): Markdown-Rendering mit Bereinigung, Remote-Bilder und Einbettungen nur aus Freigabelisten, lokale Bilder als WebP ohne EXIF; Entscheidungen O5 und O7 eingetragen, siehe [Medien](/content/media.md).
 * **Creation**: [Themes](/frontend/themes.md) angelegt: mehrere Farbschemata im Stil bekannter Editor-Themes (O35), Vorschau mit zehn Themes.

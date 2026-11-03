@@ -1,0 +1,57 @@
+---
+import { SITE_LANG, pageTitle } from '@muffelblog/core';
+import type { MemoEntry } from '@muffelblog/core';
+import { getContent } from '../../lib/articles';
+
+export async function getStaticPaths() {
+  const { memos } = await getContent();
+  return memos.map((memo) => ({
+    params: { uid: memo.uid },
+    props: { memo },
+  }));
+}
+
+interface Props {
+  memo: MemoEntry;
+}
+
+const { memo } = Astro.props;
+---
+
+<!doctype html>
+<html lang={SITE_LANG}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle(memo.title)}</title>
+    {memo.description && <meta name="description" content={memo.description} />}
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>
+          <time datetime={memo.date.toISOString()}>{memo.title}</time>
+        </h1>
+        {memo.tags.length > 0 && (
+          <ul aria-label="Tags">
+            {memo.tags.map((tag) => (
+              <li>{tag}</li>
+            ))}
+          </ul>
+        )}
+        <div class="inhalt" set:html={memo.html} />
+      </article>
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  .inhalt img,
+  .inhalt video {
+    max-width: 100%;
+    height: auto;
+  }
+  .inhalt audio {
+    width: 100%;
+  }
+</style>

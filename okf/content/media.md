@@ -73,14 +73,36 @@ die Content-Security-Policy. Eine neue Domain ist eine Codeänderung mit Test.
 # Memo-Bilder
 
 * **[E]** Werden auf die eigene Domain gespiegelt, nichts wird von der
-  Memos-Instanz geladen (siehe [Memos](/content/memos-source.md), W04).
-* **[V]** Beim Spiegeln werden EXIF-Daten entfernt, insbesondere GPS.
+  Memos-Instanz geladen (siehe [Memos](/content/memos-source.md)).
+* **[E]** Beim Spiegeln werden EXIF-Daten entfernt, insbesondere GPS.
   Handyfotos aus Memos tragen sonst Standortdaten. Dieselbe Verarbeitung
-  (`processImage`) wie bei Artikelbildern.
-* **[V]** Größen- und Zeitlimit für jeden Abruf. Abrufe von Fremd-URLs
-  (Mention-Avatare) lehnen private und interne IP-Bereiche ab (siehe
-  [Bereinigung](/security/sanitization.md)).
+  (`processImage`) wie bei Artikelbildern, WebP in mehreren Breiten.
+* **[E]** Alt-Text: Dateiname ohne Endung, Unter- und Bindestriche werden
+  Leerzeichen (`IMG_2043.jpg` wird "IMG 2043").
+* **[V]** Bilder ab Formaten PNG, JPEG, WebP, GIF und AVIF. HEIC und HEIF werden
+  nicht dekodiert und mit einem Hinweis übersprungen (O36).
+* **[V]** Größenlimit je Datei: 25 MB. Zeitlimit je Abruf: 30 Sekunden.
+  Weiterleitungen werden nie befolgt.
+
+## Andere Anhänge (O6)
+
+* **[E]** PDF, Audio und Video werden auf die eigene Domain gespiegelt und
+  eingebunden: PDF als Link mit Größe, Audio und Video mit `controls` und
+  `preload="none"`.
+* **[V]** Erlaubt sind nur diese Endungen: `pdf`, `mp3`, `m4a`, `ogg`, `opus`,
+  `wav`, `flac`, `mp4`, `m4v`, `webm`, `mov`. Der Anfang der Daten muss zur
+  Endung passen (Dateikennung), sonst wird die Datei abgewiesen.
+* **[V]** Alles andere (HTML, SVG, Skripte, Archive, Programme, Office-Dateien)
+  wird nicht übernommen, weil der Server solche Dateien sonst unter der eigenen
+  Adresse mit einem aktiven Inhaltstyp ausliefern könnte. Der Dateiname wird
+  URL-tauglich gemacht (`<16 Hex-Zeichen>-<name>.<endung>`).
+* **[V]** Die Auslieferung nutzt eine feste Tabelle Endung zu Inhaltstyp, nie den
+  Typ aus Memos. Unbekannte Endungen liefern 404.
+* Extern gespeicherte Anhänge (`externalLink`) werden nicht geladen.
+* Ein fehlender Anhang (HTTP 404) lässt das Memo stehen und warnt. Netz- und
+  Serverfehler brechen den Build ab.
 
 # Offene Fragen
 
-Anhänge, die keine Bilder sind (O6).
+Abrufe von Fremd-URLs für Mention-Avatare (W14) sind noch nicht umgesetzt. Sie
+brauchen den SSRF-Schutz aus [Bereinigung](/security/sanitization.md).

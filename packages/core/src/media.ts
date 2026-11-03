@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
-import type { ImageResolveResult } from './render.ts';
+import type { ImageResolveResult, ResolvedImage } from './render.ts';
 
 export interface ImageVariant {
   width: number;
@@ -61,6 +61,25 @@ export async function processImage(eingabe: Buffer): Promise<ProcessedImage> {
   return { id, width: breite, height: hoehe, variants };
 }
 
+/** Bildet die fertigen Varianten auf `src`, `srcset` und Maße für das HTML ab. */
+export function toResolvedImage(
+  bild: ProcessedImage,
+  urlPrefix: string,
+): ResolvedImage {
+  const anzeige =
+    [...bild.variants].reverse().find((v) => v.width <= ANZEIGE_BREITE) ??
+    bild.variants[0];
+  if (!anzeige) throw new Error('keine Variante erzeugt');
+  return {
+    src: `${urlPrefix}${anzeige.file}`,
+    srcset: bild.variants
+      .map((v) => `${urlPrefix}${v.file} ${v.width}w`)
+      .join(', '),
+    width: anzeige.width,
+    height: anzeige.height,
+  };
+}
+
 export interface LocalImageResolver {
   resolve: (rootRelativePath: string) => Promise<ImageResolveResult>;
   /** Alle bisher erzeugten Dateien: Dateiname zu Inhalt. */
@@ -71,8 +90,10 @@ export interface LocalImageResolver {
 export function createLocalImageResolver(optionen: {
   root: string;
   urlPrefix: string;
+  /** Gemeinsamer Speicher der ausgelieferten Dateien, sonst ein eigener. */
+  store?: Map<string, Buffer>;
 }): LocalImageResolver {
-  const dateien = new Map<string, Buffer>();
+  const dateien = optionen.store ?? new Map<string, Buffer>();
   const verarbeitet = new Map<string, ProcessedImage>();
   let wurzelReal: string | undefined;
 
@@ -146,21 +167,7 @@ export function createLocalImageResolver(optionen: {
       for (const variante of bild.variants)
         dateien.set(variante.file, variante.data);
 
-      const anzeige =
-        [...bild.variants].reverse().find((v) => v.width <= ANZEIGE_BREITE) ??
-        bild.variants[0];
-      if (!anzeige) return fehler('invalid', 'keine Variante erzeugt');
-      return {
-        ok: true,
-        image: {
-          src: `${optionen.urlPrefix}${anzeige.file}`,
-          srcset: bild.variants
-            .map((v) => `${optionen.urlPrefix}${v.file} ${v.width}w`)
-            .join(', '),
-          width: anzeige.width,
-          height: anzeige.height,
-        },
-      };
+      return { ok: true, image: toResolvedImage(bild, optionen.urlPrefix) };
     },
   };
 }

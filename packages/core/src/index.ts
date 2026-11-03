@@ -37,3 +37,28 @@ export type {
   RenderResult,
   ResolvedImage,
 } from './render.ts';
+export {
+  ALLOWED_FILES,
+  allowedFileFor,
+  altTextFromFilename,
+  contentTypeForMediaFile,
+  safeFileName,
+  sniffMatches,
+} from './media-files.ts';
+export type { AllowedFile, FileKind, Sniff } from './media-files.ts';
+export {
+  MemosError,
+  buildMemoEntries,
+  createFixtureMemosSource,
+  createHttpMemosSource,
+} from './memos.ts';
+export type {
+  BuildMemosOptions,
+  FetchedAttachment,
+  HttpMemosOptions,
+  MemoAttachmentRaw,
+  MemoEntry,
+  MemoRaw,
+  MemosSource,
+} from './memos.ts';
+export { toResolvedImage } from './media.ts';

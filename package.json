@@ -13,9 +13,11 @@
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "pnpm --filter @muffelblog/site build",
+    "build": "MUFFEL_FIXTURES=1 pnpm --filter @muffelblog/site build",
     "test:e2e": "pnpm --filter @muffelblog/site test:e2e",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build"
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
+    "build:site": "pnpm --filter @muffelblog/site build",
+    "test:contract": "vitest run --config vitest.contract.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

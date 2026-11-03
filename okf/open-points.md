@@ -7,7 +7,7 @@ status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-Die IDs (O1 bis O35) werden in den anderen Konzepten referenziert. Jeder Punkt
+Die IDs (O1 bis O36) werden in den anderen Konzepten referenziert. Jeder Punkt
 nennt, was der Spezifikation heute dazu eingetragen ist ("Eintrag") und was
 dagegen spricht.
 
@@ -36,12 +36,12 @@ dagegen spricht.
 | ID | Thema | Eintrag / Problem |
 |---|---|---|
 | O4 | Remark42-Darstellung | Standardsortierung im Widget und Darstellung des Autors `admin` sind ungeprüft. Die Zeitleiste mit Mentions funktioniert nur bei Sortierung nach Zeit. |
-| O6 | Anhänge, die keine Bilder sind | Audio, Video, PDF in Memos: spiegeln, verlinken auf die Memos-Instanz (widerspricht der Regel) oder weglassen? |
+| O6 | Anhänge, die keine Bilder sind | **[E] entschieden:** PDF, Audio und Video werden mit Größenlimit (25 MB) gespiegelt, nur für erlaubte Endungen und mit passender Dateikennung. Alles andere wird übersprungen (siehe [Medien](/content/media.md)). |
 | O7 | Bildgrößen und Formate | **[E] entschieden:** Lokale Artikelbilder in mehreren Breiten (480 bis 1920) als WebP, EXIF und Farbprofil entfernt, SVG abgelehnt. Umgesetzt mit `sharp`. |
 | O11 | Webmentions: Sender und Microformats | Implementierung des Senders offen. `h-entry`/`h-card`, `rel=me`, IndieAuth wurden nicht besprochen, sind für sinnvolle Anzeige aber nötig. |
 | O12 | Senden aus Memos | Der Nutzer sagte "ja auf jeden Fall" für Senden und "auch für Memo-Seiten" für Mentions. Senden aus Memos ist eine Annahme. |
-| O13 | Tag-Regeln | **[E] teilweise entschieden:** Tags durchgehend kleingeschrieben, auch in der Anzeige. Offen: verschachtelte Memos-Tags (`#a/b`), zählen Inline-`#tags` in Artikeln? Gemeinsamer Namensraum für Posts und Memos ist ein Vorschlag. |
-| O14 | Memo-Datum | `createTime` oder `displayTime`? Titel-Ableitung bei Memos, die nur ein Bild enthalten. |
+| O13 | Tag-Regeln | **[E] teilweise entschieden:** Tags durchgehend kleingeschrieben, auch in der Anzeige. Verschachtelte Memos-Tags (`#a/b`) bleiben ein Tag **[E]**. Offen: zählen Inline-`#tags` in Artikeln? Gemeinsamer Namensraum für Posts und Memos ist ein Vorschlag. |
+| O14 | Memo-Datum | **[E] entschieden:** `createTime` (die API hat kein `displayTime`). Titel immer aus Datum und Uhrzeit, auch bei Memos mit nur einem Bild. |
 | O20 | Feed-Darstellung von Posts, RSS-Umfang | Länge des Auszugs, Anzahl RSS-Einträge, Volltext oder Auszug. |
 | O21 | Zurückgezogene Artikel | **[E] entschieden:** einfach weg (404), kein gespeicherter Zustand. Offen: ob beim Zurückziehen eine Löschbenachrichtigung per Webmention gesendet wird (W15). |
 | O26 | Doppelte Slugs | **[E] entschieden:** Suffix `-2`, `-3`, der ältere Artikel behält den Slug. Risiko: Kommt ein Artikel mit älterem Datum und gleichem Slug dazu, tauschen die URLs. Ein `slug:` im Frontmatter vermeidet das. |
@@ -59,12 +59,17 @@ dagegen spricht.
 | O23 | Entwicklungsablauf | Lokales Arbeiten (`astro dev` mit Beispieldaten), Tests, Linting des Frontmatter-Schemas. |
 | O24 | 404-Seite, `robots.txt` | Nicht besprochen. |
 | O25 | Ungeprüfte Fakten | siehe Abschnitt D. |
+| O36 | HEIC-Fotos | Handyfotos im HEIC-Format (iPhone) lassen sich mit der verwendeten Bildbibliothek nicht verarbeiten und werden mit Hinweis übersprungen. Offen: Fotos als JPEG hochladen oder eine HEIC-Verarbeitung ergänzen? |
 | O35 | Themes | **[E]** Mehrere Themes im Stil bekannter Editor-Themes (siehe [Themes](/frontend/themes.md)). **[E]** Alle zehn Themes der Vorschau bleiben, Standard ist Solarized Light. Offen: Syntaxfarben für Code-Blöcke je Theme, Umgang mit `prefers-color-scheme` (Vorschlag: bei dunkler Systemeinstellung Solarized Dark), Schriften selbst hosten. |
 
 # D. Ungeprüfte Fakten (müssen vor der Umsetzung belegt werden)
 
-* Memos: öffentliche Liste und Anhänge ohne Token abrufbar, API-Form der
-  verwendeten Version.
+* Memos: Aus dem Quellcode belegt (Version 26.11.0): öffentliche Liste und Anhänge
+  sind ohne Token abrufbar, wenn der Zugriffsmodus PUBLIC ist, Pfade und Felder
+  stehen in [Memos](/content/memos-source.md). Durch den Contract-Test gegen
+  eine echte Instanz 26.11.0 belegt: Pfade, Feldnamen, anonymer Abruf und
+  Dateiroute, außerdem dass Memos zu `#a/b` auch den Tag `a` liefert. Noch
+  ungeprüft: Stabilität der `uid`, externe Anhänge.
 * Nextcloud: Public-Share-WebDAV mit Token und Passwort, Verhalten von
   `getlastmodified`, Konfliktdatei-Muster.
 * webmention.io: öffentliche API ohne Token, Parameter `since`, Verhalten bei

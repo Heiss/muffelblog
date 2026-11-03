@@ -1,0 +1,138 @@
+{
+  "memos": [
+    {
+      "name": "memos/memo-text",
+      "creator": "users/beispiel",
+      "content": "Renovate eingerichtet. Patch-Updates mergen jetzt von allein. #tooling #a/b",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [],
+      "relations": [],
+      "reactions": [],
+      "tags": ["tooling", "a/b"],
+      "createTime": "2026-11-02T13:32:00Z",
+      "updateTime": "2026-11-02T13:32:00Z"
+    },
+    {
+      "name": "memos/memo-bild",
+      "creator": "users/beispiel",
+      "content": "Foto vom Bücherregal im Lesesaal. #bibliothek",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [
+        {
+          "name": "attachments/img-regal",
+          "filename": "IMG_2043.png",
+          "type": "image/png",
+          "size": "1000"
+        }
+      ],
+      "relations": [],
+      "reactions": [],
+      "tags": ["bibliothek"],
+      "createTime": "2026-11-02T09:10:00Z",
+      "updateTime": "2026-11-02T09:10:00Z"
+    },
+    {
+      "name": "memos/memo-dateien",
+      "creator": "users/beispiel",
+      "content": "Notizen mit Dateien. #alltag",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [
+        {
+          "name": "attachments/pdf-1",
+          "filename": "Mein Bericht.pdf",
+          "type": "application/pdf",
+          "size": "1000"
+        },
+        {
+          "name": "attachments/aud-1",
+          "filename": "Klang.wav",
+          "type": "audio/wav",
+          "size": "1000"
+        }
+      ],
+      "relations": [],
+      "reactions": [],
+      "tags": ["alltag"],
+      "createTime": "2026-11-01T18:00:00Z",
+      "updateTime": "2026-11-01T18:00:00Z"
+    },
+    {
+      "name": "memos/memo-privat",
+      "creator": "users/beispiel",
+      "content": "Das ist privat und darf nie erscheinen.",
+      "visibility": "PRIVATE",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [],
+      "relations": [],
+      "reactions": [],
+      "tags": [],
+      "createTime": "2026-11-01T12:00:00Z",
+      "updateTime": "2026-11-01T12:00:00Z"
+    },
+    {
+      "name": "memos/memo-skript",
+      "creator": "users/beispiel",
+      "content": "<script>window.__pwned = 1</script>\n\nHarmloser Text.\n\n![x](https://upload.wikimedia.org/a/b.jpg)",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [],
+      "relations": [],
+      "reactions": [],
+      "tags": [],
+      "createTime": "2026-10-30T10:00:00Z",
+      "updateTime": "2026-10-30T10:00:00Z"
+    },
+    {
+      "name": "memos/memo-extern",
+      "creator": "users/beispiel",
+      "content": "Anhang liegt extern.",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [
+        {
+          "name": "attachments/ext-1",
+          "filename": "extern.png",
+          "type": "image/png",
+          "size": "1000",
+          "externalLink": "https://s3.example/extern.png"
+        }
+      ],
+      "relations": [],
+      "reactions": [],
+      "tags": [],
+      "createTime": "2026-10-29T10:00:00Z",
+      "updateTime": "2026-10-29T10:00:00Z"
+    },
+    {
+      "name": "memos/memo-html",
+      "creator": "users/beispiel",
+      "content": "Anhang mit unerlaubtem Typ.",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [
+        {
+          "name": "attachments/html-1",
+          "filename": "seite.html",
+          "type": "text/html",
+          "size": "1000"
+        }
+      ],
+      "relations": [],
+      "reactions": [],
+      "tags": [],
+      "createTime": "2026-10-28T10:00:00Z",
+      "updateTime": "2026-10-28T10:00:00Z"
+    }
+  ],
+  "nextPageToken": ""
+}
