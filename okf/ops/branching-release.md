@@ -15,6 +15,9 @@ generated: { by: claude-code/web, at: 2026-11-02T13:40:00Z }
     Request gegen `main`, danach wird der Branch gelöscht.
 * **[E]** Pull Requests werden per Squash-Merge gemergt: ein Commit pro
   Arbeitspaket, lineare Historie.
+* **[E]** Eigene Pull Requests (Arbeitspakete) mergt Claude selbst, sobald die
+  CI grün ist, inklusive des Contract-Tests. Der Nutzer hat das am 2026-11-03
+  bestätigt.
 * **[E]** Release des Codes: Git-Tag in CalVer `YY.M.MICRO`, zum Beispiel
   `26.11.0` oder `26.1.0`, ohne `v`-Präfix. `YY` ist das Jahr zweistellig, `M`
   der Monat ohne führende Null, `MICRO` zählt die Releases innerhalb des

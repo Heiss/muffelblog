@@ -1,0 +1,10 @@
+---
+import { filterKind, paginate } from '@muffelblog/core';
+import FeedSeite from '../../components/FeedSeite.astro';
+import { getFeed, pageSize } from '../../lib/feed';
+
+const eintraege = filterKind(await getFeed(), 'memo');
+const page = paginate(eintraege, 1, '/memos/', pageSize());
+---
+
+<FeedSeite title="Memos" heading="Memos" {page} />

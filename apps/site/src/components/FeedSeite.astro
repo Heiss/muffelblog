@@ -1,0 +1,44 @@
+---
+import type { FeedItem, Page } from '@muffelblog/core';
+import Base from '../layouts/Base.astro';
+import FeedEntry from './FeedEntry.astro';
+
+interface Props {
+  title?: string;
+  heading: string;
+  page: Page<FeedItem>;
+  /** Hinweis, wenn der Block leer ist. */
+  leer?: string;
+}
+
+const { title, heading, page, leer = 'Noch keine Einträge.' } = Astro.props;
+const seitentitel =
+  page.page > 1
+    ? `${title ?? heading}, Seite ${page.page}`
+    : (title ?? undefined);
+---
+
+<Base title={seitentitel} noindex={page.page > 1}>
+  <h1>{heading}</h1>
+  {page.items.length === 0 && <p>{leer}</p>}
+  {page.items.map((item) => (
+    <FeedEntry item={item} />
+  ))}
+  {(page.prev || page.next) && (
+    <nav aria-label="Seiten" class="seiten">
+      {page.prev && (
+        <a href={page.prev} rel="prev">
+          Neuere Einträge
+        </a>
+      )}
+      <span>
+        Seite {page.page} von {page.pages}
+      </span>
+      {page.next && (
+        <a href={page.next} rel="next">
+          Ältere Einträge
+        </a>
+      )}
+    </nav>
+  )}
+</Base>

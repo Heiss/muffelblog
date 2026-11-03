@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-11-03
+* **Update**: W05 umgesetzt (Branch `feature/w05-feed-statisch`): gemeinsamer Feed mit Blöcken zu 20, Reihen `/`, `/memos/`, `/posts/`, Tag-Übersicht und Tag-Listen, Sitemap und Canonical nur mit `SITE_URL`; Entscheidungen zu O1, O13, O20 eingetragen, siehe [Feed](/frontend/feed.md).
+* **Update**: Merge-Regel festgehalten: eigene Pull Requests mergt Claude nach grüner CI selbst, siehe [Branching und Release](/ops/branching-release.md).
+
 ## 2026-11-02
 * **Update**: W04 umgesetzt (Branch `feature/w04-memos`): Memos-Quelle, Seiten `/m/<uid>/`, Anhänge spiegeln, Contract-Test mit CI-Job; Entscheidungen O6, O14 und Tag-Regel eingetragen, siehe [Memos](/content/memos-source.md).
 * **Update**: Themes: alle zehn bleiben, Standard ist Solarized Light (O35), siehe [Themes](/frontend/themes.md).

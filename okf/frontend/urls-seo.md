@@ -15,8 +15,9 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 | Post | `/p/<slug>/` | **[E]** |
 | Memo | `/m/<uid>/` | **[E]** |
 | Technische Blöcke (gemischt) | `/seite/N/` | **[E]** |
-| Technische Blöcke (Memos, Posts) | `/memos/seite/N/`, `/posts/seite/N/` | **[V]** |
-| Tag | `/tag/<tag>/` | **[V]** |
+| Technische Blöcke (Memos, Posts) | `/memos/seite/N/`, `/posts/seite/N/` | **[E]** |
+| Tag-Übersicht | `/tag/` | **[E]** |
+| Tag | `/tag/<tag>/`, Blöcke `/tag/<tag>/seite/N/` | **[E]** |
 | Suche | `/suche/` | **[V]** |
 | RSS | `/feed.xml` | **[V]** |
 | Build-Signal | `/build.json` | **[E]** |
@@ -31,8 +32,9 @@ Form, die der Nutzer gewünscht hat. Der Nutzer hat `/p/<slug>/` und
   für Suchmaschinen.
 * **[V]** Der Slug trägt Schlüsselwörter und enthält kein Datum.
 * **[V]** Eine kanonische URL pro Seite, einheitlicher Slash am Ende.
-* **[V]** `lang="de"`, absolute Canonical-URLs (setzt die Domain voraus),
-  Sitemap mit Posts, Memos und Tags, aber ohne `/seite/N/`.
+* **[E]** `lang="de"`, absolute Canonical-URLs und Sitemap mit Startseite,
+  Posts, Memos und Tags, aber ohne `/seite/N/`. Beides entsteht nur, wenn
+  `SITE_URL` gesetzt ist (Domain offen, O9).
 * **[V]** Memos haben keinen Titel. Titel und Description werden aus dem Text
   abgeleitet (siehe [Memos](/content/memos-source.md)).
 
