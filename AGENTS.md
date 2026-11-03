@@ -1,11 +1,15 @@
 # Muffelblog
 
-Statischer Blog (Astro) mit Memos-Microblog, Nextcloud als Quelle, Remark42 und Docker.
+Static blog (Astro) with a Memos microblog, Nextcloud as the source, Remark42
+and Docker.
 
-Die Spezifikation liegt als OKF-Bundle in `okf/`. Nur die Konzepte laden, die für die Aufgabe nötig sind.
+The specification is an OKF bundle in `okf/`. Load only the concepts the task
+needs.
 
-* Einstieg: `okf/index.md`
-* Überblick und Legende (E = Entscheidung, V = Vorschlag, U = ungeprüft): `okf/overview.md`
-* Offene Punkte: `okf/open-points.md`
+* Entry point: `okf/index.md`
+* Overview and legend (E = decision, V = proposal, U = unverified):
+  `okf/overview.md`
+* Open points: `okf/open-points.md`
+* Language rules: `okf/ops/language.md` (development in English)
 
-Regel: Nichts erfinden, Offenes beim Nutzer erfragen.
+Rule: do not invent anything, ask the user about open points.

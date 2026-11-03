@@ -27,7 +27,7 @@ generated: { by: claude-code/web, at: 2026-11-03T12:30:00Z }
   **Begriffe** (Glossar). Begriffe werden getrennt von den Blogbeiträgen
   geführt: `Lang` enthält nie Begriffe. In **Alle** erscheinen Begriffe im
   zeitlichen Verlauf, eigens als Begriff gekennzeichnet. Die Reihe heißt
-  `/begriffe/` und `/begriffe/seite/N/`.
+  `/terms/` and `/terms/page/N/`.
 * **[E]** Die Split-View entfällt. Der Unified-Modus mit Filter bleibt die
   einzige Ansicht des Feeds (siehe [Feed](/frontend/feed.md)).
 
@@ -65,7 +65,7 @@ generated: { by: claude-code/web, at: 2026-11-03T12:30:00Z }
   für den Feed-Auszug.
 * **[V]** Der Feed bekommt eine dritte Art `glossar` und einen vierten Filter.
   Ein Eintrag zeigt Begriff, Datum und Kurzdefinition, nicht den ganzen Text.
-* **[V]** Buchstabenansicht `/glossar/`: Leiste A bis Z und alle Begriffe nach
+* **[V]** letter view `/glossary/`: Leiste A bis Z und alle Begriffe nach
   Anfangsbuchstaben des Begriffs gruppiert. Die Buchstaben der Leiste sind
   echte Links (Sprungmarken), nicht nur Skript-Elemente. Umlaute zählen zum Grundbuchstaben (Ä unter A),
   Ziffern und Sonderzeichen unter `#`. Die Seite ist statisch und vollständig,

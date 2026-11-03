@@ -21,7 +21,7 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 * **[E]** Beschriftungen des Filters: **Kurz** für Memos, **Lang** für
   Blogbeiträge und **Begriffe** für Glossareinträge. Die Beschriftung gilt in
   der Anzeige, Überschriften und Seitentiteln. Die Adressen der Reihen bleiben
-  `/memos/` und `/posts/` (und für Begriffe `/begriffe/`), die Einzelseiten
+  `/memos/` und `/posts/` (and `/terms/` for terms), die Einzelseiten
   `/m/<uid>/` und `/p/<slug>/`.
 * **[E]** Memos erscheinen vollständig mit Bildern.
 

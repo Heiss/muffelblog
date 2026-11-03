@@ -67,6 +67,8 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 | W19 | Glossar: Eintragsart, `/g/`, Buchstabenansicht, Feed-Filter | W05, W06a | W07 bis W11 |
 | W20 | Verlinkung und Backlinks | W03, W19 | W07 bis W11 |
 | W21 | Wissensgraph | W20 | W07 bis W11 |
+| W22 | English as development language (translation in several PRs) | - | - |
+| W23 | UI language per `MUFFEL_LANG` (de, en) | W22 | W07 bis W11 |
 
 **Kritischer Pfad:** W00, W01, W03, W04, W05, W12, W13, W14, W15, W16, W17.
 
@@ -562,17 +564,17 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 * Branch: `feature/w19-glossar`
 * Abhängig von: W05, W06a
 * Entschieden **[E]**: Feld `type: glossary`, Filter und Reihe **Begriffe**
-  (`/begriffe/`), Begriffe auch in Alle, aber gekennzeichnet.
+  (`/terms/`), Begriffe auch in Alle, aber gekennzeichnet.
 * Entscheidungen (O38): Begriff-Feld und Frageform des Titels, Sortierung der
   Umlaute, Kommentare auf Begriffen.
 * Umfang: Eintragsart `glossar` im Loader, Seiten `/g/<slug>/`, Buchstabenansicht
-  `/glossar/`, dritte Art im Feed mit Filter, Aufnahme in Sitemap (siehe
+  `/glossary/`, dritte Art im Feed mit Filter, Aufnahme in Sitemap (siehe
   [Glossar](/features/glossary.md)). Suche und RSS folgen in W08 und W09.
 * DoD (Entwurf, **[V]**):
   * [ ] Eine Datei mit `type: glossary` und `publish: true` erzeugt `/g/<slug>/`;
     ohne `type` bleibt sie ein Artikel.
   * [ ] Begriffe erscheinen im Feed in zeitlicher Reihenfolge und sind filterbar.
-  * [ ] `/glossar/` gruppiert nach Buchstaben des Begriffs, Umlaute unter dem
+  * [ ] `/glossary/` gruppiert nach Buchstaben des Begriffs, Umlaute unter dem
     Grundbuchstaben, die Leiste besteht aus echten Links.
   * [ ] Doppelte Slugs im Glossar bekommen einen Zähler und stören `/p/` nicht.
   * [ ] Ohne JavaScript ist alles erreichbar.
@@ -604,3 +606,38 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     Fremdbibliothek und ohne Anfrage an Dritte.
   * [ ] Jeder Knoten ist per Tastatur erreichbar, die Backlink-Listen bleiben
     der Zugang ohne JavaScript.
+
+## W22 - English as development language
+
+* Branches: `feature/w22a-rules`, `feature/w22b-core`, `feature/w22c-site`,
+  `feature/w22d-okf`
+* Depends on: -
+* Decided **[E]**: see [Languages](/ops/language.md). Translation first, then
+  demo content and W07 onward. No history rewrite.
+* Split:
+  * **W22a** rules: `AGENTS.md`, README, the language concept, roadmap entry.
+  * **W22b** `packages/core`: identifiers, comments, test names, log messages.
+  * **W22c** `apps/site`, E2E tests, workflow, scripts, UI strings collected
+    in one place (still German).
+  * **W22d** the OKF bundle (about 16,000 words), file by file.
+* DoD:
+  * [ ] `AGENTS.md`, README and the language rules are English.
+  * [ ] No German identifiers, comments or test names remain in `packages/`,
+    `apps/`, scripts and workflows. German text remains only where it is
+    content or UI text (fixtures, message catalog).
+  * [ ] The whole OKF bundle is English and `lint_okf` passes.
+  * [ ] All checks stay green after each part.
+
+## W23 - UI language
+
+* Branch: `feature/w23-ui-language`
+* Depends on: W22c
+* Decided **[E]**: `MUFFEL_LANG` (`de` or `en`), one language per build, no URL
+  prefix, no browser detection, content not translated.
+* DoD (draft, **[V]**):
+  * [ ] A message catalog per language with a shared type; a missing key fails
+    the type check.
+  * [ ] `MUFFEL_LANG=en` renders the whole UI in English, `de` in German, an
+    unknown value stops the build.
+  * [ ] `<html lang>`, date and number formats follow the language.
+  * [ ] E2E tests cover both languages.

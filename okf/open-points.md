@@ -7,7 +7,7 @@ status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-Die IDs (O1 bis O38) werden in den anderen Konzepten referenziert. Jeder Punkt
+Die IDs (O1 bis O39) werden in den anderen Konzepten referenziert. Jeder Punkt
 nennt, was der Spezifikation heute dazu eingetragen ist ("Eintrag") und was
 dagegen spricht.
 
@@ -61,7 +61,8 @@ dagegen spricht.
 | O25 | Ungeprüfte Fakten | siehe Abschnitt D. |
 | O36 | HEIC-Fotos | Handyfotos im HEIC-Format (iPhone) lassen sich mit der verwendeten Bildbibliothek nicht verarbeiten und werden mit Hinweis übersprungen. Offen: Fotos als JPEG hochladen oder eine HEIC-Verarbeitung ergänzen? |
 | O37 | Codequalität, Komplexität, Mutationstests | Wunsch des Nutzers (W18): statische Analyse und später Mutationstests mit mehr als 80 %. Offen: Werkzeuge, Schwellen, blockierend oder berichtend, Umfang, Laufzeit in der CI. | [Roadmap](/roadmap.md) |
-| O38 | Glossar und Graph | **[E]** Glossar als Eintragsart im selben Ordner, Markdown-Links, Graph lokal und gesamt (siehe [Glossar](/features/glossary.md)). **[E]** Feld `type: glossary`, Filter **Begriffe**, Reihe `/begriffe/`, Begriffe auch in Alle (gekennzeichnet), Beschriftungen Kurz und Lang statt Memos und Beiträge. Offen: Frageform des Titels mit eigenem Begriff-Feld wie im Vorbild, Kommentare und Webmentions auf Begriffen, Sortierung der Umlaute. | [Glossar](/features/glossary.md) |
+| O38 | Glossar und Graph | **[E]** Glossar als Eintragsart im selben Ordner, Markdown-Links, Graph lokal und gesamt (siehe [Glossar](/features/glossary.md)). **[E]** Feld `type: glossary`, Filter **Begriffe**, series `/terms/`, letter view `/glossary/`, Begriffe auch in Alle (gekennzeichnet), Beschriftungen Kurz und Lang statt Memos und Beiträge. Offen: Frageform des Titels mit eigenem Begriff-Feld wie im Vorbild, Kommentare und Webmentions auf Begriffen, Sortierung der Umlaute. | [Glossar](/features/glossary.md) |
+| O39 | Languages | **[E]** Development in English, UI language per `MUFFEL_LANG` (de, en), no URL prefix, articles not translated, no history rewrite, English URLs (`/page/N/`, `/glossary/`, `/terms/`, `/search/`). Open: default value, feed and search texts. | [Languages](/ops/language.md) |
 | O35 | Themes | **[E]** Mehrere Themes im Stil bekannter Editor-Themes (siehe [Themes](/frontend/themes.md)). **[E]** Alle zehn Themes der Vorschau bleiben, Standard ist Solarized Light. **[E]** Syntaxfarben je Theme (lowlight, beim Build), bei dunkler Systemeinstellung Solarized Dark, Schriften selbst gehostet (W06c). |
 
 # D. Ungeprüfte Fakten (müssen vor der Umsetzung belegt werden)
