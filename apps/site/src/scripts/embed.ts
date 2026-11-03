@@ -1,13 +1,14 @@
 import { matchEmbed } from '@muffelblog/core/policy';
+import { messages } from '../i18n/messages';
 
-/** Ersetzt den Platzhalter durch das eingebettete Element, erst nach dem Klick. */
-function starten(container: HTMLElement): void {
-  const treffer = matchEmbed(container.dataset.embedSrc ?? '');
-  if (treffer === null) return;
+/** Replaces the placeholder with the embedded element, only after the click. */
+function start(container: HTMLElement): void {
+  const match = matchEmbed(container.dataset.embedSrc ?? '');
+  if (match === null) return;
 
   const frame = document.createElement('iframe');
-  frame.src = treffer.src;
-  frame.title = `${treffer.label}: eingebetteter Inhalt`;
+  frame.src = match.src;
+  frame.title = messages.embed.frameTitle(match.label);
   frame.className = 'embed-frame';
   frame.loading = 'lazy';
   frame.referrerPolicy = 'no-referrer';
@@ -19,10 +20,10 @@ function starten(container: HTMLElement): void {
   container.replaceChildren(frame);
 }
 
-document.addEventListener('click', (ereignis) => {
-  const ziel = ereignis.target;
-  if (!(ziel instanceof Element)) return;
-  const knopf = ziel.closest('.embed-start');
-  const container = knopf?.closest<HTMLElement>('.embed');
-  if (container) starten(container);
+document.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const button = target.closest('.embed-start');
+  const container = button?.closest<HTMLElement>('.embed');
+  if (container) start(container);
 });

@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { groupByTag } from '@muffelblog/core';
 import { getFeed, siteUrl, sitemapXml } from '../lib/feed';
 
-// Ohne SITE_URL (Domain noch offen, O9) entsteht keine Sitemap.
+// Without SITE_URL (domain still open, O9) there is no sitemap.
 export async function getStaticPaths() {
   return siteUrl() ? [{ params: { sitemap: 'sitemap' } }] : [];
 }
@@ -11,9 +11,9 @@ export const GET: APIRoute = async () => {
   const base = siteUrl();
   if (!base) return new Response(null, { status: 404 });
   const feed = await getFeed();
-  const neueste = feed[0]?.date;
+  const newest = feed[0]?.date;
   const xml = sitemapXml(base, [
-    { path: '/', lastmod: neueste },
+    { path: '/', lastmod: newest },
     { path: '/posts/' },
     { path: '/memos/' },
     { path: '/tag/' },

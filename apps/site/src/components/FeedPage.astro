@@ -1,0 +1,78 @@
+---
+import type { FeedItem, Page } from '@muffelblog/core';
+import { messages } from '../i18n/messages';
+import Base from '../layouts/Base.astro';
+import FeedEntry from './FeedEntry.astro';
+
+interface Props {
+  title?: string;
+  heading: string;
+  page: Page<FeedItem>;
+  /** Series the page belongs to. Only there the filter is shown. */
+  series?: 'all' | 'post' | 'memo';
+  /** Hint shown when the block is empty. */
+  empty?: string;
+}
+
+const {
+  title,
+  heading,
+  page,
+  series,
+  empty = messages.feed.empty,
+} = Astro.props;
+const pageTitle =
+  page.page > 1
+    ? messages.feed.pageTitle(title ?? heading, page.page)
+    : (title ?? undefined);
+const filters = [
+  { id: 'all', name: messages.filter.all, href: '/' },
+  { id: 'post', name: messages.filter.long, href: '/posts/' },
+  { id: 'memo', name: messages.filter.short, href: '/memos/' },
+] as const;
+---
+
+<Base title={pageTitle} noindex={page.page > 1}>
+  <h1>{heading}</h1>
+  <div data-feed data-series={series}>
+    {series && (
+      <nav aria-label={messages.filter.label} class="filter" data-filter>
+        {filters.map((f) => (
+          <a
+            href={f.href}
+            data-filter-id={f.id}
+            aria-current={f.id === series ? 'page' : undefined}
+          >
+            {f.name}
+          </a>
+        ))}
+      </nav>
+    )}
+    <div data-feed-list>
+      {page.items.length === 0 && <p>{empty}</p>}
+      {page.items.map((item) => (
+        <FeedEntry item={item} />
+      ))}
+    </div>
+    <p data-feed-status role="status" hidden></p>
+    {(page.prev || page.next) && (
+      <nav aria-label={messages.feed.pagesLabel} class="pager" data-pager>
+        {page.prev && (
+          <a href={page.prev} rel="prev">
+            {messages.feed.newer}
+          </a>
+        )}
+        <span>{messages.feed.pageOf(page.page, page.pages)}</span>
+        {page.next && (
+          <a href={page.next} rel="next">
+            {messages.feed.older}
+          </a>
+        )}
+      </nav>
+    )}
+  </div>
+</Base>
+
+<script>
+  import '../scripts/feed';
+</script>

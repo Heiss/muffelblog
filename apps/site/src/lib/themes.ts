@@ -1,11 +1,11 @@
 export interface Theme {
   id: string;
   label: string;
-  /** Dunkles Theme: dient als Gegenstück bei dunkler Systemeinstellung. */
+  /** Dark theme: serves as the counterpart for a dark system setting. */
   dark: boolean;
 }
 
-/** Reihenfolge im Umschalter. Die Farben stehen in `styles/themes.css`. */
+/** Order in the switcher. The colors live in `styles/themes.css`. */
 export const THEMES: readonly Theme[] = [
   { id: 'solarized-light', label: 'Solarized Light', dark: false },
   { id: 'hell', label: 'Hell', dark: false },
@@ -23,42 +23,42 @@ export const DEFAULT_LIGHT = 'solarized-light';
 export const DEFAULT_DARK = 'solarized-dark';
 export const THEME_STORAGE_KEY = 'muffel:theme';
 
-export function isThemeId(wert: unknown): wert is string {
-  return typeof wert === 'string' && THEMES.some((t) => t.id === wert);
+export function isThemeId(value: unknown): value is string {
+  return typeof value === 'string' && THEMES.some((t) => t.id === value);
 }
 
-/** Gespeicherte Wahl gewinnt, sonst folgt das Theme der Systemeinstellung. */
+/** A stored choice wins, otherwise the theme follows the system setting. */
 export function pickTheme(
-  gespeichert: string | null | undefined,
-  systemDunkel: boolean,
+  stored: string | null | undefined,
+  systemDark: boolean,
 ): string {
-  if (isThemeId(gespeichert)) return gespeichert;
-  return systemDunkel ? DEFAULT_DARK : DEFAULT_LIGHT;
+  if (isThemeId(stored)) return stored;
+  return systemDark ? DEFAULT_DARK : DEFAULT_LIGHT;
 }
 
-function kanal(wert: number): number {
-  const c = wert / 255;
+function channel(value: number): number {
+  const c = value / 255;
   return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 }
 
-function luminanz(hex: string): number {
+function luminance(hex: string): number {
   const m = /^#([0-9a-f]{6})$/i.exec(hex);
-  if (!m?.[1]) throw new Error(`Keine Farbe im Format #rrggbb: ${hex}`);
+  if (!m?.[1]) throw new Error(`Not a color in the format #rrggbb: ${hex}`);
   const n = parseInt(m[1], 16);
   return (
-    0.2126 * kanal((n >> 16) & 255) +
-    0.7152 * kanal((n >> 8) & 255) +
-    0.0722 * kanal(n & 255)
+    0.2126 * channel((n >> 16) & 255) +
+    0.7152 * channel((n >> 8) & 255) +
+    0.0722 * channel(n & 255)
   );
 }
 
-/** Kontrastverhältnis nach WCAG 2.x, 1 bis 21. */
+/** Contrast ratio according to WCAG 2.x, 1 to 21. */
 export function contrastRatio(a: string, b: string): number {
-  const [hell, dunkel] = [luminanz(a), luminanz(b)].sort((x, y) => y - x);
-  return ((hell ?? 0) + 0.05) / ((dunkel ?? 0) + 0.05);
+  const [lighter, darker] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return ((lighter ?? 0) + 0.05) / ((darker ?? 0) + 0.05);
 }
 
-/** Lesbarer Quelltext des Skripts, das `data-theme` vor dem ersten Zeichnen setzt. */
+/** Readable source of the script that sets `data-theme` before the first paint. */
 export function themeInitScript(): string {
   const ids = JSON.stringify(THEMES.map((t) => t.id));
   return (

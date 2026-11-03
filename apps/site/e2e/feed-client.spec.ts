@@ -1,63 +1,61 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-// Test-Build: Blöcke zu 4 Einträgen, 9 Artikel und 6 Memos, also 4 Blöcke gemischt.
-const GESAMT = 15;
+// Test build: blocks of 4 entries, 9 articles and 6 memos, so 4 mixed blocks.
+const TOTAL = 15;
 const MEMOS = 6;
 const POSTS = 9;
 
-const eintraege = (page: Page) => page.locator('[data-feed-liste] > article');
+const entries = (page: Page) => page.locator('[data-feed-list] > article');
 
 async function ids(page: Page): Promise<string[]> {
-  return eintraege(page).evaluateAll((els) =>
+  return entries(page).evaluateAll((els) =>
     els.map((el) => el.getAttribute('data-id') ?? ''),
   );
 }
 
-async function ganzNachUnten(page: Page, erwartet: number): Promise<void> {
+async function scrollToEnd(page: Page, expected: number): Promise<void> {
   await expect
     .poll(
       async () => {
         await page.evaluate(() =>
           window.scrollTo(0, document.documentElement.scrollHeight),
         );
-        return eintraege(page).count();
+        return entries(page).count();
       },
       { timeout: 15_000 },
     )
-    .toBe(erwartet);
+    .toBe(expected);
 }
 
 test.describe('Endless Scroll', () => {
-  test('lädt beim Scrollen alle Blöcke nach, ohne Doppelungen', async ({
+  test('loads all blocks while scrolling, without duplicates', async ({
     page,
   }) => {
     await page.goto('/');
-    await expect(eintraege(page)).toHaveCount(4);
-    await ganzNachUnten(page, GESAMT);
+    await expect(entries(page)).toHaveCount(4);
+    await scrollToEnd(page, TOTAL);
     const alle = await ids(page);
-    expect(new Set(alle).size).toBe(GESAMT);
-    // Am Ende gibt es keinen sichtbaren Weiter-Link und keine Fehlermeldung mehr.
+    expect(new Set(alle).size).toBe(TOTAL);
+    // At the end there is no visible next link and no error message any more.
     await expect(
       page.getByRole('link', { name: 'Ältere Einträge' }),
     ).toBeHidden();
     await expect(page.locator('[data-feed-status]')).toBeHidden();
   });
 
-  test('behält die Reihenfolge: neueste zuerst über alle Blöcke', async ({
-    page,
-  }) => {
+  test('keeps the order: newest first across all blocks', async ({ page }) => {
     await page.goto('/');
-    await ganzNachUnten(page, GESAMT);
+    await scrollToEnd(page, TOTAL);
     const zeiten = await page
-      .locator('[data-feed-liste] > article time')
+      .locator('[data-feed-list] > article time')
       .evaluateAll((els) =>
         els.map((el) => Date.parse(el.getAttribute('datetime') ?? '')),
       );
     expect(zeiten).toEqual([...zeiten].sort((a, b) => b - a));
   });
 
-  test('der Weiter-Link ist mit JavaScript verborgen, ohne bleibt er sichtbar', async ({
+  test('the next link is hidden with JavaScript and stays visible without', async ({
     page,
     browser,
   }) => {
@@ -72,10 +70,10 @@ test.describe('Endless Scroll', () => {
     await ohne.close();
   });
 
-  test('bei einem Ladefehler erscheint ein Hinweis und der Link bleibt benutzbar', async ({
+  test('a loading error shows a hint and the link stays usable', async ({
     page,
   }) => {
-    await page.route('**/seite/2/', (route) => route.abort());
+    await page.route('**/page/2/', (route) => route.abort());
     await page.goto('/');
     await page.evaluate(() =>
       window.scrollTo(0, document.documentElement.scrollHeight),
@@ -86,23 +84,21 @@ test.describe('Endless Scroll', () => {
     await expect(
       page.getByRole('link', { name: 'Ältere Einträge' }),
     ).toBeVisible();
-    await expect(eintraege(page)).toHaveCount(4);
+    await expect(entries(page)).toHaveCount(4);
   });
 
-  test('lädt auf Tag-Seiten nach, ohne dass es dort einen Filter gibt', async ({
-    page,
-  }) => {
+  test('loads more on tag pages without a filter there', async ({ page }) => {
     await page.goto('/tag/tooling/');
     await expect(page.getByRole('navigation', { name: 'Filter' })).toHaveCount(
       0,
     );
-    const erste = await eintraege(page).count();
+    const erste = await entries(page).count();
     expect(erste).toBeGreaterThan(0);
   });
 });
 
-test.describe('Filter im Unified-Modus', () => {
-  test('Kurz zeigt nur Memos, behält die Adresse sauber und lädt nach', async ({
+test.describe('Filter in the unified mode', () => {
+  test('Kurz shows only memos, keeps the address clean and loads more', async ({
     page,
   }) => {
     await page.goto('/');
@@ -114,37 +110,35 @@ test.describe('Filter im Unified-Modus', () => {
       'page',
     );
     await expect(page).toHaveTitle('Kurz – Muffelblog');
-    await ganzNachUnten(page, MEMOS);
+    await scrollToEnd(page, MEMOS);
     expect((await ids(page)).every((id) => id.startsWith('memo:'))).toBe(true);
   });
 
-  test('Lang und Alle wechseln zurück', async ({ page }) => {
+  test('Lang and Alle switch back', async ({ page }) => {
     await page.goto('/');
     const filter = page.getByRole('navigation', { name: 'Filter' });
     await filter.getByRole('link', { name: 'Lang' }).click();
-    await ganzNachUnten(page, POSTS);
+    await scrollToEnd(page, POSTS);
     expect((await ids(page)).every((id) => id.startsWith('post:'))).toBe(true);
     await filter.getByRole('link', { name: 'Alle' }).click();
     await expect(page).toHaveURL(/\/$/);
-    await ganzNachUnten(page, GESAMT);
+    await scrollToEnd(page, TOTAL);
   });
 
-  test('ein Wechsel startet oben und ohne Reste der alten Liste', async ({
+  test('a switch starts at the top and without leftovers of the old list', async ({
     page,
   }) => {
     await page.goto('/');
-    await ganzNachUnten(page, GESAMT);
+    await scrollToEnd(page, TOTAL);
     const filter = page.getByRole('navigation', { name: 'Filter' });
     await filter.getByRole('link', { name: 'Kurz' }).click();
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     await expect(
-      page.locator('[data-feed-liste] > article[data-kind="post"]'),
+      page.locator('[data-feed-list] > article[data-kind="post"]'),
     ).toHaveCount(0);
   });
 
-  test('der Filter bleibt nach dem Neuladen von / erhalten', async ({
-    page,
-  }) => {
+  test('the filter is kept after reloading /', async ({ page }) => {
     await page.goto('/');
     const filter = page.getByRole('navigation', { name: 'Filter' });
     await filter.getByRole('link', { name: 'Kurz' }).click();
@@ -152,14 +146,14 @@ test.describe('Filter im Unified-Modus', () => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/memos\/$/);
     await expect(
-      page.locator('[data-feed-liste] > article[data-kind="post"]'),
+      page.locator('[data-feed-list] > article[data-kind="post"]'),
     ).toHaveCount(0);
     await filter.getByRole('link', { name: 'Alle' }).click();
     await page.goto('/');
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test('eine ausdrücklich aufgerufene Reihe gewinnt gegen den gespeicherten Filter', async ({
+  test('an explicitly opened series wins over the stored filter', async ({
     page,
   }) => {
     await page.goto('/');
@@ -172,7 +166,7 @@ test.describe('Filter im Unified-Modus', () => {
     expect((await ids(page)).every((id) => id.startsWith('post:'))).toBe(true);
   });
 
-  test('ohne nutzbaren localStorage gelten die Standardwerte und alles funktioniert', async ({
+  test('without usable localStorage the defaults apply and everything works', async ({
     page,
   }) => {
     await page.addInitScript(() => {
@@ -183,15 +177,17 @@ test.describe('Filter im Unified-Modus', () => {
       });
     });
     await page.goto('/');
-    await expect(eintraege(page)).toHaveCount(4);
+    await expect(entries(page)).toHaveCount(4);
     await page
       .getByRole('navigation', { name: 'Filter' })
       .getByRole('link', { name: 'Kurz' })
       .click();
-    await ganzNachUnten(page, MEMOS);
+    await scrollToEnd(page, MEMOS);
   });
 
-  test('ohne JavaScript sind die Filter normale Links', async ({ browser }) => {
+  test('without JavaScript the filters are normal links', async ({
+    browser,
+  }) => {
     const ohne = await browser.newContext({ javaScriptEnabled: false });
     const seite = await ohne.newPage();
     await seite.goto('/');
@@ -204,36 +200,34 @@ test.describe('Filter im Unified-Modus', () => {
   });
 });
 
-test.describe('Rücksprung', () => {
-  test('stellt geladene Blöcke und Scrollposition wieder her', async ({
-    page,
-  }) => {
+test.describe('Going back', () => {
+  test('restores loaded blocks and scroll position', async ({ page }) => {
     await page.goto('/');
-    await ganzNachUnten(page, GESAMT);
-    const eintrag = eintraege(page).nth(10);
-    await eintrag.scrollIntoViewIfNeeded();
-    const vorher = await page.evaluate(() => window.scrollY);
-    const href = await eintrag.locator('h2 a').getAttribute('href');
-    await eintrag.locator('h2 a').click();
+    await scrollToEnd(page, TOTAL);
+    const entry = entries(page).nth(10);
+    await entry.scrollIntoViewIfNeeded();
+    const before = await page.evaluate(() => window.scrollY);
+    const href = await entry.locator('h2 a').getAttribute('href');
+    await entry.locator('h2 a').click();
     await expect(page).toHaveURL(new RegExp(`${href}$`));
     await page.goBack();
-    await expect(eintraege(page)).toHaveCount(GESAMT);
+    await expect(entries(page)).toHaveCount(TOTAL);
     await expect
       .poll(async () =>
-        Math.abs((await page.evaluate(() => window.scrollY)) - vorher),
+        Math.abs((await page.evaluate(() => window.scrollY)) - before),
       )
       .toBeLessThan(150);
   });
 });
 
-test('Nachladen bleibt bei der eigenen Herkunft', async ({ page, baseURL }) => {
+test('loading more stays on the own origin', async ({ page, baseURL }) => {
   const origin = new URL(baseURL ?? 'http://localhost').origin;
-  const fremd: string[] = [];
+  const foreign: string[] = [];
   page.on('request', (r) => {
     if (r.url().startsWith('http') && new URL(r.url()).origin !== origin)
-      fremd.push(r.url());
+      foreign.push(r.url());
   });
   await page.goto('/');
-  await ganzNachUnten(page, GESAMT);
-  expect(fremd).toEqual([]);
+  await scrollToEnd(page, TOTAL);
+  expect(foreign).toEqual([]);
 });

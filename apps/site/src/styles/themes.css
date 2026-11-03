@@ -1,5 +1,5 @@
-/* Farben, Rundung und Schriften je Theme. Jeder Text erreicht mindestens 4,5:1
-   (geprüft in lib/themes.test.ts). Die Kennungen stehen in lib/themes.ts. */
+/* Colors, rounding and fonts per theme. Every text reaches at least 4.5:1
+   (checked in lib/themes.test.ts). The identifiers are in lib/themes.ts. */
 
 [data-theme='solarized-light'] {
   --color-scheme: light;

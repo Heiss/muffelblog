@@ -58,9 +58,9 @@ export function filterKind(items: FeedItem[], kind: FeedKind): FeedItem[] {
   return items.filter((e) => e.kind === kind);
 }
 
-/** Path of a page: page 1 lives at the base, further pages under `<base>seite/N/`. */
+/** Path of a page: page 1 lives at the base, further pages under `<base>page/N/`. */
 export function pagePath(base: string, page: number): string {
-  return page === 1 ? base : `${base}seite/${page}/`;
+  return page === 1 ? base : `${base}page/${page}/`;
 }
 
 export interface Page<T> {

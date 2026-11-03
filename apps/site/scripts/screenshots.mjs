@@ -1,5 +1,5 @@
-// Erzeugt die Bilder der README aus der gebauten Seite mit Beispieldaten.
-// Aufruf: pnpm screenshots (baut vorher mit MUFFEL_FIXTURES=1).
+// Creates the README images from the built site with sample data.
+// Usage: pnpm screenshots (builds first with MUFFEL_FIXTURES=1).
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -9,68 +9,68 @@ import sharp from 'sharp';
 
 const PORT = 4399;
 const ORIGIN = `http://localhost:${PORT}`;
-const hier = path.dirname(fileURLToPath(import.meta.url));
-const dist = path.join(hier, '..', 'dist');
-const ziel = path.join(hier, '..', '..', '..', 'docs', 'screenshots');
+const here = path.dirname(fileURLToPath(import.meta.url));
+const dist = path.join(here, '..', 'dist');
+const target = path.join(here, '..', '..', '..', 'docs', 'screenshots');
 
-// 1x1-PNG als Ersatz für freigegebene Fremdbilder, damit nichts ins Netz geht.
+// 1x1 PNG as a stand-in for allowed foreign images, so nothing goes online.
 const PIXEL = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
   'base64',
 );
 
-const ansichten = [
+const views = [
   {
-    datei: 'feed-breit',
+    name: 'feed-breit',
     theme: 'solarized-light',
-    pfad: '/',
-    breite: 1280,
-    hoehe: 900,
-    skala: 1,
+    route: '/',
+    width: 1280,
+    height: 900,
+    scale: 1,
   },
   {
-    datei: 'feed-dunkel',
+    name: 'feed-dunkel',
     theme: 'dracula',
-    pfad: '/',
-    breite: 1280,
-    hoehe: 900,
-    skala: 1,
+    route: '/',
+    width: 1280,
+    height: 900,
+    scale: 1,
   },
   {
-    datei: 'feed-mobil',
+    name: 'feed-mobil',
     theme: 'solarized-light',
-    pfad: '/',
-    breite: 390,
-    hoehe: 844,
-    skala: 2,
+    route: '/',
+    width: 390,
+    height: 844,
+    scale: 2,
   },
   {
-    datei: 'artikel',
+    name: 'artikel',
     theme: 'solarized-light',
-    pfad: '/p/rendering-demo/',
-    breite: 1280,
-    hoehe: 1000,
-    skala: 1,
+    route: '/p/rendering-demo/',
+    width: 1280,
+    height: 1000,
+    scale: 1,
   },
   {
-    datei: 'artikel-matrix',
+    name: 'artikel-matrix',
     theme: 'matrix',
-    pfad: '/p/rendering-demo/',
-    breite: 1280,
-    hoehe: 1000,
-    skala: 1,
+    route: '/p/rendering-demo/',
+    width: 1280,
+    height: 1000,
+    scale: 1,
   },
   {
-    datei: 'tags',
+    name: 'tags',
     theme: 'solarized-light',
-    pfad: '/tag/',
-    breite: 1280,
-    hoehe: 700,
-    skala: 1,
+    route: '/tag/',
+    width: 1280,
+    height: 700,
+    scale: 1,
   },
 ];
 
-async function warteAufServer() {
+async function waitForServer() {
   for (let i = 0; i < 50; i++) {
     try {
       if ((await fetch(ORIGIN)).ok) return;
@@ -79,7 +79,7 @@ async function warteAufServer() {
     }
     await new Promise((r) => setTimeout(r, 200));
   }
-  throw new Error('Server startet nicht');
+  throw new Error('The server does not start');
 }
 
 const server = spawn(
@@ -98,37 +98,37 @@ const server = spawn(
 );
 
 try {
-  await warteAufServer();
-  await mkdir(ziel, { recursive: true });
+  await waitForServer();
+  await mkdir(target, { recursive: true });
   const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || undefined,
   });
-  for (const a of ansichten) {
-    const kontext = await browser.newContext({
-      viewport: { width: a.breite, height: a.hoehe },
-      deviceScaleFactor: a.skala,
+  for (const a of views) {
+    const context = await browser.newContext({
+      viewport: { width: a.width, height: a.height },
+      deviceScaleFactor: a.scale,
       locale: 'de-DE',
       timezoneId: 'Europe/Berlin',
     });
-    const seite = await kontext.newPage();
-    // Das Theme wählt die Seite selbst aus dem Browser-Speicher, wie bei Besuchern.
-    await seite.addInitScript(
+    const page = await context.newPage();
+    // The page picks the theme itself from the browser storage, like for visitors.
+    await page.addInitScript(
       (id) => localStorage.setItem('muffel:theme', id),
       a.theme,
     );
-    await seite.route(/^https?:\/\/(?!localhost)/, (route) =>
+    await page.route(/^https?:\/\/(?!localhost)/, (route) =>
       route.fulfill({ status: 200, contentType: 'image/png', body: PIXEL }),
     );
-    await seite.goto(`${ORIGIN}${a.pfad}`);
-    await seite.waitForLoadState('networkidle');
-    await seite.evaluate('document.fonts.ready');
-    const png = await seite.screenshot();
+    await page.goto(`${ORIGIN}${a.route}`);
+    await page.waitForLoadState('networkidle');
+    await page.evaluate('document.fonts.ready');
+    const png = await page.screenshot();
     await writeFile(
-      path.join(ziel, `${a.datei}.webp`),
+      path.join(target, `${a.name}.webp`),
       await sharp(png).webp({ quality: 85 }).toBuffer(),
     );
-    console.log(`docs/screenshots/${a.datei}.webp`);
-    await kontext.close();
+    console.log(`docs/screenshots/${a.name}.webp`);
+    await context.close();
   }
   await browser.close();
 } finally {

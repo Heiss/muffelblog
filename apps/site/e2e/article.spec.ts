@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('Artikelseiten unter /p/<slug>/', () => {
-  test('zeigt Titel, Datum und Tags eines Artikels', async ({ page }) => {
+test.describe('Article pages under /p/<slug>/', () => {
+  test('shows title, date and tags of an article', async ({ page }) => {
     await page.goto('/p/hallo-welt/');
     await expect(page.locator('html')).toHaveAttribute('lang', 'de');
     await expect(page).toHaveTitle('Hallo Welt – Muffelblog');
@@ -12,7 +12,7 @@ test.describe('Artikelseiten unter /p/<slug>/', () => {
       'content',
       'Der erste Artikel.',
     );
-    // Reines Datum gilt als 12:00 Uhr in Berlin, im Januar sind das 11:00 UTC.
+    // A plain date counts as 12:00 in Berlin, in January that is 11:00 UTC.
     await expect(page.locator('time')).toHaveAttribute(
       'datetime',
       '2026-01-05T11:00:00.000Z',
@@ -22,7 +22,7 @@ test.describe('Artikelseiten unter /p/<slug>/', () => {
     ).toHaveText(['python', 'ml']);
   });
 
-  test('bildet Slug und Titel aus dem Dateinamen mit Umlauten', async ({
+  test('builds slug and title from a file name with umlauts', async ({
     page,
   }) => {
     await page.goto('/p/groesse-und-masse/');
@@ -34,7 +34,7 @@ test.describe('Artikelseiten unter /p/<slug>/', () => {
     ).toHaveText(['über größe']);
   });
 
-  test('liest Uhrzeit mit und ohne Zone', async ({ page }) => {
+  test('reads a time with and without a zone', async ({ page }) => {
     await page.goto('/p/zeit-ohne-zone/');
     await expect(page.locator('time')).toHaveAttribute(
       'datetime',
@@ -47,14 +47,14 @@ test.describe('Artikelseiten unter /p/<slug>/', () => {
     );
   });
 
-  test('findet Artikel in Unterordnern und ohne Datum', async ({ page }) => {
+  test('finds articles in subfolders and without a date', async ({ page }) => {
     const unterordner = await page.goto('/p/tief/');
     expect(unterordner?.status()).toBe(200);
     const ohneDatum = await page.goto('/p/ohne-datum/');
     expect(ohneDatum?.status()).toBe(200);
   });
 
-  test('hängt bei doppeltem Slug ein Suffix an den jüngeren Artikel', async ({
+  test('appends a suffix to the younger article on a duplicate slug', async ({
     page,
   }) => {
     await page.goto('/p/gleich/');
@@ -76,8 +76,8 @@ test.describe('Artikelseiten unter /p/<slug>/', () => {
     'konfliktkopie',
     'hallo-welt-conflicted-copy-2026-01-05-100000',
   ]) {
-    // Direkte Anfrage: Chromium meldet eine leere 404-Antwort als Netzwerkfehler.
-    test(`veröffentlicht /p/${slug}/ nicht`, async ({ request }) => {
+    // Direct request: Chromium reports an empty 404 response as a network error.
+    test(`does not publish /p/${slug}/`, async ({ request }) => {
       const antwort = await request.get(`/p/${slug}/`);
       expect(antwort.status()).toBe(404);
     });

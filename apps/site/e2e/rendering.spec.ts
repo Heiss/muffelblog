@@ -1,22 +1,22 @@
 import { expect, test } from '@playwright/test';
-import { fremdAbfangen } from './helpers';
+import { interceptForeign } from './helpers';
 
-test.describe('Rendering-Demo (/p/rendering-demo/)', () => {
-  test('rendert Markdown mit angepassten Überschriften, Liste, Tabelle und Code', async ({
+test.describe('Rendering demo (/p/rendering-demo/)', () => {
+  test('renders Markdown with adjusted headings, list, table and code', async ({
     page,
   }) => {
-    await fremdAbfangen(page);
+    await interceptForeign(page);
     await page.goto('/p/rendering-demo/');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'Rendering-Demo',
     );
-    await expect(page.locator('.inhalt h2')).toHaveText('Abschnitt');
-    await expect(page.locator('.inhalt li')).toHaveText([
+    await expect(page.locator('.content h2')).toHaveText('Abschnitt');
+    await expect(page.locator('.content li')).toHaveText([
       'Punkt eins',
       'Punkt zwei',
     ]);
-    await expect(page.locator('.inhalt table td')).toHaveText(['a', '1']);
-    await expect(page.locator('.inhalt pre code.language-ts')).toContainText(
+    await expect(page.locator('.content table td')).toHaveText(['a', '1']);
+    await expect(page.locator('.content pre code.language-ts')).toContainText(
       'const x = 1;',
     );
     const link = page.getByRole('link', { name: 'externen Link' });
@@ -24,13 +24,13 @@ test.describe('Rendering-Demo (/p/rendering-demo/)', () => {
     await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  test('liefert lokale Bilder als WebP in mehreren Breiten von der eigenen Domain', async ({
+  test('serves local images as WebP in several widths from the own domain', async ({
     page,
     request,
   }) => {
-    await fremdAbfangen(page);
+    await interceptForeign(page);
     await page.goto('/p/rendering-demo/');
-    const bild = page.locator('.inhalt img[alt="Testbild"]');
+    const bild = page.locator('.content img[alt="Testbild"]');
     await expect(bild).toHaveAttribute(
       'srcset',
       /\/media\/[0-9a-f]{16}-480\.webp 480w, \/media\/[0-9a-f]{16}-960\.webp 960w/,
@@ -48,46 +48,46 @@ test.describe('Rendering-Demo (/p/rendering-demo/)', () => {
     expect(koerper.subarray(8, 12).toString('latin1')).toBe('WEBP');
   });
 
-  test('lädt freigegebene Remote-Bilder, entfernt andere und meldet fehlende', async ({
+  test('loads allowed remote images, removes others and reports missing ones', async ({
     page,
   }) => {
-    const fremd = await fremdAbfangen(page);
+    const foreign = await interceptForeign(page);
     await page.goto('/p/rendering-demo/');
     await page.waitForLoadState('networkidle');
 
-    const wiki = page.locator('.inhalt img[alt="Wikimedia"]');
+    const wiki = page.locator('.content img[alt="Wikimedia"]');
     await expect(wiki).toHaveAttribute(
       'src',
       'https://upload.wikimedia.org/wikipedia/commons/a/a9/Example.jpg',
     );
     await expect(wiki).toHaveAttribute('referrerpolicy', 'no-referrer');
 
-    await expect(page.locator('.inhalt img[alt="Tracker"]')).toHaveCount(0);
-    expect(fremd.filter((u) => u.includes('tracker.example'))).toEqual([]);
-    expect(fremd).toEqual([
+    await expect(page.locator('.content img[alt="Tracker"]')).toHaveCount(0);
+    expect(foreign.filter((u) => u.includes('tracker.example'))).toEqual([]);
+    expect(foreign).toEqual([
       'https://upload.wikimedia.org/wikipedia/commons/a/a9/Example.jpg',
     ]);
 
-    await expect(page.locator('.inhalt .image-missing')).toHaveText(
+    await expect(page.locator('.content .image-missing')).toHaveText(
       '[Bild fehlt: Fehlt]',
     );
   });
 
-  test('lädt Einbettungen erst nach dem Klick', async ({ page }) => {
-    const fremd = await fremdAbfangen(page);
+  test('loads embeds only after the click', async ({ page }) => {
+    const foreign = await interceptForeign(page);
     await page.goto('/p/rendering-demo/');
     await page.waitForLoadState('networkidle');
 
-    const platzhalter = page.locator('.inhalt .embed');
+    const platzhalter = page.locator('.content .embed');
     await expect(platzhalter).toContainText('YouTube');
-    await expect(page.locator('.inhalt iframe')).toHaveCount(0);
-    expect(fremd.filter((u) => u.includes('youtube'))).toEqual([]);
+    await expect(page.locator('.content iframe')).toHaveCount(0);
+    expect(foreign.filter((u) => u.includes('youtube'))).toEqual([]);
     await expect(
       page.getByRole('link', { name: 'Auf YouTube öffnen' }),
     ).toHaveAttribute('href', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
 
     await page.getByRole('button', { name: 'Inhalt laden' }).click();
-    const frame = page.locator('.inhalt iframe');
+    const frame = page.locator('.content iframe');
     await expect(frame).toHaveAttribute(
       'src',
       'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
@@ -99,17 +99,17 @@ test.describe('Rendering-Demo (/p/rendering-demo/)', () => {
     await expect(frame).toHaveAttribute('referrerpolicy', 'no-referrer');
     await expect
       .poll(() =>
-        fremd.some((u) => u.startsWith('https://www.youtube-nocookie.com/')),
+        foreign.some((u) => u.startsWith('https://www.youtube-nocookie.com/')),
       )
       .toBe(true);
   });
 });
 
-test.describe('Unsicherer Inhalt (/p/unsicher/)', () => {
-  test('führt nichts aus und lädt nichts von Fremdservern', async ({
+test.describe('Unsafe content (/p/unsicher/)', () => {
+  test('executes nothing and loads nothing from foreign servers', async ({
     page,
   }) => {
-    const fremd = await fremdAbfangen(page);
+    const foreign = await interceptForeign(page);
     await page.goto('/p/unsicher/');
     await page.waitForLoadState('networkidle');
 
@@ -118,19 +118,19 @@ test.describe('Unsicherer Inhalt (/p/unsicher/)', () => {
         () => (window as unknown as { __pwned?: number }).__pwned,
       ),
     ).toBeUndefined();
-    await expect(page.locator('.inhalt script')).toHaveCount(0);
-    await expect(page.locator('.inhalt iframe')).toHaveCount(0);
-    await expect(page.locator('.inhalt form')).toHaveCount(0);
-    await expect(page.locator('.inhalt [onerror]')).toHaveCount(0);
+    await expect(page.locator('.content script')).toHaveCount(0);
+    await expect(page.locator('.content iframe')).toHaveCount(0);
+    await expect(page.locator('.content form')).toHaveCount(0);
+    await expect(page.locator('.content [onerror]')).toHaveCount(0);
 
     const verweis = page.getByText('Gefährlicher Link');
     await expect(verweis).toBeVisible();
-    expect(await page.locator('.inhalt a[href^="javascript:" i]').count()).toBe(
-      0,
-    );
+    expect(
+      await page.locator('.content a[href^="javascript:" i]').count(),
+    ).toBe(0);
 
-    await expect(page.locator('.inhalt')).toContainText('Text vorher.');
-    await expect(page.locator('.inhalt')).toContainText('Text nachher.');
-    expect(fremd).toEqual([]);
+    await expect(page.locator('.content')).toContainText('Text vorher.');
+    await expect(page.locator('.content')).toContainText('Text nachher.');
+    expect(foreign).toEqual([]);
   });
 });

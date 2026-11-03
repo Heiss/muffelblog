@@ -1,10 +1,10 @@
 import { readSettings } from '@muffelblog/core';
 import type { Settings } from '@muffelblog/core';
 
-let einstellungen: Settings | undefined;
+let settings: Settings | undefined;
 
-/** Einstellungen aus den Umgebungsvariablen, einmal pro Build geprüft. */
+/** Settings from the environment variables, checked once per build. */
 export function getSettings(): Settings {
-  einstellungen ??= readSettings();
-  return einstellungen;
+  settings ??= readSettings();
+  return settings;
 }

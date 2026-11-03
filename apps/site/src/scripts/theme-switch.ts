@@ -1,23 +1,21 @@
 import { THEME_STORAGE_KEY, isThemeId } from '../lib/themes';
 
-const huelle = document.querySelector<HTMLElement>('[data-theme-switch]');
-const auswahl = document.querySelector<HTMLSelectElement>(
-  '[data-theme-select]',
-);
+const wrapper = document.querySelector<HTMLElement>('[data-theme-switch]');
+const select = document.querySelector<HTMLSelectElement>('[data-theme-select]');
 
-if (huelle && auswahl) {
-  // Ohne JavaScript bleibt der Umschalter verborgen, er hätte keine Wirkung.
-  huelle.hidden = false;
-  const aktuell = document.documentElement.getAttribute('data-theme');
-  if (isThemeId(aktuell)) auswahl.value = aktuell;
+if (wrapper && select) {
+  // Without JavaScript the switcher stays hidden, it would have no effect.
+  wrapper.hidden = false;
+  const current = document.documentElement.getAttribute('data-theme');
+  if (isThemeId(current)) select.value = current;
 
-  auswahl.addEventListener('change', () => {
-    if (!isThemeId(auswahl.value)) return;
-    document.documentElement.setAttribute('data-theme', auswahl.value);
+  select.addEventListener('change', () => {
+    if (!isThemeId(select.value)) return;
+    document.documentElement.setAttribute('data-theme', select.value);
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, auswahl.value);
+      localStorage.setItem(THEME_STORAGE_KEY, select.value);
     } catch {
-      /* ohne Speicher gilt die Wahl nur für diese Seite */
+      /* without storage the choice applies only to this page */
     }
   });
 }

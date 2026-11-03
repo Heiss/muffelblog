@@ -625,7 +625,16 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
     fallback file name of `safeFileName` is `file`. The route `/seite/N/` stays
     until W22c.
   * **W22c** `apps/site`, E2E tests, workflow, scripts, UI strings collected
-    in one place (still German).
+    in one place (still German). Done. The routes are `/page/N/` now. All UI
+    texts of the site live in `apps/site/src/i18n/messages.ts` (German, one
+    object, becomes one catalog per language in W23). CSS classes and data
+    attributes are English (`entry`, `content`, `excerpt`, `site-header`,
+    `theme-picker`, `pager`, `data-feed-list`, `data-series`); the tag list is
+    styled through the class `tags`, not through its localized `aria-label`.
+    The CI job names are English (the required check `CI Gate` is unchanged).
+    Test files `artikel.spec.ts` and `startseite.spec.ts` are `article.spec.ts`
+    and `home.spec.ts`. The values stored in the browser for the filter changed
+    from `alle` to `all`; an old stored value falls back to `all`.
   * **W22d** the OKF bundle (about 16,000 words), file by file.
 * DoD:
   * [ ] `AGENTS.md`, README and the language rules are English.

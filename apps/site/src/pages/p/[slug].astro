@@ -1,4 +1,5 @@
 ---
+import { messages } from '../../i18n/messages';
 import Base from '../../layouts/Base.astro';
 import { getContent } from '../../lib/articles';
 import type { RenderedArticle } from '../../lib/articles';
@@ -16,7 +17,7 @@ interface Props {
 }
 
 const { article } = Astro.props;
-const datum = new Intl.DateTimeFormat('de-DE', {
+const date = new Intl.DateTimeFormat(messages.locale, {
   dateStyle: 'long',
   timeZone: 'Europe/Berlin',
 }).format(article.date);
@@ -26,16 +27,16 @@ const datum = new Intl.DateTimeFormat('de-DE', {
   <article>
     <h1>{article.title}</h1>
     <p class="meta">
-      <time datetime={article.date.toISOString()}>{datum}</time>
+      <time datetime={article.date.toISOString()}>{date}</time>
     </p>
     {article.tags.length > 0 && (
-      <ul aria-label="Tags">
+      <ul aria-label={messages.tags.label} class="tags">
         {article.tags.map((tag) => (
           <li>{tag}</li>
         ))}
       </ul>
     )}
-    <div class="inhalt" set:html={article.html} />
+    <div class="content" set:html={article.html} />
   </article>
 </Base>
 

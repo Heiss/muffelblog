@@ -10,30 +10,30 @@ import type { MemosSource } from '@muffelblog/core';
 export interface ContentConfig {
   /** Ordner mit den Markdown-Artikeln. */
   contentDir: string;
-  /** Quelle der öffentlichen Memos. */
+  /** Source of the public memos. */
   memos: MemosSource;
 }
 
 function findRepoRoot(start: string): string {
-  let ordner = path.resolve(start);
+  let folder = path.resolve(start);
   for (;;) {
-    if (existsSync(path.join(ordner, 'pnpm-workspace.yaml'))) return ordner;
-    const eltern = path.dirname(ordner);
-    if (eltern === ordner)
+    if (existsSync(path.join(folder, 'pnpm-workspace.yaml'))) return folder;
+    const parent = path.dirname(folder);
+    if (parent === folder)
       throw new Error(
-        'Wurzel des Repos nicht gefunden (pnpm-workspace.yaml fehlt)',
+        'Repository root not found (pnpm-workspace.yaml is missing)',
       );
-    ordner = eltern;
+    folder = parent;
   }
 }
 
 /**
- * Wählt die Inhaltsquellen für den Build.
+ * Chooses the content sources for the build.
  *
- * Absicht: Ein Build ohne ausdrückliche Konfiguration darf nie Beispieldaten
- * veröffentlichen. Deshalb müssen `CONTENT_DIR` (synchronisierter Nextcloud-
- * Ordner) und `MEMOS_URL` (Adresse der Memos-Instanz) gesetzt sein. Beispieldaten
- * gibt es nur mit `MUFFEL_FIXTURES=1` (Entwicklung, Tests).
+ * Intent: a build without explicit configuration must never publish sample
+ * data. That is why `CONTENT_DIR` (synchronized Nextcloud folder) and
+ * `MEMOS_URL` (address of the Memos instance) must be set. Sample data exists
+ * only with `MUFFEL_FIXTURES=1` (development, tests).
  */
 export function contentConfig(
   env: Record<string, string | undefined> = process.env,
@@ -50,13 +50,13 @@ export function contentConfig(
       memos: createFixtureMemosSource(path.join(fixtures, 'memos')),
     };
   }
-  const fehlend = (['CONTENT_DIR', 'MEMOS_URL'] as const).filter(
+  const missing = (['CONTENT_DIR', 'MEMOS_URL'] as const).filter(
     (name) => !env[name],
   );
-  if (fehlend.length > 0) {
+  if (missing.length > 0) {
     throw new Error(
-      `Inhaltsquellen nicht konfiguriert, es fehlt: ${fehlend.join(', ')}. ` +
-        'Für Entwicklung und Tests mit Beispieldaten MUFFEL_FIXTURES=1 setzen.',
+      `Content sources are not configured, missing: ${missing.join(', ')}. ` +
+        'For development and tests with sample data set MUFFEL_FIXTURES=1.',
     );
   }
   return {

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
-# Basis: Node 26 (siehe .node-version). Corepack gehört seit Node 25 nicht mehr
-# zur Auslieferung, pnpm kommt deshalb über npm in der Version aus package.json.
+# Base: Node 26 (see .node-version). Corepack has not been part of Node since
+# version 25, so pnpm comes through npm in the version from package.json.
 FROM node:26-slim AS base
 WORKDIR /repo
 ENV CI=true \
@@ -18,7 +18,7 @@ RUN pnpm install --offline --frozen-lockfile
 FROM deps AS site-build
 RUN pnpm build
 
-# Nur das Ergebnis der Seite, exportierbar mit
+# Only the result of the site, exportable with
 # docker build --target site-dist --output type=local,dest=out .
 FROM scratch AS site-dist
 COPY --from=site-build /repo/apps/site/dist/ /

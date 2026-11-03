@@ -16,8 +16,8 @@ export default defineConfig({
     },
   },
   webServer: {
-    // Testet die gebaute Seite, nicht den Dev-Server. `astro preview` startet
-    // ohne Terminal im Hintergrund und eignet sich daher nicht für Playwright.
+    // Tests the built site, not the dev server. `astro preview` starts itself
+    // in the background without a terminal and is therefore not suitable for Playwright.
     command: `pnpm exec sirv dist --port ${PORT} --host localhost --quiet`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,

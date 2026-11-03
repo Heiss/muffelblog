@@ -1,5 +1,6 @@
 ---
 import type { MemoEntry } from '@muffelblog/core';
+import { messages } from '../../i18n/messages';
 import Base from '../../layouts/Base.astro';
 import { getContent } from '../../lib/articles';
 
@@ -24,12 +25,12 @@ const { memo } = Astro.props;
       <time datetime={memo.date.toISOString()}>{memo.title}</time>
     </h1>
     {memo.tags.length > 0 && (
-      <ul aria-label="Tags">
+      <ul aria-label={messages.tags.label} class="tags">
         {memo.tags.map((tag) => (
           <li>{tag}</li>
         ))}
       </ul>
     )}
-    <div class="inhalt" set:html={memo.html} />
+    <div class="content" set:html={memo.html} />
   </article>
 </Base>
