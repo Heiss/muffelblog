@@ -1,14 +1,15 @@
 ---
 import { groupByTag, paginate } from '@muffelblog/core';
 import type { FeedItem } from '@muffelblog/core';
-import FeedSeite from '../../../../components/FeedSeite.astro';
-import { getFeed, restSeiten } from '../../../../lib/feed';
+import FeedPage from '../../../../components/FeedPage.astro';
+import { messages } from '../../../../i18n/messages';
+import { getFeed, restPages } from '../../../../lib/feed';
 import { getSettings } from '../../../../lib/settings';
 
 export async function getStaticPaths() {
   const size = getSettings().feedPageSize;
   return groupByTag(await getFeed()).flatMap((g) =>
-    restSeiten(g.items.length, size).map((n) => ({
+    restPages(g.items.length, size).map((n) => ({
       params: { tag: g.slug, n: String(n) },
       props: { name: g.names.join(' / '), items: g.items },
     })),
@@ -29,4 +30,8 @@ const page = paginate(
 );
 ---
 
-<FeedSeite title={`Tag ${name}`} heading={`Tag: ${name}`} {page} />
+<FeedPage
+  title={messages.tags.title(name)}
+  heading={messages.tags.heading(name)}
+  {page}
+/>

@@ -8,7 +8,7 @@
       "automerge": true
     },
     {
-      "description": "astro check unterstützt TypeScript 7 nicht, deshalb bleibt TypeScript bei Version 6.",
+      "description": "astro check does not support TypeScript 7, so TypeScript stays at version 6.",
       "matchPackageNames": ["typescript"],
       "allowedVersions": "<7"
     }

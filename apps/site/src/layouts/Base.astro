@@ -14,12 +14,13 @@ import '../styles/themes.css';
 import '../styles/base.css';
 import { SITE_LANG, SITE_NAME, pageTitle } from '@muffelblog/core';
 import { canonicalUrl, siteUrl } from '../lib/feed';
+import { messages } from '../i18n/messages';
 import { DEFAULT_LIGHT, THEMES } from '../lib/themes';
 
 interface Props {
   title?: string;
   description?: string;
-  /** Sucher sollen die Seite nicht indexieren (technische Blockseiten). */
+  /** Search engines should not index the page (technical block pages). */
   noindex?: boolean;
 }
 
@@ -36,20 +37,20 @@ const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
     {description && <meta name="description" content={description} />}
     {canonical && <link rel="canonical" href={canonical} />}
     {noindex && <meta name="robots" content="noindex, follow" />}
-    <!-- Setzt data-theme vor dem ersten Zeichnen, daher blockierend und aus der eigenen Domain. -->
+    <!-- Sets data-theme before the first paint, so it is blocking and from the own domain. -->
     <script is:inline src="/theme-init.js"></script>
   </head>
   <body>
-    <header class="kopf">
-      <a href="/" class="seitenname">
+    <header class="site-header">
+      <a href="/" class="site-name">
         {SITE_NAME}
       </a>
-      <nav aria-label="Hauptnavigation">
-        <a href="/">Start</a>
-        <a href="/tag/">Tags</a>
+      <nav aria-label={messages.nav.label}>
+        <a href="/">{messages.nav.home}</a>
+        <a href="/tag/">{messages.nav.tags}</a>
       </nav>
-      <label class="farbschema" data-theme-switch hidden>
-        <span>Farbschema</span>
+      <label class="theme-picker" data-theme-switch hidden>
+        <span>{messages.theme.label}</span>
         <select data-theme-select>
           {THEMES.map((t) => (
             <option value={t.id}>{t.label}</option>

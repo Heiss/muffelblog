@@ -1,12 +1,12 @@
 ---
 import { SITE_NAME, paginate } from '@muffelblog/core';
-import FeedSeite from '../../components/FeedSeite.astro';
-import { getFeed, restSeiten } from '../../lib/feed';
+import FeedPage from '../../components/FeedPage.astro';
+import { getFeed, restPages } from '../../lib/feed';
 import { getSettings } from '../../lib/settings';
 
 export async function getStaticPaths() {
   const feed = await getFeed();
-  return restSeiten(feed.length, getSettings().feedPageSize).map((n) => ({
+  return restPages(feed.length, getSettings().feedPageSize).map((n) => ({
     params: { n: String(n) },
     props: { feed },
   }));
@@ -21,4 +21,4 @@ const page = paginate(
 );
 ---
 
-<FeedSeite reihe="alle" heading={SITE_NAME} {page} />
+<FeedPage series="all" heading={SITE_NAME} {page} />

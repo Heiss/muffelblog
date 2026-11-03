@@ -1,75 +1,75 @@
 import { describe, expect, it } from 'vitest';
-import { blockPfad, frischeIds, parseFilter, reihePfad } from './feed-logic';
+import { blockPath, freshIds, parseFilter, seriesPath } from './feed-logic';
 
 describe('parseFilter', () => {
-  it('kennt alle, post und memo', () => {
-    expect(parseFilter('alle')).toBe('alle');
+  it('knows all, post and memo', () => {
+    expect(parseFilter('all')).toBe('all');
     expect(parseFilter('post')).toBe('post');
     expect(parseFilter('memo')).toBe('memo');
   });
 
-  it('fällt bei Unbekanntem auf alle zurück', () => {
-    for (const roh of [null, undefined, '', 'Post', '__proto__', '{"a":1}']) {
-      expect(parseFilter(roh)).toBe('alle');
+  it('falls back to all for unknown values', () => {
+    for (const raw of [null, undefined, '', 'Post', '__proto__', '{"a":1}']) {
+      expect(parseFilter(raw)).toBe('all');
     }
   });
 });
 
-describe('reihePfad', () => {
-  it('ordnet jedem Filter die erste Seite seiner Reihe zu', () => {
-    expect(reihePfad('alle')).toBe('/');
-    expect(reihePfad('post')).toBe('/posts/');
-    expect(reihePfad('memo')).toBe('/memos/');
+describe('seriesPath', () => {
+  it('maps each filter to the first page of its series', () => {
+    expect(seriesPath('all')).toBe('/');
+    expect(seriesPath('post')).toBe('/posts/');
+    expect(seriesPath('memo')).toBe('/memos/');
   });
 });
 
-describe('blockPfad', () => {
+describe('blockPath', () => {
   const origin = 'https://example.org';
 
-  it('akzeptiert Blöcke der eigenen Seite', () => {
-    for (const pfad of [
+  it('accepts blocks of the own site', () => {
+    for (const route of [
       '/',
-      '/seite/2/',
+      '/page/2/',
       '/memos/',
-      '/memos/seite/3/',
-      '/posts/seite/12/',
+      '/memos/page/3/',
+      '/posts/page/12/',
       '/tag/rust/',
-      '/tag/a-b/seite/2/',
+      '/tag/a-b/page/2/',
     ]) {
-      expect(blockPfad(pfad, origin)).toBe(pfad);
+      expect(blockPath(route, origin)).toBe(route);
     }
   });
 
-  it('akzeptiert absolute Adressen der eigenen Herkunft und liefert den Pfad', () => {
-    expect(blockPfad('https://example.org/seite/2/', origin)).toBe('/seite/2/');
+  it('accepts absolute addresses of the own origin and returns the path', () => {
+    expect(blockPath('https://example.org/page/2/', origin)).toBe('/page/2/');
   });
 
-  it('lehnt fremde Herkunft, Schemas und Umwege ab', () => {
-    for (const roh of [
-      'https://evil.example/seite/2/',
-      '//evil.example/seite/2/',
+  it('rejects foreign origins, schemes and detours', () => {
+    for (const raw of [
+      'https://evil.example/page/2/',
+      '//evil.example/page/2/',
       'javascript:alert(1)',
       'data:text/html,x',
       '/p/hallo-welt/',
-      '/seite/1/',
-      '/seite/0/',
-      '/seite/2',
-      '/seite/2/?x=1',
-      '/seite/2/#x',
+      '/page/1/',
+      '/page/0/',
+      '/page/2',
+      '/page/2/?x=1',
+      '/page/2/#x',
       '/tag/A B/',
-      '/../seite/2/',
+      '/../page/2/',
       '',
     ]) {
-      expect(blockPfad(roh, origin)).toBeNull();
+      expect(blockPath(raw, origin)).toBeNull();
     }
   });
 });
 
-describe('frischeIds', () => {
-  it('liefert nur Kennungen, die noch fehlen, ohne Doppelte', () => {
-    const vorhanden = new Set(['post:a', 'memo:x']);
+describe('freshIds', () => {
+  it('returns only identifiers that are still missing, without duplicates', () => {
+    const existing = new Set(['post:a', 'memo:x']);
     expect(
-      frischeIds(vorhanden, ['post:a', 'post:b', 'post:b', 'memo:y']),
+      freshIds(existing, ['post:a', 'post:b', 'post:b', 'memo:y']),
     ).toEqual(['post:b', 'memo:y']);
   });
 });

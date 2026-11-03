@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-// Der Test-Build nutzt Blöcke zu 4 Einträgen (MUFFEL_FEED_PAGE_SIZE), die Beispieldaten
-// haben 9 Artikel und 6 Memos.
-// Die statische Struktur (Blöcke, Weiter-Links) wird ohne JavaScript geprüft;
-// das Nachladen im Browser deckt feed-client.spec.ts ab.
+// The test build uses blocks of 4 entries (MUFFEL_FEED_PAGE_SIZE), the sample data
+// has 9 articles and 6 memos.
+// The static structure (blocks, next links) is checked without JavaScript;
+// loading more in the browser is covered by feed-client.spec.ts.
 test.use({ javaScriptEnabled: false });
 
-const GESAMT = 15;
+const TOTAL = 15;
 const BLOCK = 4;
 
 interface Zeile {
@@ -16,8 +16,8 @@ interface Zeile {
   datum: string;
 }
 
-async function zeilen(page: Page): Promise<Zeile[]> {
-  return page.locator('article.eintrag').evaluateAll((els) =>
+async function rows(page: Page): Promise<Zeile[]> {
+  return page.locator('article.entry').evaluateAll((els) =>
     els.map((el) => ({
       href: el.querySelector('h2 a')?.getAttribute('href') ?? '',
       kind: el.getAttribute('data-kind'),
@@ -27,11 +27,11 @@ async function zeilen(page: Page): Promise<Zeile[]> {
 }
 
 /** Folgt "Ältere Einträge" bis zum Ende und sammelt alle Zeilen. */
-async function alleSeiten(page: Page, start: string): Promise<Zeile[]> {
+async function allPages(page: Page, start: string): Promise<Zeile[]> {
   const alle: Zeile[] = [];
   await page.goto(start);
   for (let i = 0; i < 20; i++) {
-    alle.push(...(await zeilen(page)));
+    alle.push(...(await rows(page)));
     const weiter = page.getByRole('link', { name: 'Ältere Einträge' });
     if ((await weiter.count()) === 0) return alle;
     await weiter.click();
@@ -39,28 +39,28 @@ async function alleSeiten(page: Page, start: string): Promise<Zeile[]> {
   throw new Error('Zu viele Seiten, Schleife?');
 }
 
-test.describe('Gemeinsamer Feed', () => {
-  test('zeigt Artikel und Memos gemischt, neueste zuerst, ohne Doppelungen', async ({
+test.describe('Shared feed', () => {
+  test('shows articles and memos mixed, newest first, without duplicates', async ({
     page,
   }) => {
-    const alle = await alleSeiten(page, '/');
-    expect(alle).toHaveLength(GESAMT);
-    expect(new Set(alle.map((z) => z.href)).size).toBe(GESAMT);
+    const alle = await allPages(page, '/');
+    expect(alle).toHaveLength(TOTAL);
+    expect(new Set(alle.map((z) => z.href)).size).toBe(TOTAL);
     expect(new Set(alle.map((z) => z.kind))).toEqual(new Set(['post', 'memo']));
     const zeiten = alle.map((z) => Date.parse(z.datum));
     expect(zeiten).toEqual([...zeiten].sort((a, b) => b - a));
   });
 
-  test('teilt in Blöcke und verlinkt vor und zurück', async ({ page }) => {
+  test('splits into blocks and links back and forth', async ({ page }) => {
     await page.goto('/');
-    expect(await zeilen(page)).toHaveLength(BLOCK);
+    expect(await rows(page)).toHaveLength(BLOCK);
     await expect(page.getByText('Seite 1 von 4')).toBeVisible();
     await expect(
       page.getByRole('link', { name: 'Neuere Einträge' }),
     ).toHaveCount(0);
 
     await page.getByRole('link', { name: 'Ältere Einträge' }).click();
-    await expect(page).toHaveURL(/\/seite\/2\/$/);
+    await expect(page).toHaveURL(/\/page\/2\/$/);
     await expect(page).toHaveTitle('Muffelblog, Seite 2 – Muffelblog');
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
       'content',
@@ -72,31 +72,31 @@ test.describe('Gemeinsamer Feed', () => {
     await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
   });
 
-  test('letzte Seite hat keinen Weiter-Link, eine fremde Seitenzahl gibt 404', async ({
+  test('the last page has no next link, a foreign page number gives 404', async ({
     page,
     request,
   }) => {
-    await page.goto('/seite/4/');
-    expect(await zeilen(page)).toHaveLength(GESAMT - 3 * BLOCK);
+    await page.goto('/page/4/');
+    expect(await rows(page)).toHaveLength(TOTAL - 3 * BLOCK);
     await expect(
       page.getByRole('link', { name: 'Ältere Einträge' }),
     ).toHaveCount(0);
-    expect((await request.get('/seite/5/')).status()).toBe(404);
-    expect((await request.get('/seite/1/')).status()).toBe(404);
+    expect((await request.get('/page/5/')).status()).toBe(404);
+    expect((await request.get('/page/1/')).status()).toBe(404);
   });
 
-  test('Memos erscheinen vollständig, Artikel nur mit Auszug', async ({
+  test('memos appear in full, articles only with an excerpt', async ({
     page,
   }) => {
     await page.goto('/');
     const memo = page.locator('article[data-kind="memo"]').first();
-    await expect(memo.locator('.inhalt')).toBeVisible();
+    await expect(memo.locator('.content')).toBeVisible();
     const artikel = page.locator('article[data-kind="post"]').first();
-    await expect(artikel.locator('.inhalt')).toHaveCount(0);
-    await expect(artikel.locator('.auszug')).toBeVisible();
+    await expect(artikel.locator('.content')).toHaveCount(0);
+    await expect(artikel.locator('.excerpt')).toBeVisible();
   });
 
-  test('Titel führen zur eigenen Seite des Eintrags', async ({ page }) => {
+  test('titles lead to the own page of the entry', async ({ page }) => {
     await page.goto('/');
     await page
       .getByRole('link', { name: 'Memo vom 2. Nov. 2026, 14:32' })
@@ -104,48 +104,48 @@ test.describe('Gemeinsamer Feed', () => {
     await expect(page).toHaveURL(/\/m\/memo-text\/$/);
   });
 
-  test('funktioniert ohne JavaScript', async ({ browser }) => {
+  test('works without JavaScript', async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto('/');
     await page.getByRole('link', { name: 'Ältere Einträge' }).click();
-    await expect(page).toHaveURL(/\/seite\/2\/$/);
+    await expect(page).toHaveURL(/\/page\/2\/$/);
     await context.close();
   });
 
-  test('lädt nichts von Fremddomains', async ({ page, baseURL }) => {
+  test('loads nothing from foreign domains', async ({ page, baseURL }) => {
     const origin = new URL(baseURL ?? 'http://localhost').origin;
-    const fremd: string[] = [];
+    const foreign: string[] = [];
     page.on('request', (request) => {
       const url = request.url();
       if (url.startsWith('http') && new URL(url).origin !== origin) {
-        fremd.push(url);
+        foreign.push(url);
       }
     });
-    await alleSeiten(page, '/');
-    expect(fremd).toEqual([]);
+    await allPages(page, '/');
+    expect(foreign).toEqual([]);
   });
 });
 
-test.describe('Filter nach Art', () => {
-  test('/memos/ zeigt nur Memos, /posts/ nur Artikel, jeweils vollständig', async ({
+test.describe('Filter by kind', () => {
+  test('/memos/ shows only memos, /posts/ only articles, each complete', async ({
     page,
   }) => {
     await page.goto('/memos/');
     await expect(page).toHaveTitle('Kurz – Muffelblog');
-    const memos = await alleSeiten(page, '/memos/');
+    const memos = await allPages(page, '/memos/');
     expect(memos.length).toBeGreaterThan(0);
     expect(memos.every((z) => z.kind === 'memo')).toBe(true);
 
-    const posts = await alleSeiten(page, '/posts/');
+    const posts = await allPages(page, '/posts/');
     expect(posts.length).toBeGreaterThan(0);
     expect(posts.every((z) => z.kind === 'post')).toBe(true);
-    expect(memos.length + posts.length).toBe(GESAMT);
+    expect(memos.length + posts.length).toBe(TOTAL);
   });
 });
 
 test.describe('Tags', () => {
-  test('/tag/ listet alle Tags mit Anzahl', async ({ page }) => {
+  test('/tag/ lists all tags with a count', async ({ page }) => {
     await page.goto('/tag/');
     await expect(page).toHaveTitle('Tags – Muffelblog');
     const liste = page.getByRole('list', { name: 'Alle Tags' });
@@ -153,26 +153,26 @@ test.describe('Tags', () => {
       'href',
       '/tag/tooling/',
     );
-    // Verschachtelte Tags (a/b) haben eine URL-Form ohne Schrägstrich.
+    // Nested tags (a/b) have a URL form without a slash.
     await expect(liste.getByRole('link', { name: 'a/b' })).toHaveAttribute(
       'href',
       '/tag/a-b/',
     );
   });
 
-  test('/tag/<tag>/ zeigt nur Einträge mit diesem Tag', async ({ page }) => {
+  test('/tag/<tag>/ shows only entries with this tag', async ({ page }) => {
     await page.goto('/tag/tooling/');
     await expect(page).toHaveTitle('Tag tooling – Muffelblog');
-    const z = await zeilen(page);
+    const z = await rows(page);
     expect(z.map((e) => e.href)).toContain('/m/memo-text/');
-    for (const eintrag of await page.locator('article.eintrag').all()) {
+    for (const entry of await page.locator('article.entry').all()) {
       await expect(
-        eintrag.getByRole('link', { name: 'tooling', exact: true }),
+        entry.getByRole('link', { name: 'tooling', exact: true }),
       ).toBeVisible();
     }
   });
 
-  test('Tag-Links im Eintrag führen zur Tag-Seite', async ({ page }) => {
+  test('tag links in an entry lead to the tag page', async ({ page }) => {
     await page.goto('/memos/');
     await page
       .locator('article')
@@ -182,11 +182,11 @@ test.describe('Tags', () => {
     await expect(page).toHaveURL(/\/tag\/tooling\/$/);
   });
 
-  test('unbekannter Tag gibt 404', async ({ request }) => {
+  test('an unknown tag gives 404', async ({ request }) => {
     expect((await request.get('/tag/gibt-es-nicht/')).status()).toBe(404);
   });
 });
 
-test('ohne SITE_URL gibt es keine Sitemap', async ({ request }) => {
+test('without SITE_URL there is no sitemap', async ({ request }) => {
   expect((await request.get('/sitemap.xml')).status()).toBe(404);
 });

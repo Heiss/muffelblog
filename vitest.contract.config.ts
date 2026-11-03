@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config';
 
-// Contract-Tests gegen echte Dienste. Sie laufen nur, wenn die jeweilige
-// MEMOS_CONTRACT_URL gesetzt ist, und gehören nicht zu `pnpm test`.
+// Contract tests against real services. They run only if the respective
+// MEMOS_CONTRACT_URL is set, and are not part of `pnpm test`.
 export default defineConfig({
   test: {
     include: ['packages/*/contract/**/*.contract.test.ts'],

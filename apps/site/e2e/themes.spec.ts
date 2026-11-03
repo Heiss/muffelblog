@@ -16,19 +16,19 @@ const THEMES: Record<string, string> = {
 
 const dataTheme = (page: Page) =>
   page.evaluate(() => document.documentElement.getAttribute('data-theme'));
-const hintergrund = (page: Page) =>
+const background = (page: Page) =>
   page.evaluate(() => getComputedStyle(document.body).backgroundColor);
 
-test.describe('Standard', () => {
-  test('hell: Solarized Light', async ({ page }) => {
+test.describe('Default', () => {
+  test('light: Solarized Light', async ({ page }) => {
     await page.goto('/');
     expect(await dataTheme(page)).toBe('solarized-light');
-    expect(await hintergrund(page)).toBe(THEMES['solarized-light']);
+    expect(await background(page)).toBe(THEMES['solarized-light']);
   });
 
-  test.describe('bei dunkler Systemeinstellung', () => {
+  test.describe('with a dark system setting', () => {
     test.use({ colorScheme: 'dark' });
-    test('Solarized Dark, eine gespeicherte Wahl gewinnt', async ({ page }) => {
+    test('Solarized Dark, a stored choice wins', async ({ page }) => {
       await page.goto('/');
       expect(await dataTheme(page)).toBe('solarized-dark');
       await page.getByLabel('Farbschema').selectOption('hell');
@@ -38,34 +38,34 @@ test.describe('Standard', () => {
   });
 });
 
-test.describe('Umschalter', () => {
-  test('bietet alle zehn Themes an', async ({ page }) => {
+test.describe('Switcher', () => {
+  test('offers all ten themes', async ({ page }) => {
     await page.goto('/');
-    const werte = await page
+    const values = await page
       .getByLabel('Farbschema')
       .locator('option')
       .evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value));
-    expect(werte.sort()).toEqual(Object.keys(THEMES).sort());
+    expect(values.sort()).toEqual(Object.keys(THEMES).sort());
   });
 
-  for (const [id, farbe] of Object.entries(THEMES)) {
-    test(`${id}: wirkt sofort, bleibt nach Neuladen und auf anderen Seiten`, async ({
+  for (const [id, color] of Object.entries(THEMES)) {
+    test(`${id}: takes effect at once, stays after reload and on other pages`, async ({
       page,
     }) => {
       await page.goto('/');
       await page.getByLabel('Farbschema').selectOption(id);
       expect(await dataTheme(page)).toBe(id);
-      expect(await hintergrund(page)).toBe(farbe);
+      expect(await background(page)).toBe(color);
       await page.reload();
       expect(await dataTheme(page)).toBe(id);
-      expect(await hintergrund(page)).toBe(farbe);
+      expect(await background(page)).toBe(color);
       await page.goto('/tag/');
       expect(await dataTheme(page)).toBe(id);
       await expect(page.getByLabel('Farbschema')).toHaveValue(id);
     });
   }
 
-  test('ohne nutzbaren localStorage gilt die Wahl für die Seite, nichts bricht', async ({
+  test('without usable localStorage the choice applies to the page, nothing breaks', async ({
     page,
   }) => {
     const fehler: string[] = [];
@@ -84,7 +84,7 @@ test.describe('Umschalter', () => {
     expect(fehler).toEqual([]);
   });
 
-  test('ohne JavaScript ist der Umschalter verborgen und der Standard gilt', async ({
+  test('without JavaScript the switcher is hidden and the default applies', async ({
     browser,
   }) => {
     const ohne = await browser.newContext({ javaScriptEnabled: false });
@@ -96,8 +96,8 @@ test.describe('Umschalter', () => {
   });
 });
 
-test.describe('kein Aufblitzen', () => {
-  test('das Skript ist blockierend, kommt aus der eigenen Domain und liegt im head', async ({
+test.describe('no flash', () => {
+  test('the script is blocking, comes from the own domain and sits in the head', async ({
     request,
     page,
   }) => {
@@ -118,13 +118,13 @@ test.describe('kein Aufblitzen', () => {
     expect(antwort.headers()['content-type']).toContain('javascript');
   });
 
-  test('die gespeicherte Wahl steht schon, bevor irgendein anderes Skript läuft', async ({
+  test('the stored choice is already set before any other script runs', async ({
     page,
   }) => {
     await page.addInitScript(() =>
       localStorage.setItem('muffel:theme', 'dracula'),
     );
-    // Alles außer dem Theme-Skript wird blockiert: gesetzt haben kann es nur dieses.
+    // Everything except the theme script is blocked: only that one can have set it.
     await page.route('**/*.js', (route) =>
       route.request().url().endsWith('/theme-init.js')
         ? route.continue()
@@ -132,20 +132,20 @@ test.describe('kein Aufblitzen', () => {
     );
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     expect(await dataTheme(page)).toBe('dracula');
-    expect(await hintergrund(page)).toBe(THEMES.dracula);
+    expect(await background(page)).toBe(THEMES.dracula);
   });
 });
 
-test.describe('Schriften und Code', () => {
-  test('Matrix nutzt IBM Plex Mono aus der eigenen Domain', async ({
+test.describe('Fonts and code', () => {
+  test('Matrix uses IBM Plex Mono from the own domain', async ({
     page,
     baseURL,
   }) => {
     const origin = new URL(baseURL ?? 'http://localhost').origin;
-    const fremd: string[] = [];
+    const foreign: string[] = [];
     page.on('request', (r) => {
       if (r.url().startsWith('http') && new URL(r.url()).origin !== origin)
-        fremd.push(r.url());
+        foreign.push(r.url());
     });
     await page.goto('/');
     await page.getByLabel('Farbschema').selectOption('matrix');
@@ -161,27 +161,25 @@ test.describe('Schriften und Code', () => {
           getComputedStyle(document.querySelector('h1') as Element).fontFamily,
       ),
     ).toContain('IBM Plex Mono');
-    expect(fremd).toEqual([]);
+    expect(foreign).toEqual([]);
   });
 
-  test('Quelltext bekommt die Farben des gewählten Themes', async ({
-    page,
-  }) => {
+  test('source code gets the colors of the chosen theme', async ({ page }) => {
     await page.goto('/p/rendering-demo/');
-    const farbe = () =>
+    const color = () =>
       page.evaluate(
         () =>
           getComputedStyle(document.querySelector('.hljs-keyword') as Element)
             .color,
       );
-    expect(await farbe()).toBe('rgb(95, 112, 0)');
+    expect(await color()).toBe('rgb(95, 112, 0)');
     await page.getByLabel('Farbschema').selectOption('dracula');
-    expect(await farbe()).toBe('rgb(255, 121, 198)');
+    expect(await color()).toBe('rgb(255, 121, 198)');
   });
 });
 
 test.describe('Layout', () => {
-  test('Seiten haben Kopfleiste mit Navigation, auch Artikel und Memos', async ({
+  test('pages have a header with navigation, also articles and memos', async ({
     page,
   }) => {
     for (const pfad of ['/', '/p/hallo-welt/', '/m/memo-text/', '/tag/']) {
@@ -192,13 +190,11 @@ test.describe('Layout', () => {
     }
   });
 
-  test('auf dem Handy gibt es keinen waagerechten Bildlauf', async ({
-    browser,
-  }) => {
-    const kontext = await browser.newContext({
+  test('on a phone there is no horizontal scrolling', async ({ browser }) => {
+    const context = await browser.newContext({
       viewport: { width: 360, height: 740 },
     });
-    const seite = await kontext.newPage();
+    const seite = await context.newPage();
     for (const pfad of ['/', '/p/rendering-demo/', '/tag/']) {
       await seite.goto(pfad);
       const breiter = await seite.evaluate(
@@ -208,6 +204,6 @@ test.describe('Layout', () => {
       );
       expect(breiter, pfad).toBe(false);
     }
-    await kontext.close();
+    await context.close();
   });
 });

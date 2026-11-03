@@ -22,56 +22,56 @@ const css = readFileSync(
   'utf8',
 );
 
-function variablen(id: string): Record<string, string> {
-  const treffer = new RegExp(
+function variables(id: string): Record<string, string> {
+  const match = new RegExp(
     `\\[data-theme=["']${id}["']\\]\\s*\\{([^}]*)\\}`,
   ).exec(css);
-  if (!treffer?.[1]) throw new Error(`Kein Block für Theme ${id}`);
-  const ergebnis: Record<string, string> = {};
-  for (const zeile of treffer[1].split(';')) {
-    const m = /^\s*--([a-z0-9-]+)\s*:\s*(.+?)\s*$/s.exec(zeile);
-    if (m?.[1] && m[2]) ergebnis[m[1]] = m[2];
+  if (!match?.[1]) throw new Error(`No block for theme ${id}`);
+  const result: Record<string, string> = {};
+  for (const line of match[1].split(';')) {
+    const m = /^\s*--([a-z0-9-]+)\s*:\s*(.+?)\s*$/s.exec(line);
+    if (m?.[1] && m[2]) result[m[1]] = m[2];
   }
-  return ergebnis;
+  return result;
 }
 
 describe('contrastRatio', () => {
-  it('kennt die Eckwerte', () => {
+  it('knows the corner values', () => {
     expect(contrastRatio('#000000', '#ffffff')).toBeCloseTo(21, 5);
     expect(contrastRatio('#336699', '#336699')).toBeCloseTo(1, 5);
   });
 
-  it('ist symmetrisch', () => {
+  it('is symmetric', () => {
     expect(contrastRatio('#123456', '#fedcba')).toBeCloseTo(
       contrastRatio('#fedcba', '#123456'),
       10,
     );
   });
 
-  it('lehnt andere Formate ab', () => {
+  it('rejects other formats', () => {
     expect(() => contrastRatio('red', '#fff')).toThrow();
     expect(() => contrastRatio('#fff', '#000000')).toThrow();
   });
 });
 
 describe('pickTheme', () => {
-  it('nimmt die gespeicherte Wahl', () => {
+  it('takes the stored choice', () => {
     expect(pickTheme('nord', false)).toBe('nord');
     expect(pickTheme('nord', true)).toBe('nord');
   });
 
-  it('folgt ohne Wahl der Systemeinstellung', () => {
+  it('follows the system setting without a choice', () => {
     expect(pickTheme(null, false)).toBe(DEFAULT_LIGHT);
     expect(pickTheme(undefined, true)).toBe(DEFAULT_DARK);
   });
 
-  it('ignoriert unbekannte Werte', () => {
+  it('ignores unknown values', () => {
     for (const roh of ['', 'Nord', 'rot', '__proto__', '{"a":1}']) {
       expect(pickTheme(roh, false)).toBe(DEFAULT_LIGHT);
     }
   });
 
-  it('hat Solarized Light als hellen und Solarized Dark als dunklen Standard', () => {
+  it('has Solarized Light as the light and Solarized Dark as the dark default', () => {
     expect(DEFAULT_LIGHT).toBe('solarized-light');
     expect(DEFAULT_DARK).toBe('solarized-dark');
     expect(THEMES.find((t) => t.id === DEFAULT_DARK)?.dark).toBe(true);
@@ -80,13 +80,13 @@ describe('pickTheme', () => {
 });
 
 describe('THEMES', () => {
-  it('sind zehn mit eindeutigen Kennungen', () => {
+  it('are ten with unique identifiers', () => {
     expect(THEMES).toHaveLength(10);
     expect(new Set(THEMES.map((t) => t.id)).size).toBe(10);
     for (const t of THEMES) expect(isThemeId(t.id)).toBe(true);
   });
 
-  it('haben jeweils genau einen Block in themes.css, und es gibt keinen weiteren', () => {
+  it('each have exactly one block in themes.css, and there is no other', () => {
     const ids = [...css.matchAll(/\[data-theme=["']([a-z-]+)["']\]\s*\{/g)].map(
       (m) => m[1],
     );
@@ -94,8 +94,8 @@ describe('THEMES', () => {
   });
 });
 
-describe('Kontrast je Theme (Text mindestens 4,5:1)', () => {
-  const paare: [string, string][] = [
+describe('Contrast per theme (text at least 4.5:1)', () => {
+  const pairs: [string, string][] = [
     ['fg', 'bg'],
     ['fg', 'panel'],
     ['fg', 'tint'],
@@ -115,22 +115,22 @@ describe('Kontrast je Theme (Text mindestens 4,5:1)', () => {
 
   for (const theme of THEMES) {
     it(`${theme.label}`, () => {
-      const v = variablen(theme.id);
-      for (const [vorn, hinten] of paare) {
-        const a = v[vorn];
-        const b = v[hinten];
-        expect(a, `${theme.id}: --${vorn} fehlt`).toBeDefined();
-        expect(b, `${theme.id}: --${hinten} fehlt`).toBeDefined();
-        const verhaeltnis = contrastRatio(a as string, b as string);
+      const v = variables(theme.id);
+      for (const [first, second] of pairs) {
+        const a = v[first];
+        const b = v[second];
+        expect(a, `${theme.id}: --${first} is missing`).toBeDefined();
+        expect(b, `${theme.id}: --${second} is missing`).toBeDefined();
+        const ratio = contrastRatio(a as string, b as string);
         expect(
-          verhaeltnis,
-          `${theme.id}: --${vorn} auf --${hinten} = ${verhaeltnis.toFixed(2)}`,
+          ratio,
+          `${theme.id}: --${first} on --${second} = ${ratio.toFixed(2)}`,
         ).toBeGreaterThanOrEqual(4.5);
       }
     });
 
-    it(`${theme.label}: hat alle Gestaltungsvariablen`, () => {
-      const v = variablen(theme.id);
+    it(`${theme.label}: has all design variables`, () => {
+      const v = variables(theme.id);
       for (const name of [
         'bg',
         'panel',
@@ -147,7 +147,7 @@ describe('Kontrast je Theme (Text mindestens 4,5:1)', () => {
         'font-meta',
         'color-scheme',
       ]) {
-        expect(v[name], `${theme.id}: --${name} fehlt`).toBeDefined();
+        expect(v[name], `${theme.id}: --${name} is missing`).toBeDefined();
       }
       expect(v['color-scheme']).toBe(theme.dark ? 'dark' : 'light');
     });
@@ -155,19 +155,19 @@ describe('Kontrast je Theme (Text mindestens 4,5:1)', () => {
 });
 
 describe('themeInitScript', () => {
-  it('ist ein kurzer, in sich geschlossener Text ohne Fremdadressen', () => {
+  it('is a short, self-contained text without foreign addresses', () => {
     const js = themeInitScript();
     expect(js.length).toBeLessThan(800);
     expect(js).not.toMatch(/https?:/);
     for (const t of THEMES) expect(js).toContain(`"${t.id}"`);
   });
 
-  it('setzt data-theme nach denselben Regeln wie pickTheme', () => {
-    const run = (gespeichert: string | null, dunkel: boolean) => {
+  it('sets data-theme by the same rules as pickTheme', () => {
+    const run = (stored: string | null, dark: boolean) => {
       const attrs: Record<string, string> = {};
       const sandbox = {
-        localStorage: { getItem: () => gespeichert },
-        matchMedia: () => ({ matches: dunkel }),
+        localStorage: { getItem: () => stored },
+        matchMedia: () => ({ matches: dark }),
         document: {
           documentElement: {
             setAttribute: (k: string, v: string) => (attrs[k] = v),
@@ -190,7 +190,7 @@ describe('themeInitScript', () => {
     }
   });
 
-  it('übersteht einen gesperrten Speicher', () => {
+  it('survives blocked storage', () => {
     const attrs: Record<string, string> = {};
     const sandbox = {
       localStorage: {

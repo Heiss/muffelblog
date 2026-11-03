@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-03
+* **Update**: W22c done: `apps/site` translated, routes `/page/N/`, UI texts collected in `apps/site/src/i18n/messages.ts`, English CSS classes, English CI job names.
 * **Update**: W22b done: `packages/core` translated to English (identifiers, comments, test names, warning messages); UI texts in core collected in `UI` objects.
 * **Creation**: [Languages](/ops/language.md): development in English, UI language per `MUFFEL_LANG`, English URLs; roadmap W22 and W23, O39.
 * **Update**: Filter umbenannt: Kurz (Memos), Lang (Blogbeiträge), Begriffe (Glossar, getrennt von Lang, in Alle gekennzeichnet); Glossar-Feld `type: glossary`, siehe [Feed](/frontend/feed.md) und [Glossar](/features/glossary.md).

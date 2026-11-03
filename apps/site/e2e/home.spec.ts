@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('Startseite ist deutsch und trägt den Seitennamen', async ({ page }) => {
+test('The home page is German and carries the site name', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('lang', 'de');
   await expect(page).toHaveTitle('Muffelblog');
@@ -9,16 +9,19 @@ test('Startseite ist deutsch und trägt den Seitennamen', async ({ page }) => {
   );
 });
 
-test('Startseite lädt nichts von Fremddomains', async ({ page, baseURL }) => {
+test('The home page loads nothing from foreign domains', async ({
+  page,
+  baseURL,
+}) => {
   const origin = new URL(baseURL ?? 'http://localhost').origin;
-  const fremd: string[] = [];
+  const foreign: string[] = [];
   page.on('request', (request) => {
     const url = request.url();
     if (url.startsWith('http') && new URL(url).origin !== origin) {
-      fremd.push(url);
+      foreign.push(url);
     }
   });
   await page.goto('/');
   await page.waitForLoadState('networkidle');
-  expect(fremd).toEqual([]);
+  expect(foreign).toEqual([]);
 });

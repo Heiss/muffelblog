@@ -1,13 +1,14 @@
 ---
 import { tagSlug } from '@muffelblog/core';
 import type { FeedItem } from '@muffelblog/core';
+import { messages } from '../i18n/messages';
 
 interface Props {
   item: FeedItem;
 }
 
 const { item } = Astro.props;
-const datum = new Intl.DateTimeFormat('de-DE', {
+const date = new Intl.DateTimeFormat(messages.locale, {
   dateStyle: 'long',
   ...(item.kind === 'memo' ? { timeStyle: 'short' } : {}),
   timeZone: 'Europe/Berlin',
@@ -15,7 +16,7 @@ const datum = new Intl.DateTimeFormat('de-DE', {
 ---
 
 <article
-  class={`eintrag eintrag-${item.kind}`}
+  class={`entry entry-${item.kind}`}
   data-kind={item.kind}
   data-id={item.id}
 >
@@ -23,15 +24,15 @@ const datum = new Intl.DateTimeFormat('de-DE', {
     <a href={item.url}>{item.title}</a>
   </h2>
   <p>
-    <time datetime={item.date.toISOString()}>{datum}</time>
+    <time datetime={item.date.toISOString()}>{date}</time>
   </p>
   {item.html !== undefined ? (
-    <div class="inhalt" set:html={item.html} />
+    <div class="content" set:html={item.html} />
   ) : (
-    item.excerpt && <p class="auszug">{item.excerpt}</p>
+    item.excerpt && <p class="excerpt">{item.excerpt}</p>
   )}
   {item.tags.length > 0 && (
-    <ul aria-label="Tags">
+    <ul aria-label={messages.tags.label} class="tags">
       {item.tags.map((tag) => {
         const slug = tagSlug(tag);
         return <li>{slug ? <a href={`/tag/${slug}/`}>{tag}</a> : tag}</li>;

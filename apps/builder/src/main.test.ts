@@ -4,6 +4,6 @@ import { describeBuilder } from './main.ts';
 
 describe('describeBuilder', () => {
   it('nennt den Seitennamen aus dem gemeinsamen Paket', () => {
-    expect(describeBuilder()).toBe(`Builder für ${SITE_NAME}`);
+    expect(describeBuilder()).toBe(`Builder for ${SITE_NAME}`);
   });
 });

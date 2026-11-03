@@ -125,11 +125,11 @@ describe('filterKind', () => {
 });
 
 describe('pagePath', () => {
-  it('page 1 lives at the base, further pages under /seite/N/', () => {
+  it('page 1 lives at the base, further pages under /page/N/', () => {
     expect(pagePath('/', 1)).toBe('/');
-    expect(pagePath('/', 2)).toBe('/seite/2/');
+    expect(pagePath('/', 2)).toBe('/page/2/');
     expect(pagePath('/tag/x/', 1)).toBe('/tag/x/');
-    expect(pagePath('/tag/x/', 3)).toBe('/tag/x/seite/3/');
+    expect(pagePath('/tag/x/', 3)).toBe('/tag/x/page/3/');
   });
 });
 
@@ -145,17 +145,17 @@ describe('paginate', () => {
     expect(erste.items).toHaveLength(20);
     expect(erste.pages).toBe(3);
     expect(erste.prev).toBeNull();
-    expect(erste.next).toBe('/seite/2/');
+    expect(erste.next).toBe('/page/2/');
 
     const mitte = paginate(list, 2, '/');
     expect(mitte.items[0]).toBe(20);
     expect(mitte.prev).toBe('/');
-    expect(mitte.next).toBe('/seite/3/');
+    expect(mitte.next).toBe('/page/3/');
 
     const letzte = paginate(list, 3, '/');
     expect(letzte.items).toHaveLength(5);
     expect(letzte.next).toBeNull();
-    expect(letzte.prev).toBe('/seite/2/');
+    expect(letzte.prev).toBe('/page/2/');
   });
 
   it('returns exactly one empty page for an empty list', () => {

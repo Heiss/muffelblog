@@ -1,16 +1,17 @@
 ---
 import { groupByTag } from '@muffelblog/core';
+import { messages } from '../../i18n/messages';
 import Base from '../../layouts/Base.astro';
 import { getFeed } from '../../lib/feed';
 
-const gruppen = groupByTag(await getFeed());
+const groups = groupByTag(await getFeed());
 ---
 
-<Base title="Tags">
-  <h1>Tags</h1>
-  {gruppen.length === 0 && <p>Noch keine Tags.</p>}
-  <ul aria-label="Alle Tags">
-    {gruppen.map((g) => (
+<Base title={messages.tags.label}>
+  <h1>{messages.tags.label}</h1>
+  {groups.length === 0 && <p>{messages.tags.none}</p>}
+  <ul aria-label={messages.tags.all} class="tag-index">
+    {groups.map((g) => (
       <li>
         <a href={`/tag/${g.slug}/`}>{g.names[0]}</a>
         <span> ({g.count})</span>

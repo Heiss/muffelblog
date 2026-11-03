@@ -1,7 +1,7 @@
 name: CI
 
 on:
-  # Pull Requests gegen jeden Branch, damit auch gestapelte PRs geprüft werden.
+  # Pull requests against any branch, so stacked PRs are checked as well.
   pull_request:
   push:
     branches: [main]
@@ -14,10 +14,10 @@ permissions:
   contents: read
 
 jobs:
-  # Erkennt, ob Code betroffen ist. Reine Änderungen an okf/ oder an Markdown-
-  # Dateien im Wurzelverzeichnis lösen die schweren Prüfungen nicht aus.
+  # Detects whether code is affected. Changes only to okf/ or to Markdown files
+  # in the root directory do not trigger the heavy checks.
   changes:
-    name: Änderungen erkennen
+    name: Detect changes
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.diff.outputs.code }}
@@ -49,7 +49,7 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
 
   check:
-    name: Lint, Typen, Unit-Tests, Build
+    name: Lint, types, unit tests, build
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
@@ -68,7 +68,7 @@ jobs:
       - run: pnpm build
 
   e2e:
-    name: E2E-Tests
+    name: E2E tests
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
@@ -85,18 +85,18 @@ jobs:
       - run: pnpm test:e2e
 
   docker:
-    name: Docker-Build der Seite
+    name: Docker build of the site
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: docker build --target site-dist --output type=local,dest=out .
-      - name: Ergebnis prüfen
+      - name: Check the result
         run: test -s out/index.html
 
   contract:
-    name: Contract-Tests
+    name: Contract tests
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
@@ -117,16 +117,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:contract
 
-  # Pflicht-Check für main. Läuft immer, damit GitHub den Merge nicht wegen
-  # eines nie gemeldeten Checks blockiert, und entscheidet selbst, ob
-  # übersprungene Jobs in Ordnung sind.
+  # Required check for main. Always runs, so GitHub does not block the merge
+  # because of a check that was never reported, and decides itself whether
+  # skipped jobs are fine.
   gate:
     name: CI Gate
     needs: [changes, check, e2e, docker, contract]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Ergebnis auswerten
+      - name: Evaluate the result
         env:
           CHANGES: ${{ needs.changes.result }}
           CODE: ${{ needs.changes.outputs.code }}
@@ -136,16 +136,16 @@ jobs:
           CONTRACT: ${{ needs.contract.result }}
         run: |
           if [ "$CHANGES" != "success" ]; then
-            echo "Änderungserkennung fehlgeschlagen: $CHANGES"
+            echo "Change detection failed: $CHANGES"
             exit 1
           fi
           if [ "$CODE" = "true" ]; then
             for result in "$CHECK" "$E2E" "$DOCKER" "$CONTRACT"; do
               if [ "$result" != "success" ]; then
-                echo "Ein Pflicht-Job ist nicht erfolgreich: $result"
+                echo "A required job was not successful: $result"
                 exit 1
               fi
             done
           else
-            echo "Nur Dokumentation geändert, schwere Prüfungen entfallen."
+            echo "Only documentation changed, the heavy checks are skipped."
           fi

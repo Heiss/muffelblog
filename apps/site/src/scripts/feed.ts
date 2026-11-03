@@ -1,266 +1,267 @@
-import { blockPfad, frischeIds, parseFilter, reihePfad } from './feed-logic';
+import { messages } from '../i18n/messages';
+import { blockPath, freshIds, parseFilter, seriesPath } from './feed-logic';
 import type { Filter } from './feed-logic';
 
 const FILTER_KEY = 'muffel:filter';
 const POSITION_KEY = 'muffel:feed-position';
 const ORIGIN = location.origin;
 
-// Der Browser-Speicher ist optional: gesperrt oder voll heißt Standardwerte.
-function lies(speicher: 'local' | 'session', key: string): string | null {
+// Browser storage is optional: blocked or full means the defaults apply.
+function read(storage: 'local' | 'session', key: string): string | null {
   try {
-    return (speicher === 'local' ? localStorage : sessionStorage).getItem(key);
+    return (storage === 'local' ? localStorage : sessionStorage).getItem(key);
   } catch {
     return null;
   }
 }
-function schreibe(speicher: 'local' | 'session', key: string, wert: string) {
+function write(storage: 'local' | 'session', key: string, value: string) {
   try {
-    (speicher === 'local' ? localStorage : sessionStorage).setItem(key, wert);
+    (storage === 'local' ? localStorage : sessionStorage).setItem(key, value);
   } catch {
-    /* ohne Speicher gelten die Standardwerte */
+    /* without storage the defaults apply */
   }
 }
 
 interface Block {
-  eintraege: Element[];
-  weiter: string | null;
-  titel: string;
+  entries: Element[];
+  next: string | null;
+  title: string;
 }
 
-async function holeBlock(pfad: string): Promise<Block> {
-  const antwort = await fetch(pfad, {
+async function fetchBlock(path: string): Promise<Block> {
+  const response = await fetch(path, {
     credentials: 'same-origin',
     redirect: 'error',
     headers: { accept: 'text/html' },
   });
-  if (!antwort.ok) throw new Error(`HTTP ${antwort.status}`);
-  const art = antwort.headers.get('content-type') ?? '';
-  if (!art.startsWith('text/html')) throw new Error('kein HTML');
-  const dok = new DOMParser().parseFromString(
-    await antwort.text(),
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const type = response.headers.get('content-type') ?? '';
+  if (!type.startsWith('text/html')) throw new Error('not HTML');
+  const doc = new DOMParser().parseFromString(
+    await response.text(),
     'text/html',
   );
-  const eintraege = [
-    ...dok.querySelectorAll('[data-feed-liste] > article[data-id]'),
+  const entries = [
+    ...doc.querySelectorAll('[data-feed-list] > article[data-id]'),
   ];
-  const href = dok
+  const href = doc
     .querySelector('[data-pager] a[rel="next"]')
     ?.getAttribute('href');
   return {
-    eintraege,
-    weiter: href ? blockPfad(href, ORIGIN) : null,
-    titel: dok.title,
+    entries,
+    next: href ? blockPath(href, ORIGIN) : null,
+    title: doc.title,
   };
 }
 
 function start(
   feed: HTMLElement,
-  liste: HTMLElement,
+  list: HTMLElement,
   status: HTMLElement,
 ): void {
   const pager = feed.querySelector<HTMLElement>('[data-pager]');
 
-  const wachposten = document.createElement('div');
-  wachposten.setAttribute('aria-hidden', 'true');
-  feed.insertBefore(wachposten, status);
+  const sentinel = document.createElement('div');
+  sentinel.setAttribute('aria-hidden', 'true');
+  feed.insertBefore(sentinel, status);
 
-  let weiter: string | null = null;
-  let geladen: string[] = [];
-  let laedt = false;
+  let next: string | null = null;
+  let loaded: string[] = [];
+  let loading = false;
   let generation = 0;
 
-  const vorhandeneIds = () =>
+  const existingIds = () =>
     new Set(
-      [...liste.querySelectorAll('[data-id]')].map(
+      [...list.querySelectorAll('[data-id]')].map(
         (el) => el.getAttribute('data-id') ?? '',
       ),
     );
 
-  function leseWeiter(): string | null {
+  function readNext(): string | null {
     const href = pager?.querySelector('a[rel="next"]')?.getAttribute('href');
-    return href ? blockPfad(href, ORIGIN) : null;
+    return href ? blockPath(href, ORIGIN) : null;
   }
 
-  function anhaengen(eintraege: Element[]): void {
-    const neu = new Set(
-      frischeIds(
-        vorhandeneIds(),
-        eintraege.map((el) => el.getAttribute('data-id') ?? ''),
+  function append(entries: Element[]): void {
+    const fresh = new Set(
+      freshIds(
+        existingIds(),
+        entries.map((el) => el.getAttribute('data-id') ?? ''),
       ),
     );
-    for (const el of eintraege) {
-      if (neu.has(el.getAttribute('data-id') ?? '')) {
-        neu.delete(el.getAttribute('data-id') ?? '');
-        liste.append(document.importNode(el, true));
+    for (const el of entries) {
+      if (fresh.has(el.getAttribute('data-id') ?? '')) {
+        fresh.delete(el.getAttribute('data-id') ?? '');
+        list.append(document.importNode(el, true));
       }
     }
   }
 
-  function zeigeFehler(pfad: string): void {
+  function showError(path: string): void {
     status.hidden = false;
-    status.textContent = 'Nachladen fehlgeschlagen. ';
-    // Der normale Link bleibt als Ausweg.
+    status.textContent = messages.feed.loadFailed;
+    // The normal link stays as a way out.
     const link = document.createElement('a');
-    link.href = pfad;
+    link.href = path;
     link.rel = 'next';
-    link.textContent = 'Ältere Einträge';
+    link.textContent = messages.feed.older;
     status.append(link);
   }
 
-  function beobachten(): void {
-    beobachter.unobserve(wachposten);
-    if (weiter !== null && status.hidden) beobachter.observe(wachposten);
+  function observe(): void {
+    observer.unobserve(sentinel);
+    if (next !== null && status.hidden) observer.observe(sentinel);
   }
 
-  async function ladeNaechsten(): Promise<void> {
-    if (laedt || weiter === null) return;
-    laedt = true;
-    const meine = generation;
-    const pfad = weiter;
+  async function loadNext(): Promise<void> {
+    if (loading || next === null) return;
+    loading = true;
+    const mine = generation;
+    const path = next;
     try {
-      const block = await holeBlock(pfad);
-      if (meine !== generation) return;
-      anhaengen(block.eintraege);
-      geladen.push(pfad);
-      weiter = block.weiter;
+      const block = await fetchBlock(path);
+      if (mine !== generation) return;
+      append(block.entries);
+      loaded.push(path);
+      next = block.next;
       status.hidden = true;
     } catch {
-      if (meine !== generation) return;
-      zeigeFehler(pfad);
+      if (mine !== generation) return;
+      showError(path);
       return;
     } finally {
-      if (meine === generation) laedt = false;
+      if (mine === generation) loading = false;
     }
-    if (weiter === null) {
-      beobachter.unobserve(wachposten);
+    if (next === null) {
+      observer.unobserve(sentinel);
     } else {
-      beobachten();
+      observe();
     }
   }
 
-  const beobachter = new IntersectionObserver(
-    (treffer) => {
-      if (treffer.some((t) => t.isIntersecting)) void ladeNaechsten();
+  const observer = new IntersectionObserver(
+    (hits) => {
+      if (hits.some((t) => t.isIntersecting)) void loadNext();
     },
     { rootMargin: '600px 0px' },
   );
 
-  function aktiviere(): void {
-    weiter = leseWeiter();
-    // Mit JavaScript lädt der Browser nach, der Pager ist nur der Ausweg ohne.
+  function activate(): void {
+    next = readNext();
+    // With JavaScript the browser loads more, the pager is only the way out without.
     if (pager) pager.hidden = true;
-    if (weiter !== null) beobachter.observe(wachposten);
+    if (next !== null) observer.observe(sentinel);
   }
 
-  // Filter: ersetzt die Liste durch Seite 1 der gewählten Reihe, ohne neu zu laden.
+  // Filter: replaces the list with page 1 of the chosen series, without reloading.
   const filterNav = feed.querySelector<HTMLElement>('[data-filter]');
 
-  function markiere(filter: Filter): void {
+  function mark(filter: Filter): void {
     for (const a of filterNav?.querySelectorAll<HTMLElement>('a') ?? []) {
       if (a.dataset.filterId === filter) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     }
   }
 
-  async function setzeFilter(
-    filter: Filter,
-    speichern: boolean,
-  ): Promise<void> {
-    const pfad = reihePfad(filter);
+  async function setFilter(filter: Filter, persist: boolean): Promise<void> {
+    const path = seriesPath(filter);
     generation += 1;
-    laedt = false;
-    beobachter.unobserve(wachposten);
+    loading = false;
+    observer.unobserve(sentinel);
     status.hidden = true;
     try {
-      const block = await holeBlock(pfad);
-      liste.replaceChildren(
-        ...block.eintraege.map((el) => document.importNode(el, true)),
+      const block = await fetchBlock(path);
+      list.replaceChildren(
+        ...block.entries.map((el) => document.importNode(el, true)),
       );
-      weiter = block.weiter;
-      geladen = [];
-      document.title = block.titel;
-      history.replaceState(null, '', pfad);
-      markiere(filter);
-      if (speichern) schreibe('local', FILTER_KEY, filter);
+      next = block.next;
+      loaded = [];
+      document.title = block.title;
+      history.replaceState(null, '', path);
+      mark(filter);
+      if (persist) write('local', FILTER_KEY, filter);
       window.scrollTo(0, 0);
-      beobachten();
+      observe();
     } catch {
-      // Ohne Erfolg wirkt der Link wie ein normaler Link.
-      location.assign(pfad);
+      // Without success the link acts like a normal link.
+      location.assign(path);
     }
   }
 
-  filterNav?.addEventListener('click', (ereignis) => {
-    const ziel = ereignis.target;
-    if (!(ziel instanceof Element)) return;
-    const a = ziel.closest<HTMLAnchorElement>('a[data-filter-id]');
+  filterNav?.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const a = target.closest<HTMLAnchorElement>('a[data-filter-id]');
     if (!a) return;
     if (
-      ereignis.defaultPrevented ||
-      ereignis.button !== 0 ||
-      ereignis.metaKey ||
-      ereignis.ctrlKey ||
-      ereignis.shiftKey ||
-      ereignis.altKey
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
     )
       return;
-    ereignis.preventDefault();
-    void setzeFilter(parseFilter(a.dataset.filterId), true);
+    event.preventDefault();
+    void setFilter(parseFilter(a.dataset.filterId), true);
   });
 
-  // Position beim Verlassen merken, beim Rücksprung wiederherstellen.
+  // Remember the position when leaving, restore it when coming back.
   history.scrollRestoration = 'manual';
   window.addEventListener('pagehide', () => {
-    schreibe(
+    write(
       'session',
       POSITION_KEY,
       JSON.stringify({
-        pfad: location.pathname,
-        geladen,
+        path: location.pathname,
+        loaded,
         y: window.scrollY,
       }),
     );
   });
 
-  async function stelleWiederHer(): Promise<boolean> {
+  async function restore(): Promise<boolean> {
     const nav = performance.getEntriesByType('navigation')[0] as
       PerformanceNavigationTiming | undefined;
     if (nav?.type !== 'back_forward' && nav?.type !== 'reload') return false;
-    const roh = lies('session', POSITION_KEY);
-    if (!roh) return false;
-    let gemerkt: { pfad?: unknown; geladen?: unknown; y?: unknown };
+    const raw = read('session', POSITION_KEY);
+    if (!raw) return false;
+    let remembered: { path?: unknown; loaded?: unknown; y?: unknown };
     try {
-      gemerkt = JSON.parse(roh);
+      remembered = JSON.parse(raw);
     } catch {
       return false;
     }
-    if (gemerkt.pfad !== location.pathname || !Array.isArray(gemerkt.geladen))
+    if (
+      remembered.path !== location.pathname ||
+      !Array.isArray(remembered.loaded)
+    )
       return false;
-    for (const eintrag of gemerkt.geladen) {
-      if (typeof eintrag !== 'string' || weiter !== eintrag) break;
-      await ladeNaechsten();
+    for (const entry of remembered.loaded) {
+      if (typeof entry !== 'string' || next !== entry) break;
+      await loadNext();
       if (status.hidden === false) break;
     }
-    if (typeof gemerkt.y === 'number' && Number.isFinite(gemerkt.y)) {
-      window.scrollTo(0, gemerkt.y);
+    if (typeof remembered.y === 'number' && Number.isFinite(remembered.y)) {
+      window.scrollTo(0, remembered.y);
     }
     return true;
   }
 
-  aktiviere();
+  activate();
 
   void (async () => {
-    // Auf `/` gewinnt ein gespeicherter Filter. Ausdrücklich aufgerufene Reihen nicht.
-    const wiederhergestellt = await stelleWiederHer();
-    if (wiederhergestellt) return;
-    if (feed.dataset.reihe === 'alle' && location.pathname === '/') {
-      const gespeichert = parseFilter(lies('local', FILTER_KEY));
-      if (gespeichert !== 'alle') await setzeFilter(gespeichert, false);
+    // On `/` a stored filter wins. Series that were opened explicitly do not.
+    const restored = await restore();
+    if (restored) return;
+    if (feed.dataset.series === 'all' && location.pathname === '/') {
+      const stored = parseFilter(read('local', FILTER_KEY));
+      if (stored !== 'all') await setFilter(stored, false);
     }
   })();
 }
 
 const feed = document.querySelector<HTMLElement>('[data-feed]');
-const liste = feed?.querySelector<HTMLElement>('[data-feed-liste]');
+const list = feed?.querySelector<HTMLElement>('[data-feed-list]');
 const status = feed?.querySelector<HTMLElement>('[data-feed-status]');
-if (feed && liste && status) start(feed, liste, status);
+if (feed && list && status) start(feed, list, status);

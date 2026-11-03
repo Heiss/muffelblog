@@ -15,7 +15,7 @@ export interface RenderedArticle extends Article {
 interface Content {
   articles: RenderedArticle[];
   memos: MemoEntry[];
-  /** Erzeugte Mediendateien: Dateiname zu Inhalt (Bilder, PDF, Audio, Video). */
+  /** Generated media files: file name to content (images, PDF, audio, video). */
   media: Map<string, Buffer>;
 }
 
@@ -40,21 +40,21 @@ async function build(): Promise<Content> {
     rendered.push({ ...article, html: result.html });
   }
 
-  // Scheitert der Abruf der Memos, bricht der Build ab und die letzte gute Version bleibt online.
-  const memoErgebnis = await buildMemoEntries(config.memos, media, {
+  // If fetching the memos fails, the build stops and the last good version stays online.
+  const memoResult = await buildMemoEntries(config.memos, media, {
     maxFileBytes: getSettings().memosMaxFileBytes,
     descriptionChars: getSettings().memosDescriptionChars,
   });
-  warnings.push(...memoErgebnis.warnings);
+  warnings.push(...memoResult.warnings);
 
-  for (const warnung of warnings) console.warn(`[inhalt] ${warnung}`);
-  return { articles: rendered, memos: memoErgebnis.memos, media };
+  for (const warning of warnings) console.warn(`[content] ${warning}`);
+  return { articles: rendered, memos: memoResult.memos, media };
 }
 
-let inhalt: Promise<Content> | undefined;
+let content: Promise<Content> | undefined;
 
-/** Liest und rendert Artikel und Memos einmal pro Build. */
+/** Reads and renders articles and memos once per build. */
 export function getContent(): Promise<Content> {
-  inhalt ??= build();
-  return inhalt;
+  content ??= build();
+  return content;
 }

@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { fremdAbfangen } from './helpers';
+import { interceptForeign } from './helpers';
 
-test.describe('Memo-Seiten unter /m/<uid>/', () => {
-  test('zeigt Titel aus Datum und Uhrzeit, Zeitpunkt, Tags und Text', async ({
+test.describe('Memo pages under /m/<uid>/', () => {
+  test('shows title from date and time, instant, tags and text', async ({
     page,
   }) => {
     await page.goto('/m/memo-text/');
@@ -18,7 +18,7 @@ test.describe('Memo-Seiten unter /m/<uid>/', () => {
     await expect(
       page.getByRole('list', { name: 'Tags' }).getByRole('listitem'),
     ).toHaveText(['tooling', 'a/b']);
-    await expect(page.locator('.inhalt')).toContainText(
+    await expect(page.locator('.content')).toContainText(
       'Renovate eingerichtet.',
     );
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
@@ -27,14 +27,14 @@ test.describe('Memo-Seiten unter /m/<uid>/', () => {
     );
   });
 
-  test('zeigt gespiegelte Bilder von der eigenen Domain mit Alt-Text aus dem Dateinamen', async ({
+  test('shows mirrored images from the own domain with alt text from the file name', async ({
     page,
     request,
   }) => {
-    const fremd = await fremdAbfangen(page);
+    const foreign = await interceptForeign(page);
     await page.goto('/m/memo-bild/');
     await page.waitForLoadState('networkidle');
-    const bild = page.locator('.inhalt img');
+    const bild = page.locator('.content img');
     await expect(bild).toHaveAttribute('alt', 'IMG 2043');
     await expect(bild).toHaveAttribute(
       'srcset',
@@ -47,10 +47,10 @@ test.describe('Memo-Seiten unter /m/<uid>/', () => {
     ).toBe(true);
     const antwort = await request.get((await bild.getAttribute('src')) ?? '');
     expect(antwort.headers()['content-type']).toBe('image/webp');
-    expect(fremd).toEqual([]);
+    expect(foreign).toEqual([]);
   });
 
-  test('liefert PDF und Audio mit passendem Inhaltstyp von der eigenen Domain', async ({
+  test('serves PDF and audio with a fitting content type from the own domain', async ({
     page,
     request,
   }) => {
@@ -66,7 +66,7 @@ test.describe('Memo-Seiten unter /m/<uid>/', () => {
     expect(pdfAntwort.status()).toBe(200);
     expect(pdfAntwort.headers()['content-type']).toBe('application/pdf');
 
-    const audio = page.locator('.inhalt audio');
+    const audio = page.locator('.content audio');
     await expect(audio).toHaveAttribute('preload', 'none');
     await expect(audio).toHaveAttribute(
       'src',
@@ -78,10 +78,10 @@ test.describe('Memo-Seiten unter /m/<uid>/', () => {
     expect(audioAntwort.headers()['content-type']).toBe('audio/wav');
   });
 
-  test('bereinigt den Text und lädt keine Bilder von Fremdservern', async ({
+  test('sanitizes the text and loads no images from foreign servers', async ({
     page,
   }) => {
-    const fremd = await fremdAbfangen(page);
+    const foreign = await interceptForeign(page);
     await page.goto('/m/memo-skript/');
     await page.waitForLoadState('networkidle');
     expect(
@@ -89,30 +89,32 @@ test.describe('Memo-Seiten unter /m/<uid>/', () => {
         () => (window as unknown as { __pwned?: number }).__pwned,
       ),
     ).toBeUndefined();
-    await expect(page.locator('.inhalt script')).toHaveCount(0);
-    await expect(page.locator('.inhalt img')).toHaveCount(0);
-    await expect(page.locator('.inhalt')).toContainText('Harmloser Text.');
-    expect(fremd).toEqual([]);
+    await expect(page.locator('.content script')).toHaveCount(0);
+    await expect(page.locator('.content img')).toHaveCount(0);
+    await expect(page.locator('.content')).toContainText('Harmloser Text.');
+    expect(foreign).toEqual([]);
   });
 
-  test('lässt externe und unerlaubte Anhänge weg, zeigt das Memo aber', async ({
+  test('leaves out external and disallowed attachments but shows the memo', async ({
     page,
   }) => {
     await page.goto('/m/memo-extern/');
-    await expect(page.locator('.inhalt')).toContainText('Anhang liegt extern.');
+    await expect(page.locator('.content')).toContainText(
+      'Anhang liegt extern.',
+    );
     expect(await page.content()).not.toContain('s3.example');
     await page.goto('/m/memo-html/');
-    await expect(page.locator('.inhalt')).toContainText(
+    await expect(page.locator('.content')).toContainText(
       'Anhang mit unerlaubtem Typ.',
     );
     expect(await page.content()).not.toContain('seite.html');
   });
 
-  test('veröffentlicht private Memos nicht', async ({ request }) => {
+  test('does not publish private memos', async ({ request }) => {
     expect((await request.get('/m/memo-privat/')).status()).toBe(404);
   });
 
-  test('liefert keine Mediendateien mit unbekanntem oder aktivem Typ', async ({
+  test('serves no media files of an unknown or active type', async ({
     request,
   }) => {
     for (const pfad of [
