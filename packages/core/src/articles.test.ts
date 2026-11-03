@@ -183,6 +183,51 @@ describe('parseArticle type', () => {
   });
 });
 
+describe('parseArticle type page', () => {
+  const page = (slug: string) =>
+    `---\npublish: true\ntitle: Impressum\ntype: page\nslug: ${slug}\n---\nText\n`;
+
+  it('reads type: page', () => {
+    const r = parse('impressum.md', page('impressum'));
+    expect(r.kind === 'article' && r.article.type).toBe('page');
+    expect(r.kind === 'article' && r.warnings).toEqual([]);
+  });
+
+  it('skips a page whose slug would shadow a route of the site', () => {
+    for (const slug of [
+      'p',
+      'm',
+      'g',
+      'tag',
+      'page',
+      'posts',
+      'memos',
+      'terms',
+      'glossary',
+      'search',
+      'media',
+      'pagefind',
+      'feed-xml',
+    ]) {
+      const r = parse('x.md', page(slug));
+      if (slug === 'feed-xml') {
+        expect(r.kind).toBe('article');
+      } else {
+        expect(r.kind, slug).toBe('skipped');
+        expect(r.kind === 'skipped' && r.warnings[0]).toContain('reserved');
+      }
+    }
+  });
+
+  it('only checks reserved names for pages', () => {
+    const r = parse(
+      'p.md',
+      '---\npublish: true\ntitle: P\nslug: p\n---\nText\n',
+    );
+    expect(r.kind).toBe('article');
+  });
+});
+
 describe('assignUniqueSlugs', () => {
   const make = (path: string, slug: string, date: string) => ({
     type: 'post' as const,
@@ -283,6 +328,8 @@ describe('loadArticles (Fixtures)', () => {
         'glossary:aether',
         'glossary:cache',
         'glossary:hallo-welt',
+        'page:datenschutz',
+        'page:impressum',
         'post:gleich',
         'post:gleich-2',
         'post:groesse-und-masse',

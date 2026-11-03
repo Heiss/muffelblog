@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-03
+* **Update**: W10 done: static pages (`type: page`), footer, 404, `robots.txt`, Open Graph tags, `h-entry`/`h-card`; O11 partly, O17 partly, O24 closed, O15 structure done (text open).
 * **Update**: W09 done: `/feed.xml` (RSS 2.0) with full text for posts and memos, terms as short definition, stable GUIDs, `MUFFEL_RSS_ITEMS`; only with `SITE_URL`.
 * **Update**: W08 done: Pagefind index over posts, memos and terms, own search UI on `/search/` (Modular UI is English only), filters kind and tag.
 * **Update**: W19 done: `type: glossary` kind, `/g/<slug>/`, `/glossary/` letter view, `/terms/` series with the Begriffe filter, slugs unique per type; see [Glossary and knowledge graph](/features/glossary.md).

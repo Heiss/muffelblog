@@ -19,22 +19,32 @@ interface Props {
 const { memo } = Astro.props;
 ---
 
-<Base title={memo.title} description={memo.description || undefined}>
-  <article data-pagefind-body>
+<Base
+  title={memo.title}
+  description={memo.description || undefined}
+  ogType="article"
+>
+  <article class="h-entry" data-pagefind-body>
     <meta
       data-pagefind-filter="kind[content]"
       content={messages.filter.short}
     />
-    <h1>
-      <time datetime={memo.date.toISOString()}>{memo.title}</time>
+    <h1 class="p-name">
+      <a class="u-url" href={`/m/${memo.uid}/`}>
+        <time class="dt-published" datetime={memo.date.toISOString()}>
+          {memo.title}
+        </time>
+      </a>
     </h1>
     {memo.tags.length > 0 && (
       <ul aria-label={messages.tags.label} class="tags">
         {memo.tags.map((tag) => (
-          <li data-pagefind-filter="tag">{tag}</li>
+          <li class="p-category" data-pagefind-filter="tag">
+            {tag}
+          </li>
         ))}
       </ul>
     )}
-    <div class="content" set:html={memo.html} />
+    <div class="content e-content" set:html={memo.html} />
   </article>
 </Base>

@@ -27,6 +27,16 @@ export const messages = {
     },
     all: 'Alle',
   },
+  footer: {
+    label: 'Fußbereich',
+    rss: 'RSS',
+    glossary: 'Glossar',
+  },
+  notFound: {
+    title: 'Seite nicht gefunden',
+    text: 'Diese Seite gibt es nicht (mehr).',
+    home: 'Zur Startseite',
+  },
   rss: {
     description: 'Beiträge, Kurznotizen und Begriffe',
   },

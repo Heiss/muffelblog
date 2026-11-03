@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { groupByTag } from '@muffelblog/core';
+import { getContent } from '../lib/articles';
 import { getFeed, siteUrl, sitemapXml } from '../lib/feed';
 
 // Without SITE_URL (domain still open, O9) there is no sitemap.
@@ -11,6 +12,7 @@ export const GET: APIRoute = async () => {
   const base = siteUrl();
   if (!base) return new Response(null, { status: 404 });
   const feed = await getFeed();
+  const { articles } = await getContent();
   const newest = feed[0]?.date;
   const xml = sitemapXml(base, [
     { path: '/', lastmod: newest },
@@ -23,6 +25,9 @@ export const GET: APIRoute = async () => {
       path: `/tag/${g.slug}/`,
       lastmod: g.items[0]?.date,
     })),
+    ...articles
+      .filter((a) => a.type === 'page')
+      .map((a) => ({ path: `/${a.slug}/` })),
     ...feed.map((e) => ({ path: e.url, lastmod: e.date })),
   ]);
   return new Response(xml, {

@@ -412,3 +412,15 @@ article > ul.tags {
   color: var(--fg);
   font-weight: 600;
 }
+
+.site-footer {
+  margin-top: 3rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+  color: var(--dim);
+}
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}

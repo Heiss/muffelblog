@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import { getContent } from '../lib/articles';
+import type { RenderedArticle } from '../lib/articles';
+
+export async function getStaticPaths() {
+  const { articles } = await getContent();
+  return articles
+    .filter((a) => a.type === 'page')
+    .map((article) => ({
+      params: { page: article.slug },
+      props: { article },
+    }));
+}
+
+interface Props {
+  article: RenderedArticle;
+}
+
+const { article } = Astro.props;
+---
+
+<Base title={article.title} description={article.description}>
+  <article>
+    <h1>{article.title}</h1>
+    <div class="content" set:html={article.html} />
+  </article>
+</Base>
+
+<script>
+  import '../scripts/embed';
+</script>

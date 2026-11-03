@@ -4,7 +4,34 @@ import { parseDate } from './date.ts';
 import { splitFrontmatter } from './frontmatter.ts';
 import { normalizeTag, toSlug } from './slug.ts';
 
-export type ArticleType = 'post' | 'glossary';
+export type ArticleType = 'post' | 'glossary' | 'page';
+
+/**
+ * Names a static page must not take: they are routes or folders of the site.
+ * Pages live at the root (`/<slug>/`), so these would shadow the real routes.
+ */
+export const RESERVED_PAGE_SLUGS: ReadonlySet<string> = new Set([
+  'p',
+  'm',
+  'g',
+  'tag',
+  'page',
+  'posts',
+  'memos',
+  'terms',
+  'glossary',
+  'search',
+  'media',
+  'pagefind',
+  'build',
+  'feed',
+  'sitemap',
+  'robots',
+  '404',
+  'theme-init',
+  '_astro',
+  'index',
+]);
 
 export interface Article {
   /** `glossary` for a term (frontmatter `type: glossary`), otherwise `post`. */
@@ -106,6 +133,21 @@ export function parseArticle(input: {
     return { kind: 'skipped', warnings };
   }
 
+  let type: ArticleType = 'post';
+  if (data.type === 'glossary') {
+    type = 'glossary';
+  } else if (data.type === 'page') {
+    type = 'page';
+    if (RESERVED_PAGE_SLUGS.has(slug)) {
+      warn(`skipped, "${slug}" is reserved for the site and cannot be a page`);
+      return { kind: 'skipped', warnings };
+    }
+  } else if (data.type !== undefined) {
+    warn(
+      `unknown type ${JSON.stringify(data.type)}, treated as a post (known: glossary)`,
+    );
+  }
+
   const rawTitle =
     typeof data.title === 'string' || typeof data.title === 'number'
       ? String(data.title).trim()
@@ -118,7 +160,11 @@ export function parseArticle(input: {
 
   let date = parseDate(data.date);
   let dateSource: Article['dateSource'] = 'frontmatter';
-  if (date === null) {
+  if (date === null && type === 'page') {
+    // A static page has no place in time; the date is only a placeholder.
+    date = new Date(mtime.getTime());
+    dateSource = 'mtime';
+  } else if (date === null) {
     warn(
       data.date === undefined
         ? 'no date, the modification date of the file is used'
@@ -141,15 +187,6 @@ export function parseArticle(input: {
     }
     const tag = normalizeTag(entry);
     if (tag !== null && !tags.includes(tag)) tags.push(tag);
-  }
-
-  let type: ArticleType = 'post';
-  if (data.type === 'glossary') {
-    type = 'glossary';
-  } else if (data.type !== undefined) {
-    warn(
-      `unknown type ${JSON.stringify(data.type)}, treated as a post (known: glossary)`,
-    );
   }
 
   const article: Article = {
@@ -238,7 +275,7 @@ export async function loadArticles(
 
   // Slugs are unique per type: /p/ and /g/ are separate namespaces.
   const merged: Article[] = [];
-  for (const type of ['post', 'glossary'] as const) {
+  for (const type of ['post', 'glossary', 'page'] as const) {
     const unique = assignUniqueSlugs(found.filter((a) => a.type === type));
     warnings.push(...unique.warnings);
     merged.push(...unique.articles);
