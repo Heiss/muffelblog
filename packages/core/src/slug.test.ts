@@ -2,33 +2,33 @@ import { describe, expect, it } from 'vitest';
 import { normalizeTag, tagSlug, toSlug } from './slug.ts';
 
 describe('toSlug', () => {
-  it('schreibt klein und ersetzt Leerraum durch Bindestriche', () => {
+  it('lowercases and replaces whitespace with hyphens', () => {
     expect(toSlug('Hallo Welt')).toBe('hallo-welt');
   });
 
-  it('transliteriert Umlaute und ß', () => {
+  it('transliterates umlauts and ß', () => {
     expect(toSlug('Größe und Maße')).toBe('groesse-und-masse');
     expect(toSlug('Äpfel Öl Übung')).toBe('aepfel-oel-uebung');
   });
 
-  it('behandelt zerlegte Umlaute (macOS) wie zusammengesetzte', () => {
+  it('treats decomposed umlauts (macOS) like composed ones', () => {
     expect(toSlug('Gro\u0308ße')).toBe('groesse');
     expect(toSlug('Gro\u0308ße')).toBe(toSlug('Größe'));
   });
 
-  it('entfernt andere Akzente', () => {
+  it('removes other accents', () => {
     expect(toSlug('Café Señor')).toBe('cafe-senor');
   });
 
-  it('fasst Sonderzeichen und Mehrfach-Bindestriche zusammen', () => {
+  it('collapses special characters and repeated hyphens', () => {
     expect(toSlug('  A -- B / C!?  ')).toBe('a-b-c');
   });
 
-  it('behält Ziffern', () => {
+  it('keeps digits', () => {
     expect(toSlug('Version 2.0')).toBe('version-2-0');
   });
 
-  it('liefert null, wenn nichts Brauchbares übrig bleibt', () => {
+  it('returns null if nothing usable is left', () => {
     expect(toSlug('')).toBeNull();
     expect(toSlug('!!!')).toBeNull();
     expect(toSlug('日本語')).toBeNull();
@@ -36,19 +36,19 @@ describe('toSlug', () => {
 });
 
 describe('normalizeTag', () => {
-  it('schreibt klein, schneidet Leerraum ab und fasst Leerzeichen zusammen', () => {
+  it('lowercases, trims whitespace and collapses spaces', () => {
     expect(normalizeTag('  Machine   Learning ')).toBe('machine learning');
   });
 
-  it('behält Umlaute in der Anzeige', () => {
+  it('keeps umlauts in the display form', () => {
     expect(normalizeTag('Über Größe')).toBe('über größe');
   });
 
-  it('entfernt ein führendes Rautenzeichen', () => {
+  it('removes a leading hash sign', () => {
     expect(normalizeTag('#Python')).toBe('python');
   });
 
-  it('liefert null für leere Tags', () => {
+  it('returns null for empty tags', () => {
     expect(normalizeTag('')).toBeNull();
     expect(normalizeTag('   ')).toBeNull();
     expect(normalizeTag('#')).toBeNull();
@@ -56,7 +56,7 @@ describe('normalizeTag', () => {
 });
 
 describe('tagSlug', () => {
-  it('ist die URL-Form des Tags', () => {
+  it('is the URL form of the tag', () => {
     expect(tagSlug('über größe')).toBe('ueber-groesse');
   });
 });

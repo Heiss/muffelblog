@@ -1,10 +1,10 @@
 import { toSlug } from './slug.ts';
 
 /**
- * Dateien, die zusätzlich zu Bildern auf die eigene Domain gespiegelt werden
- * dürfen: PDF, Audio und Video. Alles andere (HTML, SVG, Skripte, Archive,
- * Programme) wird nicht übernommen, weil der Server sie sonst unter der eigenen
- * Adresse mit einem aktiven Inhaltstyp ausliefern könnte.
+ * Files that may be mirrored to the own domain in addition to images: PDF,
+ * audio and video. Everything else (HTML, SVG, scripts, archives, programs) is
+ * not accepted, because the server could otherwise serve it under the own
+ * address with an active content type.
  */
 export type FileKind = 'pdf' | 'audio' | 'video';
 export type Sniff = 'pdf' | 'mp3' | 'ogg' | 'wav' | 'flac' | 'mp4' | 'webm';
@@ -13,7 +13,7 @@ export interface AllowedFile {
   ext: string;
   kind: FileKind;
   contentType: string;
-  /** Welche Dateikennung am Anfang der Daten stehen muss. */
+  /** Which file signature must be at the start of the data. */
   sniff: Sniff;
 }
 
@@ -31,77 +31,77 @@ export const ALLOWED_FILES: readonly AllowedFile[] = [
   { ext: 'mov', kind: 'video', contentType: 'video/quicktime', sniff: 'mp4' },
 ];
 
-function endung(dateiname: string): string {
-  const basis = dateiname.split(/[\\/]/).pop() ?? '';
-  const treffer = /\.([^.]+)$/.exec(basis);
-  return treffer?.[1]?.toLowerCase() ?? '';
+function extensionOf(fileName: string): string {
+  const base = fileName.split(/[\\/]/).pop() ?? '';
+  const match = /\.([^.]+)$/.exec(base);
+  return match?.[1]?.toLowerCase() ?? '';
 }
 
-/** Regel für eine erlaubte Datei, nach Endung. Null, wenn der Typ nicht erlaubt ist. */
-export function allowedFileFor(dateiname: string): AllowedFile | null {
-  const ext = endung(dateiname);
-  return ALLOWED_FILES.find((regel) => regel.ext === ext) ?? null;
+/** Rule for an allowed file, by extension. Null if the type is not allowed. */
+export function allowedFileFor(fileName: string): AllowedFile | null {
+  const ext = extensionOf(fileName);
+  return ALLOWED_FILES.find((rule) => rule.ext === ext) ?? null;
 }
 
-function beginntMit(daten: Buffer, text: string, offset = 0): boolean {
+function startsWith(data: Buffer, text: string, offset = 0): boolean {
   return (
-    daten.subarray(offset, offset + text.length).toString('latin1') === text
+    data.subarray(offset, offset + text.length).toString('latin1') === text
   );
 }
 
-/** Passt der Anfang der Daten zur erwarteten Dateikennung? */
-export function sniffMatches(art: Sniff, daten: Buffer): boolean {
-  switch (art) {
+/** Does the start of the data match the expected file signature? */
+export function sniffMatches(kind: Sniff, data: Buffer): boolean {
+  switch (kind) {
     case 'pdf':
-      return beginntMit(daten, '%PDF-');
+      return startsWith(data, '%PDF-');
     case 'mp3':
       return (
-        beginntMit(daten, 'ID3') ||
-        (daten.length >= 2 &&
-          daten[0] === 0xff &&
-          ((daten[1] ?? 0) & 0xe0) === 0xe0)
+        startsWith(data, 'ID3') ||
+        (data.length >= 2 &&
+          data[0] === 0xff &&
+          ((data[1] ?? 0) & 0xe0) === 0xe0)
       );
     case 'ogg':
-      return beginntMit(daten, 'OggS');
+      return startsWith(data, 'OggS');
     case 'wav':
-      return beginntMit(daten, 'RIFF') && beginntMit(daten, 'WAVE', 8);
+      return startsWith(data, 'RIFF') && startsWith(data, 'WAVE', 8);
     case 'flac':
-      return beginntMit(daten, 'fLaC');
+      return startsWith(data, 'fLaC');
     case 'mp4':
-      return beginntMit(daten, 'ftyp', 4);
+      return startsWith(data, 'ftyp', 4);
     case 'webm':
       return (
-        daten.length >= 4 &&
-        daten[0] === 0x1a &&
-        daten[1] === 0x45 &&
-        daten[2] === 0xdf &&
-        daten[3] === 0xa3
+        data.length >= 4 &&
+        data[0] === 0x1a &&
+        data[1] === 0x45 &&
+        data[2] === 0xdf &&
+        data[3] === 0xa3
       );
   }
 }
 
-/** Inhaltstyp einer ausgelieferten Mediendatei nach Endung. Null für alles Unbekannte. */
-export function contentTypeForMediaFile(datei: string): string | null {
-  const ext = endung(datei);
+/** Content type of a served media file, by extension. Null for anything unknown. */
+export function contentTypeForMediaFile(file: string): string | null {
+  const ext = extensionOf(file);
   if (ext === 'webp') return 'image/webp';
-  return ALLOWED_FILES.find((regel) => regel.ext === ext)?.contentType ?? null;
+  return ALLOWED_FILES.find((rule) => rule.ext === ext)?.contentType ?? null;
 }
 
-/** Macht aus einem Dateinamen einen URL-tauglichen Namen, die Endung bleibt erhalten. */
-export function safeFileName(dateiname: string): string {
-  const basis = dateiname.split(/[\\/]/).pop() ?? '';
-  const treffer = /\.([^.]+)$/.exec(basis);
-  const ext = (treffer?.[1] ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const stamm = treffer ? basis.slice(0, treffer.index) : basis;
+/** Turns a file name into a URL-safe name, the extension is kept. */
+export function safeFileName(fileName: string): string {
+  const base = fileName.split(/[\\/]/).pop() ?? '';
+  const match = /\.([^.]+)$/.exec(base);
+  const ext = (match?.[1] ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const stem = match ? base.slice(0, match.index) : base;
   const name =
-    (toSlug(stamm) ?? 'datei').slice(0, 50).replace(/-+$/, '') || 'datei';
+    (toSlug(stem) ?? 'file').slice(0, 50).replace(/-+$/, '') || 'file';
   return ext === '' ? name : `${name}.${ext}`;
 }
 
-/** Alt-Text aus dem Dateinamen: ohne Endung, Unter- und Bindestriche werden Leerzeichen. */
-export function altTextFromFilename(dateiname: string): string {
-  const basis = (dateiname.split(/[\\/]/).pop() ?? '').replace(/\.[^.]*$/, '');
-  return basis
+/** Alt text from the file name: without extension, underscores and hyphens become spaces. */
+export function altTextFromFilename(fileName: string): string {
+  const base = (fileName.split(/[\\/]/).pop() ?? '').replace(/\.[^.]*$/, '');
+  return base
     .normalize('NFC')
     .replace(/[_-]+/g, ' ')
     .replace(/\s+/g, ' ')

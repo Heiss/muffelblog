@@ -12,7 +12,7 @@ export interface Article {
   tags: string[];
   description?: string;
   body: string;
-  /** Pfad relativ zum Inhaltsordner, mit `/` als Trenner. */
+  /** Path relative to the content folder, with `/` as the separator. */
   path: string;
 }
 
@@ -21,94 +21,95 @@ export type ParseResult =
   | { kind: 'skipped'; warnings: string[] }
   | { kind: 'article'; article: Article; warnings: string[] };
 
-const KONFLIKTKOPIE = [
+// Nextcloud names conflict copies after the UI language, so both forms occur.
+const CONFLICT_COPY = [
   /\(conflicted copy[^)]*\)/i,
   /\(konfliktkopie[^)]*\)/i,
   /\.sync-conflict-/i,
 ];
 
 /**
- * Pfade, die nie veröffentlicht werden: versteckte Dateien und Ordner
- * (`.obsidian/`, `.trash/`), Konfliktkopien und alles außer Markdown.
+ * Paths that are never published: hidden files and folders (`.obsidian/`,
+ * `.trash/`), conflict copies and everything except Markdown.
  */
-export function isIgnoredPath(relPfad: string): boolean {
-  const teile = relPfad.split('/');
-  if (teile.some((teil) => teil.startsWith('.'))) return true;
-  const name = teile[teile.length - 1] ?? '';
+export function isIgnoredPath(relPath: string): boolean {
+  const parts = relPath.split('/');
+  if (parts.some((part) => part.startsWith('.'))) return true;
+  const name = parts[parts.length - 1] ?? '';
   if (!name.toLowerCase().endsWith('.md')) return true;
-  return KONFLIKTKOPIE.some((muster) => muster.test(name));
+  return CONFLICT_COPY.some((pattern) => pattern.test(name));
 }
 
-function ohneCode(text: string): string {
+function withoutCode(text: string): string {
   return text
     .replace(/^(```|~~~)[\s\S]*?(?:^\1[^\n]*$|(?![\s\S]))/gm, '')
     .replace(/`[^`\n]*`/g, '');
 }
 
-function hatWikilink(body: string): boolean {
-  return /\[\[[^\]\n]+\]\]/.test(ohneCode(body));
+function hasWikilink(body: string): boolean {
+  return /\[\[[^\]\n]+\]\]/.test(withoutCode(body));
 }
 
-function dateiname(relPfad: string): string {
-  const name = relPfad.split('/').pop() ?? relPfad;
+function fileName(relPath: string): string {
+  const name = relPath.split('/').pop() ?? relPath;
   return name.replace(/\.md$/i, '').normalize('NFC').trim();
 }
 
-export function parseArticle(eingabe: {
+export function parseArticle(input: {
   path: string;
   text: string;
   mtime: Date;
 }): ParseResult {
-  const { path: relPfad, text, mtime } = eingabe;
-  if (isIgnoredPath(relPfad)) return { kind: 'ignored' };
+  const { path: relPath, text, mtime } = input;
+  if (isIgnoredPath(relPath)) return { kind: 'ignored' };
 
-  const warnungen: string[] = [];
-  const warn = (meldung: string) => warnungen.push(`${relPfad}: ${meldung}`);
+  const warnings: string[] = [];
+  const warn = (message: string) => warnings.push(`${relPath}: ${message}`);
 
-  const geteilt = splitFrontmatter(text);
-  if (!geteilt.ok) {
-    // Nur melden, wenn die Datei erkennbar veröffentlicht werden sollte.
+  const split = splitFrontmatter(text);
+  if (!split.ok) {
+    // Only report if the file was clearly meant to be published.
     if (/^\s*publish:\s*true\s*$/m.test(text)) {
-      warn(`übersprungen, ${geteilt.error}`);
-      return { kind: 'skipped', warnings: warnungen };
+      warn(`skipped, ${split.error}`);
+      return { kind: 'skipped', warnings };
     }
     return { kind: 'ignored' };
   }
 
-  const { data, body } = geteilt;
+  const { data, body } = split;
   if (data.publish !== true) return { kind: 'ignored' };
 
-  if (hatWikilink(body)) {
+  if (hasWikilink(body)) {
     warn(
-      'übersprungen, enthält Wikilinks ([[...]]); in Obsidian "Use Wikilinks" ausschalten',
+      'skipped, contains wikilinks ([[...]]); turn off "Use Wikilinks" in Obsidian',
     );
-    return { kind: 'skipped', warnings: warnungen };
+    return { kind: 'skipped', warnings };
   }
 
-  const name = dateiname(relPfad);
+  const name = fileName(relPath);
 
-  let slugQuelle = name;
+  let slugSource = name;
   if (data.slug !== undefined) {
     if (typeof data.slug === 'string' && data.slug.trim() !== '') {
-      slugQuelle = data.slug;
+      slugSource = data.slug;
     } else {
-      warn('slug ist kein Text, der Dateiname wird verwendet');
+      warn('slug is not text, the file name is used');
     }
   }
-  const slug = toSlug(slugQuelle);
+  const slug = toSlug(slugSource);
   if (slug === null) {
-    warn(`übersprungen, aus "${slugQuelle}" lässt sich kein Slug bilden`);
-    return { kind: 'skipped', warnings: warnungen };
+    warn(`skipped, no slug can be built from "${slugSource}"`);
+    return { kind: 'skipped', warnings };
   }
 
-  const titelRoh =
+  const rawTitle =
     typeof data.title === 'string' || typeof data.title === 'number'
       ? String(data.title).trim()
       : '';
-  const title = titelRoh !== '' ? titelRoh : name;
+  const title = rawTitle !== '' ? rawTitle : name;
   if (title === '') {
-    warn('übersprungen, kein Titel');
-    return { kind: 'skipped', warnings: warnungen };
+    warn('skipped, no title');
+    return { kind: 'skipped', warnings };
   }
 
   let date = parseDate(data.date);
@@ -116,25 +117,25 @@ export function parseArticle(eingabe: {
   if (date === null) {
     warn(
       data.date === undefined
-        ? 'kein date, das Änderungsdatum der Datei wird verwendet'
-        : `ungültiges date "${String(data.date)}", das Änderungsdatum der Datei wird verwendet`,
+        ? 'no date, the modification date of the file is used'
+        : `invalid date "${String(data.date)}", the modification date of the file is used`,
     );
     date = new Date(mtime.getTime());
     dateSource = 'mtime';
   }
 
-  const rohTags = Array.isArray(data.tags)
+  const rawTags = Array.isArray(data.tags)
     ? data.tags
     : data.tags === undefined
       ? []
       : [data.tags];
   const tags: string[] = [];
-  for (const eintrag of rohTags) {
-    if (typeof eintrag !== 'string') {
-      warn(`Tag ${JSON.stringify(eintrag)} ist kein Text und wird ignoriert`);
+  for (const entry of rawTags) {
+    if (typeof entry !== 'string') {
+      warn(`tag ${JSON.stringify(entry)} is not text and is ignored`);
       continue;
     }
-    const tag = normalizeTag(eintrag);
+    const tag = normalizeTag(entry);
     if (tag !== null && !tags.includes(tag)) tags.push(tag);
   }
 
@@ -145,84 +146,84 @@ export function parseArticle(eingabe: {
     dateSource,
     tags,
     body,
-    path: relPfad,
+    path: relPath,
   };
   if (typeof data.description === 'string' && data.description.trim() !== '') {
     article.description = data.description.trim();
   }
-  return { kind: 'article', article, warnings: warnungen };
+  return { kind: 'article', article, warnings };
 }
 
 /**
- * Vergibt eindeutige Slugs. Der Artikel mit dem älteren Datum (bei Gleichstand
- * der Pfad in Textreihenfolge) behält den Slug, alle weiteren bekommen -2, -3, ...
- * Das Ergebnis ist nach Datum aufsteigend sortiert.
+ * Assigns unique slugs. The article with the older date (on a tie, the path in
+ * text order) keeps the slug, all others get -2, -3, ...
+ * The result is sorted by date, ascending.
  */
-export function assignUniqueSlugs(artikel: Article[]): {
+export function assignUniqueSlugs(articles: Article[]): {
   articles: Article[];
   warnings: string[];
 } {
-  const sortiert = [...artikel].sort(
+  const sorted = [...articles].sort(
     (a, b) =>
       a.date.getTime() - b.date.getTime() ||
       (a.path < b.path ? -1 : a.path > b.path ? 1 : 0),
   );
-  const vergeben = new Set<string>();
+  const taken = new Set<string>();
   const warnings: string[] = [];
-  const articles = sortiert.map((eintrag) => {
-    let slug = eintrag.slug;
-    for (let n = 2; vergeben.has(slug); n += 1) slug = `${eintrag.slug}-${n}`;
-    vergeben.add(slug);
-    if (slug !== eintrag.slug) {
+  const result = sorted.map((entry) => {
+    let slug = entry.slug;
+    for (let n = 2; taken.has(slug); n += 1) slug = `${entry.slug}-${n}`;
+    taken.add(slug);
+    if (slug !== entry.slug) {
       warnings.push(
-        `${eintrag.path}: Slug "${eintrag.slug}" ist schon vergeben, verwendet wird "${slug}"`,
+        `${entry.path}: slug "${entry.slug}" is already taken, "${slug}" is used`,
       );
     }
-    return { ...eintrag, slug };
+    return { ...entry, slug };
   });
-  return { articles, warnings };
+  return { articles: result, warnings };
 }
 
-async function dateien(wurzel: string, rel = ''): Promise<string[]> {
-  const eintraege = await readdir(path.join(wurzel, rel), {
+async function listFiles(root: string, rel = ''): Promise<string[]> {
+  const entries = await readdir(path.join(root, rel), {
     withFileTypes: true,
   });
-  eintraege.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-  const ergebnis: string[] = [];
-  for (const eintrag of eintraege) {
-    if (eintrag.name.startsWith('.')) continue;
-    const relPfad = rel === '' ? eintrag.name : `${rel}/${eintrag.name}`;
-    if (eintrag.isDirectory()) {
-      ergebnis.push(...(await dateien(wurzel, relPfad)));
-    } else if (eintrag.isFile()) {
-      ergebnis.push(relPfad);
+  entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  const result: string[] = [];
+  for (const entry of entries) {
+    if (entry.name.startsWith('.')) continue;
+    const relPath = rel === '' ? entry.name : `${rel}/${entry.name}`;
+    if (entry.isDirectory()) {
+      result.push(...(await listFiles(root, relPath)));
+    } else if (entry.isFile()) {
+      result.push(relPath);
     }
   }
-  return ergebnis;
+  return result;
 }
 
-/** Liest alle veröffentlichbaren Artikel aus einem Ordner, neueste zuerst. */
+/** Reads all publishable articles from a folder, newest first. */
 export async function loadArticles(
-  ordner: string,
+  folder: string,
 ): Promise<{ articles: Article[]; warnings: string[] }> {
   const warnings: string[] = [];
-  const gefunden: Article[] = [];
+  const found: Article[] = [];
 
-  for (const relPfad of await dateien(ordner)) {
-    if (isIgnoredPath(relPfad)) continue;
-    const voll = path.join(ordner, relPfad);
+  for (const relPath of await listFiles(folder)) {
+    if (isIgnoredPath(relPath)) continue;
+    const full = path.join(folder, relPath);
     const [text, info] = await Promise.all([
-      readFile(voll, 'utf8'),
-      stat(voll),
+      readFile(full, 'utf8'),
+      stat(full),
     ]);
-    const ergebnis = parseArticle({ path: relPfad, text, mtime: info.mtime });
-    if (ergebnis.kind === 'ignored') continue;
-    warnings.push(...ergebnis.warnings);
-    if (ergebnis.kind === 'article') gefunden.push(ergebnis.article);
+    const result = parseArticle({ path: relPath, text, mtime: info.mtime });
+    if (result.kind === 'ignored') continue;
+    warnings.push(...result.warnings);
+    if (result.kind === 'article') found.push(result.article);
   }
 
-  const eindeutig = assignUniqueSlugs(gefunden);
-  warnings.push(...eindeutig.warnings);
-  const articles = eindeutig.articles.reverse();
+  const unique = assignUniqueSlugs(found);
+  warnings.push(...unique.warnings);
+  const articles = unique.articles.reverse();
   return { articles, warnings };
 }

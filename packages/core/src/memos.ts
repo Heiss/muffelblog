@@ -16,7 +16,7 @@ import { processImage, toResolvedImage } from './media.ts';
 import { renderMarkdown } from './render.ts';
 import { normalizeTag } from './slug.ts';
 
-/** Fehler beim Abruf der Memos-Instanz. Der Build bricht dann ab, die letzte gute Version bleibt online. */
+/** Error while reading the Memos instance. The build then stops, the last good version stays online. */
 export class MemosError extends Error {
   override name = 'MemosError';
 }
@@ -26,7 +26,7 @@ export interface MemoAttachmentRaw {
   name: string;
   filename: string;
   type: string;
-  /** Die Memos-API liefert int64 als Text. */
+  /** The Memos API returns int64 as text. */
   size?: string | number;
   externalLink?: string;
 }
@@ -40,7 +40,7 @@ export interface MemoRaw {
   createTime: string;
   tags?: string[];
   attachments?: MemoAttachmentRaw[];
-  /** Gesetzt bei Kommentaren. */
+  /** Set for comments. */
   parent?: string | null;
 }
 
@@ -53,11 +53,11 @@ export type FetchedAttachment =
     };
 
 export interface MemosSource {
-  /** Alle öffentlichen Memos. Wirft MemosError, wenn die Instanz nicht (vollständig) lesbar ist. */
+  /** All public memos. Throws MemosError if the instance cannot be read (completely). */
   listPublicMemos: () => Promise<{ memos: MemoRaw[]; warnings: string[] }>;
-  /** Lädt die Datei eines Anhangs. Wirft MemosError bei vorübergehenden Fehlern. */
+  /** Loads the file of an attachment. Throws MemosError on temporary errors. */
   fetchAttachment: (
-    anhang: MemoAttachmentRaw,
+    attachment: MemoAttachmentRaw,
     maxBytes: number,
   ) => Promise<FetchedAttachment>;
 }
@@ -65,76 +65,78 @@ export interface MemosSource {
 const MEMO_NAME = /^memos\/([A-Za-z0-9](?:[A-Za-z0-9-]{0,34}[A-Za-z0-9])?)$/;
 const ATTACHMENT_NAME = /^attachments\/([A-Za-z0-9][A-Za-z0-9_-]{0,63})$/;
 
-function istObjekt(wert: unknown): wert is Record<string, unknown> {
-  return typeof wert === 'object' && wert !== null && !Array.isArray(wert);
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function parseAttachment(wert: unknown): MemoAttachmentRaw | null {
-  if (!istObjekt(wert)) return null;
+function parseAttachment(value: unknown): MemoAttachmentRaw | null {
+  if (!isObject(value)) return null;
   if (
-    typeof wert.name !== 'string' ||
-    typeof wert.filename !== 'string' ||
-    wert.filename === ''
+    typeof value.name !== 'string' ||
+    typeof value.filename !== 'string' ||
+    value.filename === ''
   )
     return null;
-  const anhang: MemoAttachmentRaw = {
-    name: wert.name,
-    filename: wert.filename,
-    type: typeof wert.type === 'string' ? wert.type : '',
+  const attachment: MemoAttachmentRaw = {
+    name: value.name,
+    filename: value.filename,
+    type: typeof value.type === 'string' ? value.type : '',
   };
-  if (typeof wert.size === 'string' || typeof wert.size === 'number')
-    anhang.size = wert.size;
-  if (typeof wert.externalLink === 'string' && wert.externalLink !== '')
-    anhang.externalLink = wert.externalLink;
-  return anhang;
+  if (typeof value.size === 'string' || typeof value.size === 'number')
+    attachment.size = value.size;
+  if (typeof value.externalLink === 'string' && value.externalLink !== '')
+    attachment.externalLink = value.externalLink;
+  return attachment;
 }
 
-/** Prüft einen Eintrag der Memos-Antwort. Liefert null, wenn er unbrauchbar ist. */
-function parseMemo(wert: unknown): MemoRaw | null {
-  if (!istObjekt(wert)) return null;
-  if (typeof wert.name !== 'string' || !MEMO_NAME.test(wert.name)) return null;
-  if (typeof wert.content !== 'string') return null;
+/** Checks one entry of the Memos response. Returns null if it is unusable. */
+function parseMemo(value: unknown): MemoRaw | null {
+  if (!isObject(value)) return null;
+  if (typeof value.name !== 'string' || !MEMO_NAME.test(value.name))
+    return null;
+  if (typeof value.content !== 'string') return null;
   const memo: MemoRaw = {
-    name: wert.name,
-    content: wert.content,
-    visibility: typeof wert.visibility === 'string' ? wert.visibility : '',
-    createTime: typeof wert.createTime === 'string' ? wert.createTime : '',
-    tags: Array.isArray(wert.tags)
-      ? wert.tags.filter((t): t is string => typeof t === 'string')
+    name: value.name,
+    content: value.content,
+    visibility: typeof value.visibility === 'string' ? value.visibility : '',
+    createTime: typeof value.createTime === 'string' ? value.createTime : '',
+    tags: Array.isArray(value.tags)
+      ? value.tags.filter((t): t is string => typeof t === 'string')
       : [],
-    attachments: Array.isArray(wert.attachments)
-      ? wert.attachments
+    attachments: Array.isArray(value.attachments)
+      ? value.attachments
           .map(parseAttachment)
           .filter((a): a is MemoAttachmentRaw => a !== null)
       : [],
   };
-  if (typeof wert.state === 'string') memo.state = wert.state;
-  if (typeof wert.parent === 'string' && wert.parent !== '')
-    memo.parent = wert.parent;
+  if (typeof value.state === 'string') memo.state = value.state;
+  if (typeof value.parent === 'string' && value.parent !== '')
+    memo.parent = value.parent;
   return memo;
 }
 
-function parseSeite(wert: unknown): {
+function parsePage(value: unknown): {
   memos: MemoRaw[];
   warnings: string[];
   next: string;
 } {
-  if (!istObjekt(wert) || !Array.isArray(wert.memos)) {
+  if (!isObject(value) || !Array.isArray(value.memos)) {
     throw new MemosError(
-      'Unerwartete Antwort der Memos-Instanz (Feld "memos" fehlt)',
+      'Unexpected response from the Memos instance (field "memos" is missing)',
     );
   }
   const memos: MemoRaw[] = [];
   const warnings: string[] = [];
-  wert.memos.forEach((eintrag, index) => {
-    const memo = parseMemo(eintrag);
+  value.memos.forEach((entry, index) => {
+    const memo = parseMemo(entry);
     if (memo === null)
       warnings.push(
-        `Eintrag ${index + 1} der Memos-Antwort ist unbrauchbar und wird übersprungen`,
+        `Entry ${index + 1} of the Memos response is unusable and is skipped`,
       );
     else memos.push(memo);
   });
-  const next = typeof wert.nextPageToken === 'string' ? wert.nextPageToken : '';
+  const next =
+    typeof value.nextPageToken === 'string' ? value.nextPageToken : '';
   return { memos, warnings, next };
 }
 
@@ -147,38 +149,38 @@ export interface HttpMemosOptions {
 }
 
 /**
- * Liest öffentliche Memos über die REST-Schnittstelle (`/api/memos`) ohne Anmeldung.
- * Das setzt voraus, dass der Zugriffsmodus der Instanz auf PUBLIC steht.
- * Weiterleitungen werden nie befolgt.
+ * Reads public memos through the REST interface (`/api/memos`) without login.
+ * This requires the access mode of the instance to be PUBLIC.
+ * Redirects are never followed.
  */
-export function createHttpMemosSource(optionen: HttpMemosOptions): MemosSource {
-  let basis: URL;
+export function createHttpMemosSource(options: HttpMemosOptions): MemosSource {
+  let base: URL;
   try {
-    basis = new URL(optionen.baseUrl);
+    base = new URL(options.baseUrl);
   } catch {
-    throw new MemosError(`Ungültige Memos-Adresse: ${optionen.baseUrl}`);
+    throw new MemosError(`Invalid Memos address: ${options.baseUrl}`);
   }
-  if (basis.protocol !== 'http:' && basis.protocol !== 'https:') {
+  if (base.protocol !== 'http:' && base.protocol !== 'https:') {
     throw new MemosError(
-      `Die Memos-Adresse muss mit http oder https beginnen: ${optionen.baseUrl}`,
+      `The Memos address must start with http or https: ${options.baseUrl}`,
     );
   }
-  const wurzel = `${basis.origin}${basis.pathname.replace(/\/+$/, '')}`;
-  const abruf = optionen.fetch ?? globalThis.fetch;
-  const pageSize = optionen.pageSize ?? 100;
-  const maxPages = optionen.maxPages ?? 1000;
-  const timeoutMs = optionen.timeoutMs ?? DEFAULT_SETTINGS.memosTimeoutMs;
+  const root = `${base.origin}${base.pathname.replace(/\/+$/, '')}`;
+  const doFetch = options.fetch ?? globalThis.fetch;
+  const pageSize = options.pageSize ?? 100;
+  const maxPages = options.maxPages ?? 1000;
+  const timeoutMs = options.timeoutMs ?? DEFAULT_SETTINGS.memosTimeoutMs;
 
-  async function hole(url: string): Promise<Response> {
+  async function request(url: string): Promise<Response> {
     try {
-      return await abruf(url, {
+      return await doFetch(url, {
         redirect: 'manual',
         signal: AbortSignal.timeout(timeoutMs),
         headers: { accept: 'application/json' },
       });
-    } catch (fehler) {
-      const grund = fehler instanceof Error ? fehler.message : String(fehler);
-      throw new MemosError(`Memos nicht erreichbar (${grund})`);
+    } catch (error) {
+      const cause = error instanceof Error ? error.message : String(error);
+      throw new MemosError(`Memos is unreachable (${cause})`);
     }
   }
 
@@ -186,166 +188,165 @@ export function createHttpMemosSource(optionen: HttpMemosOptions): MemosSource {
     async listPublicMemos() {
       const memos: MemoRaw[] = [];
       const warnings: string[] = [];
-      const gesehen = new Set<string>();
+      const seen = new Set<string>();
       let token = '';
-      for (let seite = 0; seite < maxPages; seite += 1) {
-        const url = new URL(`${wurzel}/api/memos`);
+      for (let pageIndex = 0; pageIndex < maxPages; pageIndex += 1) {
+        const url = new URL(`${root}/api/memos`);
         url.searchParams.set('page_size', String(pageSize));
         url.searchParams.set('filter', 'visibility == "PUBLIC"');
         url.searchParams.set('order_by', 'create_time desc');
         if (token !== '') url.searchParams.set('page_token', token);
 
-        const antwort = await hole(url.toString());
-        if (antwort.status === 401 || antwort.status === 403) {
+        const response = await request(url.toString());
+        if (response.status === 401 || response.status === 403) {
           throw new MemosError(
-            'Die Memos-Instanz verlangt eine Anmeldung. Der Zugriffsmodus der Instanz muss PUBLIC sein.',
+            'The Memos instance requires a login. The access mode of the instance must be PUBLIC.',
           );
         }
-        if (antwort.status >= 300 && antwort.status < 400) {
+        if (response.status >= 300 && response.status < 400) {
           throw new MemosError(
-            `Memos leitet weiter (HTTP ${antwort.status}), Weiterleitungen werden nicht befolgt`,
+            `Memos redirects (HTTP ${response.status}), redirects are not followed`,
           );
         }
-        if (!antwort.ok)
-          throw new MemosError(`Memos antwortet mit HTTP ${antwort.status}`);
+        if (!response.ok)
+          throw new MemosError(`Memos responds with HTTP ${response.status}`);
 
         let json: unknown;
         try {
-          json = await antwort.json();
+          json = await response.json();
         } catch {
           throw new MemosError(
-            'Die Antwort der Memos-Instanz ist kein gültiges JSON',
+            'The response of the Memos instance is not valid JSON',
           );
         }
-        const ergebnis = parseSeite(json);
-        memos.push(...ergebnis.memos);
-        warnings.push(...ergebnis.warnings);
+        const result = parsePage(json);
+        memos.push(...result.memos);
+        warnings.push(...result.warnings);
 
-        if (ergebnis.next === '') return { memos, warnings };
-        if (gesehen.has(ergebnis.next))
-          throw new MemosError('Memos liefert ein wiederholtes Seitentoken');
-        gesehen.add(ergebnis.next);
-        token = ergebnis.next;
+        if (result.next === '') return { memos, warnings };
+        if (seen.has(result.next))
+          throw new MemosError('Memos returns a repeated page token');
+        seen.add(result.next);
+        token = result.next;
       }
-      throw new MemosError(`Memos liefert mehr als ${maxPages} Seiten`);
+      throw new MemosError(`Memos returns more than ${maxPages} pages`);
     },
 
-    async fetchAttachment(anhang, maxBytes) {
-      const treffer = ATTACHMENT_NAME.exec(anhang.name);
-      if (treffer === null || anhang.filename === '') {
+    async fetchAttachment(attachment, maxBytes) {
+      const match = ATTACHMENT_NAME.exec(attachment.name);
+      if (match === null || attachment.filename === '') {
         return {
           ok: false,
           code: 'invalid',
-          reason: `ungültiger Anhang "${anhang.name}"`,
+          reason: `invalid attachment "${attachment.name}"`,
         };
       }
-      const url = `${wurzel}/file/attachments/${treffer[1]}/${encodeURIComponent(anhang.filename)}`;
-      const antwort = await hole(url);
+      const url = `${root}/file/attachments/${match[1]}/${encodeURIComponent(attachment.filename)}`;
+      const response = await request(url);
 
-      if (antwort.status >= 300 && antwort.status < 400) {
+      if (response.status >= 300 && response.status < 400) {
         return {
           ok: false,
           code: 'redirect',
-          reason: 'Memos leitet weiter, Weiterleitungen werden nicht befolgt',
+          reason: 'Memos redirects, redirects are not followed',
         };
       }
-      if (antwort.status === 404)
-        return { ok: false, code: 'not-found', reason: 'Datei nicht gefunden' };
-      if (antwort.status === 401 || antwort.status === 403) {
+      if (response.status === 404)
+        return { ok: false, code: 'not-found', reason: 'File not found' };
+      if (response.status === 401 || response.status === 403) {
         throw new MemosError(
-          `Zugriff auf den Anhang verweigert (HTTP ${antwort.status}), Zugriffsmodus prüfen`,
+          `Access to the attachment was denied (HTTP ${response.status}), check the access mode`,
         );
       }
-      if (!antwort.ok)
+      if (!response.ok)
         throw new MemosError(
-          `Memos antwortet beim Anhang mit HTTP ${antwort.status}`,
+          `Memos responds to the attachment with HTTP ${response.status}`,
         );
 
-      const laenge = Number(antwort.headers.get('content-length'));
-      if (Number.isFinite(laenge) && laenge > maxBytes) {
-        await antwort.body?.cancel();
+      const length = Number(response.headers.get('content-length'));
+      if (Number.isFinite(length) && length > maxBytes) {
+        await response.body?.cancel();
         return {
           ok: false,
           code: 'too-large',
-          reason: `größer als ${maxBytes} Bytes`,
+          reason: `larger than ${maxBytes} bytes`,
         };
       }
 
-      const teile: Buffer[] = [];
-      let gesamt = 0;
-      if (antwort.body) {
-        const leser = antwort.body.getReader();
+      const chunks: Buffer[] = [];
+      let total = 0;
+      if (response.body) {
+        const reader = response.body.getReader();
         try {
           for (;;) {
-            const { done, value } = await leser.read();
+            const { done, value } = await reader.read();
             if (done) break;
-            gesamt += value.byteLength;
-            if (gesamt > maxBytes) {
-              await leser.cancel();
+            total += value.byteLength;
+            if (total > maxBytes) {
+              await reader.cancel();
               return {
                 ok: false,
                 code: 'too-large',
-                reason: `größer als ${maxBytes} Bytes`,
+                reason: `larger than ${maxBytes} bytes`,
               };
             }
-            teile.push(Buffer.from(value));
+            chunks.push(Buffer.from(value));
           }
-        } catch (fehler) {
-          const grund =
-            fehler instanceof Error ? fehler.message : String(fehler);
-          throw new MemosError(`Anhang konnte nicht gelesen werden (${grund})`);
+        } catch (error) {
+          const cause = error instanceof Error ? error.message : String(error);
+          throw new MemosError(`The attachment could not be read (${cause})`);
         }
       }
-      return { ok: true, data: Buffer.concat(teile) };
+      return { ok: true, data: Buffer.concat(chunks) };
     },
   };
 }
 
 /**
- * Quelle aus Dateien, für Entwicklung und Tests: `memos.json` in der Form der
- * Listen-Antwort und die Anhänge unter `attachments/<uid>/<dateiname>`.
+ * Source from files, for development and tests: `memos.json` in the shape of
+ * the list response and the attachments under `attachments/<uid>/<file name>`.
  */
-export function createFixtureMemosSource(ordner: string): MemosSource {
+export function createFixtureMemosSource(folder: string): MemosSource {
   return {
     async listPublicMemos() {
       let json: unknown;
       try {
         json = JSON.parse(
-          await readFile(path.join(ordner, 'memos.json'), 'utf8'),
+          await readFile(path.join(folder, 'memos.json'), 'utf8'),
         );
-      } catch (fehler) {
-        const grund = fehler instanceof Error ? fehler.message : String(fehler);
-        throw new MemosError(`memos.json nicht lesbar (${grund})`);
+      } catch (error) {
+        const cause = error instanceof Error ? error.message : String(error);
+        throw new MemosError(`memos.json is not readable (${cause})`);
       }
-      const { memos, warnings } = parseSeite(json);
+      const { memos, warnings } = parsePage(json);
       return { memos, warnings };
     },
-    async fetchAttachment(anhang, maxBytes) {
-      const treffer = ATTACHMENT_NAME.exec(anhang.name);
+    async fetchAttachment(attachment, maxBytes) {
+      const match = ATTACHMENT_NAME.exec(attachment.name);
       if (
-        treffer === null ||
-        anhang.filename === '' ||
-        /[\\/]/.test(anhang.filename) ||
-        anhang.filename.startsWith('.')
+        match === null ||
+        attachment.filename === '' ||
+        /[\\/]/.test(attachment.filename) ||
+        attachment.filename.startsWith('.')
       ) {
         return {
           ok: false,
           code: 'invalid',
-          reason: `ungültiger Anhang "${anhang.name}"`,
+          reason: `invalid attachment "${attachment.name}"`,
         };
       }
-      const datei = path.join(
-        ordner,
+      const file = path.join(
+        folder,
         'attachments',
-        treffer[1] ?? '',
-        anhang.filename,
+        match[1] ?? '',
+        attachment.filename,
       );
       try {
-        if ((await stat(datei)).size > maxBytes)
-          return { ok: false, code: 'too-large', reason: 'zu groß' };
-        return { ok: true, data: await readFile(datei) };
+        if ((await stat(file)).size > maxBytes)
+          return { ok: false, code: 'too-large', reason: 'too large' };
+        return { ok: true, data: await readFile(file) };
       } catch {
-        return { ok: false, code: 'not-found', reason: 'Datei nicht gefunden' };
+        return { ok: false, code: 'not-found', reason: 'File not found' };
       }
     },
   };
@@ -359,12 +360,14 @@ export interface MemoEntry {
   description: string;
   date: Date;
   tags: string[];
-  /** Bereinigtes HTML des Textes samt gespiegelter Anhänge. */
+  /** Sanitized HTML of the text together with the mirrored attachments. */
   html: string;
 }
 
-const BILD_ENDUNGEN = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'avif']);
-const DATUM_FORMAT = new Intl.DateTimeFormat('de-DE', {
+const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'avif']);
+// Texts that end up in the pages. They are UI text and move to the message
+// catalog together with the UI language (W23).
+const DATE_FORMAT = new Intl.DateTimeFormat('de-DE', {
   day: 'numeric',
   month: 'short',
   year: 'numeric',
@@ -373,7 +376,12 @@ const DATUM_FORMAT = new Intl.DateTimeFormat('de-DE', {
   timeZone: 'Europe/Berlin',
 });
 
-function maskiere(text: string): string {
+const UI = {
+  memoTitle: (date: Date) => `Memo vom ${DATE_FORMAT.format(date)}`,
+  pdfLabel: (bytes: number) => `PDF, ${formatSize(bytes)}`,
+};
+
+function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -381,193 +389,199 @@ function maskiere(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function formatiereGroesse(bytes: number): string {
+function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`;
 }
 
-/** Kurzer Klartext aus Markdown, höchstens `max` Zeichen, an einer Wortgrenze gekürzt. */
-function beschreibung(markdown: string, max: number): string {
-  const baum = unified().use(remarkParse).use(remarkGfm).parse(markdown);
-  const teile: string[] = [];
-  visit(baum, (knoten) => {
-    if (knoten.type === 'text' || knoten.type === 'inlineCode')
-      teile.push((knoten as { value: string }).value);
+/** Short plain text from Markdown, at most `max` characters, cut at a word boundary. */
+function makeDescription(markdown: string, max: number): string {
+  const tree = unified().use(remarkParse).use(remarkGfm).parse(markdown);
+  const chunks: string[] = [];
+  visit(tree, (node) => {
+    if (node.type === 'text' || node.type === 'inlineCode')
+      chunks.push((node as { value: string }).value);
   });
-  const text = teile.join(' ').replace(/\s+/g, ' ').trim();
+  const text = chunks.join(' ').replace(/\s+/g, ' ').trim();
   if (text.length <= max) return text;
-  const gekuerzt = text.slice(0, max);
-  const ende = gekuerzt.lastIndexOf(' ');
-  return `${(ende > max / 2 ? gekuerzt.slice(0, ende) : gekuerzt).trimEnd()}…`;
+  const cut = text.slice(0, max);
+  const end = cut.lastIndexOf(' ');
+  return `${(end > max / 2 ? cut.slice(0, end) : cut).trimEnd()}…`;
 }
 
 export interface BuildMemosOptions {
-  /** Höchstgröße je gespiegelter Datei in Bytes. Standard: 25 MB. */
+  /** Maximum size per mirrored file in bytes. Default: 25 MB. */
   maxFileBytes?: number;
-  /** Höchstlänge der Beschreibung in Zeichen. Standard: 160. */
+  /** Maximum length of the description in characters. Default: 160. */
   descriptionChars?: number;
   urlPrefix?: string;
 }
 
-function inhaltsKennung(daten: Buffer): string {
-  return createHash('sha256').update(daten).digest('hex').slice(0, 16);
+function contentId(data: Buffer): string {
+  return createHash('sha256').update(data).digest('hex').slice(0, 16);
 }
 
 /**
- * Baut die Seitendaten aller öffentlichen Memos. Anhänge werden auf die eigene
- * Domain gespiegelt (Bilder als WebP ohne EXIF; PDF, Audio und Video nur mit
- * passender Dateikennung). Nichts verweist auf die Memos-Instanz.
- * Vorübergehende Fehler beim Abruf werfen und brechen den Build ab.
+ * Builds the page data of all public memos. Attachments are mirrored to the
+ * own domain (images as WebP without EXIF; PDF, audio and video only with a
+ * matching file signature). Nothing points to the Memos instance.
+ * Temporary errors while reading throw and stop the build.
  */
 export async function buildMemoEntries(
-  quelle: MemosSource,
-  speicher: Map<string, Buffer>,
-  optionen: BuildMemosOptions = {},
+  source: MemosSource,
+  store: Map<string, Buffer>,
+  options: BuildMemosOptions = {},
 ): Promise<{ memos: MemoEntry[]; warnings: string[] }> {
-  const maxBytes = optionen.maxFileBytes ?? DEFAULT_SETTINGS.memosMaxFileBytes;
-  const beschreibungMax =
-    optionen.descriptionChars ?? DEFAULT_SETTINGS.memosDescriptionChars;
-  const prefix = optionen.urlPrefix ?? '/media/';
-  const liste = await quelle.listPublicMemos();
-  const warnings = [...liste.warnings];
-  const eintraege: MemoEntry[] = [];
+  const maxBytes = options.maxFileBytes ?? DEFAULT_SETTINGS.memosMaxFileBytes;
+  const descriptionMax =
+    options.descriptionChars ?? DEFAULT_SETTINGS.memosDescriptionChars;
+  const prefix = options.urlPrefix ?? '/media/';
+  const list = await source.listPublicMemos();
+  const warnings = [...list.warnings];
+  const entries: MemoEntry[] = [];
 
-  for (const roh of liste.memos) {
-    const treffer = MEMO_NAME.exec(roh.name);
-    const uid = treffer?.[1];
+  for (const raw of list.memos) {
+    const match = MEMO_NAME.exec(raw.name);
+    const uid = match?.[1];
     const warn = (meldung: string) =>
-      warnings.push(`memos/${uid ?? roh.name}: ${meldung}`);
+      warnings.push(`memos/${uid ?? raw.name}: ${meldung}`);
     if (uid === undefined) {
-      warnings.push(`${roh.name}: ungültige Kennung, übersprungen`);
+      warnings.push(`${raw.name}: invalid identifier, skipped`);
       continue;
     }
-    if (roh.parent) continue;
-    if (roh.visibility !== 'PUBLIC') {
-      warn(`nicht öffentlich (${roh.visibility || 'unbekannt'}), übersprungen`);
+    if (raw.parent) continue;
+    if (raw.visibility !== 'PUBLIC') {
+      warn(`not public (${raw.visibility || 'unknown'}), skipped`);
       continue;
     }
-    if (roh.state !== undefined && roh.state !== 'NORMAL') continue;
-    const datum = new Date(roh.createTime);
-    if (roh.createTime === '' || Number.isNaN(datum.getTime())) {
-      warn(`ungültiges createTime "${roh.createTime}", übersprungen`);
+    if (raw.state !== undefined && raw.state !== 'NORMAL') continue;
+    const createdAt = new Date(raw.createTime);
+    if (raw.createTime === '' || Number.isNaN(createdAt.getTime())) {
+      warn(`invalid createTime "${raw.createTime}", skipped`);
       continue;
     }
 
-    const alleTags: string[] = [];
-    for (const tag of roh.tags ?? []) {
+    const allTags: string[] = [];
+    for (const tag of raw.tags ?? []) {
       const normal = normalizeTag(tag);
-      if (normal !== null && !alleTags.includes(normal)) alleTags.push(normal);
+      if (normal !== null && !allTags.includes(normal)) allTags.push(normal);
     }
-    // Memos erzeugt für "#a/b" selbst den Eltern-Tag "a". Ein verschachtelter Tag
-    // bleibt hier ein einzelner Tag, also fallen solche Eltern-Tags weg.
-    const tags = alleTags.filter(
-      (tag) => !alleTags.some((anderer) => anderer.startsWith(`${tag}/`)),
+    // Memos itself creates the parent tag "a" for "#a/b". A nested tag stays a
+    // single tag here, so such parent tags are dropped.
+    const tags = allTags.filter(
+      (tag) => !allTags.some((other) => other.startsWith(`${tag}/`)),
     );
 
-    const gerendert = await renderMarkdown(roh.content, {
+    const rendered = await renderMarkdown(raw.content, {
       articlePath: `memos/${uid}.md`,
       remoteContent: 'none',
       resolveImage: async () => ({
         ok: false,
         code: 'unsupported',
-        reason: 'Memos binden Bilder über Anhänge ein',
+        reason: 'Memos embed images through attachments',
       }),
     });
-    for (const w of gerendert.warnings) warnings.push(w);
+    for (const w of rendered.warnings) warnings.push(w);
 
-    const anhaenge: string[] = [];
-    for (const anhang of roh.attachments ?? []) {
-      if (anhang.externalLink) {
-        warn(`Anhang "${anhang.filename}" liegt extern und wird nicht geladen`);
+    const attachments: string[] = [];
+    for (const attachment of raw.attachments ?? []) {
+      if (attachment.externalLink) {
+        warn(
+          `attachment "${attachment.filename}" is external and is not loaded`,
+        );
         continue;
       }
       const ext =
-        anhang.filename.split(/[\\/]/).pop()?.split('.').pop()?.toLowerCase() ??
-        '';
-      const bildArt = BILD_ENDUNGEN.has(ext);
-      const dateiRegel = allowedFileFor(anhang.filename);
-      if (!bildArt && dateiRegel === null) {
-        const hinweis =
+        attachment.filename
+          .split(/[\\/]/)
+          .pop()
+          ?.split('.')
+          .pop()
+          ?.toLowerCase() ?? '';
+      const isImage = IMAGE_EXTENSIONS.has(ext);
+      const fileRule = allowedFileFor(attachment.filename);
+      if (!isImage && fileRule === null) {
+        const hint =
           ext === 'heic' || ext === 'heif'
-            ? ' (HEIC wird nicht unterstützt, bitte als JPEG hochladen)'
+            ? ' (HEIC is not supported, please upload as JPEG)'
             : '';
         warn(
-          `Anhang "${anhang.filename}" hat einen nicht erlaubten Dateityp und wird übersprungen${hinweis}`,
+          `attachment "${attachment.filename}" has a file type that is not allowed and is skipped${hint}`,
         );
         continue;
       }
 
-      const geholt = await quelle.fetchAttachment(anhang, maxBytes);
-      if (!geholt.ok) {
+      const fetched = await source.fetchAttachment(attachment, maxBytes);
+      if (!fetched.ok) {
         warn(
-          `Anhang "${anhang.filename}" wird übersprungen (${geholt.reason})`,
+          `attachment "${attachment.filename}" is skipped (${fetched.reason})`,
         );
         continue;
       }
-      const daten = geholt.data;
+      const data = fetched.data;
 
-      if (bildArt) {
+      if (isImage) {
         try {
-          const bild = await processImage(daten);
-          for (const v of bild.variants) speicher.set(v.file, v.data);
-          const aufgeloest = toResolvedImage(bild, prefix);
-          anhaenge.push(
-            `<img src="${maskiere(aufgeloest.src)}" srcset="${maskiere(aufgeloest.srcset)}" sizes="(min-width: 760px) 720px, 100vw" ` +
-              `width="${aufgeloest.width}" height="${aufgeloest.height}" alt="${maskiere(altTextFromFilename(anhang.filename))}" ` +
+          const image = await processImage(data);
+          for (const v of image.variants) store.set(v.file, v.data);
+          const resolved = toResolvedImage(image, prefix);
+          attachments.push(
+            `<img src="${escapeHtml(resolved.src)}" srcset="${escapeHtml(resolved.srcset)}" sizes="(min-width: 760px) 720px, 100vw" ` +
+              `width="${resolved.width}" height="${resolved.height}" alt="${escapeHtml(altTextFromFilename(attachment.filename))}" ` +
               `loading="lazy" decoding="async">`,
           );
         } catch {
           warn(
-            `Anhang "${anhang.filename}" ist kein lesbares Bild und wird übersprungen`,
+            `attachment "${attachment.filename}" is not a readable image and is skipped`,
           );
         }
         continue;
       }
 
-      if (dateiRegel === null || !sniffMatches(dateiRegel.sniff, daten)) {
+      if (fileRule === null || !sniffMatches(fileRule.sniff, data)) {
         warn(
-          `Anhang "${anhang.filename}" passt nicht zu seiner Endung und wird übersprungen`,
+          `attachment "${attachment.filename}" does not match its extension and is skipped`,
         );
         continue;
       }
-      const dateiname = `${inhaltsKennung(daten)}-${safeFileName(anhang.filename)}`;
-      speicher.set(dateiname, daten);
-      const adresse = maskiere(`${prefix}${dateiname}`);
-      const name = maskiere(anhang.filename);
-      const link = `<a href="${adresse}" rel="noopener">${name}</a>`;
-      if (dateiRegel.kind === 'audio') {
-        anhaenge.push(
-          `<audio controls preload="none" src="${adresse}">${link}</audio>`,
+      const storedName = `${contentId(data)}-${safeFileName(attachment.filename)}`;
+      store.set(storedName, data);
+      const address = escapeHtml(`${prefix}${storedName}`);
+      const name = escapeHtml(attachment.filename);
+      const link = `<a href="${address}" rel="noopener">${name}</a>`;
+      if (fileRule.kind === 'audio') {
+        attachments.push(
+          `<audio controls preload="none" src="${address}">${link}</audio>`,
         );
-      } else if (dateiRegel.kind === 'video') {
-        anhaenge.push(
-          `<video controls preload="none" playsinline src="${adresse}">${link}</video>`,
+      } else if (fileRule.kind === 'video') {
+        attachments.push(
+          `<video controls preload="none" playsinline src="${address}">${link}</video>`,
         );
       } else {
-        anhaenge.push(
-          `<p class="anhang">${link} (PDF, ${formatiereGroesse(daten.length)})</p>`,
+        attachments.push(
+          `<p class="attachment">${link} (${UI.pdfLabel(data.length)})</p>`,
         );
       }
     }
 
-    const medien =
-      anhaenge.length > 0
-        ? `<div class="memo-anhaenge">${anhaenge.join('')}</div>`
+    const media =
+      attachments.length > 0
+        ? `<div class="memo-attachments">${attachments.join('')}</div>`
         : '';
-    eintraege.push({
+    entries.push({
       uid,
       path: `memos/${uid}`,
-      title: `Memo vom ${DATUM_FORMAT.format(datum)}`,
-      description: beschreibung(roh.content, beschreibungMax),
-      date: datum,
+      title: UI.memoTitle(createdAt),
+      description: makeDescription(raw.content, descriptionMax),
+      date: createdAt,
       tags,
-      html: gerendert.html + medien,
+      html: rendered.html + media,
     });
   }
 
-  eintraege.sort(
+  entries.sort(
     (a, b) => b.date.getTime() - a.date.getTime() || (a.uid < b.uid ? -1 : 1),
   );
-  return { memos: eintraege, warnings };
+  return { memos: entries, warnings };
 }

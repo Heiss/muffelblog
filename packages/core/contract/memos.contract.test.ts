@@ -3,90 +3,89 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { buildMemoEntries, createHttpMemosSource } from '../src/memos.ts';
 
 /**
- * Contract-Test gegen eine echte Memos-Instanz (frisch, ohne Daten).
- * Läuft nur mit MEMOS_CONTRACT_URL, zum Beispiel http://localhost:5230.
- * Er legt den ersten Benutzer an, stellt den Zugriff auf PUBLIC, erzeugt
- * Memos und prüft, dass der Loader sie ohne Anmeldung korrekt liest.
+ * Contract test against a real Memos instance (fresh, without data).
+ * Runs only with MEMOS_CONTRACT_URL, for example http://localhost:5230.
+ * It creates the first user, sets the access mode to PUBLIC, creates memos
+ * and checks that the loader reads them correctly without login.
  */
-const BASIS = process.env.MEMOS_CONTRACT_URL;
-const PASSWORT = 'contract-test-passwort-123';
+const BASE = process.env.MEMOS_CONTRACT_URL;
+const PASSWORD = 'contract-test-password-123';
 
-async function anfrage(
-  pfad: string,
-  optionen: { method?: string; body?: unknown; token?: string } = {},
+async function request(
+  requestPath: string,
+  options: { method?: string; body?: unknown; token?: string } = {},
 ): Promise<{ status: number; json: Record<string, unknown>; text: string }> {
-  const antwort = await fetch(`${BASIS}${pfad}`, {
-    method: optionen.method ?? 'GET',
+  const response = await fetch(`${BASE}${requestPath}`, {
+    method: options.method ?? 'GET',
     headers: {
       'content-type': 'application/json',
-      ...(optionen.token ? { authorization: `Bearer ${optionen.token}` } : {}),
+      ...(options.token ? { authorization: `Bearer ${options.token}` } : {}),
     },
-    body:
-      optionen.body === undefined ? undefined : JSON.stringify(optionen.body),
+    body: options.body === undefined ? undefined : JSON.stringify(options.body),
   });
-  const text = await antwort.text();
+  const text = await response.text();
   let json: Record<string, unknown> = {};
   try {
     json = JSON.parse(text) as Record<string, unknown>;
   } catch {
-    // Antwort ohne JSON, der Text steht in der Fehlermeldung.
+    // Response without JSON, the text is in the error message.
   }
-  return { status: antwort.status, json, text };
+  return { status: response.status, json, text };
 }
 
-function erwarteOk(
-  antwort: { status: number; text: string },
-  was: string,
+function expectOk(
+  response: { status: number; text: string },
+  what: string,
 ): void {
-  if (antwort.status < 200 || antwort.status >= 300) {
+  if (response.status < 200 || response.status >= 300) {
     throw new Error(
-      `${was}: HTTP ${antwort.status}, Antwort: ${antwort.text.slice(0, 500)}`,
+      `${what}: HTTP ${response.status}, response: ${response.text.slice(0, 500)}`,
     );
   }
 }
 
-async function warteAufInstanz(): Promise<void> {
-  const ende = Date.now() + 120_000;
-  let letzter = '';
-  while (Date.now() < ende) {
+async function waitForInstance(): Promise<void> {
+  const deadline = Date.now() + 120_000;
+  let last = '';
+  while (Date.now() < deadline) {
     try {
-      const antwort = await fetch(`${BASIS}/healthz`);
-      if (antwort.ok) return;
-      letzter = `HTTP ${antwort.status}`;
-    } catch (fehler) {
-      letzter = fehler instanceof Error ? fehler.message : String(fehler);
+      const response = await fetch(`${BASE}/healthz`);
+      if (response.ok) return;
+      last = `HTTP ${response.status}`;
+    } catch (error) {
+      last = error instanceof Error ? error.message : String(error);
     }
-    await new Promise((fertig) => setTimeout(fertig, 2000));
+    await new Promise((done) => setTimeout(done, 2000));
   }
-  throw new Error(`Memos wurde nicht bereit (${letzter})`);
+  throw new Error(`Memos did not become ready (${last})`);
 }
 
-describe.skipIf(!BASIS)('Memos (echte Instanz)', () => {
-  let oeffentlicheUid = '';
-  let anhangName = '';
+describe.skipIf(!BASE)('Memos (real instance)', () => {
+  let publicUid = '';
+  let attachmentName = '';
 
   beforeAll(async () => {
-    await warteAufInstanz();
+    await waitForInstance();
 
-    const neu = await anfrage('/api/users', {
+    const created = await request('/api/users', {
       method: 'POST',
-      body: { username: 'ci', password: PASSWORT, displayName: 'CI' },
+      body: { username: 'ci', password: PASSWORD, displayName: 'CI' },
     });
-    // Läuft der Test erneut gegen dieselbe Instanz, existiert der Benutzer schon.
-    if (neu.status < 200 || neu.status >= 300)
+    // If the test runs again against the same instance, the user already exists.
+    if (created.status < 200 || created.status >= 300)
       console.warn(
-        `Benutzer anlegen: HTTP ${neu.status} ${neu.text.slice(0, 200)}`,
+        `Create user: HTTP ${created.status} ${created.text.slice(0, 200)}`,
       );
 
-    const login = await anfrage('/api/auth/signin', {
+    const login = await request('/api/auth/signin', {
       method: 'POST',
-      body: { passwordCredentials: { username: 'ci', password: PASSWORT } },
+      body: { passwordCredentials: { username: 'ci', password: PASSWORD } },
     });
-    erwarteOk(login, 'Anmelden');
+    expectOk(login, 'Sign in');
     const token = String(login.json.accessToken ?? '');
     expect(token).not.toBe('');
 
-    const modus = await anfrage('/api/instance/settings/ACCESS', {
+    const mode = await request('/api/instance/settings/ACCESS', {
       method: 'PATCH',
       token,
       body: {
@@ -94,9 +93,9 @@ describe.skipIf(!BASIS)('Memos (echte Instanz)', () => {
         accessSetting: { accessMode: 'INSTANCE_ACCESS_MODE_PUBLIC' },
       },
     });
-    erwarteOk(modus, 'Zugriffsmodus auf PUBLIC stellen');
+    expectOk(mode, 'Set access mode to PUBLIC');
 
-    const bild = await sharp({
+    const image = await sharp({
       create: {
         width: 640,
         height: 320,
@@ -106,60 +105,57 @@ describe.skipIf(!BASIS)('Memos (echte Instanz)', () => {
     })
       .png()
       .toBuffer();
-    const anhang = await anfrage('/api/attachments', {
+    const attachment = await request('/api/attachments', {
       method: 'POST',
       token,
       body: {
         filename: 'IMG_CI.png',
         type: 'image/png',
-        content: bild.toString('base64'),
+        content: image.toString('base64'),
       },
     });
-    erwarteOk(anhang, 'Anhang hochladen');
-    anhangName = String(anhang.json.name ?? '');
-    expect(anhangName).toMatch(/^attachments\//);
+    expectOk(attachment, 'Upload attachment');
+    attachmentName = String(attachment.json.name ?? '');
+    expect(attachmentName).toMatch(/^attachments\//);
 
-    const oeffentlich = await anfrage('/api/memos', {
+    const publicMemo = await request('/api/memos', {
       method: 'POST',
       token,
       body: {
-        content: 'Contract-Test: öffentliches Memo #contract #a/b',
+        content: 'Contract test: public memo #contract #a/b',
         visibility: 'PUBLIC',
-        attachments: [{ name: anhangName }],
+        attachments: [{ name: attachmentName }],
       },
     });
-    erwarteOk(oeffentlich, 'Öffentliches Memo anlegen');
-    oeffentlicheUid = String(oeffentlich.json.name ?? '').replace(
-      /^memos\//,
-      '',
-    );
-    expect(oeffentlicheUid).not.toBe('');
+    expectOk(publicMemo, 'Create public memo');
+    publicUid = String(publicMemo.json.name ?? '').replace(/^memos\//, '');
+    expect(publicUid).not.toBe('');
 
-    for (const sichtbarkeit of ['PRIVATE', 'PROTECTED']) {
-      const memo = await anfrage('/api/memos', {
+    for (const visibility of ['PRIVATE', 'PROTECTED']) {
+      const memo = await request('/api/memos', {
         method: 'POST',
         token,
         body: {
-          content: `Contract-Test: ${sichtbarkeit} darf nie erscheinen`,
-          visibility: sichtbarkeit,
+          content: `Contract test: ${visibility} must never appear`,
+          visibility: visibility,
         },
       });
-      erwarteOk(memo, `${sichtbarkeit}-Memo anlegen`);
+      expectOk(memo, `Create ${visibility} memo`);
     }
   }, 180_000);
 
-  it('liefert die Liste ohne Anmeldung als JSON mit den erwarteten Feldnamen', async () => {
-    const url = new URL(`${BASIS}/api/memos`);
+  it('returns the list without login as JSON with the expected field names', async () => {
+    const url = new URL(`${BASE}/api/memos`);
     url.searchParams.set('page_size', '100');
     url.searchParams.set('filter', 'visibility == "PUBLIC"');
     url.searchParams.set('order_by', 'create_time desc');
-    const antwort = await fetch(url);
-    expect(antwort.status).toBe(200);
-    const json = (await antwort.json()) as Record<string, unknown>;
+    const response = await fetch(url);
+    expect(response.status).toBe(200);
+    const json = (await response.json()) as Record<string, unknown>;
     expect(Array.isArray(json.memos)).toBe(true);
     expect(typeof json.nextPageToken).toBe('string');
     const memo = (json.memos as Array<Record<string, unknown>>)[0] ?? {};
-    for (const feld of [
+    for (const field of [
       'name',
       'content',
       'visibility',
@@ -167,61 +163,61 @@ describe.skipIf(!BASIS)('Memos (echte Instanz)', () => {
       'attachments',
       'tags',
     ]) {
-      expect(Object.keys(memo), `Feld ${feld}`).toContain(feld);
+      expect(Object.keys(memo), `field ${field}`).toContain(field);
     }
   });
 
-  it('der Loader sieht nur das öffentliche Memo samt Anhang und Tags', async () => {
-    const quelle = createHttpMemosSource({ baseUrl: BASIS as string });
-    const { memos, warnings } = await quelle.listPublicMemos();
+  it('the loader sees only the public memo with attachment and tags', async () => {
+    const source = createHttpMemosSource({ baseUrl: BASE as string });
+    const { memos, warnings } = await source.listPublicMemos();
     expect(warnings).toEqual([]);
-    expect(memos.map((m) => m.name)).toEqual([`memos/${oeffentlicheUid}`]);
+    expect(memos.map((m) => m.name)).toEqual([`memos/${publicUid}`]);
     const memo = memos[0];
     expect(memo?.visibility).toBe('PUBLIC');
-    expect(memo?.content).toContain('öffentliches Memo');
+    expect(memo?.content).toContain('public memo');
     expect(memo?.tags).toContain('contract');
-    // Belegt: Memos liefert für "#a/b" auch den Eltern-Tag "a".
+    // Proven: Memos also returns the parent tag "a" for "#a/b".
     expect(memo?.tags).toEqual(
       expect.arrayContaining(['contract', 'a', 'a/b']),
     );
     expect(memo?.attachments?.map((a) => a.filename)).toEqual(['IMG_CI.png']);
-    expect(memo?.attachments?.[0]?.name).toBe(anhangName);
+    expect(memo?.attachments?.[0]?.name).toBe(attachmentName);
   });
 
-  it('der Loader lädt den Anhang ohne Anmeldung über die Dateiroute', async () => {
-    const quelle = createHttpMemosSource({ baseUrl: BASIS as string });
-    const { memos } = await quelle.listPublicMemos();
-    const anhang = memos[0]?.attachments?.[0];
-    expect(anhang).toBeDefined();
-    const geholt = await quelle.fetchAttachment(
-      anhang as NonNullable<typeof anhang>,
+  it('the loader loads the attachment without login through the file route', async () => {
+    const source = createHttpMemosSource({ baseUrl: BASE as string });
+    const { memos } = await source.listPublicMemos();
+    const attachment = memos[0]?.attachments?.[0];
+    expect(attachment).toBeDefined();
+    const fetched = await source.fetchAttachment(
+      attachment as NonNullable<typeof attachment>,
       5_000_000,
     );
-    expect(geholt).toMatchObject({ ok: true });
-    if (!geholt.ok) return;
-    expect((await sharp(geholt.data).metadata()).format).toBe('png');
+    expect(fetched).toMatchObject({ ok: true });
+    if (!fetched.ok) return;
+    expect((await sharp(fetched.data).metadata()).format).toBe('png');
   });
 
-  it('baut daraus eine Seite ohne Verweis auf die Instanz', async () => {
-    const quelle = createHttpMemosSource({ baseUrl: BASIS as string });
-    const speicher = new Map<string, Buffer>();
-    const { memos, warnings } = await buildMemoEntries(quelle, speicher);
+  it('builds a page from it without a link to the instance', async () => {
+    const source = createHttpMemosSource({ baseUrl: BASE as string });
+    const store = new Map<string, Buffer>();
+    const { memos, warnings } = await buildMemoEntries(source, store);
     expect(warnings).toEqual([]);
     expect(memos).toHaveLength(1);
     const html = memos[0]?.html ?? '';
     expect(memos[0]?.tags).toEqual(['contract', 'a/b']);
-    expect(html).toContain('öffentliches Memo');
+    expect(html).toContain('public memo');
     expect(html).toMatch(/<img [^>]*alt="IMG CI"/);
-    expect(html).not.toContain(String(BASIS));
+    expect(html).not.toContain(String(BASE));
     expect(html).not.toContain('/file/attachments');
-    expect(speicher.size).toBeGreaterThan(0);
+    expect(store.size).toBeGreaterThan(0);
   });
 
-  it('meldet bei nicht erreichbarer Instanz einen Fehler statt einer leeren Liste', async () => {
-    const quelle = createHttpMemosSource({
+  it('reports an error instead of an empty list if the instance is unreachable', async () => {
+    const source = createHttpMemosSource({
       baseUrl: 'http://127.0.0.1:9',
       timeoutMs: 3000,
     });
-    await expect(quelle.listPublicMemos()).rejects.toThrow();
+    await expect(source.listPublicMemos()).rejects.toThrow();
   });
 });

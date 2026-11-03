@@ -7,7 +7,7 @@ import {
 } from './config.ts';
 
 describe('readSettings', () => {
-  it('liefert ohne Variablen die Standardwerte', () => {
+  it('returns the defaults without variables', () => {
     expect(readSettings({})).toEqual({
       feedPageSize: 20,
       feedExcerptChars: 200,
@@ -18,7 +18,7 @@ describe('readSettings', () => {
     expect(readSettings({})).toEqual(DEFAULT_SETTINGS);
   });
 
-  it('liest gesetzte Werte', () => {
+  it('reads set values', () => {
     const s = readSettings({
       MUFFEL_FEED_PAGE_SIZE: '50',
       MUFFEL_FEED_EXCERPT_CHARS: '300',
@@ -35,16 +35,16 @@ describe('readSettings', () => {
     });
   });
 
-  it('behandelt leere Variablen wie nicht gesetzt', () => {
+  it('treats empty variables as unset', () => {
     expect(readSettings({ MUFFEL_FEED_PAGE_SIZE: '' }).feedPageSize).toBe(20);
     expect(readSettings({ MUFFEL_FEED_PAGE_SIZE: '  ' }).feedPageSize).toBe(20);
   });
 
-  it('erlaubt Leerraum um eine Zahl', () => {
+  it('allows whitespace around a number', () => {
     expect(readSettings({ MUFFEL_FEED_PAGE_SIZE: ' 7 ' }).feedPageSize).toBe(7);
   });
 
-  it('akzeptiert die Grenzen der Spanne und lehnt knapp außerhalb ab', () => {
+  it('accepts the bounds of the range and rejects values just outside', () => {
     for (const spec of SETTING_SPECS) {
       expect(() =>
         readSettings({ [spec.env]: String(spec.min) }),
@@ -61,31 +61,39 @@ describe('readSettings', () => {
     }
   });
 
-  it('lehnt Nicht-Ganzzahlen ab', () => {
-    for (const wert of ['abc', '2.5', '-1', '1e3', '0x10', '20 Stück', '+5']) {
-      expect(() => readSettings({ MUFFEL_FEED_PAGE_SIZE: wert })).toThrow(
+  it('rejects non-integers', () => {
+    for (const value of [
+      'abc',
+      '2.5',
+      '-1',
+      '1e3',
+      '0x10',
+      '20 pieces',
+      '+5',
+    ]) {
+      expect(() => readSettings({ MUFFEL_FEED_PAGE_SIZE: value })).toThrow(
         ConfigError,
       );
     }
   });
 
-  it('nennt alle Fehler auf einmal mit Variablenname und Spanne', () => {
+  it('lists all errors at once with variable name and range', () => {
     try {
       readSettings({
         MUFFEL_FEED_PAGE_SIZE: '0',
         MUFFEL_MEMOS_TIMEOUT_MS: 'x',
       });
       expect.unreachable();
-    } catch (fehler) {
-      expect(fehler).toBeInstanceOf(ConfigError);
-      const text = (fehler as Error).message;
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConfigError);
+      const text = (error as Error).message;
       expect(text).toContain('MUFFEL_FEED_PAGE_SIZE');
       expect(text).toContain('MUFFEL_MEMOS_TIMEOUT_MS');
-      expect(text).toMatch(/1 bis \d+/);
+      expect(text).toMatch(/from 1 to \d+/);
     }
   });
 
-  it('hat für jede Einstellung einen Standardwert innerhalb der Spanne', () => {
+  it('has a default within the range for every setting', () => {
     for (const spec of SETTING_SPECS) {
       expect(spec.default).toBeGreaterThanOrEqual(spec.min);
       expect(spec.default).toBeLessThanOrEqual(spec.max);

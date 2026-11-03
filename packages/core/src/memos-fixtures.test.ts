@@ -2,14 +2,14 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { buildMemoEntries, createFixtureMemosSource } from './memos.ts';
 
-const ordner = fileURLToPath(new URL('../fixtures/memos', import.meta.url));
+const folder = fileURLToPath(new URL('../fixtures/memos', import.meta.url));
 
-describe('Memos-Fixtures', () => {
-  it('liefert genau die öffentlichen, darstellbaren Memos, neueste zuerst', async () => {
-    const speicher = new Map<string, Buffer>();
+describe('Memos fixtures', () => {
+  it('returns exactly the public, displayable memos, newest first', async () => {
+    const store = new Map<string, Buffer>();
     const { memos } = await buildMemoEntries(
-      createFixtureMemosSource(ordner),
-      speicher,
+      createFixtureMemosSource(folder),
+      store,
     );
     expect(memos.map((m) => m.uid)).toEqual([
       'memo-text',
@@ -21,9 +21,9 @@ describe('Memos-Fixtures', () => {
     ]);
   });
 
-  it('meldet übersprungene Memos und Anhänge, ohne etwas zu verlieren', async () => {
+  it('reports skipped memos and attachments without losing anything', async () => {
     const { warnings } = await buildMemoEntries(
-      createFixtureMemosSource(ordner),
+      createFixtureMemosSource(folder),
       new Map(),
     );
     const text = warnings.join('\n');
@@ -33,13 +33,13 @@ describe('Memos-Fixtures', () => {
     expect(text).toContain('wikimedia');
   });
 
-  it('spiegelt Bild, PDF und Audio, aber sonst nichts', async () => {
-    const speicher = new Map<string, Buffer>();
-    await buildMemoEntries(createFixtureMemosSource(ordner), speicher);
-    const namen = [...speicher.keys()]
+  it('mirrors image, PDF and audio, but nothing else', async () => {
+    const store = new Map<string, Buffer>();
+    await buildMemoEntries(createFixtureMemosSource(folder), store);
+    const names = [...store.keys()]
       .map((k) => k.replace(/^[0-9a-f]{16}-/, ''))
       .sort();
-    expect(namen).toEqual([
+    expect(names).toEqual([
       '480.webp',
       '960.webp',
       'klang.wav',
@@ -47,17 +47,17 @@ describe('Memos-Fixtures', () => {
     ]);
   });
 
-  it('wirft, wenn memos.json fehlt', async () => {
+  it('throws if memos.json is missing', async () => {
     await expect(
-      createFixtureMemosSource(`${ordner}/gibt-es-nicht`).listPublicMemos(),
+      createFixtureMemosSource(`${folder}/gibt-es-nicht`).listPublicMemos(),
     ).rejects.toThrow();
   });
 
-  it('weist Pfadtricks bei Anhängen ab', async () => {
-    const quelle = createFixtureMemosSource(ordner);
+  it('rejects path tricks in attachments', async () => {
+    const source = createFixtureMemosSource(folder);
     for (const filename of ['../memos.json', 'a/b.pdf', '.versteckt.pdf']) {
       expect(
-        await quelle.fetchAttachment(
+        await source.fetchAttachment(
           { name: 'attachments/pdf-1', filename, type: '' },
           1000,
         ),
@@ -67,7 +67,7 @@ describe('Memos-Fixtures', () => {
       });
     }
     expect(
-      await quelle.fetchAttachment(
+      await source.fetchAttachment(
         { name: 'attachments/..', filename: 'x.pdf', type: '' },
         1000,
       ),

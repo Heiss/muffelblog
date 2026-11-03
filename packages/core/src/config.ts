@@ -1,20 +1,20 @@
 /**
- * Einstellungen aus Umgebungsvariablen. Alle Werte wirken beim Build und sind
- * in der Seite festgeschrieben. Ungültige Werte brechen den Build ab, damit ein
- * Tippfehler keine falsch konfigurierte Seite veröffentlicht.
- * Freigabelisten und Dateikennungen gehören bewusst nicht dazu.
+ * Settings from environment variables. All values take effect at build time
+ * and are baked into the site. Invalid values stop the build, so a typo never
+ * publishes a wrongly configured site.
+ * Allowlists and file signatures are deliberately not part of this.
  */
 
 export interface Settings {
-  /** Einträge pro Block des Feeds. */
+  /** Entries per block of the feed. */
   feedPageSize: number;
-  /** Höchstlänge des Auszugs eines Artikels im Feed, in Zeichen. */
+  /** Maximum length of an article excerpt in the feed, in characters. */
   feedExcerptChars: number;
-  /** Höchstlänge der Beschreibung eines Memos (Meta-Tag), in Zeichen. */
+  /** Maximum length of a memo description (meta tag), in characters. */
   memosDescriptionChars: number;
-  /** Zeitlimit je Anfrage an Memos, in Millisekunden. */
+  /** Time limit per request to Memos, in milliseconds. */
   memosTimeoutMs: number;
-  /** Höchstgröße je gespiegelter Memo-Datei, in Bytes. */
+  /** Maximum size per mirrored memo file, in bytes. */
   memosMaxFileBytes: number;
 }
 
@@ -24,7 +24,7 @@ export interface SettingSpec {
   default: number;
   min: number;
   max: number;
-  /** Faktor von Wert der Variable zu Wert der Einstellung (MB zu Bytes). */
+  /** Factor from the variable's value to the setting's value (MB to bytes). */
   factor: number;
   unit: string;
   description: string;
@@ -40,8 +40,8 @@ export const SETTING_SPECS: readonly SettingSpec[] = [
     min: 1,
     max: 200,
     factor: 1,
-    unit: 'Einträge',
-    description: 'Einträge pro Block des Feeds',
+    unit: 'entries',
+    description: 'Entries per block of the feed',
   },
   {
     key: 'feedExcerptChars',
@@ -50,8 +50,8 @@ export const SETTING_SPECS: readonly SettingSpec[] = [
     min: 20,
     max: 2000,
     factor: 1,
-    unit: 'Zeichen',
-    description: 'Länge des Artikelauszugs im Feed',
+    unit: 'characters',
+    description: 'Length of the article excerpt in the feed',
   },
   {
     key: 'memosDescriptionChars',
@@ -60,8 +60,8 @@ export const SETTING_SPECS: readonly SettingSpec[] = [
     min: 20,
     max: 500,
     factor: 1,
-    unit: 'Zeichen',
-    description: 'Länge der Beschreibung einer Memo-Seite',
+    unit: 'characters',
+    description: 'Length of the description of a memo page',
   },
   {
     key: 'memosTimeoutMs',
@@ -71,7 +71,7 @@ export const SETTING_SPECS: readonly SettingSpec[] = [
     max: 300_000,
     factor: 1,
     unit: 'ms',
-    description: 'Zeitlimit je Anfrage an Memos',
+    description: 'Time limit per request to Memos',
   },
   {
     key: 'memosMaxFileBytes',
@@ -81,7 +81,7 @@ export const SETTING_SPECS: readonly SettingSpec[] = [
     max: 500,
     factor: MB,
     unit: 'MB',
-    description: 'Höchstgröße je gespiegelter Memo-Datei',
+    description: 'Maximum size per mirrored memo file',
   },
 ];
 
@@ -92,41 +92,45 @@ export class ConfigError extends Error {
   }
 }
 
-function standard(): Settings {
+function defaults(): Settings {
   const s: Record<string, number> = {};
   for (const spec of SETTING_SPECS) s[spec.key] = spec.default * spec.factor;
   return s as unknown as Settings;
 }
 
-export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze(standard());
+export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze(defaults());
 
 /**
- * Liest und prüft alle Einstellungen. Eine leere Variable gilt als nicht
- * gesetzt (Compose liefert sie so, wenn `${VAR:-}` leer bleibt). Nur
- * Ganzzahlen ohne Vorzeichen sind erlaubt. Alle Fehler werden gesammelt.
+ * Reads and validates all settings. An empty variable counts as unset
+ * (Compose delivers it like that when `${VAR:-}` stays empty). Only unsigned
+ * integers are allowed. All errors are collected.
  */
 export function readSettings(
   env: Record<string, string | undefined> = process.env,
 ): Settings {
-  const werte: Record<string, number> = {};
-  const fehler: string[] = [];
+  const values: Record<string, number> = {};
+  const errors: string[] = [];
   for (const spec of SETTING_SPECS) {
-    const roh = env[spec.env]?.trim();
-    if (roh === undefined || roh === '') {
-      werte[spec.key] = spec.default * spec.factor;
+    const raw = env[spec.env]?.trim();
+    if (raw === undefined || raw === '') {
+      values[spec.key] = spec.default * spec.factor;
       continue;
     }
-    const zahl = /^\d+$/.test(roh) ? Number(roh) : NaN;
-    if (!Number.isSafeInteger(zahl) || zahl < spec.min || zahl > spec.max) {
-      fehler.push(
-        `${spec.env}="${roh}" ist ungültig, erlaubt sind Ganzzahlen von ${spec.min} bis ${spec.max} (${spec.unit}), Standard ${spec.default}`,
+    const number = /^\d+$/.test(raw) ? Number(raw) : NaN;
+    if (
+      !Number.isSafeInteger(number) ||
+      number < spec.min ||
+      number > spec.max
+    ) {
+      errors.push(
+        `${spec.env}="${raw}" is invalid, allowed are integers from ${spec.min} to ${spec.max} (${spec.unit}), default ${spec.default}`,
       );
       continue;
     }
-    werte[spec.key] = zahl * spec.factor;
+    values[spec.key] = number * spec.factor;
   }
-  if (fehler.length > 0) {
-    throw new ConfigError(`Ungültige Einstellungen:\n- ${fehler.join('\n- ')}`);
+  if (errors.length > 0) {
+    throw new ConfigError(`Invalid settings:\n- ${errors.join('\n- ')}`);
   }
-  return werte as unknown as Settings;
+  return values as unknown as Settings;
 }

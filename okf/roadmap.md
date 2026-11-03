@@ -617,6 +617,13 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 * Split:
   * **W22a** rules: `AGENTS.md`, README, the language concept, roadmap entry.
   * **W22b** `packages/core`: identifiers, comments, test names, log messages.
+    Done. Findings: the texts that end up in the pages (memo title
+    "Memo vom ...", PDF label, embed placeholder, "[Bild fehlt]") are still
+    German. They sit in one `UI` object per file (`render.ts`, `memos.ts`) and
+    move to the message catalog in W23. CSS classes in the generated HTML are
+    English now (`image-missing`, `memo-attachments`, `attachment`). The
+    fallback file name of `safeFileName` is `file`. The route `/seite/N/` stays
+    until W22c.
   * **W22c** `apps/site`, E2E tests, workflow, scripts, UI strings collected
     in one place (still German).
   * **W22d** the OKF bundle (about 16,000 words), file by file.

@@ -1,6 +1,6 @@
 import { DEFAULT_SETTINGS } from './config.ts';
 
-const BENANNT: Record<string, string> = {
+const NAMED: Record<string, string> = {
   lt: '<',
   gt: '>',
   quot: '"',
@@ -9,29 +9,28 @@ const BENANNT: Record<string, string> = {
   amp: '&',
 };
 
-function entitaeten(text: string): string {
+function decodeEntities(text: string): string {
   return text.replace(
     /&(?:#x([0-9a-f]+)|#(\d+)|([a-z]+));/gi,
-    (treffer, hex?: string, dez?: string, name?: string) => {
-      if (name) return BENANNT[name.toLowerCase()] ?? treffer;
-      const code = hex ? parseInt(hex, 16) : parseInt(dez ?? '', 10);
-      if (!Number.isInteger(code) || code < 32 || code > 0x10ffff)
-        return treffer;
+    (match, hex?: string, dec?: string, name?: string) => {
+      if (name) return NAMED[name.toLowerCase()] ?? match;
+      const code = hex ? parseInt(hex, 16) : parseInt(dec ?? '', 10);
+      if (!Number.isInteger(code) || code < 32 || code > 0x10ffff) return match;
       return String.fromCodePoint(code);
     },
   );
 }
 
 /**
- * Klartext-Auszug aus bereinigtem HTML: ohne Tags, Skripte, Stile und
- * Code-Blöcke, Leerraum zusammengefasst, höchstens `max` Zeichen
- * (an einer Wortgrenze gekürzt, mit "…").
+ * Plain-text excerpt from sanitized HTML: without tags, scripts, styles and
+ * code blocks, whitespace collapsed, at most `max` characters
+ * (cut at a word boundary, with "…").
  */
 export function plainExcerpt(
   html: string,
   max = DEFAULT_SETTINGS.feedExcerptChars,
 ): string {
-  const text = entitaeten(
+  const text = decodeEntities(
     html
       .replace(/<(script|style|pre)\b[\s\S]*?<\/\1\s*>/gi, ' ')
       .replace(/<[^>]*>/g, ' '),
@@ -39,8 +38,8 @@ export function plainExcerpt(
     .replace(/\s+/g, ' ')
     .trim();
   if (text.length <= max) return text;
-  const kurz = text.slice(0, max - 1);
-  const grenze = kurz.lastIndexOf(' ');
-  const ende = grenze > 0 ? kurz.slice(0, grenze) : kurz;
-  return `${ende.trimEnd()}…`;
+  const short = text.slice(0, max - 1);
+  const boundary = short.lastIndexOf(' ');
+  const end = boundary > 0 ? short.slice(0, boundary) : short;
+  return `${end.trimEnd()}…`;
 }
