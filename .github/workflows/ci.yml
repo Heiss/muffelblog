@@ -5,6 +5,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # The release workflow runs the whole suite again before it builds images.
+  workflow_call:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}

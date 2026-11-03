@@ -35,6 +35,22 @@ generated: { by: claude-code/web, at: 2026-11-02T13:40:00Z }
   author's own, not yet merged feature branches (see
   [Languages](/ops/language.md)).
 
+# Implemented: release workflow (2026-11-03)
+
+* **[E]** `.github/workflows/release.yml` starts on a tag `YY.M.MICRO`. It calls
+  the whole CI (`ci.yml` as a reusable workflow) on the tagged commit, and only
+  if that is green builds the `builder` image for `linux/amd64` and
+  `linux/arm64` and pushes it to GHCR as
+  `ghcr.io/<owner>/muffelblog-builder:<tag>` and `:latest`, then creates the
+  GitHub release with generated notes. Caddy, Remark42 and Mailpit are
+  upstream images; there is no own web image.
+* **[E]** O10 (registry): GHCR, decided by the user on 2026-11-03.
+* **[E]** A tag that is not CalVer fails the workflow before anything is built.
+  "Run workflow" by hand does a dry run: same build, nothing is pushed.
+* **[U]** New GHCR packages are private by default. To pull without a login the
+  user sets the package to public (package settings on GitHub), or logs in with
+  a token that has `read:packages`.
+
 # Proposals
 
 * **[V]** Branch names: `feature/wNN-<short name>`.
