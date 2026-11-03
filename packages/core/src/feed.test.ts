@@ -38,7 +38,7 @@ function memo(teil: Partial<MemoEntry> & { uid: string }): MemoEntry {
 }
 
 describe('buildFeed', () => {
-  it('mischt Artikel und Memos, neueste zuerst', () => {
+  it('mixes articles and memos, newest first', () => {
     const feed = buildFeed(
       [
         artikel({ slug: 'alt', date: new Date('2026-01-01T00:00:00Z') }),
@@ -49,7 +49,7 @@ describe('buildFeed', () => {
     expect(feed.map((e) => e.id)).toEqual(['post:neu', 'memo:m1', 'post:alt']);
   });
 
-  it('vergibt URLs mit Schrägstrich am Ende', () => {
+  it('assigns URLs with a trailing slash', () => {
     const [post, mem] = buildFeed(
       [artikel({ slug: 'a', date: new Date('2026-02-01T00:00:00Z') })],
       [memo({ uid: 'u', date: new Date('2026-01-01T00:00:00Z') })],
@@ -58,7 +58,7 @@ describe('buildFeed', () => {
     expect(mem?.url).toBe('/m/u/');
   });
 
-  it('ordnet bei gleichem Zeitpunkt stabil nach Kennung', () => {
+  it('orders stably by identifier at the same instant', () => {
     const d = new Date('2026-01-01T00:00:00Z');
     const a = buildFeed(
       [artikel({ slug: 'b', date: d }), artikel({ slug: 'a', date: d })],
@@ -72,7 +72,7 @@ describe('buildFeed', () => {
     expect(b.map((e) => e.id)).toEqual(['memo:x', 'post:a']);
   });
 
-  it('nimmt als Auszug die Beschreibung, sonst den Textanfang', () => {
+  it('uses the description as the excerpt, otherwise the start of the text', () => {
     const [mit, ohne] = buildFeed(
       [
         artikel({
@@ -88,17 +88,17 @@ describe('buildFeed', () => {
     expect(ohne?.excerpt).toBe('Titel Los geht es');
   });
 
-  it('kürzt den Textanfang auf die eingestellte Länge', () => {
-    const [eintrag] = buildFeed(
+  it('cuts the start of the text to the configured length', () => {
+    const [entry] = buildFeed(
       [artikel({ slug: 'a', html: `<p>${'wort '.repeat(50)}</p>` })],
       [],
       { excerptChars: 30 },
     );
-    expect(eintrag?.excerpt.length).toBeLessThanOrEqual(30);
-    expect(eintrag?.excerpt.endsWith('…')).toBe(true);
+    expect(entry?.excerpt.length).toBeLessThanOrEqual(30);
+    expect(entry?.excerpt.endsWith('…')).toBe(true);
   });
 
-  it('zeigt Memos vollständig und Artikel nur mit Auszug', () => {
+  it('shows memos in full and articles only with an excerpt', () => {
     const feed = buildFeed([artikel({ slug: 'a' })], [memo({ uid: 'u' })]);
     const m = feed.find((e) => e.kind === 'memo');
     const p = feed.find((e) => e.kind === 'post');
@@ -106,7 +106,7 @@ describe('buildFeed', () => {
     expect(p?.html).toBeUndefined();
   });
 
-  it('verändert die Eingaben nicht', () => {
+  it('does not change the inputs', () => {
     const arts = [
       artikel({ slug: 'b', date: new Date('2026-01-01T00:00:00Z') }),
       artikel({ slug: 'a', date: new Date('2026-02-01T00:00:00Z') }),
@@ -117,7 +117,7 @@ describe('buildFeed', () => {
 });
 
 describe('filterKind', () => {
-  it('filtert nach Art', () => {
+  it('filters by kind', () => {
     const feed = buildFeed([artikel({ slug: 'a' })], [memo({ uid: 'u' })]);
     expect(filterKind(feed, 'memo').map((e) => e.id)).toEqual(['memo:u']);
     expect(filterKind(feed, 'post').map((e) => e.id)).toEqual(['post:a']);
@@ -125,7 +125,7 @@ describe('filterKind', () => {
 });
 
 describe('pagePath', () => {
-  it('Seite 1 liegt an der Basis, weitere unter /seite/N/', () => {
+  it('page 1 lives at the base, further pages under /seite/N/', () => {
     expect(pagePath('/', 1)).toBe('/');
     expect(pagePath('/', 2)).toBe('/seite/2/');
     expect(pagePath('/tag/x/', 1)).toBe('/tag/x/');
@@ -134,50 +134,50 @@ describe('pagePath', () => {
 });
 
 describe('paginate', () => {
-  const liste = Array.from({ length: 45 }, (_, i) => i);
+  const list = Array.from({ length: 45 }, (_, i) => i);
 
-  it('Blockgröße ist 20', () => {
+  it('block size is 20', () => {
     expect(DEFAULT_SETTINGS.feedPageSize).toBe(20);
   });
 
-  it('teilt in Blöcke und verlinkt vor und zurück', () => {
-    const erste = paginate(liste, 1, '/');
+  it('splits into blocks and links back and forth', () => {
+    const erste = paginate(list, 1, '/');
     expect(erste.items).toHaveLength(20);
     expect(erste.pages).toBe(3);
     expect(erste.prev).toBeNull();
     expect(erste.next).toBe('/seite/2/');
 
-    const mitte = paginate(liste, 2, '/');
+    const mitte = paginate(list, 2, '/');
     expect(mitte.items[0]).toBe(20);
     expect(mitte.prev).toBe('/');
     expect(mitte.next).toBe('/seite/3/');
 
-    const letzte = paginate(liste, 3, '/');
+    const letzte = paginate(list, 3, '/');
     expect(letzte.items).toHaveLength(5);
     expect(letzte.next).toBeNull();
     expect(letzte.prev).toBe('/seite/2/');
   });
 
-  it('liefert für eine leere Liste genau eine leere Seite', () => {
+  it('returns exactly one empty page for an empty list', () => {
     const leer = paginate([], 1, '/');
     expect(leer.pages).toBe(1);
     expect(leer.items).toEqual([]);
     expect(leer.next).toBeNull();
   });
 
-  it('wirft bei ungültiger Seite', () => {
-    expect(() => paginate(liste, 0, '/')).toThrow();
-    expect(() => paginate(liste, 4, '/')).toThrow();
-    expect(() => paginate(liste, 1.5, '/')).toThrow();
+  it('throws for an invalid page', () => {
+    expect(() => paginate(list, 0, '/')).toThrow();
+    expect(() => paginate(list, 4, '/')).toThrow();
+    expect(() => paginate(list, 1.5, '/')).toThrow();
   });
 
-  it('genau 20 Einträge ergeben eine Seite', () => {
-    expect(paginate(liste.slice(0, 20), 1, '/').pages).toBe(1);
+  it('exactly 20 entries make one page', () => {
+    expect(paginate(list.slice(0, 20), 1, '/').pages).toBe(1);
   });
 });
 
 describe('groupByTag', () => {
-  it('gruppiert nach URL-Form, neueste zuerst, Tags alphabetisch', () => {
+  it('groups by URL form, newest first, tags alphabetical', () => {
     const feed = buildFeed(
       [
         artikel({
@@ -199,7 +199,7 @@ describe('groupByTag', () => {
     expect(gruppen[0]?.count).toBe(2);
   });
 
-  it('führt Tags mit gleicher URL-Form zusammen und meldet die Namen', () => {
+  it('merges tags with the same URL form and reports the names', () => {
     const feed = buildFeed(
       [
         artikel({ slug: 'a', tags: ['a/b'] }),
@@ -214,13 +214,13 @@ describe('groupByTag', () => {
     expect(gruppen[0]?.items).toHaveLength(2);
   });
 
-  it('zählt einen Eintrag nicht doppelt, wenn zwei Tags zusammenfallen', () => {
+  it('does not count an entry twice if two tags collapse', () => {
     const feed = buildFeed([artikel({ slug: 'a', tags: ['a/b', 'a-b'] })], []);
     const gruppen = groupByTag(feed);
     expect(gruppen[0]?.items).toHaveLength(1);
   });
 
-  it('verwirft Tags ohne brauchbare URL-Form', () => {
+  it('drops tags without a usable URL form', () => {
     const feed = buildFeed([artikel({ slug: 'a', tags: ['???'] })], []);
     expect(groupByTag(feed)).toEqual([]);
   });

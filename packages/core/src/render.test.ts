@@ -13,14 +13,14 @@ const bild: ImageResolveResult = {
 
 function optionen(
   pfad = 'a.md',
-  aufgerufen: string[] = [],
-  antwort: (p: string) => ImageResolveResult = () => bild,
+  called: string[] = [],
+  response: (p: string) => ImageResolveResult = () => bild,
 ) {
   return {
     articlePath: pfad,
     resolveImage: async (p: string) => {
-      aufgerufen.push(p);
-      return antwort(p);
+      called.push(p);
+      return response(p);
     },
   };
 }
@@ -28,7 +28,7 @@ function optionen(
 const render = (md: string, opt = optionen()) => renderMarkdown(md, opt);
 
 describe('Markdown', () => {
-  it('rendert Absätze, Hervorhebungen und Listen', async () => {
+  it('renders paragraphs, emphasis and lists', async () => {
     const { html } = await render(
       'Ein **fetter** und *kursiver* Text.\n\n- eins\n- zwei\n',
     );
@@ -37,7 +37,7 @@ describe('Markdown', () => {
     expect(html).toContain('<li>zwei</li>');
   });
 
-  it('rendert GFM: Tabellen, Durchgestrichenes und Aufgaben', async () => {
+  it('renders GFM: tables, strikethrough and tasks', async () => {
     const md =
       '| a | b |\n|---|---|\n| 1 | 2 |\n\n~~weg~~\n\n- [x] fertig\n- [ ] offen\n';
     const { html } = await render(md);
@@ -46,14 +46,14 @@ describe('Markdown', () => {
     expect(html).toContain('type="checkbox"');
   });
 
-  it('behält Code-Blöcke mit Sprachangabe und färbt sie über Klassen', async () => {
+  it('keeps code blocks with a language and colors them through classes', async () => {
     const { html } = await render('```ts\nconst x = 1;\n```\n');
     expect(html).toContain('<pre><code class="language-ts');
     expect(html).toContain('<span class="hljs-keyword">const</span>');
     expect(html).toContain('<span class="hljs-number">1</span>');
   });
 
-  it('lässt Code ohne oder mit unbekannter Sprache unverändert', async () => {
+  it('leaves code without a language or with an unknown one unchanged', async () => {
     const ohne = await render('```\nconst x = 1;\n```\n');
     expect(ohne.html).toContain('<pre><code>const x = 1;\n</code></pre>');
     const fremd = await render('```gibtsnicht\nconst x = 1;\n```\n');
@@ -61,19 +61,19 @@ describe('Markdown', () => {
     expect(fremd.html).toContain('const x = 1;');
   });
 
-  it('maskiert HTML im gefärbten Code und übernimmt keine eigenen Klassen', async () => {
+  it('escapes HTML in colored code and does not take over own classes', async () => {
     const md =
-      '```html\n<script>alert(1)</script>\n```\n\n<span class="hljs-keyword" style="color:red" onclick="x()">roh</span>\n';
+      '```html\n<script>alert(1)</script>\n```\n\n<span class="hljs-keyword" style="color:red" onclick="x()">raw</span>\n';
     const { html } = await render(md);
     expect(html).not.toMatch(/<script/i);
     expect(html).toContain('&#x3C;');
     expect(html).not.toContain('onclick');
     expect(html).not.toContain('style=');
-    // Die rohe Klasse aus dem Text bleibt nicht stehen, nur die aus dem Färben.
-    expect(html).not.toContain('<span class="hljs-keyword">roh</span>');
+    // The raw class from the text does not stay, only the one from the coloring.
+    expect(html).not.toContain('<span class="hljs-keyword">raw</span>');
   });
 
-  it('färbt auch im strengen Memos-Modus', async () => {
+  it('also colors in the strict memos mode', async () => {
     const { html } = await renderMarkdown('```js\nlet a;\n```', {
       ...optionen(),
       remoteContent: 'none',
@@ -81,7 +81,7 @@ describe('Markdown', () => {
     expect(html).toContain('hljs-keyword');
   });
 
-  it('schiebt Überschriften eine Ebene nach unten, weil die Seite das h1 trägt', async () => {
+  it('moves headings down one level because the page carries the h1', async () => {
     const { html } = await render('# Eins\n\n## Zwei\n\n###### Sechs\n');
     expect(html).toContain('<h2>Eins</h2>');
     expect(html).toContain('<h3>Zwei</h3>');
@@ -90,8 +90,8 @@ describe('Markdown', () => {
   });
 });
 
-describe('Bereinigung', () => {
-  it('entfernt Skripte', async () => {
+describe('Sanitizing', () => {
+  it('removes scripts', async () => {
     const { html } = await render(
       'Text\n\n<script>window.pwned = 1</script>\n',
     );
@@ -99,7 +99,7 @@ describe('Bereinigung', () => {
     expect(html).not.toContain('pwned');
   });
 
-  it('entfernt Ereignis-Attribute', async () => {
+  it('removes event attributes', async () => {
     const { html } = await render(
       '<img src="x" onerror="alert(1)">\n\n<p onclick="alert(1)">Hallo</p>\n',
     );
@@ -108,14 +108,14 @@ describe('Bereinigung', () => {
     expect(html).toContain('Hallo');
   });
 
-  it('entfernt gefährliche Verweise', async () => {
+  it('removes dangerous links', async () => {
     const { html } = await render(
       '[a](javascript:alert(1)) und [b](data:text/html;base64,AAAA) und [c](vbscript:x)\n',
     );
     expect(html).not.toMatch(/href="(javascript|data|vbscript):/i);
   });
 
-  it('entfernt Formulare, Stile, SVG, Objekte und Einbettungen anderer Art', async () => {
+  it('removes forms, styles, SVG, objects and other kinds of embeds', async () => {
     const md = [
       '<form action="https://evil.example"><input name="x"></form>',
       '<style>body{display:none}</style>',
@@ -139,7 +139,7 @@ describe('Bereinigung', () => {
     }
   });
 
-  it('lässt harmloses HTML stehen', async () => {
+  it('keeps harmless HTML', async () => {
     const { html } = await render(
       'Text mit <b>fett</b> und <kbd>Strg</kbd>.\n',
     );
@@ -147,26 +147,26 @@ describe('Bereinigung', () => {
     expect(html).toContain('<kbd>Strg</kbd>');
   });
 
-  it('entfernt HTML-Kommentare', async () => {
+  it('removes HTML comments', async () => {
     const { html } = await render('Text <!-- geheim --> Ende\n');
     expect(html).not.toContain('geheim');
   });
 
-  it('versieht externe Links mit noopener und noreferrer', async () => {
+  it('gives external links noopener and noreferrer', async () => {
     const { html } = await render('[Seite](https://example.org/a)\n');
     expect(html).toContain('href="https://example.org/a"');
     expect(html).toContain('rel="noopener noreferrer"');
   });
 
-  it('lässt interne Links ohne rel', async () => {
+  it('leaves internal links without rel', async () => {
     const { html } = await render('[Start](/)\n');
     expect(html).toContain('href="/"');
     expect(html).not.toContain('rel=');
   });
 });
 
-describe('Remote-Bilder', () => {
-  it('behält Bilder freigegebener Hosts und lädt sie verzögert ohne Referrer', async () => {
+describe('Remote images', () => {
+  it('keeps images from allowed hosts and loads them lazily without referrer', async () => {
     const { html, warnings } = await render(
       '![Alt](https://upload.wikimedia.org/a/b.jpg)\n',
     );
@@ -177,7 +177,7 @@ describe('Remote-Bilder', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('entfernt Bilder anderer Hosts mit Warnung und behält den Alt-Text', async () => {
+  it('removes images from other hosts with a warning and keeps the alt text', async () => {
     const { html, warnings } = await render(
       '![Tracker](https://tracker.example/pixel.png)\n',
     );
@@ -188,7 +188,7 @@ describe('Remote-Bilder', () => {
     expect(warnings[0]).toContain('tracker.example');
   });
 
-  it('entfernt Bilder mit data-Adresse und unverschlüsseltes http', async () => {
+  it('removes images with a data address and plain http', async () => {
     const { html, warnings } = await render(
       '![a](data:image/png;base64,AAAA)\n\n![b](http://upload.wikimedia.org/x.png)\n',
     );
@@ -197,10 +197,10 @@ describe('Remote-Bilder', () => {
   });
 });
 
-describe('Einbettungen', () => {
+describe('Embeds', () => {
   const yt = 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ';
 
-  it('ersetzt ein erlaubtes iframe durch einen Platzhalter ohne Fremdaufruf', async () => {
+  it('replaces an allowed iframe with a placeholder without a foreign request', async () => {
     const { html, warnings } = await render(
       `<iframe src="${yt}" width="560" height="315" allow="autoplay"></iframe>\n`,
     );
@@ -214,7 +214,7 @@ describe('Einbettungen', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('entfernt iframes anderer Hosts mit Warnung', async () => {
+  it('removes iframes from other hosts with a warning', async () => {
     const { html, warnings } = await render(
       '<iframe src="https://evil.example/x"></iframe>\n',
     );
@@ -223,7 +223,7 @@ describe('Einbettungen', () => {
     expect(warnings.length).toBe(1);
   });
 
-  it('entfernt iframes ohne src und ähnlich aussehende Hosts', async () => {
+  it('removes iframes without src and look-alike hosts', async () => {
     const md =
       '<iframe></iframe>\n\n<iframe src="https://www.youtube-nocookie.com.evil.example/embed/dQw4w9WgXcQ"></iframe>\n';
     const { html, warnings } = await render(md);
@@ -232,7 +232,7 @@ describe('Einbettungen', () => {
     expect(warnings.length).toBe(2);
   });
 
-  it('übernimmt keine Attribute des Autors in den Platzhalter', async () => {
+  it('does not take over attributes of the author into the placeholder', async () => {
     const { html } = await render(
       `<iframe src="${yt}" onload="alert(1)" style="x" sandbox="" srcdoc="<script>1</script>"></iframe>\n`,
     );
@@ -242,14 +242,14 @@ describe('Einbettungen', () => {
   });
 });
 
-describe('Lokale Bilder', () => {
-  it('löst relative Pfade zum Artikel auf und schreibt srcset und Maße', async () => {
-    const aufgerufen: string[] = [];
+describe('Local images', () => {
+  it('resolves paths relative to the article and writes srcset and dimensions', async () => {
+    const called: string[] = [];
     const { html, warnings } = await render(
       '![Foto](bilder/foto.png)\n',
-      optionen('ordner/artikel.md', aufgerufen),
+      optionen('ordner/artikel.md', called),
     );
-    expect(aufgerufen).toEqual(['ordner/bilder/foto.png']);
+    expect(called).toEqual(['ordner/bilder/foto.png']);
     expect(html).toContain('src="/media/abc-960.webp"');
     expect(html).toContain(
       'srcset="/media/abc-480.webp 480w, /media/abc-960.webp 960w"',
@@ -261,79 +261,79 @@ describe('Lokale Bilder', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('versteht ./, ../ und kodierte Leerzeichen', async () => {
-    const aufgerufen: string[] = [];
+  it('understands ./, ../ and encoded spaces', async () => {
+    const called: string[] = [];
     await render(
       '![a](./bild%20eins.png)\n\n![b](../anhang/bild.png)\n',
-      optionen('x/y/artikel.md', aufgerufen),
+      optionen('x/y/artikel.md', called),
     );
-    expect(aufgerufen).toEqual(['x/y/bild eins.png', 'x/anhang/bild.png']);
+    expect(called).toEqual(['x/y/bild eins.png', 'x/anhang/bild.png']);
   });
 
-  it('probiert bei nicht gefundenem Pfad den Pfad ab Ordnerwurzel (Obsidian)', async () => {
-    const aufgerufen: string[] = [];
-    const antwort = (p: string): ImageResolveResult =>
+  it('tries the path from the folder root if the path is not found (Obsidian)', async () => {
+    const called: string[] = [];
+    const response = (p: string): ImageResolveResult =>
       p === 'bilder/foto.png'
         ? bild
-        : { ok: false, code: 'not-found', reason: 'nicht gefunden' };
+        : { ok: false, code: 'not-found', reason: 'not found' };
     const { html, warnings } = await render(
       '![Foto](bilder/foto.png)\n',
-      optionen('ordner/artikel.md', aufgerufen, antwort),
+      optionen('ordner/artikel.md', called, response),
     );
-    expect(aufgerufen).toEqual(['ordner/bilder/foto.png', 'bilder/foto.png']);
+    expect(called).toEqual(['ordner/bilder/foto.png', 'bilder/foto.png']);
     expect(html).toContain('src="/media/abc-960.webp"');
     expect(warnings).toEqual([]);
   });
 
-  it('weist Pfade aus dem Ordner heraus ab, ohne den Auflöser aufzurufen', async () => {
-    const aufgerufen: string[] = [];
+  it('rejects paths out of the folder without calling the resolver', async () => {
+    const called: string[] = [];
     const { html, warnings } = await render(
       '![a](../../../etc/passwd)\n\n![b](/etc/passwd)\n\n![c](..%2F..%2Fgeheim.png)\n\n![d](.obsidian/x.png)\n',
-      optionen('artikel.md', aufgerufen),
+      optionen('artikel.md', called),
     );
-    expect(aufgerufen).toEqual([]);
+    expect(called).toEqual([]);
     expect(html).not.toContain('<img');
     expect(warnings.length).toBe(4);
   });
 
-  it('warnt bei fehlendem Bild, bricht aber nicht ab und zeigt den Alt-Text', async () => {
-    const antwort = (): ImageResolveResult => ({
+  it('warns about a missing image but does not abort and shows the alt text', async () => {
+    const response = (): ImageResolveResult => ({
       ok: false,
       code: 'not-found',
-      reason: 'nicht gefunden',
+      reason: 'not found',
     });
     const { html, warnings } = await render(
       'Vorher ![Fehlt](weg.png) nachher\n',
-      optionen('a.md', [], antwort),
+      optionen('a.md', [], response),
     );
     expect(html).toContain('Vorher');
     expect(html).toContain('nachher');
-    expect(html).toContain('class="bild-fehlt"');
+    expect(html).toContain('class="image-missing"');
     expect(html).toContain('Fehlt');
     expect(html).not.toContain('<img');
     expect(warnings.length).toBe(1);
     expect(warnings[0]).toContain('weg.png');
   });
 
-  it('meldet nicht unterstützte Bildtypen', async () => {
-    const antwort = (): ImageResolveResult => ({
+  it('reports unsupported image types', async () => {
+    const response = (): ImageResolveResult => ({
       ok: false,
       code: 'unsupported',
-      reason: 'SVG wird nicht unterstützt',
+      reason: 'SVG is not supported',
     });
     const { html, warnings } = await render(
       '![Logo](logo.svg)\n',
-      optionen('a.md', [], antwort),
+      optionen('a.md', [], response),
     );
     expect(html).not.toContain('<img');
     expect(warnings[0]).toContain('SVG');
   });
 });
 
-describe('Strenger Modus (remoteContent: none), zum Beispiel für Memos', () => {
+describe('Strict mode (remoteContent: none), for example for memos', () => {
   const streng = { ...optionen(), remoteContent: 'none' as const };
 
-  it('entfernt auch Bilder freigegebener Hosts', async () => {
+  it('also removes images from allowed hosts', async () => {
     const { html, warnings } = await renderMarkdown(
       '![Alt](https://upload.wikimedia.org/a/b.jpg)\n',
       streng,
@@ -344,7 +344,7 @@ describe('Strenger Modus (remoteContent: none), zum Beispiel für Memos', () => 
     expect(warnings.length).toBe(1);
   });
 
-  it('entfernt auch erlaubte Einbettungen', async () => {
+  it('also removes allowed embeds', async () => {
     const { html, warnings } = await renderMarkdown(
       '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"></iframe>\n',
       streng,
@@ -354,7 +354,7 @@ describe('Strenger Modus (remoteContent: none), zum Beispiel für Memos', () => 
     expect(warnings.length).toBe(1);
   });
 
-  it('behält lokale Aufrufe über den Auflöser bei, wenn er sie liefert', async () => {
+  it('keeps local calls through the resolver if it delivers them', async () => {
     const { html } = await renderMarkdown('![Foto](bild.png)\n', streng);
     expect(html).toContain('src="/media/abc-960.webp"');
   });

@@ -30,13 +30,13 @@ export type ImageResolveResult =
     };
 
 export interface RenderOptions {
-  /** Pfad des Artikels relativ zum Inhaltsordner, mit `/` als Trenner. */
+  /** Path of the article relative to the content folder, with `/` as the separator. */
   articlePath: string;
-  /** Löst ein Bild (Pfad relativ zum Inhaltsordner) auf und liefert die Varianten. */
+  /** Resolves an image (path relative to the content folder) and returns the variants. */
   resolveImage: (rootRelativePath: string) => Promise<ImageResolveResult>;
   /**
-   * `allowlist` (Standard): Remote-Bilder und Einbettungen der Freigabelisten bleiben.
-   * `none`: Fremdinhalte werden immer entfernt, zum Beispiel bei Memos.
+   * `allowlist` (default): remote images and embeds of the allowlists stay.
+   * `none`: foreign content is always removed, for example for memos.
    */
   remoteContent?: 'allowlist' | 'none';
 }
@@ -48,7 +48,7 @@ export interface RenderResult {
 
 const lowlight = createLowlight(common);
 
-const BILD_GROESSEN = '(min-width: 760px) 720px, 100vw';
+const IMAGE_SIZES = '(min-width: 760px) 720px, 100vw';
 
 const schema: SanitizeOptions = {
   ...defaultSchema,
@@ -56,13 +56,13 @@ const schema: SanitizeOptions = {
   strip: ['script', 'style', 'noscript', 'template', 'title'],
   attributes: {
     ...defaultSchema.attributes,
-    // Nur die Adresse; der Platzhalter-Baustein prüft sie gegen die Richtlinie.
+    // Only the address; the placeholder step checks it against the policy.
     iframe: ['src'],
   },
 };
 
-function text(wert: string): Text {
-  return { type: 'text', value: wert };
+function text(value: string): Text {
+  return { type: 'text', value };
 }
 
 function element(
@@ -73,188 +73,193 @@ function element(
   return { type: 'element', tagName, properties, children };
 }
 
-function hostVon(wert: string): string {
+function hostOf(value: string): string {
   try {
-    return new URL(wert).hostname;
+    return new URL(value).hostname;
   } catch {
-    return wert;
+    return value;
   }
 }
 
-type PfadErgebnis =
-  { ok: true; kandidaten: string[] } | { ok: false; reason: string };
+type PathResult =
+  { ok: true; candidates: string[] } | { ok: false; reason: string };
 
-function pruefePfad(pfad: string): string | null {
-  const normal = path.posix.normalize(pfad);
+function checkPath(pathValue: string): string | null {
+  const normal = path.posix.normalize(pathValue);
   if (normal === '..' || normal.startsWith('../') || normal === '.')
-    return 'liegt außerhalb des Inhaltsordners';
-  if (normal.split('/').some((teil) => teil.startsWith('.')))
-    return 'liegt in einem versteckten Pfad';
+    return 'is outside the content folder';
+  if (normal.split('/').some((part) => part.startsWith('.')))
+    return 'is in a hidden path';
   return null;
 }
 
-/** Wandelt die Bildadresse eines Artikels in Pfade relativ zum Inhaltsordner um. */
-function kandidatenFuer(articlePath: string, src: string): PfadErgebnis {
+/** Turns the image address of an article into paths relative to the content folder. */
+function candidatesFor(articlePath: string, src: string): PathResult {
   let rel: string;
   try {
     rel = decodeURIComponent(src);
   } catch {
-    return { ok: false, reason: 'ungültig kodierter Pfad' };
+    return { ok: false, reason: 'invalid path encoding' };
   }
   if (rel.includes('\0') || rel.includes('\\'))
-    return { ok: false, reason: 'ungültiger Pfad' };
+    return { ok: false, reason: 'invalid path' };
   if (rel.startsWith('/'))
-    return { ok: false, reason: 'absolute Pfade sind nicht erlaubt' };
+    return { ok: false, reason: 'absolute paths are not allowed' };
   if (rel.includes('?') || rel.includes('#'))
-    return { ok: false, reason: 'Parameter im Pfad sind nicht erlaubt' };
+    return { ok: false, reason: 'parameters in the path are not allowed' };
 
-  const basis = path.posix.dirname(articlePath);
-  const relativZumArtikel = path.posix.normalize(path.posix.join(basis, rel));
-  const fehler = pruefePfad(relativZumArtikel);
-  if (fehler !== null) return { ok: false, reason: fehler };
+  const base = path.posix.dirname(articlePath);
+  const relativeToArticle = path.posix.normalize(path.posix.join(base, rel));
+  const error = checkPath(relativeToArticle);
+  if (error !== null) return { ok: false, reason: error };
 
-  const kandidaten = [relativZumArtikel];
-  // Obsidian kann Pfade auch ab der Ordnerwurzel schreiben.
-  if (basis !== '.' && !rel.startsWith('./') && !rel.startsWith('../')) {
-    const abWurzel = path.posix.normalize(rel);
-    if (pruefePfad(abWurzel) === null && abWurzel !== relativZumArtikel)
-      kandidaten.push(abWurzel);
+  const candidates = [relativeToArticle];
+  // Obsidian can also write paths starting at the folder root.
+  if (base !== '.' && !rel.startsWith('./') && !rel.startsWith('../')) {
+    const fromRoot = path.posix.normalize(rel);
+    if (checkPath(fromRoot) === null && fromRoot !== relativeToArticle)
+      candidates.push(fromRoot);
   }
-  return { ok: true, kandidaten };
+  return { ok: true, candidates };
 }
 
-function ersetze(
-  eltern: Element | Root,
-  alt: ElementContent,
-  neu: ElementContent[],
+function replaceNode(
+  parent: Element | Root,
+  old: ElementContent,
+  replacement: ElementContent[],
 ): void {
-  eltern.children = eltern.children.flatMap((kind) =>
-    kind === alt ? neu : [kind],
-  ) as typeof eltern.children;
+  parent.children = parent.children.flatMap((child) =>
+    child === old ? replacement : [child],
+  ) as typeof parent.children;
 }
 
-function bildAlsText(alt: string): ElementContent[] {
+function imageAsText(alt: string): ElementContent[] {
   return alt === '' ? [] : [text(alt)];
 }
 
-function rehypeInhalt(options: RenderOptions, warnings: string[]) {
-  return async (baum: Root): Promise<void> => {
-    const bilder: Array<[Element, Element | Root]> = [];
-    const frames: Array<[Element, Element | Root]> = [];
-    const eingaben: Array<[Element, Element | Root]> = [];
+// Texts that end up in the rendered HTML. They are UI text and move to the
+// message catalog together with the UI language (W23).
+const UI = {
+  embedNotice: (label: string) =>
+    `Dieser Inhalt wird von ${label} geladen, sobald du ihn startest.`,
+  embedLoad: 'Inhalt laden',
+  embedOpen: (label: string) => `Auf ${label} öffnen`,
+  imageMissing: (alt: string) => `[Bild fehlt${alt === '' ? '' : `: ${alt}`}]`,
+};
 
-    visit(baum, 'element', (knoten, _index, eltern) => {
-      if (!eltern) return;
-      if (knoten.tagName === 'img')
-        bilder.push([knoten, eltern as Element | Root]);
-      else if (knoten.tagName === 'iframe')
-        frames.push([knoten, eltern as Element | Root]);
-      else if (knoten.tagName === 'input')
-        eingaben.push([knoten, eltern as Element | Root]);
-      else if (/^h[1-6]$/.test(knoten.tagName)) {
-        const ebene = Math.min(6, Number(knoten.tagName.slice(1)) + 1);
-        knoten.tagName = `h${ebene}`;
-      } else if (knoten.tagName === 'a') {
-        const href = String(knoten.properties?.href ?? '');
+function rehypeContent(options: RenderOptions, warnings: string[]) {
+  return async (tree: Root): Promise<void> => {
+    const images: Array<[Element, Element | Root]> = [];
+    const frames: Array<[Element, Element | Root]> = [];
+    const inputs: Array<[Element, Element | Root]> = [];
+
+    visit(tree, 'element', (node, _index, parent) => {
+      if (!parent) return;
+      if (node.tagName === 'img') images.push([node, parent as Element | Root]);
+      else if (node.tagName === 'iframe')
+        frames.push([node, parent as Element | Root]);
+      else if (node.tagName === 'input')
+        inputs.push([node, parent as Element | Root]);
+      else if (/^h[1-6]$/.test(node.tagName)) {
+        const level = Math.min(6, Number(node.tagName.slice(1)) + 1);
+        node.tagName = `h${level}`;
+      } else if (node.tagName === 'a') {
+        const href = String(node.properties?.href ?? '');
         if (/^https?:\/\//i.test(href))
-          knoten.properties = {
-            ...knoten.properties,
+          node.properties = {
+            ...node.properties,
             rel: ['noopener', 'noreferrer'],
           };
       }
     });
 
-    // Färbt Code mit bekannter Sprache über Klassen (`hljs-*`). Das läuft nach
-    // der Bereinigung, die Klassen stammen also nur aus dem Färben, nicht aus
-    // dem Text. Ohne Sprachangabe wird nicht geraten.
-    visit(baum, 'element', (knoten, _index, eltern) => {
-      if (knoten.tagName !== 'code' || (eltern as Element)?.tagName !== 'pre')
+    // Colors code with a known language through classes (`hljs-*`). This runs
+    // after sanitizing, so the classes come only from the coloring, never from
+    // the text. Without a language nothing is guessed.
+    visit(tree, 'element', (node, _index, parent) => {
+      if (node.tagName !== 'code' || (parent as Element)?.tagName !== 'pre')
         return;
-      const klassen = Array.isArray(knoten.properties?.className)
-        ? knoten.properties.className.map(String)
+      const classes = Array.isArray(node.properties?.className)
+        ? node.properties.className.map(String)
         : [];
-      const sprache = klassen
-        .find((k) => k.startsWith('language-'))
+      const language = classes
+        .find((c) => c.startsWith('language-'))
         ?.slice('language-'.length);
-      if (!sprache || !lowlight.registered(sprache)) return;
-      const quelle = knoten.children
-        .map((kind) => (kind.type === 'text' ? kind.value : ''))
+      if (!language || !lowlight.registered(language)) return;
+      const source = node.children
+        .map((child) => (child.type === 'text' ? child.value : ''))
         .join('');
-      const ergebnis = lowlight.highlight(sprache, quelle);
-      knoten.children = ergebnis.children as ElementContent[];
-      knoten.properties = {
-        ...knoten.properties,
-        className: [...klassen, 'hljs'],
+      const result = lowlight.highlight(language, source);
+      node.children = result.children as ElementContent[];
+      node.properties = {
+        ...node.properties,
+        className: [...classes, 'hljs'],
       };
     });
 
-    for (const [knoten, eltern] of eingaben) {
-      if (knoten.properties?.type !== 'checkbox') ersetze(eltern, knoten, []);
+    for (const [node, parent] of inputs) {
+      if (node.properties?.type !== 'checkbox') replaceNode(parent, node, []);
     }
 
-    for (const [knoten, eltern] of frames) {
-      const quelle = String(knoten.properties?.src ?? '');
-      const treffer =
-        quelle === '' || options.remoteContent === 'none'
+    for (const [node, parent] of frames) {
+      const source = String(node.properties?.src ?? '');
+      const match =
+        source === '' || options.remoteContent === 'none'
           ? null
-          : matchEmbed(quelle);
-      if (treffer === null) {
+          : matchEmbed(source);
+      if (match === null) {
         warnings.push(
-          `${options.articlePath}: Einbettung ${quelle === '' ? 'ohne Adresse' : hostVon(quelle)} ist nicht freigegeben und wird entfernt`,
+          `${options.articlePath}: embed ${source === '' ? 'without an address' : hostOf(source)} is not allowed and is removed`,
         );
-        ersetze(eltern, knoten, []);
+        replaceNode(parent, node, []);
         continue;
       }
-      const platzhalter = element(
+      const placeholder = element(
         'div',
         {
           className: ['embed'],
-          dataEmbedSrc: treffer.src,
-          dataEmbedLabel: treffer.label,
+          dataEmbedSrc: match.src,
+          dataEmbedLabel: match.label,
         },
         [
-          element('p', {}, [
-            text(
-              `Dieser Inhalt wird von ${treffer.label} geladen, sobald du ihn startest.`,
-            ),
-          ]),
+          element('p', {}, [text(UI.embedNotice(match.label))]),
           element('button', { type: 'button', className: ['embed-start'] }, [
-            text('Inhalt laden'),
+            text(UI.embedLoad),
           ]),
           element('p', {}, [
             element(
               'a',
-              { href: treffer.openUrl, rel: ['noopener', 'noreferrer'] },
-              [text(`Auf ${treffer.label} öffnen`)],
+              { href: match.openUrl, rel: ['noopener', 'noreferrer'] },
+              [text(UI.embedOpen(match.label))],
             ),
           ]),
         ],
       );
-      ersetze(eltern, knoten, [platzhalter]);
+      replaceNode(parent, node, [placeholder]);
     }
 
-    for (const [knoten, eltern] of bilder) {
-      const quelle = String(knoten.properties?.src ?? '');
-      const alt = String(knoten.properties?.alt ?? '');
+    for (const [node, parent] of images) {
+      const source = String(node.properties?.src ?? '');
+      const alt = String(node.properties?.alt ?? '');
 
-      if (quelle === '') {
+      if (source === '') {
         warnings.push(
-          `${options.articlePath}: Bild ohne gültige Adresse wird entfernt`,
+          `${options.articlePath}: image without a valid address is removed`,
         );
-        ersetze(eltern, knoten, bildAlsText(alt));
+        replaceNode(parent, node, imageAsText(alt));
         continue;
       }
 
-      if (/^[a-z][a-z0-9+.-]*:/i.test(quelle) || quelle.startsWith('//')) {
-        if (options.remoteContent === 'none' || !isAllowedImageUrl(quelle)) {
+      if (/^[a-z][a-z0-9+.-]*:/i.test(source) || source.startsWith('//')) {
+        if (options.remoteContent === 'none' || !isAllowedImageUrl(source)) {
           warnings.push(
-            `${options.articlePath}: Bild von ${hostVon(quelle)} ist nicht freigegeben und wird entfernt`,
+            `${options.articlePath}: image from ${hostOf(source)} is not allowed and is removed`,
           );
-          ersetze(eltern, knoten, bildAlsText(alt));
+          replaceNode(parent, node, imageAsText(alt));
           continue;
         }
-        knoten.properties = {
-          src: quelle,
+        node.properties = {
+          src: source,
           alt,
           loading: 'lazy',
           decoding: 'async',
@@ -263,44 +268,44 @@ function rehypeInhalt(options: RenderOptions, warnings: string[]) {
         continue;
       }
 
-      const pfade = kandidatenFuer(options.articlePath, quelle);
-      if (!pfade.ok) {
+      const paths = candidatesFor(options.articlePath, source);
+      if (!paths.ok) {
         warnings.push(
-          `${options.articlePath}: Bild "${quelle}" wird entfernt (${pfade.reason})`,
+          `${options.articlePath}: image "${source}" is removed (${paths.reason})`,
         );
-        ersetze(eltern, knoten, bildAlsText(alt));
+        replaceNode(parent, node, imageAsText(alt));
         continue;
       }
 
-      let aufgeloest: ImageResolveResult = {
+      let resolved: ImageResolveResult = {
         ok: false,
         code: 'not-found',
-        reason: 'nicht gefunden',
+        reason: 'not found',
       };
-      for (const kandidat of pfade.kandidaten) {
-        aufgeloest = await options.resolveImage(kandidat);
-        if (aufgeloest.ok || aufgeloest.code !== 'not-found') break;
+      for (const candidate of paths.candidates) {
+        resolved = await options.resolveImage(candidate);
+        if (resolved.ok || resolved.code !== 'not-found') break;
       }
 
-      if (aufgeloest.ok) {
-        const bild = aufgeloest.image;
-        knoten.properties = {
-          src: bild.src,
-          srcSet: bild.srcset,
-          sizes: BILD_GROESSEN,
-          width: bild.width,
-          height: bild.height,
+      if (resolved.ok) {
+        const image = resolved.image;
+        node.properties = {
+          src: image.src,
+          srcSet: image.srcset,
+          sizes: IMAGE_SIZES,
+          width: image.width,
+          height: image.height,
           alt,
           loading: 'lazy',
           decoding: 'async',
         };
       } else {
         warnings.push(
-          `${options.articlePath}: Bild "${quelle}" fehlt oder ist unbrauchbar (${aufgeloest.reason})`,
+          `${options.articlePath}: image "${source}" is missing or unusable (${resolved.reason})`,
         );
-        ersetze(eltern, knoten, [
-          element('span', { className: ['bild-fehlt'] }, [
-            text(`[Bild fehlt${alt === '' ? '' : `: ${alt}`}]`),
+        replaceNode(parent, node, [
+          element('span', { className: ['image-missing'] }, [
+            text(UI.imageMissing(alt)),
           ]),
         ]);
       }
@@ -309,26 +314,26 @@ function rehypeInhalt(options: RenderOptions, warnings: string[]) {
 }
 
 /**
- * Rendert Markdown zu bereinigtem HTML.
- * - Rohes HTML wird nur über eine Allowlist übernommen; Skripte, Ereignis-
- *   Attribute, gefährliche Verweise, Formulare, SVG und Objekte fallen weg.
- * - Remote-Bilder und Einbettungen nur von freigegebenen Hosts (siehe policy.ts).
- * - Lokale Bilder gehen durch `resolveImage`; Pfade außerhalb des Ordners werden abgewiesen.
- * - Überschriften rutschen eine Ebene nach unten, die Seite trägt das h1.
+ * Renders Markdown to sanitized HTML.
+ * - Raw HTML is accepted only through an allowlist; scripts, event attributes,
+ *   dangerous links, forms, SVG and objects are dropped.
+ * - Remote images and embeds only from allowed hosts (see policy.ts).
+ * - Local images go through `resolveImage`; paths outside the folder are rejected.
+ * - Headings move down one level, the page carries the h1.
  */
 export async function renderMarkdown(
   markdown: string,
   options: RenderOptions,
 ): Promise<RenderResult> {
   const warnings: string[] = [];
-  const datei = await unified()
+  const file = await unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeSanitize, schema)
-    .use(rehypeInhalt, options, warnings)
+    .use(rehypeContent, options, warnings)
     .use(rehypeStringify)
     .process(markdown);
-  return { html: String(datei), warnings };
+  return { html: String(file), warnings };
 }

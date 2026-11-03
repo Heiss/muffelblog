@@ -1,4 +1,4 @@
-const UMLAUTE: Record<string, string> = {
+const UMLAUTS: Record<string, string> = {
   ä: 'ae',
   ö: 'oe',
   ü: 'ue',
@@ -10,19 +10,19 @@ const UMLAUTE: Record<string, string> = {
 };
 
 /**
- * Macht aus einem Text eine URL-taugliche Kennung: klein, ASCII, Bindestriche.
- * Umlaute werden zu ae, oe, ue, ss; andere Akzente fallen weg.
- * Liefert null, wenn nichts Brauchbares übrig bleibt.
+ * Turns a text into a URL-safe identifier: lowercase, ASCII, hyphens.
+ * German umlauts become ae, oe, ue, ss; other accents are dropped.
+ * Returns null if nothing usable is left.
  */
 export function toSlug(input: string): string | null {
-  // NFC zuerst: macOS und manche Sync-Werkzeuge liefern zerlegte Umlaute (a + ¨).
+  // NFC first: macOS and some sync tools deliver decomposed umlauts (a + ¨).
   const composed = input.normalize('NFC');
-  const ersetzt = composed.replace(
+  const replaced = composed.replace(
     /[äöüßÄÖÜẞ]/g,
-    (zeichen) => UMLAUTE[zeichen] ?? zeichen,
+    (char) => UMLAUTS[char] ?? char,
   );
-  const ohneAkzente = ersetzt.normalize('NFKD').replace(/\p{M}+/gu, '');
-  const slug = ohneAkzente
+  const withoutAccents = replaced.normalize('NFKD').replace(/\p{M}+/gu, '');
+  const slug = withoutAccents
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -30,21 +30,21 @@ export function toSlug(input: string): string | null {
 }
 
 /**
- * Anzeigeform eines Tags: klein, ohne führendes `#`, Leerraum zusammengefasst.
- * Liefert null für leere Tags.
+ * Display form of a tag: lowercase, without a leading `#`, whitespace collapsed.
+ * Returns null for empty tags.
  */
 export function normalizeTag(tag: string): string | null {
-  const bereinigt = tag
+  const cleaned = tag
     .normalize('NFC')
     .trim()
     .replace(/^#+/, '')
     .trim()
     .replace(/\s+/g, ' ')
     .toLowerCase();
-  return bereinigt === '' ? null : bereinigt;
+  return cleaned === '' ? null : cleaned;
 }
 
-/** URL-Form eines Tags, zum Beispiel für `/tag/<tag>/`. */
+/** URL form of a tag, for example for `/tag/<tag>/`. */
 export function tagSlug(tag: string): string | null {
   return toSlug(tag);
 }

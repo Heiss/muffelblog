@@ -8,15 +8,15 @@ export type FeedKind = 'post' | 'memo';
 
 export interface FeedItem {
   kind: FeedKind;
-  /** Eindeutig über beide Arten: `post:<slug>` oder `memo:<uid>`. */
+  /** Unique across both kinds: `post:<slug>` or `memo:<uid>`. */
   id: string;
   url: string;
   title: string;
   date: Date;
   tags: string[];
-  /** Klartext: Beschreibung, sonst Textanfang. */
+  /** Plain text: description, otherwise the start of the text. */
   excerpt: string;
-  /** Nur bei Memos: vollständiges, bereinigtes HTML. */
+  /** Memos only: complete, sanitized HTML. */
   html?: string;
 }
 
@@ -58,7 +58,7 @@ export function filterKind(items: FeedItem[], kind: FeedKind): FeedItem[] {
   return items.filter((e) => e.kind === kind);
 }
 
-/** Pfad einer Seite: Seite 1 liegt an der Basis, weitere unter `<basis>seite/N/`. */
+/** Path of a page: page 1 lives at the base, further pages under `<base>seite/N/`. */
 export function pagePath(base: string, page: number): string {
   return page === 1 ? base : `${base}seite/${page}/`;
 }
@@ -79,7 +79,7 @@ export function paginate<T>(
 ): Page<T> {
   const pages = Math.max(1, Math.ceil(items.length / size));
   if (!Number.isInteger(page) || page < 1 || page > pages) {
-    throw new RangeError(`Seite ${page} existiert nicht (1 bis ${pages})`);
+    throw new RangeError(`Page ${page} does not exist (1 to ${pages})`);
   }
   return {
     items: items.slice((page - 1) * size, page * size),
@@ -91,15 +91,15 @@ export function paginate<T>(
 }
 
 export interface TagGroup {
-  /** URL-Form, Teil von `/tag/<slug>/`. */
+  /** URL form, part of `/tag/<slug>/`. */
   slug: string;
-  /** Alle Schreibweisen, die auf diese URL-Form fallen, sortiert. */
+  /** All spellings that map to this URL form, sorted. */
   names: string[];
   count: number;
   items: FeedItem[];
 }
 
-/** Gruppiert nach URL-Form des Tags. Reihenfolge der Einträge bleibt erhalten. */
+/** Groups by the URL form of the tag. The order of the entries is kept. */
 export function groupByTag(feed: FeedItem[]): TagGroup[] {
   const gruppen = new Map<string, { names: Set<string>; items: FeedItem[] }>();
   for (const eintrag of feed) {

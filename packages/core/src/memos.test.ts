@@ -12,7 +12,7 @@ import {
 
 const BASE = 'http://memos.test:5230';
 
-function antwort(body: unknown, init: ResponseInit = {}): Response {
+function response(body: unknown, init: ResponseInit = {}): Response {
   return new Response(typeof body === 'string' ? body : JSON.stringify(body), {
     status: 200,
     headers: { 'content-type': 'application/json' },
@@ -20,7 +20,7 @@ function antwort(body: unknown, init: ResponseInit = {}): Response {
   });
 }
 
-const rohMemo = (uid: string, extra: Partial<MemoRaw> = {}): MemoRaw => ({
+const rawMemo = (uid: string, extra: Partial<MemoRaw> = {}): MemoRaw => ({
   name: `memos/${uid}`,
   content: 'Hallo',
   visibility: 'PUBLIC',
@@ -31,13 +31,13 @@ const rohMemo = (uid: string, extra: Partial<MemoRaw> = {}): MemoRaw => ({
   ...extra,
 });
 
-describe('createHttpMemosSource: Liste', () => {
-  it('fragt nur öffentliche Memos ab, neueste zuerst', async () => {
+describe('createHttpMemosSource: list', () => {
+  it('asks only for public memos, newest first', async () => {
     const fetchMock = vi.fn(async () =>
-      antwort({ memos: [rohMemo('a')], nextPageToken: '' }),
+      response({ memos: [rawMemo('a')], nextPageToken: '' }),
     );
-    const quelle = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
-    const { memos } = await quelle.listPublicMemos();
+    const source = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
+    const { memos } = await source.listPublicMemos();
     expect(memos.map((m) => m.name)).toEqual(['memos/a']);
 
     const aufruf = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
@@ -53,97 +53,97 @@ describe('createHttpMemosSource: Liste', () => {
     );
   });
 
-  it('folgt nextPageToken über mehrere Seiten', async () => {
+  it('follows nextPageToken across several pages', async () => {
     const seiten = [
-      { memos: [rohMemo('a')], nextPageToken: 'tok1' },
-      { memos: [rohMemo('b')], nextPageToken: '' },
+      { memos: [rawMemo('a')], nextPageToken: 'tok1' },
+      { memos: [rawMemo('b')], nextPageToken: '' },
     ];
-    const fetchMock = vi.fn(async () => antwort(seiten.shift()));
-    const quelle = createHttpMemosSource({
+    const fetchMock = vi.fn(async () => response(seiten.shift()));
+    const source = createHttpMemosSource({
       baseUrl: `${BASE}/`,
       fetch: fetchMock,
     });
-    const { memos } = await quelle.listPublicMemos();
+    const { memos } = await source.listPublicMemos();
     expect(memos.map((m) => m.name)).toEqual(['memos/a', 'memos/b']);
     const zweite = new URL((fetchMock.mock.calls[1] as unknown as [string])[0]);
     expect(zweite.searchParams.get('page_token')).toBe('tok1');
   });
 
-  it('bricht ab, wenn ein Seitentoken sich wiederholt', async () => {
+  it('aborts if a page token repeats', async () => {
     const fetchMock = vi.fn(async () =>
-      antwort({ memos: [rohMemo('a')], nextPageToken: 'gleich' }),
+      response({ memos: [rawMemo('a')], nextPageToken: 'gleich' }),
     );
-    const quelle = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
-    await expect(quelle.listPublicMemos()).rejects.toBeInstanceOf(MemosError);
+    const source = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
+    await expect(source.listPublicMemos()).rejects.toBeInstanceOf(MemosError);
   });
 
-  it('bricht ab, wenn zu viele Seiten kommen', async () => {
+  it('aborts if too many pages arrive', async () => {
     let n = 0;
     const fetchMock = vi.fn(async () =>
-      antwort({ memos: [], nextPageToken: `t${n++}` }),
+      response({ memos: [], nextPageToken: `t${n++}` }),
     );
-    const quelle = createHttpMemosSource({
+    const source = createHttpMemosSource({
       baseUrl: BASE,
       fetch: fetchMock,
       maxPages: 3,
     });
-    await expect(quelle.listPublicMemos()).rejects.toBeInstanceOf(MemosError);
+    await expect(source.listPublicMemos()).rejects.toBeInstanceOf(MemosError);
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
-  it('liefert nichts Teilweises, wenn die zweite Seite scheitert', async () => {
+  it('returns nothing partial if the second page fails', async () => {
     const seiten: Array<() => Response> = [
-      () => antwort({ memos: [rohMemo('a')], nextPageToken: 'tok1' }),
-      () => antwort('Fehler', { status: 500 }),
+      () => response({ memos: [rawMemo('a')], nextPageToken: 'tok1' }),
+      () => response('Fehler', { status: 500 }),
     ];
     const fetchMock = vi.fn(async () => (seiten.shift() as () => Response)());
-    const quelle = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
-    await expect(quelle.listPublicMemos()).rejects.toBeInstanceOf(MemosError);
+    const source = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
+    await expect(source.listPublicMemos()).rejects.toBeInstanceOf(MemosError);
   });
 
-  it('erklärt, dass der Zugriffsmodus PUBLIC sein muss, wenn die Instanz eine Anmeldung verlangt', async () => {
-    const quelle = createHttpMemosSource({
+  it('explains that the access mode must be PUBLIC if the instance requires a login', async () => {
+    const source = createHttpMemosSource({
       baseUrl: BASE,
-      fetch: async () => antwort({ message: 'x' }, { status: 401 }),
+      fetch: async () => response({ message: 'x' }, { status: 401 }),
     });
-    await expect(quelle.listPublicMemos()).rejects.toThrow(/PUBLIC/);
+    await expect(source.listPublicMemos()).rejects.toThrow(/PUBLIC/);
   });
 
-  it('meldet Serverfehler, Netzfehler, kaputtes JSON und unerwartete Antworten', async () => {
-    const fehler: Array<() => Promise<Response>> = [
-      async () => antwort('x', { status: 500 }),
-      async () => antwort('x', { status: 404 }),
+  it('reports server errors, network errors, broken JSON and unexpected responses', async () => {
+    const error: Array<() => Promise<Response>> = [
+      async () => response('x', { status: 500 }),
+      async () => response('x', { status: 404 }),
       async () => {
         throw new TypeError('fetch failed');
       },
-      async () => antwort('kein json'),
-      async () => antwort({ foo: 1 }),
-      async () => antwort([]),
+      async () => response('kein json'),
+      async () => response({ foo: 1 }),
+      async () => response([]),
     ];
-    for (const f of fehler) {
-      const quelle = createHttpMemosSource({ baseUrl: BASE, fetch: f });
-      await expect(quelle.listPublicMemos()).rejects.toBeInstanceOf(MemosError);
+    for (const f of error) {
+      const source = createHttpMemosSource({ baseUrl: BASE, fetch: f });
+      await expect(source.listPublicMemos()).rejects.toBeInstanceOf(MemosError);
     }
   });
 
-  it('überspringt unbrauchbare Einträge mit Warnung, ohne alles zu verwerfen', async () => {
+  it('skips unusable entries with a warning without discarding everything', async () => {
     const fetchMock = async () =>
-      antwort({
+      response({
         memos: [
-          rohMemo('gut'),
+          rawMemo('gut'),
           'text',
           { name: 'nope/1', content: 'x' },
           { name: 'memos/ohneinhalt' },
         ],
         nextPageToken: '',
       });
-    const quelle = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
-    const { memos, warnings } = await quelle.listPublicMemos();
+    const source = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
+    const { memos, warnings } = await source.listPublicMemos();
     expect(memos.map((m) => m.name)).toEqual(['memos/gut']);
     expect(warnings.length).toBe(3);
   });
 
-  it('akzeptiert nur http(s)-Adressen', () => {
+  it('accepts only http(s) addresses', () => {
     for (const adresse of [
       'ftp://x',
       'memos.test',
@@ -157,8 +157,8 @@ describe('createHttpMemosSource: Liste', () => {
   });
 });
 
-describe('createHttpMemosSource: Anhänge', () => {
-  const anhang = (
+describe('createHttpMemosSource: attachments', () => {
+  const attachment = (
     extra: Partial<MemoAttachmentRaw> = {},
   ): MemoAttachmentRaw => ({
     name: 'attachments/abc123',
@@ -168,15 +168,15 @@ describe('createHttpMemosSource: Anhänge', () => {
     ...extra,
   });
 
-  it('lädt über die Dateiroute ohne Anmeldung und ohne Weiterleitungen', async () => {
+  it('loads through the file route without login and without redirects', async () => {
     const fetchMock = vi.fn(
       async () => new Response(Buffer.from('%PDF-1.4 hallo'), { status: 200 }),
     );
-    const quelle = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
-    const ergebnis = await quelle.fetchAttachment(anhang(), 1000);
-    expect(ergebnis.ok).toBe(true);
-    if (!ergebnis.ok) return;
-    expect(ergebnis.data.toString()).toBe('%PDF-1.4 hallo');
+    const source = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
+    const result = await source.fetchAttachment(attachment(), 1000);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.toString()).toBe('%PDF-1.4 hallo');
     const [url, init] = fetchMock.mock.calls[0] as unknown as [
       string,
       RequestInit,
@@ -187,19 +187,19 @@ describe('createHttpMemosSource: Anhänge', () => {
     expect(init.redirect).toBe('manual');
   });
 
-  it('meldet fehlende Dateien als not-found', async () => {
-    const quelle = createHttpMemosSource({
+  it('reports missing files as not-found', async () => {
+    const source = createHttpMemosSource({
       baseUrl: BASE,
-      fetch: async () => antwort({}, { status: 404 }),
+      fetch: async () => response({}, { status: 404 }),
     });
-    expect(await quelle.fetchAttachment(anhang(), 1000)).toMatchObject({
+    expect(await source.fetchAttachment(attachment(), 1000)).toMatchObject({
       ok: false,
       code: 'not-found',
     });
   });
 
-  it('folgt keiner Weiterleitung', async () => {
-    const quelle = createHttpMemosSource({
+  it('follows no redirect', async () => {
+    const source = createHttpMemosSource({
       baseUrl: BASE,
       fetch: async () =>
         new Response(null, {
@@ -207,14 +207,14 @@ describe('createHttpMemosSource: Anhänge', () => {
           headers: { location: 'http://127.0.0.1/geheim' },
         }),
     });
-    expect(await quelle.fetchAttachment(anhang(), 1000)).toMatchObject({
+    expect(await source.fetchAttachment(attachment(), 1000)).toMatchObject({
       ok: false,
       code: 'redirect',
     });
   });
 
-  it('lehnt zu große Dateien schon am Header ab, ohne den Inhalt zu lesen', async () => {
-    const quelle = createHttpMemosSource({
+  it('rejects files that are too large at the header without reading the content', async () => {
+    const source = createHttpMemosSource({
       baseUrl: BASE,
       fetch: async () =>
         new Response(Buffer.alloc(10), {
@@ -222,26 +222,26 @@ describe('createHttpMemosSource: Anhänge', () => {
           headers: { 'content-length': '5000' },
         }),
     });
-    expect(await quelle.fetchAttachment(anhang(), 1000)).toMatchObject({
+    expect(await source.fetchAttachment(attachment(), 1000)).toMatchObject({
       ok: false,
       code: 'too-large',
     });
   });
 
-  it('bricht beim Lesen ab, wenn der Inhalt das Limit überschreitet', async () => {
-    const quelle = createHttpMemosSource({
+  it('aborts while reading if the content exceeds the limit', async () => {
+    const source = createHttpMemosSource({
       baseUrl: BASE,
       fetch: async () => new Response(Buffer.alloc(5000), { status: 200 }),
     });
-    expect(await quelle.fetchAttachment(anhang(), 1000)).toMatchObject({
+    expect(await source.fetchAttachment(attachment(), 1000)).toMatchObject({
       ok: false,
       code: 'too-large',
     });
   });
 
-  it('lehnt ungültige Anhangs-Kennungen ab, ohne etwas abzurufen', async () => {
+  it('rejects invalid attachment identifiers without fetching anything', async () => {
     const fetchMock = vi.fn(async () => new Response('x'));
-    const quelle = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
+    const source = createHttpMemosSource({ baseUrl: BASE, fetch: fetchMock });
     for (const name of [
       'attachments/../x',
       'attachments/a/b',
@@ -250,44 +250,44 @@ describe('createHttpMemosSource: Anhänge', () => {
       'attachments/a b',
     ]) {
       expect(
-        await quelle.fetchAttachment(anhang({ name }), 1000),
+        await source.fetchAttachment(attachment({ name }), 1000),
       ).toMatchObject({ ok: false, code: 'invalid' });
     }
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('wirft bei Anmeldepflicht, Serverfehler und Netzfehler, damit der Build abbricht', async () => {
+  it('throws on a login requirement, server error and network error so the build stops', async () => {
     for (const f of [
-      async () => antwort({}, { status: 401 }),
-      async () => antwort({}, { status: 403 }),
-      async () => antwort({}, { status: 500 }),
+      async () => response({}, { status: 401 }),
+      async () => response({}, { status: 403 }),
+      async () => response({}, { status: 500 }),
       async () => {
         throw new TypeError('fetch failed');
       },
     ]) {
-      const quelle = createHttpMemosSource({ baseUrl: BASE, fetch: f });
+      const source = createHttpMemosSource({ baseUrl: BASE, fetch: f });
       await expect(
-        quelle.fetchAttachment(anhang(), 1000),
+        source.fetchAttachment(attachment(), 1000),
       ).rejects.toBeInstanceOf(MemosError);
     }
   });
 });
 
-/** Quelle mit festen Memos und Dateien, ohne Netz. */
-function fakeQuelle(
+/** Source with fixed memos and files, without network. */
+function fakeSource(
   memos: MemoRaw[],
-  dateien: Record<string, Buffer | FetchedAttachment> = {},
-): MemosSource & { abgerufen: string[] } {
-  const abgerufen: string[] = [];
+  files: Record<string, Buffer | FetchedAttachment> = {},
+): MemosSource & { fetched: string[] } {
+  const fetched: string[] = [];
   return {
-    abgerufen,
+    fetched,
     listPublicMemos: async () => ({ memos, warnings: [] }),
-    fetchAttachment: async (anhang) => {
-      abgerufen.push(anhang.name);
-      const eintrag = dateien[anhang.name];
-      if (eintrag === undefined)
-        return { ok: false, code: 'not-found', reason: 'nicht gefunden' };
-      return Buffer.isBuffer(eintrag) ? { ok: true, data: eintrag } : eintrag;
+    fetchAttachment: async (attachment) => {
+      fetched.push(attachment.name);
+      const entry = files[attachment.name];
+      if (entry === undefined)
+        return { ok: false, code: 'not-found', reason: 'not found' };
+      return Buffer.isBuffer(entry) ? { ok: true, data: entry } : entry;
     },
   };
 }
@@ -305,7 +305,7 @@ async function png(breite = 800, hoehe = 400): Promise<Buffer> {
     .toBuffer();
 }
 
-const anhangRoh = (
+const attachmentRaw = (
   uid: string,
   filename: string,
   extra: Partial<MemoAttachmentRaw> = {},
@@ -317,12 +317,12 @@ const anhangRoh = (
   ...extra,
 });
 
-describe('buildMemoEntries: Grunddaten', () => {
-  it('bildet Kennung, Datum, Titel aus Datum und Uhrzeit sowie Pfad', async () => {
-    const quelle = fakeQuelle([
-      rohMemo('abc', { content: 'Renovate eingerichtet.' }),
+describe('buildMemoEntries: basic data', () => {
+  it('builds identifier, date, title from date and time, and path', async () => {
+    const source = fakeSource([
+      rawMemo('abc', { content: 'Renovate eingerichtet.' }),
     ]);
-    const { memos, warnings } = await buildMemoEntries(quelle, new Map());
+    const { memos, warnings } = await buildMemoEntries(source, new Map());
     expect(warnings).toEqual([]);
     expect(memos).toHaveLength(1);
     const memo = memos[0];
@@ -333,62 +333,62 @@ describe('buildMemoEntries: Grunddaten', () => {
     expect(memo?.html).toContain('<p>Renovate eingerichtet.</p>');
   });
 
-  it('rechnet die Uhrzeit in Sommerzeit um', async () => {
-    const quelle = fakeQuelle([
-      rohMemo('s', { createTime: '2026-07-01T07:30:00Z' }),
+  it('converts the time to summer time', async () => {
+    const source = fakeSource([
+      rawMemo('s', { createTime: '2026-07-01T07:30:00Z' }),
     ]);
-    const { memos } = await buildMemoEntries(quelle, new Map());
+    const { memos } = await buildMemoEntries(source, new Map());
     expect(memos[0]?.title).toBe('Memo vom 1. Juli 2026, 09:30');
   });
 
-  it('bildet die Beschreibung aus dem Text ohne Markdown und kürzt sie', async () => {
+  it('builds the description from the text without Markdown and cuts it', async () => {
     const lang = `**Fett** und [Link](https://example.org) ${'wort '.repeat(80)}`;
-    const quelle = fakeQuelle([rohMemo('d', { content: lang })]);
-    const { memos } = await buildMemoEntries(quelle, new Map());
-    const beschreibung = memos[0]?.description ?? '';
-    expect(beschreibung.startsWith('Fett und Link wort')).toBe(true);
-    expect(beschreibung.length).toBeLessThanOrEqual(161);
-    expect(beschreibung.endsWith('…')).toBe(true);
-    expect(beschreibung).not.toContain('*');
-    expect(beschreibung).not.toContain('https');
+    const source = fakeSource([rawMemo('d', { content: lang })]);
+    const { memos } = await buildMemoEntries(source, new Map());
+    const description = memos[0]?.description ?? '';
+    expect(description.startsWith('Fett und Link wort')).toBe(true);
+    expect(description.length).toBeLessThanOrEqual(161);
+    expect(description.endsWith('…')).toBe(true);
+    expect(description).not.toContain('*');
+    expect(description).not.toContain('https');
   });
 
-  it('kürzt die Beschreibung auf die eingestellte Länge', async () => {
-    const quelle = fakeQuelle([rohMemo('d', { content: 'wort '.repeat(80) })]);
-    const { memos } = await buildMemoEntries(quelle, new Map(), {
+  it('cuts the description to the configured length', async () => {
+    const source = fakeSource([rawMemo('d', { content: 'wort '.repeat(80) })]);
+    const { memos } = await buildMemoEntries(source, new Map(), {
       descriptionChars: 40,
     });
-    const beschreibung = memos[0]?.description ?? '';
-    expect(beschreibung.length).toBeLessThanOrEqual(41);
-    expect(beschreibung.endsWith('…')).toBe(true);
-    expect(beschreibung.length).toBeGreaterThan(20);
+    const description = memos[0]?.description ?? '';
+    expect(description.length).toBeLessThanOrEqual(41);
+    expect(description.endsWith('…')).toBe(true);
+    expect(description.length).toBeGreaterThan(20);
   });
 
-  it('lässt die Beschreibung leer, wenn es keinen Text gibt', async () => {
-    const quelle = fakeQuelle([rohMemo('e', { content: '' })]);
-    const { memos } = await buildMemoEntries(quelle, new Map());
+  it('leaves the description empty if there is no text', async () => {
+    const source = fakeSource([rawMemo('e', { content: '' })]);
+    const { memos } = await buildMemoEntries(source, new Map());
     expect(memos[0]?.description).toBe('');
   });
 
-  it('normalisiert Tags: klein, ohne #, doppelte fallen weg, verschachtelte bleiben ein Tag', async () => {
-    const quelle = fakeQuelle([
-      rohMemo('t', {
+  it('normalizes tags: lowercase, without #, duplicates drop out, nested ones stay one tag', async () => {
+    const source = fakeSource([
+      rawMemo('t', {
         tags: ['Tooling', '#Tooling', 'a/b', ' Über Größe ', ''],
       }),
     ]);
-    const { memos } = await buildMemoEntries(quelle, new Map());
+    const { memos } = await buildMemoEntries(source, new Map());
     expect(memos[0]?.tags).toEqual(['tooling', 'a/b', 'über größe']);
   });
 
-  it('entfernt Eltern-Tags, die Memos aus verschachtelten Tags selbst erzeugt', async () => {
-    // Memos liefert für "#a/b" die Tags "a" und "a/b" (belegt durch den Contract-Test).
-    const quelle = fakeQuelle([
-      rohMemo('v', { tags: ['contract', 'a', 'a/b'] }),
-      rohMemo('w', { tags: ['x', 'x/y', 'x/y/z', 'andere'] }),
-      rohMemo('u', { tags: ['a'] }),
-      rohMemo('t', { tags: ['ab', 'a/b'] }),
+  it('removes parent tags that Memos creates itself from nested tags', async () => {
+    // Memos returns the tags "a" and "a/b" for "#a/b" (proven by the contract test).
+    const source = fakeSource([
+      rawMemo('v', { tags: ['contract', 'a', 'a/b'] }),
+      rawMemo('w', { tags: ['x', 'x/y', 'x/y/z', 'andere'] }),
+      rawMemo('u', { tags: ['a'] }),
+      rawMemo('t', { tags: ['ab', 'a/b'] }),
     ]);
-    const { memos } = await buildMemoEntries(quelle, new Map());
+    const { memos } = await buildMemoEntries(source, new Map());
     const tags = Object.fromEntries(memos.map((m) => [m.uid, m.tags]));
     expect(tags.v).toEqual(['contract', 'a/b']);
     expect(tags.w).toEqual(['x/y/z', 'andere']);
@@ -396,47 +396,47 @@ describe('buildMemoEntries: Grunddaten', () => {
     expect(tags.t).toEqual(['ab', 'a/b']);
   });
 
-  it('sortiert nach Datum, neueste zuerst', async () => {
-    const quelle = fakeQuelle([
-      rohMemo('alt', { createTime: '2026-01-01T10:00:00Z' }),
-      rohMemo('neu', { createTime: '2026-03-01T10:00:00Z' }),
+  it('sorts by date, newest first', async () => {
+    const source = fakeSource([
+      rawMemo('alt', { createTime: '2026-01-01T10:00:00Z' }),
+      rawMemo('neu', { createTime: '2026-03-01T10:00:00Z' }),
     ]);
-    const { memos } = await buildMemoEntries(quelle, new Map());
+    const { memos } = await buildMemoEntries(source, new Map());
     expect(memos.map((m) => m.uid)).toEqual(['neu', 'alt']);
   });
 
-  it('überspringt nicht öffentliche, archivierte und Kommentar-Memos', async () => {
-    const quelle = fakeQuelle([
-      rohMemo('privat', { visibility: 'PRIVATE' }),
-      rohMemo('geschuetzt', { visibility: 'PROTECTED' }),
-      rohMemo('archiv', { state: 'ARCHIVED' }),
-      rohMemo('kommentar', { parent: 'memos/abc' }),
-      rohMemo('ok'),
+  it('skips non-public, archived and comment memos', async () => {
+    const source = fakeSource([
+      rawMemo('privat', { visibility: 'PRIVATE' }),
+      rawMemo('geschuetzt', { visibility: 'PROTECTED' }),
+      rawMemo('archiv', { state: 'ARCHIVED' }),
+      rawMemo('kommentar', { parent: 'memos/abc' }),
+      rawMemo('ok'),
     ]);
-    const { memos, warnings } = await buildMemoEntries(quelle, new Map());
+    const { memos, warnings } = await buildMemoEntries(source, new Map());
     expect(memos.map((m) => m.uid)).toEqual(['ok']);
     expect(warnings.some((w) => w.includes('privat'))).toBe(true);
     expect(warnings.some((w) => w.includes('geschuetzt'))).toBe(true);
   });
 
-  it('überspringt Memos mit ungültigem Datum oder ungültiger Kennung', async () => {
-    const quelle = fakeQuelle([
-      rohMemo('datum', { createTime: 'gestern' }),
-      rohMemo('../hack'),
-      rohMemo('ok'),
+  it('skips memos with an invalid date or invalid identifier', async () => {
+    const source = fakeSource([
+      rawMemo('datum', { createTime: 'gestern' }),
+      rawMemo('../hack'),
+      rawMemo('ok'),
     ]);
-    const { memos, warnings } = await buildMemoEntries(quelle, new Map());
+    const { memos, warnings } = await buildMemoEntries(source, new Map());
     expect(memos.map((m) => m.uid)).toEqual(['ok']);
     expect(warnings.length).toBe(2);
   });
 });
 
-describe('buildMemoEntries: Text bereinigen', () => {
-  it('entfernt Skripte und fremde Bilder, auch freigegebene Hosts', async () => {
+describe('buildMemoEntries: sanitizing the text', () => {
+  it('removes scripts and foreign images, also from allowed hosts', async () => {
     const text =
       '<script>window.pwned=1</script>\n\n![x](https://upload.wikimedia.org/a.jpg)\n\nText';
-    const quelle = fakeQuelle([rohMemo('s', { content: text })]);
-    const { memos, warnings } = await buildMemoEntries(quelle, new Map());
+    const source = fakeSource([rawMemo('s', { content: text })]);
+    const { memos, warnings } = await buildMemoEntries(source, new Map());
     const html = memos[0]?.html ?? '';
     expect(html).not.toContain('<script');
     expect(html).not.toContain('wikimedia');
@@ -445,20 +445,20 @@ describe('buildMemoEntries: Text bereinigen', () => {
   });
 });
 
-describe('buildMemoEntries: Anhänge', () => {
-  it('spiegelt Bilder als WebP mit Alt-Text aus dem Dateinamen und ohne Verweis auf die Instanz', async () => {
-    const quelle = fakeQuelle(
+describe('buildMemoEntries: attachments', () => {
+  it('mirrors images as WebP with alt text from the file name and without a link to the instance', async () => {
+    const source = fakeSource(
       [
-        rohMemo('b', {
+        rawMemo('b', {
           attachments: [
-            anhangRoh('img1', 'IMG_2043.png', { type: 'image/png' }),
+            attachmentRaw('img1', 'IMG_2043.png', { type: 'image/png' }),
           ],
         }),
       ],
       { 'attachments/img1': await png() },
     );
-    const speicher = new Map<string, Buffer>();
-    const { memos, warnings } = await buildMemoEntries(quelle, speicher);
+    const store = new Map<string, Buffer>();
+    const { memos, warnings } = await buildMemoEntries(source, store);
     expect(warnings).toEqual([]);
     const html = memos[0]?.html ?? '';
     expect(html).toMatch(/<img [^>]*src="\/media\/[0-9a-f]{16}-480\.webp"/);
@@ -466,11 +466,11 @@ describe('buildMemoEntries: Anhänge', () => {
     expect(html).toContain('alt="IMG 2043"');
     expect(html).not.toContain('memos.test');
     expect(html).not.toContain('/file/attachments');
-    expect([...speicher.keys()].every((k) => k.endsWith('.webp'))).toBe(true);
-    expect(speicher.size).toBeGreaterThan(0);
+    expect([...store.keys()].every((k) => k.endsWith('.webp'))).toBe(true);
+    expect(store.size).toBeGreaterThan(0);
   });
 
-  it('spiegelt PDF, Audio und Video mit passendem Element', async () => {
+  it('mirrors PDF, audio and video with a fitting element', async () => {
     const wav = Buffer.concat([
       Buffer.from('RIFF'),
       Buffer.alloc(4),
@@ -482,13 +482,13 @@ describe('buildMemoEntries: Anhänge', () => {
       Buffer.from('ftypisom'),
       Buffer.alloc(20),
     ]);
-    const quelle = fakeQuelle(
+    const source = fakeSource(
       [
-        rohMemo('m', {
+        rawMemo('m', {
           attachments: [
-            anhangRoh('p1', 'Mein Bericht.PDF'),
-            anhangRoh('a1', 'Klang.wav'),
-            anhangRoh('v1', 'Film.mp4'),
+            attachmentRaw('p1', 'Mein Bericht.PDF'),
+            attachmentRaw('a1', 'Klang.wav'),
+            attachmentRaw('v1', 'Film.mp4'),
           ],
         }),
       ],
@@ -498,8 +498,8 @@ describe('buildMemoEntries: Anhänge', () => {
         'attachments/v1': mp4,
       },
     );
-    const speicher = new Map<string, Buffer>();
-    const { memos, warnings } = await buildMemoEntries(quelle, speicher);
+    const store = new Map<string, Buffer>();
+    const { memos, warnings } = await buildMemoEntries(source, store);
     expect(warnings).toEqual([]);
     const html = memos[0]?.html ?? '';
     expect(html).toMatch(
@@ -512,130 +512,133 @@ describe('buildMemoEntries: Anhänge', () => {
       /<video [^>]*controls[^>]*preload="none"[^>]*src="\/media\/[0-9a-f]{16}-film\.mp4"/,
     );
     expect(
-      [...speicher.keys()].map((k) => k.replace(/^[0-9a-f]{16}-/, '')).sort(),
+      [...store.keys()].map((k) => k.replace(/^[0-9a-f]{16}-/, '')).sort(),
     ).toEqual(['film.mp4', 'klang.wav', 'mein-bericht.pdf']);
   });
 
-  it('maskiert Dateinamen im HTML', async () => {
-    const quelle = fakeQuelle(
-      [rohMemo('x', { attachments: [anhangRoh('p', '<b>x</b>&"y.pdf')] })],
+  it('escapes file names in the HTML', async () => {
+    const source = fakeSource(
+      [rawMemo('x', { attachments: [attachmentRaw('p', '<b>x</b>&"y.pdf')] })],
       {
         'attachments/p': Buffer.from('%PDF-1.4'),
       },
     );
-    const { memos } = await buildMemoEntries(quelle, new Map());
+    const { memos } = await buildMemoEntries(source, new Map());
     const html = memos[0]?.html ?? '';
     expect(html).not.toContain('<b>x</b>');
     expect(html).toContain('&lt;b&gt;x&lt;/b&gt;&amp;&quot;y.pdf');
   });
 
-  it('überspringt nicht erlaubte Dateitypen mit Warnung und lädt sie nicht', async () => {
-    const quelle = fakeQuelle(
+  it('skips file types that are not allowed with a warning and does not load them', async () => {
+    const source = fakeSource(
       [
-        rohMemo('o', {
+        rawMemo('o', {
           attachments: [
-            anhangRoh('h', 'seite.html'),
-            anhangRoh('s', 'logo.svg'),
-            anhangRoh('z', 'archiv.zip'),
-            anhangRoh('e', 'prog.exe'),
-            anhangRoh('i', 'foto.heic'),
+            attachmentRaw('h', 'seite.html'),
+            attachmentRaw('s', 'logo.svg'),
+            attachmentRaw('z', 'archiv.zip'),
+            attachmentRaw('e', 'prog.exe'),
+            attachmentRaw('i', 'foto.heic'),
           ],
         }),
       ],
       {},
     );
-    const { memos, warnings } = await buildMemoEntries(quelle, new Map());
-    expect(quelle.abgerufen).toEqual([]);
+    const { memos, warnings } = await buildMemoEntries(source, new Map());
+    expect(source.fetched).toEqual([]);
     expect(memos[0]?.html).not.toMatch(/<(a|img|audio|video)\b/);
     expect(warnings).toHaveLength(5);
     expect(warnings.find((w) => w.includes('foto.heic'))).toMatch(/HEIC/i);
   });
 
-  it('weist Dateien ab, deren Inhalt nicht zur Endung passt', async () => {
-    const quelle = fakeQuelle(
-      [rohMemo('f', { attachments: [anhangRoh('p', 'falsch.pdf')] })],
+  it('rejects files whose content does not match the extension', async () => {
+    const source = fakeSource(
+      [rawMemo('f', { attachments: [attachmentRaw('p', 'falsch.pdf')] })],
       {
         'attachments/p': Buffer.from(
           '<!doctype html><script>alert(1)</script>',
         ),
       },
     );
-    const speicher = new Map<string, Buffer>();
-    const { memos, warnings } = await buildMemoEntries(quelle, speicher);
+    const store = new Map<string, Buffer>();
+    const { memos, warnings } = await buildMemoEntries(source, store);
     expect(memos[0]?.html).not.toContain('falsch.pdf');
-    expect(speicher.size).toBe(0);
+    expect(store.size).toBe(0);
     expect(warnings).toHaveLength(1);
   });
 
-  it('weist Bilder ab, die sich nicht lesen lassen', async () => {
-    const quelle = fakeQuelle(
-      [rohMemo('k', { attachments: [anhangRoh('i', 'kaputt.png')] })],
+  it('rejects images that cannot be read', async () => {
+    const source = fakeSource(
+      [rawMemo('k', { attachments: [attachmentRaw('i', 'kaputt.png')] })],
       {
         'attachments/i': Buffer.from('kein Bild'),
       },
     );
-    const { memos, warnings } = await buildMemoEntries(quelle, new Map());
+    const { memos, warnings } = await buildMemoEntries(source, new Map());
     expect(memos[0]?.html).not.toContain('<img');
     expect(warnings).toHaveLength(1);
   });
 
-  it('übergeht externe Anhänge, weil nichts von fremden Diensten geladen wird', async () => {
-    const quelle = fakeQuelle([
-      rohMemo('x', {
+  it('passes over external attachments because nothing is loaded from foreign services', async () => {
+    const source = fakeSource([
+      rawMemo('x', {
         attachments: [
-          anhangRoh('e', 'bild.png', {
+          attachmentRaw('e', 'bild.png', {
             externalLink: 'https://s3.example/bild.png',
           }),
         ],
       }),
     ]);
-    const { memos, warnings } = await buildMemoEntries(quelle, new Map());
-    expect(quelle.abgerufen).toEqual([]);
+    const { memos, warnings } = await buildMemoEntries(source, new Map());
+    expect(source.fetched).toEqual([]);
     expect(memos[0]?.html).not.toContain('s3.example');
     expect(warnings).toHaveLength(1);
   });
 
-  it('lässt das Memo stehen und warnt, wenn ein Anhang fehlt oder zu groß ist', async () => {
-    const quelle = fakeQuelle(
+  it('keeps the memo and warns if an attachment is missing or too large', async () => {
+    const source = fakeSource(
       [
-        rohMemo('g', {
+        rawMemo('g', {
           content: 'Text bleibt',
-          attachments: [anhangRoh('weg', 'a.pdf'), anhangRoh('gross', 'b.pdf')],
+          attachments: [
+            attachmentRaw('weg', 'a.pdf'),
+            attachmentRaw('gross', 'b.pdf'),
+          ],
         }),
       ],
       {
         'attachments/gross': {
           ok: false,
           code: 'too-large',
-          reason: 'zu groß',
+          reason: 'too large',
         },
       },
     );
-    const { memos, warnings } = await buildMemoEntries(quelle, new Map());
+    const { memos, warnings } = await buildMemoEntries(source, new Map());
     expect(memos).toHaveLength(1);
     expect(memos[0]?.html).toContain('Text bleibt');
     expect(warnings).toHaveLength(2);
   });
 
-  it('bricht den ganzen Build ab, wenn der Abruf eines Anhangs vorübergehend scheitert', async () => {
-    const quelle: MemosSource = {
+  it('stops the whole build if fetching an attachment fails temporarily', async () => {
+    const source: MemosSource = {
       listPublicMemos: async () => ({
-        memos: [rohMemo('h', { attachments: [anhangRoh('p', 'a.pdf')] })],
+        memos: [rawMemo('h', { attachments: [attachmentRaw('p', 'a.pdf')] })],
         warnings: [],
       }),
       fetchAttachment: async () => {
         throw new MemosError('Netzwerkfehler');
       },
     };
-    await expect(buildMemoEntries(quelle, new Map())).rejects.toBeInstanceOf(
+    await expect(buildMemoEntries(source, new Map())).rejects.toBeInstanceOf(
       MemosError,
     );
   });
 
-  it('bricht ab, wenn die Liste nicht geladen werden kann', async () => {
-    const quelle: MemosSource = {
+  it('stops if the list cannot be loaded', async () => {
+    const source: MemosSource = {
       listPublicMemos: async () => {
-        throw new MemosError('nicht erreichbar');
+        throw new MemosError('unreachable');
       },
       fetchAttachment: async () => ({
         ok: false,
@@ -643,22 +646,22 @@ describe('buildMemoEntries: Anhänge', () => {
         reason: '',
       }),
     };
-    await expect(buildMemoEntries(quelle, new Map())).rejects.toThrow(
-      'nicht erreichbar',
+    await expect(buildMemoEntries(source, new Map())).rejects.toThrow(
+      'unreachable',
     );
   });
 
-  it('verarbeitet gleiche Dateien nur einmal im Speicher', async () => {
+  it('processes identical files only once in the store', async () => {
     const bild = await png(300, 200);
-    const quelle = fakeQuelle(
+    const source = fakeSource(
       [
-        rohMemo('a', { attachments: [anhangRoh('i1', 'a.png')] }),
-        rohMemo('b', { attachments: [anhangRoh('i2', 'b.png')] }),
+        rawMemo('a', { attachments: [attachmentRaw('i1', 'a.png')] }),
+        rawMemo('b', { attachments: [attachmentRaw('i2', 'b.png')] }),
       ],
       { 'attachments/i1': bild, 'attachments/i2': bild },
     );
-    const speicher = new Map<string, Buffer>();
-    await buildMemoEntries(quelle, speicher);
-    expect(speicher.size).toBe(1);
+    const store = new Map<string, Buffer>();
+    await buildMemoEntries(source, store);
+    expect(store.size).toBe(1);
   });
 });

@@ -8,15 +8,15 @@ import {
   sniffMatches,
 } from './media-files.ts';
 
-const bytes = (...werte: Array<number | string>): Buffer =>
+const bytes = (...values: Array<number | string>): Buffer =>
   Buffer.concat(
-    werte.map((w) =>
+    values.map((w) =>
       typeof w === 'number' ? Buffer.from([w]) : Buffer.from(w, 'latin1'),
     ),
   );
 
 describe('allowedFileFor', () => {
-  it('erlaubt PDF, Audio und Video nach Endung, unabhängig von Groß-/Kleinschreibung', () => {
+  it('allows PDF, audio and video by extension, regardless of case', () => {
     expect(allowedFileFor('Bericht.PDF')?.kind).toBe('pdf');
     expect(allowedFileFor('lied.mp3')?.kind).toBe('audio');
     expect(allowedFileFor('lied.m4a')?.kind).toBe('audio');
@@ -29,7 +29,7 @@ describe('allowedFileFor', () => {
     expect(allowedFileFor('film.mov')?.kind).toBe('video');
   });
 
-  it('lehnt alles andere ab', () => {
+  it('rejects everything else', () => {
     for (const name of [
       'a.html',
       'a.htm',
@@ -47,14 +47,14 @@ describe('allowedFileFor', () => {
     }
   });
 
-  it('führt für jede Endung einen Inhaltstyp', () => {
+  it('has a content type for every extension', () => {
     for (const regel of ALLOWED_FILES)
       expect(regel.contentType).toMatch(/^(application|audio|video)\//);
   });
 });
 
 describe('sniffMatches', () => {
-  it('erkennt die erlaubten Dateikennungen', () => {
+  it('recognizes the allowed file signatures', () => {
     expect(sniffMatches('pdf', bytes('%PDF-1.7\n'))).toBe(true);
     expect(sniffMatches('mp3', bytes('ID3', 4, 0))).toBe(true);
     expect(sniffMatches('mp3', bytes(0xff, 0xfb, 0x90, 0x00))).toBe(true);
@@ -69,7 +69,7 @@ describe('sniffMatches', () => {
     );
   });
 
-  it('lehnt HTML und andere Daten ab', () => {
+  it('rejects HTML and other data', () => {
     for (const art of [
       'pdf',
       'mp3',
@@ -91,45 +91,45 @@ describe('sniffMatches', () => {
 });
 
 describe('contentTypeForMediaFile', () => {
-  it('liefert den Typ nach Endung, auch für WebP-Bilder', () => {
+  it('returns the type by extension, also for WebP images', () => {
     expect(contentTypeForMediaFile('abc-960.webp')).toBe('image/webp');
     expect(contentTypeForMediaFile('abc-bericht.pdf')).toBe('application/pdf');
     expect(contentTypeForMediaFile('abc-lied.mp3')).toBe('audio/mpeg');
     expect(contentTypeForMediaFile('abc-film.mp4')).toBe('video/mp4');
   });
 
-  it('liefert null für alles andere', () => {
+  it('returns null for everything else', () => {
     expect(contentTypeForMediaFile('x.html')).toBeNull();
     expect(contentTypeForMediaFile('x')).toBeNull();
   });
 });
 
 describe('safeFileName', () => {
-  it('macht Dateinamen klein und URL-tauglich und behält die Endung', () => {
+  it('lowercases file names, makes them URL-safe and keeps the extension', () => {
     expect(safeFileName('Mein Bericht (final).PDF')).toBe(
       'mein-bericht-final.pdf',
     );
     expect(safeFileName('Größe & Maße.mp3')).toBe('groesse-masse.mp3');
   });
 
-  it('entfernt Pfadanteile und gefährliche Zeichen', () => {
+  it('removes path parts and dangerous characters', () => {
     expect(safeFileName('../../etc/passwd.pdf')).toBe('passwd.pdf');
     expect(safeFileName('<script>alert(1)</script>.pdf')).toBe('script.pdf');
     expect(safeFileName('<b>x.pdf')).toBe('b-x.pdf');
     expect(safeFileName('a\\b.pdf')).toBe('b.pdf');
   });
 
-  it('kürzt lange Namen und fällt bei leerem Namen auf "datei" zurück', () => {
+  it('shortens long names and falls back to "file" for an empty name', () => {
     expect(safeFileName(`${'a'.repeat(200)}.pdf`).length).toBeLessThanOrEqual(
       64,
     );
-    expect(safeFileName('日本語.pdf')).toBe('datei.pdf');
-    expect(safeFileName('.pdf')).toBe('datei.pdf');
+    expect(safeFileName('日本語.pdf')).toBe('file.pdf');
+    expect(safeFileName('.pdf')).toBe('file.pdf');
   });
 });
 
 describe('altTextFromFilename', () => {
-  it('nimmt den Dateinamen ohne Endung, Unter- und Bindestriche werden Leerzeichen', () => {
+  it('takes the file name without extension, underscores and hyphens become spaces', () => {
     expect(altTextFromFilename('IMG_2043.jpg')).toBe('IMG 2043');
     expect(altTextFromFilename('Bücherregal-Lesesaal.PNG')).toBe(
       'Bücherregal Lesesaal',
@@ -137,7 +137,7 @@ describe('altTextFromFilename', () => {
     expect(altTextFromFilename('foto.final.jpeg')).toBe('foto.final');
   });
 
-  it('liefert einen leeren Text, wenn nichts übrig bleibt', () => {
+  it('returns an empty text if nothing is left', () => {
     expect(altTextFromFilename('.jpg')).toBe('');
     expect(altTextFromFilename('___.png')).toBe('');
   });

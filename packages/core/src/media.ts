@@ -13,96 +13,96 @@ export interface ImageVariant {
 
 export interface ProcessedImage {
   id: string;
-  /** Maße des Originals nach Anwendung der Ausrichtung. */
+  /** Dimensions of the original after applying the orientation. */
   width: number;
   height: number;
   variants: ImageVariant[];
 }
 
-const BREITEN = [480, 960, 1440, 1920] as const;
-const ANZEIGE_BREITE = 960;
+const WIDTHS = [480, 960, 1440, 1920] as const;
+const DISPLAY_WIDTH = 960;
 const MAX_BYTES = 25 * 1024 * 1024;
-const ENDUNGEN = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif']);
+const EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif']);
 
 /**
- * Verkleinert ein Bild auf mehrere Breiten und wandelt es in WebP um.
- * Die EXIF-Ausrichtung wird angewandt und danach entfernt, ebenso alle
- * Metadaten (GPS, Kamera, Farbprofil). Kleine Bilder werden nicht vergrößert.
+ * Scales an image to several widths and converts it to WebP.
+ * The EXIF orientation is applied and then removed, as is all other metadata
+ * (GPS, camera, color profile). Small images are not enlarged.
  */
-export async function processImage(eingabe: Buffer): Promise<ProcessedImage> {
-  const id = createHash('sha256').update(eingabe).digest('hex').slice(0, 16);
-  const optionen = { animated: true, limitInputPixels: 100_000_000 } as const;
+export async function processImage(input: Buffer): Promise<ProcessedImage> {
+  const id = createHash('sha256').update(input).digest('hex').slice(0, 16);
+  const options = { animated: true, limitInputPixels: 100_000_000 } as const;
 
-  const meta = await sharp(eingabe, optionen).metadata();
-  const roheBreite = meta.width;
-  const roheHoehe = meta.pageHeight ?? meta.height;
-  if (!roheBreite || !roheHoehe) throw new Error('Maße des Bildes unbekannt');
-  const gedreht = meta.orientation !== undefined && meta.orientation >= 5;
-  const breite = gedreht ? roheHoehe : roheBreite;
-  const hoehe = gedreht ? roheBreite : roheHoehe;
+  const meta = await sharp(input, options).metadata();
+  const rawWidth = meta.width;
+  const rawHeight = meta.pageHeight ?? meta.height;
+  if (!rawWidth || !rawHeight) throw new Error('Image dimensions are unknown');
+  const rotated = meta.orientation !== undefined && meta.orientation >= 5;
+  const width = rotated ? rawHeight : rawWidth;
+  const height = rotated ? rawWidth : rawHeight;
 
-  const breiten: number[] = BREITEN.filter((b) => b <= breite);
-  if (breiten.length === 0) breiten.push(breite);
+  const widths: number[] = WIDTHS.filter((w) => w <= width);
+  if (widths.length === 0) widths.push(width);
 
   const variants: ImageVariant[] = [];
-  for (const zielBreite of breiten) {
-    const data = await sharp(eingabe, optionen)
+  for (const targetWidth of widths) {
+    const data = await sharp(input, options)
       .rotate()
-      .resize({ width: zielBreite, withoutEnlargement: true })
+      .resize({ width: targetWidth, withoutEnlargement: true })
       .webp({ quality: 80 })
       .toBuffer();
     variants.push({
-      width: zielBreite,
-      height: Math.round((zielBreite * hoehe) / breite),
-      file: `${id}-${zielBreite}.webp`,
+      width: targetWidth,
+      height: Math.round((targetWidth * height) / width),
+      file: `${id}-${targetWidth}.webp`,
       data,
     });
   }
-  return { id, width: breite, height: hoehe, variants };
+  return { id, width, height, variants };
 }
 
-/** Bildet die fertigen Varianten auf `src`, `srcset` und Maße für das HTML ab. */
+/** Maps the finished variants to `src`, `srcset` and dimensions for the HTML. */
 export function toResolvedImage(
-  bild: ProcessedImage,
+  image: ProcessedImage,
   urlPrefix: string,
 ): ResolvedImage {
-  const anzeige =
-    [...bild.variants].reverse().find((v) => v.width <= ANZEIGE_BREITE) ??
-    bild.variants[0];
-  if (!anzeige) throw new Error('keine Variante erzeugt');
+  const display =
+    [...image.variants].reverse().find((v) => v.width <= DISPLAY_WIDTH) ??
+    image.variants[0];
+  if (!display) throw new Error('No variant was created');
   return {
-    src: `${urlPrefix}${anzeige.file}`,
-    srcset: bild.variants
+    src: `${urlPrefix}${display.file}`,
+    srcset: image.variants
       .map((v) => `${urlPrefix}${v.file} ${v.width}w`)
       .join(', '),
-    width: anzeige.width,
-    height: anzeige.height,
+    width: display.width,
+    height: display.height,
   };
 }
 
 export interface LocalImageResolver {
   resolve: (rootRelativePath: string) => Promise<ImageResolveResult>;
-  /** Alle bisher erzeugten Dateien: Dateiname zu Inhalt. */
+  /** All files created so far: file name to content. */
   files: () => Map<string, Buffer>;
 }
 
-/** Löst Bilder aus dem Inhaltsordner auf und verarbeitet jedes Bild nur einmal. */
-export function createLocalImageResolver(optionen: {
+/** Resolves images from the content folder and processes each image only once. */
+export function createLocalImageResolver(options: {
   root: string;
   urlPrefix: string;
-  /** Gemeinsamer Speicher der ausgelieferten Dateien, sonst ein eigener. */
+  /** Shared store of the served files, otherwise a private one. */
   store?: Map<string, Buffer>;
 }): LocalImageResolver {
-  const dateien = optionen.store ?? new Map<string, Buffer>();
-  const verarbeitet = new Map<string, ProcessedImage>();
-  let wurzelReal: string | undefined;
+  const files = options.store ?? new Map<string, Buffer>();
+  const processed = new Map<string, ProcessedImage>();
+  let realRoot: string | undefined;
 
-  const wurzel = async (): Promise<string> => {
-    wurzelReal ??= await realpath(optionen.root);
-    return wurzelReal;
+  const rootPath = async (): Promise<string> => {
+    realRoot ??= await realpath(options.root);
+    return realRoot;
   };
 
-  const fehler = (
+  const failure = (
     code: 'not-found' | 'unsupported' | 'invalid',
     reason: string,
   ): ImageResolveResult => ({
@@ -112,7 +112,7 @@ export function createLocalImageResolver(optionen: {
   });
 
   return {
-    files: () => dateien,
+    files: () => files,
     async resolve(rel) {
       const normal = path.posix.normalize(rel);
       if (
@@ -120,54 +120,54 @@ export function createLocalImageResolver(optionen: {
         normal.startsWith('../') ||
         path.posix.isAbsolute(normal)
       ) {
-        return fehler('invalid', 'Pfad liegt außerhalb des Inhaltsordners');
+        return failure('invalid', 'Path is outside the content folder');
       }
-      if (normal.split('/').some((teil) => teil.startsWith('.'))) {
-        return fehler('invalid', 'versteckter Pfad');
+      if (normal.split('/').some((part) => part.startsWith('.'))) {
+        return failure('invalid', 'Hidden path');
       }
-      const endung = path.posix.extname(normal).toLowerCase();
-      if (!ENDUNGEN.has(endung)) {
-        return fehler(
+      const extension = path.posix.extname(normal).toLowerCase();
+      if (!EXTENSIONS.has(extension)) {
+        return failure(
           'unsupported',
-          endung === '.svg'
-            ? 'SVG wird nicht unterstützt'
-            : `Dateityp ${endung || '(ohne)'} wird nicht unterstützt`,
+          extension === '.svg'
+            ? 'SVG is not supported'
+            : `File type ${extension || '(none)'} is not supported`,
         );
       }
 
-      const basis = await wurzel();
-      let echt: string;
+      const base = await rootPath();
+      let real: string;
       try {
-        echt = await realpath(path.join(basis, normal));
+        real = await realpath(path.join(base, normal));
       } catch {
-        return fehler('not-found', 'Datei nicht gefunden');
+        return failure('not-found', 'File not found');
       }
-      if (echt !== basis && !echt.startsWith(basis + path.sep)) {
-        return fehler('invalid', 'Verweis führt aus dem Inhaltsordner heraus');
+      if (real !== base && !real.startsWith(base + path.sep)) {
+        return failure('invalid', 'Link leads out of the content folder');
       }
 
-      const info = await stat(echt);
-      if (!info.isFile()) return fehler('invalid', 'kein Bild');
-      if (info.size > MAX_BYTES) return fehler('invalid', 'Datei ist zu groß');
+      const info = await stat(real);
+      if (!info.isFile()) return failure('invalid', 'Not an image');
+      if (info.size > MAX_BYTES) return failure('invalid', 'File is too large');
 
-      let bild: ProcessedImage;
+      let image: ProcessedImage;
       try {
-        const inhalt = await readFile(echt);
+        const content = await readFile(real);
         const id = createHash('sha256')
-          .update(inhalt)
+          .update(content)
           .digest('hex')
           .slice(0, 16);
-        const schon = verarbeitet.get(id);
-        bild = schon ?? (await processImage(inhalt));
-        verarbeitet.set(bild.id, bild);
+        const existing = processed.get(id);
+        image = existing ?? (await processImage(content));
+        processed.set(image.id, image);
       } catch {
-        return fehler('invalid', 'Datei ist kein lesbares Bild');
+        return failure('invalid', 'File is not a readable image');
       }
 
-      for (const variante of bild.variants)
-        dateien.set(variante.file, variante.data);
+      for (const variant of image.variants)
+        files.set(variant.file, variant.data);
 
-      return { ok: true, image: toResolvedImage(bild, optionen.urlPrefix) };
+      return { ok: true, image: toResolvedImage(image, options.urlPrefix) };
     },
   };
 }

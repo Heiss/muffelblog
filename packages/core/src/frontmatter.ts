@@ -1,15 +1,15 @@
 import { parse } from 'yaml';
 
-/** Byte-Order-Marke, die manche Editoren an den Dateianfang setzen. */
+/** Byte order mark that some editors put at the start of a file. */
 const BOM = String.fromCharCode(0xfeff);
 
 export type SplitResult =
   | { ok: true; data: Record<string, unknown>; body: string }
   | { ok: false; error: string };
 
-/** Trennt das YAML-Frontmatter vom Text einer Markdown-Datei. */
-export function splitFrontmatter(roh: string): SplitResult {
-  const text = (roh.startsWith(BOM) ? roh.slice(1) : roh).replace(
+/** Splits the YAML frontmatter from the text of a Markdown file. */
+export function splitFrontmatter(raw: string): SplitResult {
+  const text = (raw.startsWith(BOM) ? raw.slice(1) : raw).replace(
     /\r\n?/g,
     '\n',
   );
@@ -17,27 +17,28 @@ export function splitFrontmatter(roh: string): SplitResult {
     return { ok: true, data: {}, body: text };
   }
 
-  const zeilen = text.split('\n');
-  const ende = zeilen.indexOf('---', 1);
-  if (ende === -1) {
-    return { ok: false, error: 'Die schließende Trennlinie "---" fehlt' };
+  const lines = text.split('\n');
+  const end = lines.indexOf('---', 1);
+  if (end === -1) {
+    return { ok: false, error: 'The closing separator "---" is missing' };
   }
 
-  const yamlText = zeilen.slice(1, ende).join('\n');
-  const body = zeilen.slice(ende + 1).join('\n');
+  const yamlText = lines.slice(1, end).join('\n');
+  const body = lines.slice(end + 1).join('\n');
 
-  let wert: unknown;
+  let value: unknown;
   try {
-    wert = parse(yamlText, { logLevel: 'error' });
-  } catch (fehler) {
-    const meldung =
-      fehler instanceof Error ? fehler.message.split('\n')[0] : String(fehler);
-    return { ok: false, error: `Ungültiges YAML (${meldung})` };
+    value = parse(yamlText, { logLevel: 'error' });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message.split('\n')[0] : String(error);
+    return { ok: false, error: `Invalid YAML (${message})` };
   }
 
-  if (wert === null || wert === undefined) return { ok: true, data: {}, body };
-  if (typeof wert !== 'object' || Array.isArray(wert)) {
-    return { ok: false, error: 'Das Frontmatter ist kein Objekt' };
+  if (value === null || value === undefined)
+    return { ok: true, data: {}, body };
+  if (typeof value !== 'object' || Array.isArray(value)) {
+    return { ok: false, error: 'The frontmatter is not an object' };
   }
-  return { ok: true, data: wert as Record<string, unknown>, body };
+  return { ok: true, data: value as Record<string, unknown>, body };
 }

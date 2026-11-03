@@ -68,7 +68,7 @@ test.describe('Rendering-Demo (/p/rendering-demo/)', () => {
       'https://upload.wikimedia.org/wikipedia/commons/a/a9/Example.jpg',
     ]);
 
-    await expect(page.locator('.inhalt .bild-fehlt')).toHaveText(
+    await expect(page.locator('.inhalt .image-missing')).toHaveText(
       '[Bild fehlt: Fehlt]',
     );
   });

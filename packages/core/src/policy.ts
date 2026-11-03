@@ -1,13 +1,13 @@
 /**
- * Richtlinie für Inhalte von Drittseiten in Artikeln.
+ * Policy for third-party content in articles.
  *
- * Die Seite lädt sonst nichts von fremden Servern. Artikel dürfen genau diese
- * Bild-Hosts und Einbettungen verwenden. Memo-Bilder sind davon ausgenommen,
- * sie werden auf die eigene Domain gespiegelt.
- * Dieselben Listen speist später die Content-Security-Policy des Servers.
+ * The site loads nothing else from foreign servers. Articles may use exactly
+ * these image hosts and embeds. Memo images are exempt, they are mirrored to
+ * the own domain.
+ * The same lists will later feed the Content Security Policy of the server.
  */
 
-/** Hosts, von denen Artikel Remote-Bilder laden dürfen (nur https). */
+/** Hosts from which articles may load remote images (https only). */
 export const ALLOWED_IMAGE_HOSTS = [
   'upload.wikimedia.org',
   'raw.githubusercontent.com',
@@ -17,9 +17,9 @@ export const ALLOWED_IMAGE_HOSTS = [
 export interface EmbedRule {
   host: string;
   label: string;
-  /** Erlaubter Pfad der Einbettungs-Adresse, ohne Parameter. */
+  /** Allowed path of the embed URL, without parameters. */
   path: RegExp;
-  /** Adresse, unter der man den Inhalt auf der Ursprungsseite öffnet. */
+  /** URL under which the content opens on the original site. */
   openUrl: (url: URL) => string;
 }
 
@@ -33,10 +33,10 @@ export const EMBED_RULES: readonly EmbedRule[] = [
   },
 ];
 
-function parseHttps(wert: string): URL | null {
+function parseHttps(value: string): URL | null {
   let url: URL;
   try {
-    url = new URL(wert);
+    url = new URL(value);
   } catch {
     return null;
   }
@@ -46,33 +46,33 @@ function parseHttps(wert: string): URL | null {
   return url;
 }
 
-/** Ist das ein https-Bild von einem freigegebenen Host? */
-export function isAllowedImageUrl(wert: string): boolean {
-  const url = parseHttps(wert);
+/** Is this an https image from an allowed host? */
+export function isAllowedImageUrl(value: string): boolean {
+  const url = parseHttps(value);
   if (url === null) return false;
   return (ALLOWED_IMAGE_HOSTS as readonly string[]).includes(url.hostname);
 }
 
 export interface EmbedMatch {
   label: string;
-  /** Die geprüfte, normalisierte Einbettungs-Adresse. */
+  /** The checked, normalized embed URL. */
   src: string;
   openUrl: string;
 }
 
 /**
- * Prüft eine Einbettungs-Adresse streng gegen die Regeln: https, genauer Host,
- * genauer Pfad, keine Parameter, keine Zugangsdaten. Alles andere liefert null.
+ * Checks an embed URL strictly against the rules: https, exact host, exact
+ * path, no parameters, no credentials. Anything else returns null.
  */
-export function matchEmbed(wert: string): EmbedMatch | null {
-  const url = parseHttps(wert.trim());
+export function matchEmbed(value: string): EmbedMatch | null {
+  const url = parseHttps(value.trim());
   if (url === null) return null;
-  // Die Adresse muss schon normalisiert gewesen sein (kein ../, keine Umkodierung).
-  if (url.href !== wert.trim()) return null;
+  // The URL must already have been normalized (no ../, no re-encoding).
+  if (url.href !== value.trim()) return null;
   if (url.search !== '' || url.hash !== '') return null;
-  for (const regel of EMBED_RULES) {
-    if (url.hostname === regel.host && regel.path.test(url.pathname)) {
-      return { label: regel.label, src: url.href, openUrl: regel.openUrl(url) };
+  for (const rule of EMBED_RULES) {
+    if (url.hostname === rule.host && rule.path.test(url.pathname)) {
+      return { label: rule.label, src: url.href, openUrl: rule.openUrl(url) };
     }
   }
   return null;

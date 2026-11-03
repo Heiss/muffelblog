@@ -12,13 +12,13 @@ const parse = (path: string, text: string) =>
   parseArticle({ path, text, mtime });
 
 describe('isIgnoredPath', () => {
-  it('ignoriert versteckte Dateien und Ordner', () => {
+  it('ignores hidden files and folders', () => {
     expect(isIgnoredPath('.obsidian/app.json')).toBe(true);
     expect(isIgnoredPath('a/.versteckt/b.md')).toBe(true);
     expect(isIgnoredPath('.trash/x.md')).toBe(true);
   });
 
-  it('ignoriert Konfliktkopien', () => {
+  it('ignores conflict copies', () => {
     expect(isIgnoredPath('a (conflicted copy 2026-01-05 100000).md')).toBe(
       true,
     );
@@ -26,12 +26,12 @@ describe('isIgnoredPath', () => {
     expect(isIgnoredPath('a (Konfliktkopie 2026-01-05).md')).toBe(true);
   });
 
-  it('ignoriert Dateien, die kein Markdown sind', () => {
+  it('ignores files that are not Markdown', () => {
     expect(isIgnoredPath('bild.png')).toBe(true);
     expect(isIgnoredPath('notizen.txt')).toBe(true);
   });
 
-  it('lässt normale Markdown-Dateien durch', () => {
+  it('lets normal Markdown files through', () => {
     expect(isIgnoredPath('a.md')).toBe(false);
     expect(isIgnoredPath('ordner/b c.md')).toBe(false);
   });
@@ -41,7 +41,7 @@ describe('parseArticle', () => {
   const ok =
     '---\npublish: true\ntitle: Titel\ndate: 2026-01-05\ntags: [A, b]\n---\nText\n';
 
-  it('liest einen veröffentlichten Artikel', () => {
+  it('reads a published article', () => {
     const r = parse('ordner/datei.md', ok);
     expect(r.kind).toBe('article');
     if (r.kind !== 'article') return;
@@ -56,38 +56,38 @@ describe('parseArticle', () => {
     expect(r.warnings).toEqual([]);
   });
 
-  it('ignoriert Artikel ohne publish', () => {
+  it('ignores articles without publish', () => {
     expect(parse('a.md', '---\ntitle: A\n---\nText').kind).toBe('ignored');
     expect(parse('a.md', 'Nur Text').kind).toBe('ignored');
   });
 
-  it('wertet nur den Boolean true als publish', () => {
-    for (const wert of ['"true"', 'yes', '1', 'false', 'null']) {
-      expect(parse('a.md', `---\npublish: ${wert}\n---\nText`).kind).toBe(
+  it('counts only the boolean true as publish', () => {
+    for (const value of ['"true"', 'yes', '1', 'false', 'null']) {
+      expect(parse('a.md', `---\npublish: ${value}\n---\nText`).kind).toBe(
         'ignored',
       );
     }
   });
 
-  it('überspringt ungültiges YAML mit Warnung', () => {
+  it('skips invalid YAML with a warning', () => {
     const r = parse('a.md', '---\npublish: true\ntitle: [offen\n---\nText');
     expect(r.kind).toBe('skipped');
   });
 
-  it('überspringt Artikel mit Wikilinks', () => {
+  it('skips articles with wikilinks', () => {
     const r = parse('a.md', '---\npublish: true\n---\nSiehe [[Notiz]].');
     expect(r.kind).toBe('skipped');
     const r2 = parse('a.md', '---\npublish: true\n---\n![[bild.png]]');
     expect(r2.kind).toBe('skipped');
   });
 
-  it('erkennt Wikilinks in Code nicht als Wikilinks', () => {
+  it('does not treat wikilinks in code as wikilinks', () => {
     const text =
       '---\npublish: true\n---\nCode: `a[[0]]`\n\n```\nx[[1]]\n```\n';
     expect(parse('a.md', text).kind).toBe('article');
   });
 
-  it('fällt bei fehlendem Datum auf das Änderungsdatum zurück', () => {
+  it('falls back to the modification date if the date is missing', () => {
     const r = parse('a.md', '---\npublish: true\n---\nText');
     expect(r.kind).toBe('article');
     if (r.kind !== 'article') return;
@@ -96,7 +96,7 @@ describe('parseArticle', () => {
     expect(r.warnings.length).toBe(1);
   });
 
-  it('fällt bei ungültigem Datum auf das Änderungsdatum zurück und warnt', () => {
+  it('falls back to the modification date for an invalid date and warns', () => {
     const r = parse('a.md', '---\npublish: true\ndate: gestern\n---\nText');
     expect(r.kind).toBe('article');
     if (r.kind !== 'article') return;
@@ -104,7 +104,7 @@ describe('parseArticle', () => {
     expect(r.warnings.length).toBe(1);
   });
 
-  it('leitet den Titel aus dem Dateinamen ab', () => {
+  it('derives the title from the file name', () => {
     const r = parse(
       'ordner/Größe und Maße.md',
       '---\npublish: true\ndate: 2026-01-05\n---\nText',
@@ -113,7 +113,7 @@ describe('parseArticle', () => {
     expect(r.kind === 'article' && r.article.slug).toBe('groesse-und-masse');
   });
 
-  it('nimmt einen gesetzten Slug und normalisiert ihn', () => {
+  it('takes a given slug and normalizes it', () => {
     const r = parse(
       'a.md',
       '---\npublish: true\nslug: Mein Slug\ndate: 2026-01-05\n---\nText',
@@ -121,14 +121,14 @@ describe('parseArticle', () => {
     expect(r.kind === 'article' && r.article.slug).toBe('mein-slug');
   });
 
-  it('überspringt Artikel, deren Slug nicht brauchbar ist', () => {
+  it('skips articles whose slug is not usable', () => {
     expect(
       parse('日本語.md', '---\npublish: true\ndate: 2026-01-05\n---\nText')
         .kind,
     ).toBe('skipped');
   });
 
-  it('normalisiert Tags, entfernt Doppelte und warnt bei Ungültigem', () => {
+  it('normalizes tags, removes duplicates and warns about invalid ones', () => {
     const text =
       '---\npublish: true\ndate: 2026-01-05\ntags: [Python, python, " ML ", 5]\n---\nText';
     const r = parse('a.md', text);
@@ -138,7 +138,7 @@ describe('parseArticle', () => {
     expect(r.warnings.length).toBe(1);
   });
 
-  it('akzeptiert einen einzelnen Tag als Text', () => {
+  it('accepts a single tag as text', () => {
     const r = parse(
       'a.md',
       '---\npublish: true\ndate: 2026-01-05\ntags: Python\n---\nText',
@@ -146,7 +146,7 @@ describe('parseArticle', () => {
     expect(r.kind === 'article' && r.article.tags).toEqual(['python']);
   });
 
-  it('übernimmt die Beschreibung', () => {
+  it('takes over the description', () => {
     const r = parse(
       'a.md',
       '---\npublish: true\ndate: 2026-01-05\ndescription: Kurz\n---\nText',
@@ -166,7 +166,7 @@ describe('assignUniqueSlugs', () => {
     path,
   });
 
-  it('lässt eindeutige Slugs unverändert', () => {
+  it('leaves unique slugs unchanged', () => {
     const { articles, warnings } = assignUniqueSlugs([
       make('a.md', 'a', '2026-01-01'),
       make('b.md', 'b', '2026-01-02'),
@@ -175,7 +175,7 @@ describe('assignUniqueSlugs', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('gibt dem Älteren den Slug und hängt beim Jüngeren ein Suffix an', () => {
+  it('gives the older one the slug and appends a suffix to the younger one', () => {
     const { articles, warnings } = assignUniqueSlugs([
       make('b.md', 'gleich', '2026-01-03'),
       make('a.md', 'gleich', '2026-01-02'),
@@ -187,7 +187,7 @@ describe('assignUniqueSlugs', () => {
     expect(warnings.length).toBe(1);
   });
 
-  it('zählt weiter und vermeidet Zusammenstöße mit vorhandenen Suffixen', () => {
+  it('keeps counting and avoids clashes with existing suffixes', () => {
     const { articles } = assignUniqueSlugs([
       make('a.md', 'x', '2026-01-01'),
       make('b.md', 'x', '2026-01-02'),
@@ -197,7 +197,7 @@ describe('assignUniqueSlugs', () => {
     expect(articles.map((a) => a.slug)).toEqual(['x', 'x-2', 'x-3', 'x-2-2']);
   });
 
-  it('ordnet bei gleichem Datum nach Pfad, damit das Ergebnis stabil ist', () => {
+  it('orders by path at the same date so the result is stable', () => {
     const { articles } = assignUniqueSlugs([
       make('z.md', 's', '2026-01-01'),
       make('a.md', 's', '2026-01-01'),
@@ -212,7 +212,7 @@ describe('assignUniqueSlugs', () => {
 describe('loadArticles (Fixtures)', () => {
   const dir = fileURLToPath(new URL('../fixtures/content', import.meta.url));
 
-  it('lädt genau die veröffentlichbaren Artikel', async () => {
+  it('loads exactly the publishable articles', async () => {
     const { articles } = await loadArticles(dir);
     expect(articles.map((a) => a.slug).sort()).toEqual(
       [
@@ -229,7 +229,7 @@ describe('loadArticles (Fixtures)', () => {
     );
   });
 
-  it('meldet übersprungene und zurückgefallene Dateien', async () => {
+  it('reports skipped files and files that fell back', async () => {
     const { warnings } = await loadArticles(dir);
     const text = warnings.join('\n');
     expect(text).toContain('kaputt.md');
@@ -239,13 +239,13 @@ describe('loadArticles (Fixtures)', () => {
     expect(text).not.toContain('conflicted');
   });
 
-  it('sortiert nach Datum, neueste zuerst', async () => {
+  it('sorts by date, newest first', async () => {
     const { articles } = await loadArticles(dir);
     const times = articles.map((a) => a.date.getTime());
     expect(times).toEqual([...times].sort((a, b) => b - a));
   });
 
-  it('liefert einen Fehler für einen fehlenden Ordner', async () => {
+  it('returns an error for a missing folder', async () => {
     await expect(loadArticles(`${dir}/gibt-es-nicht`)).rejects.toThrow();
   });
 });
