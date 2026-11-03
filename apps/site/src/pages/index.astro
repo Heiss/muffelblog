@@ -1,17 +1,9 @@
 ---
-import { SITE_LANG, SITE_NAME, pageTitle } from '@muffelblog/core';
+import { SITE_NAME, paginate } from '@muffelblog/core';
+import FeedSeite from '../components/FeedSeite.astro';
+import { getFeed, pageSize } from '../lib/feed';
+
+const page = paginate(await getFeed(), 1, '/', pageSize());
 ---
 
-<!doctype html>
-<html lang={SITE_LANG}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{pageTitle()}</title>
-  </head>
-  <body>
-    <main>
-      <h1>{SITE_NAME}</h1>
-    </main>
-  </body>
-</html>
+<FeedSeite heading={SITE_NAME} {page} />

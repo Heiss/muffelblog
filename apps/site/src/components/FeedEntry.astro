@@ -1,0 +1,37 @@
+---
+import { tagSlug } from '@muffelblog/core';
+import type { FeedItem } from '@muffelblog/core';
+
+interface Props {
+  item: FeedItem;
+}
+
+const { item } = Astro.props;
+const datum = new Intl.DateTimeFormat('de-DE', {
+  dateStyle: 'long',
+  ...(item.kind === 'memo' ? { timeStyle: 'short' } : {}),
+  timeZone: 'Europe/Berlin',
+}).format(item.date);
+---
+
+<article class={`eintrag eintrag-${item.kind}`} data-kind={item.kind}>
+  <h2>
+    <a href={item.url}>{item.title}</a>
+  </h2>
+  <p>
+    <time datetime={item.date.toISOString()}>{datum}</time>
+  </p>
+  {item.html !== undefined ? (
+    <div class="inhalt" set:html={item.html} />
+  ) : (
+    item.excerpt && <p class="auszug">{item.excerpt}</p>
+  )}
+  {item.tags.length > 0 && (
+    <ul aria-label="Tags">
+      {item.tags.map((tag) => {
+        const slug = tagSlug(tag);
+        return <li>{slug ? <a href={`/tag/${slug}/`}>{tag}</a> : tag}</li>;
+      })}
+    </ul>
+  )}
+</article>

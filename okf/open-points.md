@@ -15,7 +15,7 @@ dagegen spricht.
 
 | ID | Thema | Eintrag / Problem | Auswirkung |
 |---|---|---|---|
-| O1 | Block-Quellen der Split-View | Drei Reihen technischer Blöcke (gemischt, Memos, Posts), Blockgröße 20. Der Nutzer hat nur die gemischten Blöcke bestätigt, die Split-View braucht aber pro Spalte eine eigene Liste. | [Feed](/frontend/feed.md) |
+| O1 | Block-Quellen der Split-View | **[E]** Drei Reihen technischer Blöcke (gemischt, Memos, Posts), Blockgröße 20, umgesetzt in W05. Offen bleibt nur, ob die Split-View (W06) damit auskommt. | [Feed](/frontend/feed.md) |
 | O2 | Datumsformat und Zeitzone | **[E] entschieden:** reines Datum = 12:00 Uhr Berlin, Uhrzeit ohne Zone = Berliner Ortszeit, mit Zone gilt der Zeitpunkt. | [Frontmatter](/content/frontmatter.md) |
 | O3 | Zustand des Mention-Sync | Bei Verlust der Statusdatei würden alle Mentions doppelt gepostet. Vorschlag: Marker (Quell-URL) im Kommentartext, aus dem der Zustand aus Remark42 wiederhergestellt wird. | [Webmentions](/community/webmentions.md) |
 | O5 | Fremdinhalte in Markdown | **[E] entschieden:** In Artikeln erlaubt, aber nur aus Freigabelisten. Bilder: `upload.wikimedia.org`, `raw.githubusercontent.com`, `user-images.githubusercontent.com`. Einbettungen: `www.youtube-nocookie.com`, erst nach Klick. Memos bleiben strikt (Bilder gespiegelt). Das weicht von der früheren Regel "nichts von anderen Diensten laden" ab. Risiko: IP-Adressen der Besucher gehen an die Bild-Hosts (O15). | [Medien](/content/media.md) |
@@ -40,9 +40,9 @@ dagegen spricht.
 | O7 | Bildgrößen und Formate | **[E] entschieden:** Lokale Artikelbilder in mehreren Breiten (480 bis 1920) als WebP, EXIF und Farbprofil entfernt, SVG abgelehnt. Umgesetzt mit `sharp`. |
 | O11 | Webmentions: Sender und Microformats | Implementierung des Senders offen. `h-entry`/`h-card`, `rel=me`, IndieAuth wurden nicht besprochen, sind für sinnvolle Anzeige aber nötig. |
 | O12 | Senden aus Memos | Der Nutzer sagte "ja auf jeden Fall" für Senden und "auch für Memo-Seiten" für Mentions. Senden aus Memos ist eine Annahme. |
-| O13 | Tag-Regeln | **[E] teilweise entschieden:** Tags durchgehend kleingeschrieben, auch in der Anzeige. Verschachtelte Memos-Tags (`#a/b`) bleiben ein Tag **[E]**. Offen: zählen Inline-`#tags` in Artikeln? Gemeinsamer Namensraum für Posts und Memos ist ein Vorschlag. |
+| O13 | Tag-Regeln | **[E] teilweise entschieden:** Tags durchgehend kleingeschrieben, auch in der Anzeige. Verschachtelte Memos-Tags (`#a/b`) bleiben ein Tag **[E]**. Tag-Seiten: Übersicht `/tag/` und Liste je Tag **[E]** (W05). Offen: zählen Inline-`#tags` in Artikeln? Gemeinsamer Namensraum für Posts und Memos ist ein Vorschlag. |
 | O14 | Memo-Datum | **[E] entschieden:** `createTime` (die API hat kein `displayTime`). Titel immer aus Datum und Uhrzeit, auch bei Memos mit nur einem Bild. |
-| O20 | Feed-Darstellung von Posts, RSS-Umfang | Länge des Auszugs, Anzahl RSS-Einträge, Volltext oder Auszug. |
+| O20 | Feed-Darstellung von Posts, RSS-Umfang | **[E teilweise]** Feed-Auszug: Beschreibung, sonst Textanfang, höchstens 200 Zeichen (W05). Offen: Anzahl RSS-Einträge, Volltext oder Auszug im RSS. |
 | O21 | Zurückgezogene Artikel | **[E] entschieden:** einfach weg (404), kein gespeicherter Zustand. Offen: ob beim Zurückziehen eine Löschbenachrichtigung per Webmention gesendet wird (W15). |
 | O26 | Doppelte Slugs | **[E] entschieden:** Suffix `-2`, `-3`, der ältere Artikel behält den Slug. Risiko: Kommt ein Artikel mit älterem Datum und gleichem Slug dazu, tauschen die URLs. Ein `slug:` im Frontmatter vermeidet das. |
 

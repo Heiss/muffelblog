@@ -1,0 +1,31 @@
+---
+import { groupByTag, paginate } from '@muffelblog/core';
+import type { FeedItem } from '@muffelblog/core';
+import FeedSeite from '../../../../components/FeedSeite.astro';
+import { getFeed, pageSize, restSeiten } from '../../../../lib/feed';
+
+export async function getStaticPaths() {
+  const size = pageSize();
+  return groupByTag(await getFeed()).flatMap((g) =>
+    restSeiten(g.items.length, size).map((n) => ({
+      params: { tag: g.slug, n: String(n) },
+      props: { name: g.names.join(' / '), items: g.items },
+    })),
+  );
+}
+
+interface Props {
+  name: string;
+  items: FeedItem[];
+}
+
+const { name, items } = Astro.props;
+const page = paginate(
+  items,
+  Number(Astro.params.n),
+  `/tag/${Astro.params.tag}/`,
+  pageSize(),
+);
+---
+
+<FeedSeite title={`Tag ${name}`} heading={`Tag: ${name}`} {page} />

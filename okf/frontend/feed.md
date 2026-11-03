@@ -21,24 +21,26 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 * **[E]** Modus, Teilungsverhältnis, ausgeblendete Seite und Filter bleiben
   erhalten (Browser-Speicher).
 * **[E]** Memos erscheinen vollständig mit Bildern.
-* **[V]** Posts erscheinen im Feed mit Auszug (Länge offen, siehe O20).
+* **[E]** Posts erscheinen im Feed mit Auszug: Beschreibung, sonst Textanfang
+  (höchstens 200 Zeichen, an der Wortgrenze gekürzt).
 * **[E]** Posts und Memos haben eigene Seiten, die der Feed verlinkt.
 
 # Datenquelle für Endless Scroll
 
 * **[E]** Technische HTML-Blöcke `/seite/N/` mit `noindex, follow`. Das
   JavaScript lädt sie beim Scrollen und hängt die Einträge an. Besucher sehen
-  nie eine Pagination. Ohne JavaScript steht in `<noscript>` ein "Weiter"-Link.
+  nie eine Pagination. Ohne JavaScript führt ein normaler "Ältere Einträge"-Link
+  weiter (umgesetzt in W05).
 * **[E]** Die Blöcke sind nicht in Pagefind (`data-pagefind-ignore`) und nicht
-  in der Sitemap. `/seite/1/` verweist per Canonical auf `/`.
+  in der Sitemap. Seite 1 hat keine eigene Route (`/seite/1/` gibt 404), sie
+  liegt an der Basis (`/`, `/memos/`, `/posts/`, `/tag/<tag>/`).
 * **[E]** Tag-Listen nutzen dasselbe Verfahren.
 * **[V]** Die Split-View braucht pro Spalte eine eigene chronologische Liste.
   Aus den gemischten Blöcken ließen sich die Spalten nur durch Filtern
   füllen, was ungleich lange Spalten erzeugt. Deshalb werden drei Block-
   Reihen erzeugt: gemischt (`/seite/N/`), nur Memos (`/memos/seite/N/`), nur
   Posts (`/posts/seite/N/`). Der Filter im Unified-Modus nutzt die
-  passende Reihe. Blockgröße (Vorschlag: 20 Einträge) und Pfade sind in
-  O1 erfasst.
+  passende Reihe. **[E]** Blockgröße 20 Einträge. Umgesetzt in W05.
 
 # Verhalten im Browser
 

@@ -1,0 +1,53 @@
+---
+import { SITE_LANG, SITE_NAME, pageTitle } from '@muffelblog/core';
+import { canonicalUrl, siteUrl } from '../lib/feed';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Sucher sollen die Seite nicht indexieren (technische Blockseiten). */
+  noindex?: boolean;
+}
+
+const { title, description, noindex } = Astro.props;
+const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
+---
+
+<!doctype html>
+<html lang={SITE_LANG}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle(title)}</title>
+    {description && <meta name="description" content={description} />}
+    {canonical && <link rel="canonical" href={canonical} />}
+    {noindex && <meta name="robots" content="noindex, follow" />}
+  </head>
+  <body>
+    <header>
+      <a href="/" class="seitenname">
+        {SITE_NAME}
+      </a>
+      <nav aria-label="Hauptnavigation">
+        <a href="/">Alles</a>
+        <a href="/posts/">Beiträge</a>
+        <a href="/memos/">Memos</a>
+        <a href="/tag/">Tags</a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  .inhalt img,
+  .inhalt video {
+    max-width: 100%;
+    height: auto;
+  }
+  .inhalt audio {
+    width: 100%;
+  }
+</style>

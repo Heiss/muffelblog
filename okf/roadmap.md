@@ -269,16 +269,36 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 
 * Branch: `feature/w05-feed-statisch`
 * Abhängig von: W01, W04
-* Entscheidungen: Blockgröße und Pfade (O1), Tag-Seiten, Grundlayout (O16).
-* Umfang: Startseite, technische Blöcke `/seite/N/` in drei Reihen,
-  `noindex, follow`, Canonical, `<noscript>`-Link, Tag-Seiten, Sitemap (siehe
-  [Feed](/frontend/feed.md), [URLs und SEO](/frontend/urls-seo.md)).
+* Entschieden:
+  * **[E]** Blockgröße 20 Einträge (O1).
+  * **[E]** Auszug eines Artikels: Beschreibung, sonst Textanfang (höchstens
+    200 Zeichen, an der Wortgrenze gekürzt). Memos erscheinen vollständig (O20).
+  * **[E]** Tag-Seiten: Übersicht `/tag/` und je Tag eine Liste `/tag/<tag>/`
+    mit Blöcken `/tag/<tag>/seite/N/` (O13).
+* Umfang: Startseite, technische Blöcke `/seite/N/` in drei Reihen
+  (`/`, `/memos/`, `/posts/`), `noindex, follow` ab Seite 2, Canonical (nur mit
+  `SITE_URL`), Tag-Seiten, Sitemap (nur mit `SITE_URL`), siehe
+  [Feed](/frontend/feed.md) und [URLs und SEO](/frontend/urls-seo.md).
 * DoD:
-  * [ ] Posts und Memos erscheinen gemeinsam, rein chronologisch.
-  * [ ] `/seite/N/` ist weder in der Sitemap noch in Pagefind.
-  * [ ] `/seite/1/` verweist per Canonical auf `/`.
-  * [ ] Ohne JavaScript führt der Weiter-Link durch alle Einträge.
-  * [ ] Seiten haben `lang="de"`.
+  * [x] Posts und Memos erscheinen gemeinsam, rein chronologisch (Unit-Test
+    und E2E über alle Blöcke, ohne Doppelungen).
+  * [x] `/seite/N/` ist nicht in der Sitemap. Pagefind kommt in W08, dort ist
+    `data-pagefind-ignore` für die Blöcke nachzuziehen.
+  * [x] Seite 1 hat keine eigene Route: `/seite/1/` gibt 404, die erste Seite
+    ist `/`. Damit entfällt der Canonical von `/seite/1/` auf `/`.
+  * [x] Ohne JavaScript führt der Weiter-Link durch alle Einträge (E2E mit
+    abgeschaltetem JavaScript). Ein `<noscript>`-Link ist unnötig, weil die
+    Links normale Anker sind.
+  * [x] Seiten haben `lang="de"`.
+* Befunde bei der Umsetzung:
+  * Der Test-Build nutzt Blöcke zu 4 Einträgen (`MUFFEL_PAGE_SIZE=4`, nur mit
+    `MUFFEL_FIXTURES=1` wirksam), sonst hätten die 15 Beispieleinträge nur
+    eine Seite.
+  * Ohne `SITE_URL` (Domain offen, O9) gibt es weder Sitemap noch Canonical.
+    Mit `SITE_URL` entstehen beide, lokal geprüft, aber nicht in der CI.
+  * Tags, deren URL-Form gleich ist (`a/b` und `a-b`), teilen sich eine Seite.
+  * Artikelseiten `/p/<slug>/` und Memo-Seiten nutzen das neue Grundlayout
+    noch nicht (Navigation fehlt dort), das folgt mit W06/W10.
 
 ## W06 - Feed-Client
 
