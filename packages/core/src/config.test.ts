@@ -14,6 +14,7 @@ describe('readSettings', () => {
       memosDescriptionChars: 160,
       memosTimeoutMs: 30_000,
       memosMaxFileBytes: 25 * 1024 * 1024,
+      rssItems: 50,
     });
     expect(readSettings({})).toEqual(DEFAULT_SETTINGS);
   });
@@ -25,6 +26,7 @@ describe('readSettings', () => {
       MUFFEL_MEMOS_DESCRIPTION_CHARS: '100',
       MUFFEL_MEMOS_TIMEOUT_MS: '5000',
       MUFFEL_MEMOS_MAX_FILE_MB: '10',
+      MUFFEL_RSS_ITEMS: '30',
     });
     expect(s).toEqual({
       feedPageSize: 50,
@@ -32,6 +34,7 @@ describe('readSettings', () => {
       memosDescriptionChars: 100,
       memosTimeoutMs: 5000,
       memosMaxFileBytes: 10 * 1024 * 1024,
+      rssItems: 30,
     });
   });
 

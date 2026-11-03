@@ -413,9 +413,9 @@ Applies to every work package in addition to its own criteria:
 * Depends on: W05
 * Decisions: scope and excerpt (O20), domain placeholder until it is set.
 * DoD:
-  * [ ] `/feed.xml` is valid and combines posts and memos.
-  * [ ] GUIDs are stable, independent of date and domain.
-  * [ ] The feed contains no comments and mentions.
+  * [x] `/feed.xml` is valid and combines posts and memos.
+  * [x] GUIDs are stable, independent of date and domain.
+  * [x] The feed contains no comments and mentions.
 
 ## W10 - SEO, microformats, static pages
 
