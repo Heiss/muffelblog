@@ -1,34 +1,35 @@
-# Update Log
+# Update log
 
 ## 2026-11-03
+* **Update**: W22d done: the whole OKF bundle is translated to English (see [Languages](/ops/language.md)).
 * **Update**: W22c done: `apps/site` translated, routes `/page/N/`, UI texts collected in `apps/site/src/i18n/messages.ts`, English CSS classes, English CI job names.
 * **Update**: W22b done: `packages/core` translated to English (identifiers, comments, test names, warning messages); UI texts in core collected in `UI` objects.
 * **Creation**: [Languages](/ops/language.md): development in English, UI language per `MUFFEL_LANG`, English URLs; roadmap W22 and W23, O39.
-* **Update**: Filter umbenannt: Kurz (Memos), Lang (Blogbeiträge), Begriffe (Glossar, getrennt von Lang, in Alle gekennzeichnet); Glossar-Feld `type: glossary`, siehe [Feed](/frontend/feed.md) und [Glossar](/features/glossary.md).
-* **Update**: W06c umgesetzt (Branch `feature/w06c-themes`): Grundlayout, zehn Themes mit selbst gehosteten Schriften, Umschalter, kein Aufblitzen, Syntaxfarben je Theme; O35 entschieden, siehe [Themes](/frontend/themes.md).
-* **Creation**: [Glossar und Wissensgraph](/features/glossary.md) angelegt (Vorbild newworkglossar.de, Startseite ausgewertet); Arbeitspakete W19 bis W21, offener Punkt O38.
-* **Update**: Split-View gestrichen (W06b entfällt), Unified mit Filter bleibt, Nicht-Ziel "kein Graph" ersetzt, siehe [Feed](/frontend/feed.md).
-* **Update**: W06 in drei Pull Requests geteilt (W06a Endless Scroll, Filter, Rücksprung; W06b Split-View; W06c Themes); Entscheidungen zu Split-Daten, Moduswechsel und dunkler Systemeinstellung eingetragen.
-* **Update**: Arbeitspaket W18 (Codequalität, Komplexität, Mutationstests ab 80 %) und O37 aufgenommen, bewusst nicht am Anfang.
-* **Creation**: [Konfiguration](/ops/config.md) angelegt: Zahlenwerte für Feed und Memos als Umgebungsvariablen `MUFFEL_<BEREICH>_<NAME>`, ungültige Werte brechen den Build ab.
-* **Update**: W05 umgesetzt (Branch `feature/w05-feed-statisch`): gemeinsamer Feed mit Blöcken zu 20, Reihen `/`, `/memos/`, `/posts/`, Tag-Übersicht und Tag-Listen, Sitemap und Canonical nur mit `SITE_URL`; Entscheidungen zu O1, O13, O20 eingetragen, siehe [Feed](/frontend/feed.md).
-* **Update**: Merge-Regel festgehalten: eigene Pull Requests mergt Claude nach grüner CI selbst, siehe [Branching und Release](/ops/branching-release.md).
+* **Update**: Filter renamed: Kurz (memos), Lang (blog posts), Begriffe (glossary terms, kept apart from Lang, marked in All); glossary field `type: glossary`, see [Feed](/frontend/feed.md) and [Glossary](/features/glossary.md).
+* **Update**: W06c implemented (branch `feature/w06c-themes`): base layout, ten themes with self-hosted fonts, switcher, no flash, syntax colors per theme; O35 decided, see [Themes](/frontend/themes.md).
+* **Creation**: [Glossary and knowledge graph](/features/glossary.md) created (model newworkglossar.de, home page evaluated); work packages W19 to W21, open point O38.
+* **Update**: Split view dropped (W06b is gone), unified with a filter stays, non-goal "no graph" replaced, see [Feed](/frontend/feed.md).
+* **Update**: W06 split into three pull requests (W06a endless scroll, filter, going back; W06b split view; W06c themes); decisions on split data, mode change and dark system setting recorded.
+* **Update**: Work package W18 (code quality, complexity, mutation tests from 80 %) and O37 added, deliberately not at the start.
+* **Creation**: [Configuration](/ops/config.md) created: numeric values for feed and memos as environment variables `MUFFEL_<AREA>_<NAME>`, invalid values stop the build.
+* **Update**: W05 implemented (branch `feature/w05-feed-statisch`): combined feed with blocks of 20, series `/`, `/memos/`, `/posts/`, tag overview and tag lists, sitemap and canonical only with `SITE_URL`; decisions on O1, O13, O20 recorded, see [Feed](/frontend/feed.md).
+* **Update**: Merge rule recorded: the assistant merges its own pull requests after a green CI, see [Branching and release](/ops/branching-release.md).
 
 ## 2026-11-02
-* **Update**: W04 umgesetzt (Branch `feature/w04-memos`): Memos-Quelle, Seiten `/m/<uid>/`, Anhänge spiegeln, Contract-Test mit CI-Job; Entscheidungen O6, O14 und Tag-Regel eingetragen, siehe [Memos](/content/memos-source.md).
-* **Update**: Themes: alle zehn bleiben, Standard ist Solarized Light (O35), siehe [Themes](/frontend/themes.md).
-* **Update**: W03 umgesetzt (Branch `feature/w03-rendering`): Markdown-Rendering mit Bereinigung, Remote-Bilder und Einbettungen nur aus Freigabelisten, lokale Bilder als WebP ohne EXIF; Entscheidungen O5 und O7 eingetragen, siehe [Medien](/content/media.md).
-* **Creation**: [Themes](/frontend/themes.md) angelegt: mehrere Farbschemata im Stil bekannter Editor-Themes (O35), Vorschau mit zehn Themes.
-* **Update**: W01 umgesetzt (Branch `feature/w01-frontmatter`): Artikel-Loader, Frontmatter-Schema, Slugs, Datum, Tags, Seiten `/p/<slug>/`; Entscheidungen O2, O13 (teilweise), O21, O26 eingetragen, siehe [Frontmatter](/content/frontmatter.md).
-* **Update**: Renovate läuft. Auto-Merge bleibt auf Patch beschränkt, TypeScript wird bei Version 6 gehalten (O31), siehe [Branching und Release](/ops/branching-release.md).
-* **Update**: Erster CI-Lauf von W00 auf GitHub grün (Docker-Build, Lint/Typen/Unit/Build, E2E, Gate); Roadmap-Kriterien nachgezogen.
-* **Update**: W00 umgesetzt (Branch `feature/w00-fundament`): Workspace, Astro-Gerüst, Vitest, Playwright, ESLint, Prettier, Dockerfile, CI mit Gate-Job, Renovate-Konfiguration; Befunde und offene Abnahmepunkte in der [Roadmap](/roadmap.md).
-* **Update**: [Teststrategie](/ops/testing.md): Vitest und Playwright, volle Suite bei jedem PR und erneut beim Tag, gepinnte Testinstanzen, Gate-Job für Doku-PRs.
-* **Creation**: [Teststrategie](/ops/testing.md) angelegt (TDD mit Mocks, E2E-Tests, Contract-Tests); Roadmap-Kriterien ergänzt.
-* **Update**: Renovate (GitHub-App) mit Auto-Merge für Patch-Updates, 3 Tage Wartezeit, ohne Ausnahmen entschieden (O31); W00 um Renovate-Kriterien ergänzt.
-* **Update**: Release-Tags von `vX.Y.Z` auf CalVer `YY.M.MICRO` ohne `v` umgestellt (SemVer-gültig), Auto-Updater-Regeln ergänzt, siehe [Branching und Release](/ops/branching-release.md).
-* **Creation**: [Branching und Release](/ops/branching-release.md) angelegt: GitHub Flow, Squash-Merge, Tags `vX.Y.Z`, Images nur auf Tag.
-* **Update**: Entscheidungen zu W00 eingetragen: Basis-Branch `main`, pnpm auf Node LTS, GitHub Actions, hybride Teststrategie.
-* **Creation**: [Roadmap](/roadmap.md) mit Arbeitspaketen, Abhängigkeiten und Definition of Done angelegt.
-* **Creation**: Bundle aus der Brainstorming-Sitzung angelegt, siehe [Überblick](/overview.md).
-* **Review**: Kritische Durchsicht, Ergebnis in [Offene Punkte](/open-points.md).
+* **Update**: W04 implemented (branch `feature/w04-memos`): Memos source, pages `/m/<uid>/`, mirroring attachments, contract test with a CI job; decisions O6, O14 and the tag rule recorded, see [Memos](/content/memos-source.md).
+* **Update**: Themes: all ten stay, the default is Solarized Light (O35), see [Themes](/frontend/themes.md).
+* **Update**: W03 implemented (branch `feature/w03-rendering`): Markdown rendering with sanitizing, remote images and embeds only from allowlists, local images as WebP without EXIF; decisions O5 and O7 recorded, see [Media](/content/media.md).
+* **Creation**: [Themes](/frontend/themes.md) created: several color schemes in the style of well-known editor themes (O35), preview with ten themes.
+* **Update**: W01 implemented (branch `feature/w01-frontmatter`): article loader, frontmatter schema, slugs, date, tags, pages `/p/<slug>/`; decisions O2, O13 (partly), O21, O26 recorded, see [Frontmatter](/content/frontmatter.md).
+* **Update**: Renovate runs. Auto-merge stays limited to patch, TypeScript is held at version 6 (O31), see [Branching and release](/ops/branching-release.md).
+* **Update**: First CI run of W00 on GitHub green (Docker build, lint/types/unit/build, E2E, gate); roadmap criteria updated.
+* **Update**: W00 implemented (branch `feature/w00-fundament`): workspace, Astro scaffold, Vitest, Playwright, ESLint, Prettier, Dockerfile, CI with a gate job, Renovate configuration; findings and open acceptance points in the [roadmap](/roadmap.md).
+* **Update**: [Test strategy](/ops/testing.md): Vitest and Playwright, full suite on every PR and again on the tag, pinned test instances, gate job for documentation PRs.
+* **Creation**: [Test strategy](/ops/testing.md) created (TDD with mocks, E2E tests, contract tests); roadmap criteria added.
+* **Update**: Renovate (GitHub app) with auto-merge for patch updates, 3 days of waiting, decided without exceptions (O31); W00 extended by Renovate criteria.
+* **Update**: Release tags changed from `vX.Y.Z` to CalVer `YY.M.MICRO` without `v` (SemVer-valid), auto-updater rules added, see [Branching and release](/ops/branching-release.md).
+* **Creation**: [Branching and release](/ops/branching-release.md) created: GitHub Flow, squash merge, tags `vX.Y.Z`, images only on a tag.
+* **Update**: Decisions on W00 recorded: base branch `main`, pnpm on Node LTS, GitHub Actions, hybrid test strategy.
+* **Creation**: [Roadmap](/roadmap.md) with work packages, dependencies and definition of done created.
+* **Creation**: Bundle from the brainstorming session created, see [Overview](/overview.md).
+* **Review**: Critical review, result in [Open points](/open-points.md).

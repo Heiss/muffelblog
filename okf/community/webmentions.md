@@ -1,7 +1,7 @@
 ---
 type: Feature
 title: Webmentions
-description: Empfangen über webmention.io, Senden aus Posts und Memos, Anzeige als Remark42-Kommentare.
+description: Receiving through webmention.io, sending from posts and memos, display as Remark42 comments.
 tags: [webmention, indieweb, remark42]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
@@ -14,86 +14,84 @@ sources:
     title: Remark42 Comment, PrepareUntrusted
   - id: remark42-migrator
     resource: https://raw.githubusercontent.com/umputun/remark42/master/backend/app/migrator/native.go
-    title: Remark42 nativer Import
+    title: Remark42 native import
 ---
 
-# Entscheidungen
+# Decisions
 
-* **[E]** webmention.io empfängt Mentions.
-* **[E]** Mentions werden auch gesendet, aus Posts. Ob aus Memos, ist eine
-  Annahme (O12).
-* **[E]** Mentions können auf Posts und Memos eingehen.
-* **[E]** Die Anzeige erfolgt als Kommentare in Remark42 (Option B), damit Kommentare
-  und Mentions in einer Zeitleiste im Widget stehen.
-* **[E]** Name der Quellseite als Kommentator und Originaldatum sind
-  nicht umsetzbar. Es gilt, was Remark42 zulässt.
-* **[E]** Der Browser lädt nichts von webmention.io.
+* **[E]** webmention.io receives mentions.
+* **[E]** Mentions are also sent, from posts. Whether from memos is an
+  assumption (O12).
+* **[E]** Mentions can arrive for posts and memos.
+* **[E]** Display as comments in Remark42 (option B), so comments and mentions
+  are in one timeline in the widget.
+* **[E]** The name of the source page as commenter and the original date are
+  not feasible. What Remark42 allows applies.
+* **[E]** The browser loads nothing from webmention.io.
 
-# Warum als Kommentare
+# Why as comments
 
-Das Remark42-Widget lässt sich nicht von außen um fremde Einträge erweitern.
-Ein Import-Weg wäre möglich, löscht aber bei jedem Lauf alle Kommentare der Site
-(`DeleteAll` vor dem Schreiben).[^remark42-migrator] Er ist deshalb nicht
-vertretbar.
+The Remark42 widget cannot be extended from outside with foreign entries. An
+import path would be possible, but it deletes all comments of the site on every
+run (`DeleteAll` before writing).[^remark42-migrator] It is therefore not
+acceptable.
 
-# Verfahren (Vorschlag)
+# Procedure (proposal)
 
-* **[V]** Der Builder fragt webmention.io alle 3 Minuten ab.
-* **[V]** Für jede neue Mention postet er einen Kommentar über
-  `POST /api/v1/comment` mit Basic Auth als `admin` in das Thema der Zielseite.
-* **[V]** Der Kommentartext enthält Markdown mit Namen und Link der Quellseite,
-  etwa "Mention von {Seitenname}: {URL}". Die Texte sind vorher
-  bereinigt (siehe [Bereinigung](/security/sanitization.md)). Ob Links in
-  Remark42-Kommentaren so gerendert werden, ist nicht geprüft.
-* **[V]** Der Builder speichert die Zuordnung Mention zu Kommentar-ID, um nicht
-  doppelt zu posten und um bei weggefallenen Mentions den Kommentar über
-  `DELETE /api/v1/admin/comment/{id}` zu löschen. Wiederherstellung bei
-  Verlust des Zustands: siehe O3.
+* **[V]** The builder queries webmention.io every 3 minutes.
+* **[V]** For every new mention it posts a comment through
+  `POST /api/v1/comment` with basic auth as `admin` into the topic of the
+  target page.
+* **[V]** The comment text contains Markdown with the name and the link of the
+  source page, for example "Mention from {site name}: {URL}". The texts are
+  sanitized beforehand (see [Sanitizing](/security/sanitization.md)). Whether
+  links in Remark42 comments are rendered this way has not been checked.
+* **[V]** The builder stores the mapping from mention to comment id, so it does
+  not post twice and can delete the comment through
+  `DELETE /api/v1/admin/comment/{id}` when a mention is gone. Recovery when the
+  state is lost: see O3.
 
-# Was Remark42 vorgibt
+# What Remark42 dictates
 
-* Der Autor ist immer der angemeldete Nutzer, hier `admin`. Ein eigener Name ist
-  nicht möglich.[^remark42-create]
-* Der Zeitstempel wird zurückgesetzt und neu vergeben, es zählt der Zeitpunkt
-  des Postens.[^remark42-comment] Damit ist die Zeit einer Mention der
-  Eingangszeitpunkt (bis zu 3 Minuten nach Eintreffen), nicht das Datum der
-  Quellseite. Beim ersten Lauf bekämen vorhandene Mentions das aktuelle Datum.
-* **[U]** Wie das Widget den Autor `admin` darstellt, ist nicht geprüft.
+* The author is always the logged-in user, here `admin`. A name of its own is
+  not possible.[^remark42-create]
+* The timestamp is reset and assigned anew, the time of posting counts.[^remark42-comment]
+  So the time of a mention is the time of arrival (up to 3 minutes after it
+  arrives), not the date of the source page. On the first run existing mentions
+  would get the current date.
+* **[U]** How the widget displays the author `admin` has not been checked.
 
-# Senden
+# Sending
 
-* **[E]** Webmentions werden gesendet, weil das Netzwerk sonst nicht
-  funktioniert.
-* **[V]** Gesendet wird erst, nachdem der neue Build ausgeliefert ist. Der
-  Empfänger ruft die Quell-URL ab und prüft den Link.
-* **[V]** Die gesendeten Paare aus Quelle und Ziel werden gespeichert, damit nicht
-  bei jedem Rebuild alle Pings erneut rausgehen. Ändert sich ein Post, wird
-  erneut gesendet. Wird ein Post entfernt, wird eine Löschbenachrichtigung
-  gesendet.
-* **[V]** Die Suche nach dem Endpunkt der Ziele ruft fremde Server ab und läuft
-  asynchron zum Build, mit Zeitlimits.
-* Die Implementierung des Senders ist offen (O11).
+* **[E]** Webmentions are sent, because the network does not work otherwise.
+* **[V]** Sending happens only after the new build is served. The receiver
+  fetches the source URL and checks the link.
+* **[V]** The sent pairs of source and target are stored, so not all pings go
+  out again on every rebuild. If a post changes, it is sent again. If a post is
+  removed, a deletion notice is sent.
+* **[V]** Looking up the endpoint of the targets fetches foreign servers and
+  runs asynchronously to the build, with time limits.
+* The implementation of the sender is open (O11).
 
-# Voraussetzungen
+# Prerequisites
 
 * **[V]** `<link rel="webmention" href="https://webmention.io/<domain>/webmention">`
-  und `rel=me`-Links im `<head>` bzw. auf der Seite, IndieAuth-Anmeldung bei
-  webmention.io. Das braucht die endgültige Domain.
-* **[V]** Microformats (`h-entry`, `h-card`, `u-url`) auf Post- und Memo-Seiten,
-  damit Empfänger Titel und Autor lesen können. Das wurde nicht besprochen
-  (O11).
-* **[U]** Die öffentliche webmention.io-API liefert Mentions ohne Token und
-  kennt einen `since`-Parameter. Nicht geprüft.
+  and `rel=me` links in the `<head>` or on the page, IndieAuth login at
+  webmention.io. This needs the final domain.
+* **[V]** Microformats (`h-entry`, `h-card`, `u-url`) on post and memo pages,
+  so receivers can read title and author. This was not discussed (O11).
+* **[U]** The public webmention.io API delivers mentions without a token and
+  has a `since` parameter. Not checked.
 
-# Risiken
+# Risks
 
-* Mentions sind Fremdinhalt. Spam und Schadcode: Text wird nur als Text
-  gerendert.
-* Fällt webmention.io aus, dürfen vorhandene Mentions nicht verschwinden.
-  Sie liegen in Remark42 und bleiben dort.
-* `ADMIN_PASSWD` im Builder ist ein Master-Schlüssel (siehe
-  [Kommentare](/community/comments.md)).
+* Mentions are foreign content. Spam and malicious code: text is rendered only
+  as text.
+* If webmention.io fails, existing mentions must not disappear. They live in
+  Remark42 and stay there.
+* `ADMIN_PASSWD` in the builder is a master key (see
+  [Comments](/community/comments.md)).
 
 [^remark42-create]: Remark42 createCommentCtrl
 [^remark42-comment]: Remark42 Comment, PrepareUntrusted
-[^remark42-migrator]: Remark42 nativer Import
+[^remark42-migrator]: Remark42 native import

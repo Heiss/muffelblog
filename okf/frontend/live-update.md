@@ -1,29 +1,29 @@
 ---
 type: Feature
-title: Live-Update über build.json
-description: Erkennung neuer Builds durch Abfrage einer kleinen Datei und Banner "N neue Einträge".
+title: Live update through build.json
+description: Detecting new builds by polling a small file and the banner "N new entries".
 tags: [build-json, polling, frontend]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-# Entscheidungen
+# Decisions
 
-* **[E]** Polling einer kleinen Datei `build.json`, kein SSE, kein WebSocket.
-  Es gibt keine Dauerverbindungen für Besucher.
-* **[E]** Der Client zeigt ein Banner "N neue Einträge", wenn neue Einträge da
-  sind. Ein Klick scrollt ganz nach oben und zeigt sie an.
-* **[E]** Das Banner zählt nur Einträge, die neuer sind als der neueste bereits
-  geladene. Zurückdatierte Einträge erscheinen erst beim nächsten Laden.
-* **[V]** Der Client prüft nur bei sichtbarem Tab.
+* **[E]** Polling a small file `build.json`, no SSE, no WebSocket. There are no
+  permanent connections for visitors.
+* **[E]** The client shows a banner "N new entries" when there are new
+  entries. A click scrolls all the way up and shows them.
+* **[E]** The banner counts only entries that are newer than the newest one
+  already loaded. Back-dated entries appear only on the next load.
+* **[V]** The client polls only while the tab is visible.
 
-# Inhalt von build.json
+# Content of build.json
 
 **[V]**
 
 ```json
 {
-  "build": "<Build-ID>",
+  "build": "<build id>",
   "entries": [
     { "id": "post:<slug>", "date": "<ISO 8601>" },
     { "id": "memo:<uid>",  "date": "<ISO 8601>" }
@@ -31,29 +31,29 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 }
 ```
 
-`entries` enthält die neuesten N Einträge (Vorschlag: 20), damit der Client
-die Zahl neuer Einträge ohne Nachladen der Seite berechnen kann. Sind mehr als
-N neu, zeigt das Banner "N+ neue Einträge". Die Build-ID ändert sich bei jedem
-Build, auch wenn sich nur Kommentare oder Mentions geändert haben. Der Client
-vergleicht deshalb die Eintrags-IDs, nicht nur die Build-ID.
+`entries` holds the newest N entries (proposal: 20), so the client can compute
+the number of new entries without reloading the page. If more than N are new,
+the banner shows "N+ new entries". The build id changes on every build, even if
+only comments or mentions changed. The client therefore compares the entry
+ids, not only the build id.
 
-# Abfrage
+# Polling
 
-* **[V]** `cache: 'no-cache'` mit ETag: Der Server antwortet meist mit 304.
-* **[V]** Intervall 60 Sekunden bei sichtbarem Tab, der Scheduler läuft alle 3
-  Minuten (siehe [Pipeline](/ops/pipeline.md)). Der Nutzer hatte "3 Minuten" für
-  die Intervalle genannt. Die 60 Sekunden für den Client sind ein Vorschlag.
-* **[V]** Beim Klick auf das Banner werden die neuen Einträge von `/seite/1/`
-  geholt und oben eingefügt, danach scrollt die Seite nach oben.
-* **[V]** Wird beim Abruf die Build-ID geändert, aber es gibt keine neuen
-  Einträge, bleibt das Banner aus.
+* **[V]** `cache: 'no-cache'` with ETag: the server mostly answers with 304.
+* **[V]** Interval 60 seconds while the tab is visible, the scheduler runs
+  every 3 minutes (see [Pipeline](/ops/pipeline.md)). The user had named "3
+  minutes" for the intervals. The 60 seconds for the client are a proposal.
+* **[V]** On a click on the banner, the new entries are fetched from the first
+  block of the feed (`/`) and inserted at the top, then the page scrolls up.
+* **[V]** If the build id changes during polling but there are no new entries,
+  the banner stays off.
 
-# Risiken
+# Risks
 
-* `build.json` muss als letzte Datei eines Builds erscheinen (siehe
-  [Docker](/architecture/docker.md)), sonst melden Clients einen neuen Stand,
-  bevor die Seiten vollständig sind.
-* Alte Tabs referenzieren gehashte Assets, die nach einem Build fehlen können.
-  Frühere Releases bleiben deshalb eine Weile erhalten.
-* Last: 100 gleichzeitige Besucher bei 60 s Intervall sind etwa 1,7 Abfragen
-  pro Sekunde, fast alle mit 304.
+* `build.json` must appear as the last file of a build (see
+  [Docker](/architecture/docker.md)), otherwise clients report a new state
+  before the pages are complete.
+* Old tabs reference hashed assets that may be missing after a build. Earlier
+  releases are therefore kept for a while.
+* Load: 100 simultaneous visitors at a 60 s interval are about 1.7 requests per
+  second, almost all of them with 304.

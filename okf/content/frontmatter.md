@@ -1,88 +1,86 @@
 ---
 type: Schema
-title: Frontmatter-Schema für Artikel
-description: Pflichtfelder, Fallbacks und Verarbeitungsregeln des YAML-Frontmatters der Markdown-Artikel.
+title: Frontmatter schema for articles
+description: Required fields, fallbacks and processing rules of the YAML frontmatter of the Markdown articles.
 tags: [frontmatter, obsidian, tags, slug]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-# Felder
+# Fields
 
-| Feld | Typ | Pflicht | Regel |
+| Field | Type | Required | Rule |
 |---|---|---|---|
-| `publish` | boolean | **[E]** ja | Nur der Boolean `true` zählt. `"true"` oder `yes` zählen nicht. Fehlt es, wird die Datei ignoriert. |
-| `date` | Datum/Zeit | **[E]** ja, mit Fallback | Fehlt oder ist ungültig: Änderungsdatum der Datei. |
-| `title` | Text | **[V]** ja | Fehlt es, wird es aus dem Dateinamen abgeleitet. |
-| `slug` | Text | **[V]** nein | Fehlt er, wird er aus dem Dateinamen abgeleitet. |
-| `description` | Text | **[V]** nein | Meta-Description, Feed-Auszug. |
-| `tags` | Liste | **[V]** nein | Obsidian-Properties, Listen von Strings. Dass es Tags gibt, ist **[E]**. |
+| `publish` | boolean | **[E]** yes | Only the boolean `true` counts. `"true"` or `yes` do not. If it is missing, the file is ignored. |
+| `date` | date/time | **[E]** yes, with fallback | Missing or invalid: modification date of the file. |
+| `title` | text | **[V]** yes | If it is missing, it is derived from the file name. |
+| `slug` | text | **[V]** no | If it is missing, it is derived from the file name. |
+| `description` | text | **[V]** no | Meta description, feed excerpt. |
+| `tags` | list | **[V]** no | Obsidian properties, lists of strings. That tags exist is **[E]**. |
+| `type` | text | **[E]** no | `glossary` marks a glossary entry (see [Glossary](/features/glossary.md)); planned in W19. Without it the file is an article. |
 
-Unbekannte Felder (`aliases`, `cssclasses` und weitere) werden ignoriert.
+Unknown fields (`aliases`, `cssclasses` and others) are ignored.
 
-# Datum
+# Date
 
-* **[E]** `date` ist Pflichtfeld. Fehlt es, gilt das Änderungsdatum der Datei
-  als Fallback.
-* **[U]** Per WebDAV ist nur `getlastmodified` verfügbar, kein
-  Erstellungsdatum. Das Änderungsdatum wird bei jeder Bearbeitung neu gesetzt.
-  Posts ohne `date` springen dadurch in der Chronologie und erscheinen im RSS
-  erneut als neu, wenn die GUID am Datum hängt.
-* **[V]** Die RSS-GUID hängt deshalb nicht am Datum (siehe
+* **[E]** `date` is a required field. If it is missing, the modification date
+  of the file counts as a fallback.
+* **[U]** Over WebDAV only `getlastmodified` is available, no creation date. The
+  modification date is set anew on every edit. Posts without `date` therefore
+  jump in the chronology and appear as new again in RSS if the GUID depends on
+  the date.
+* **[V]** The RSS GUID therefore does not depend on the date (see
   [RSS](/features/rss.md)).
-* **[E]** Format und Zeitzone (O2): Erlaubt sind ein reines Datum und Datum mit
-  Uhrzeit. Ein reines Datum (`2026-01-05`) gilt als 12:00 Uhr in
-  Europe/Berlin. Eine Uhrzeit ohne Zone (`2026-07-01 09:30` oder
-  `2026-07-01T09:30`) gilt als Berliner Ortszeit. Mit `Z` oder Versatz
-  (`+02:00`) gilt genau dieser Zeitpunkt. Alles andere ist ungültig und fällt
-  auf das Änderungsdatum zurück.
-* Umsetzung: Die Umrechnung der Berliner Ortszeit nutzt `Intl` in
-  `packages/core/src/date.ts`, geprüft an den Umstellungstagen der
-  Sommerzeit. Node 26 kennt `Temporal`, die TypeScript-Typen dafür wurden
-  nicht geprüft.
+* **[E]** Format and time zone (O2): a plain date and a date with a time are
+  allowed. A plain date (`2026-01-05`) counts as 12:00 in Europe/Berlin. A time
+  without a zone (`2026-07-01 09:30` or `2026-07-01T09:30`) counts as Berlin
+  local time. With `Z` or an offset (`+02:00`) exactly that instant counts.
+  Everything else is invalid and falls back to the modification date.
+* Implementation: the conversion of Berlin local time uses `Intl` in
+  `packages/core/src/date.ts`, checked on the days of the daylight saving time
+  changes. Node 26 knows `Temporal`, the TypeScript types for it have not been
+  checked.
 
 # Slug
 
-* **[E]** URL-Schema `/p/<slug>/`, siehe [URLs und SEO](/frontend/urls-seo.md).
-* **[V]** Slugs werden transliteriert: ä→ae, ö→oe, ü→ue, ß→ss, danach
-  Kleinbuchstaben, Ziffern und `-`.
-* **[E]** Doppelte Slugs (O26): Es wird automatisch ein Suffix angehängt
-  (`-2`, `-3`). Der Artikel mit dem älteren `date` behält den Slug, bei
-  Gleichstand entscheidet der Pfad. Das ist deterministisch, aber nicht stabil:
-  Kommt später ein Artikel mit älterem Datum und gleichem Slug hinzu, tauschen
-  die URLs. Ein `slug:` im Frontmatter vermeidet das. Jede Vergabe eines
-  Suffixes wird als Warnung geloggt.
-* **[V]** Wird der Slug aus dem Dateinamen abgeleitet, ändert Umbenennen die
-  URL. Ein `slug:` im Frontmatter fixiert sie.
-* **[V]** Zerlegte Umlaute (a + ¨, wie sie macOS-Dateinamen liefern) werden vor
-  dem Transliterieren zusammengesetzt (NFC).
+* **[E]** URL scheme `/p/<slug>/`, see [URLs and SEO](/frontend/urls-seo.md).
+* **[V]** Slugs are transliterated: ä→ae, ö→oe, ü→ue, ß→ss, then lowercase
+  letters, digits and `-`.
+* **[E]** Duplicate slugs (O26): a suffix is appended automatically (`-2`,
+  `-3`). The article with the older `date` keeps the slug, on a tie the path
+  decides. This is deterministic but not stable: if an article with an older
+  date and the same slug is added later, the URLs swap. A `slug:` in the
+  frontmatter avoids that. Every assignment of a suffix is logged as a warning.
+* **[V]** If the slug is derived from the file name, renaming changes the URL.
+  A `slug:` in the frontmatter fixes it.
+* **[V]** Decomposed umlauts (a + ¨, as macOS file names deliver them) are
+  composed (NFC) before transliterating.
 
 # Tags
 
-* **[E]** Tags existieren, auch für die Suche.
-* **[V]** Gemeinsamer Tag-Namensraum für Posts und Memos.
-* **[E]** Normalisierung (O13): Tags werden durchgehend kleingeschrieben, auch
-  in der Anzeige (`iOS` wird `ios`). Ein führendes `#` entfällt, Leerraum wird
-  zusammengefasst, doppelte Tags fallen weg. Die URL-Form ist transliteriert
-  (`über größe` wird `/tag/ueber-groesse/`). Ein einzelner Text statt einer
-  Liste zählt als ein Tag. Nicht-Text-Einträge werden mit Warnung ignoriert.
-* Offen bleiben verschachtelte Memos-Tags (`#a/b`) und die Frage, ob Inline-
-  `#tags` im Artikeltext zählen (W04 bzw. später).
+* **[E]** Tags exist, also for search.
+* **[V]** A shared tag namespace for posts and memos.
+* **[E]** Normalization (O13): tags are lowercased throughout, also in the
+  display (`iOS` becomes `ios`). A leading `#` is dropped, whitespace is
+  collapsed, duplicate tags are dropped. The URL form is transliterated (`über
+  größe` becomes `/tag/ueber-groesse/`). A single text instead of a list counts
+  as one tag. Non-text entries are ignored with a warning.
+* Still open: whether inline `#tags` in the article text count (later).
 
-# Fehlerbehandlung
+# Error handling
 
-* **[V]** Ungültiges YAML in einer Datei: nur diese Datei wird übersprungen und
-  geloggt, nie der ganze Build.
-* **[V]** `publish: true` mit ungültigem `date`: Fallback auf das
-  Änderungsdatum und Warnung im Log.
-* **[V]** Ungültiges YAML wird nur gemeldet, wenn die Datei erkennbar
-  `publish: true` enthält. Sonst bleibt sie still ignoriert, damit private
-  Notizen im Ordner keine Warnungen erzeugen.
-* **[V]** Dateien mit Wikilinks (`[[...]]`, auch `![[...]]`) werden übersprungen
-  und gemeldet. Code-Blöcke und Inline-Code zählen nicht.
-* **[E]** Zurückgezogene Artikel (O21) (`publish` entfernt oder Datei gelöscht)
-  verschwinden mit dem nächsten Build und liefern 404. Es gibt dafür keinen
-  gespeicherten Zustand.
-* **[U]** Die Muster für Konfliktkopien (`(conflicted copy ...)`,
-  `(Konfliktkopie ...)`, `.sync-conflict-`) sind nicht gegen echte
-  Nextcloud-Dateinamen geprüft. Das übernimmt der Contract-Test in W02.
+* **[V]** Invalid YAML in a file: only that file is skipped and logged, never
+  the whole build.
+* **[V]** `publish: true` with an invalid `date`: fallback to the modification
+  date and a warning in the log.
+* **[V]** Invalid YAML is reported only if the file clearly contains
+  `publish: true`. Otherwise it stays silently ignored, so private notes in the
+  folder do not produce warnings.
+* **[V]** Files with wikilinks (`[[...]]`, also `![[...]]`) are skipped and
+  reported. Code blocks and inline code do not count.
+* **[E]** Withdrawn articles (O21) (`publish` removed or file deleted)
+  disappear with the next build and give 404. There is no stored state for
+  this.
+* **[U]** The patterns for conflict copies (`(conflicted copy ...)`,
+  `(Konfliktkopie ...)`, `.sync-conflict-`) are not checked against real
+  Nextcloud file names. The contract test in W02 takes that over.

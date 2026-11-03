@@ -1,66 +1,72 @@
 ---
 type: Specification
-title: Muffelblog - Überblick und Ziele
-description: Zweck, Umfang und Legende der Spezifikation für den statischen Blog mit Memos-Microblog.
+title: Muffelblog - overview and goals
+description: Purpose, scope and legend of the specification for the static blog with a Memos microblog.
 tags: [blog, astro, memos, nextcloud, docker]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-# Zweck
+# Purpose
 
-Ein flacher, persönlicher Blog. Artikel entstehen als Markdown in einem
-Nextcloud-Ordner (bearbeitet mit Obsidian). Kurznachrichten kommen aus einer
-Memos-Instanz. Beides erscheint in einem kombinierten, zeitlich sortierten
-Feed. Die Seite wird statisch erzeugt und per Docker ausgeliefert.
+A flat, personal blog. Articles are written as Markdown in a Nextcloud folder
+(edited with Obsidian). Short messages come from a Memos instance. Both appear
+in one combined, time-sorted feed. The site is generated statically and served
+with Docker.
 
-# Legende der Kennzeichnungen
+# Legend of the markers
 
-Diese Spezifikation trennt Bestätigtes von Vorschlägen:
+This specification separates what is confirmed from proposals:
 
-* **[E]** Entscheidung: vom Nutzer ausdrücklich bestätigt.
-* **[V]** Vorschlag: vom Assistenten ergänzt, nicht bestätigt.
-* **[U]** Ungeprüft: Tatsachenbehauptung über Software, die nicht belegt ist
-  und vor der Umsetzung geprüft werden muss.
+* **[E]** Decision: explicitly confirmed by the user.
+* **[V]** Proposal: added by the assistant, not confirmed.
+* **[U]** Unverified: a factual claim about software that is not proven and
+  must be checked before implementation.
 
-# Festgelegte Eckpunkte
+# Fixed key points
 
-* **[E]** Generator: Astro, statisch. Client-Code in Vanilla-TS ohne Framework.
-* **[E]** Quelle der Artikel: Nextcloud-Public-Share (mit Passwort), Root-Ordner,
-  Zugriff per WebDAV. Nextcloud ist die einzige Quelle, kein Git-Inhalt.
-* **[E]** Veröffentlicht wird nur, was `publish: true` trägt.
-* **[E]** Memos (Public) werden zur Build-Zeit geholt und bekommen eigene Seiten.
-* **[E]** Kombinierter Feed, rein chronologisch, Endless Scroll, ein Strom
-  mit Filter (die Split-View entfällt).
-* **[E]** Glossar und Wissensgraph, siehe [Glossar](/features/glossary.md).
-* **[E]** Auto-Update über `build.json`, Banner "N neue Einträge".
-* **[E]** Suche mit Pagefind, Tags, kombinierter RSS-Feed.
-* **[E]** Kommentare: Remark42 mit E-Mail-Login, für Posts und Memos.
-* **[E]** Webmentions: webmention.io, empfangen und senden, Anzeige als
-  Kommentare in Remark42.
-* **[E]** Sprache Deutsch. Domain wird später festgelegt.
-* **[E]** Betrieb komplett in Docker.
+* **[E]** Generator: Astro, static. Client code in vanilla TS without a
+  framework.
+* **[E]** Source of the articles: Nextcloud public share (with a password),
+  root folder, access through WebDAV. Nextcloud is the only source, no content
+  in Git.
+* **[E]** Only what carries `publish: true` is published.
+* **[E]** Memos (public) are fetched at build time and get pages of their own.
+* **[E]** Combined feed, purely chronological, endless scroll, one stream with
+  a filter (the split view is dropped).
+* **[E]** Glossary and knowledge graph, see [Glossary](/features/glossary.md).
+* **[E]** Auto-update through `build.json`, banner "N new entries".
+* **[E]** Search with Pagefind, tags, combined RSS feed.
+* **[E]** Comments: Remark42 with email login, for posts and memos.
+* **[E]** Webmentions: webmention.io, receiving and sending, displayed as
+  comments in Remark42.
+* **[E]** UI language per deployment setting (`de` or `en`), the blog itself is
+  German. The domain is set later. Development is in English (see
+  [Languages](/ops/language.md)).
+* **[E]** Operation entirely in Docker.
 
-# Nicht-Ziele
+# Non-goals
 
-* Keine Wikilinks. Verlinkt wird mit Markdown-Links. Ein Graph aus diesen
-  Links ist Ziel (siehe [Glossar](/features/glossary.md)), ein
-  Digital-Garden mit Wikilinks nicht.
-* Keine Kommentare auf der Memos-Instanz selbst.
-* Keine Laufzeit-Requests des Browsers an Drittdienste. Ausnahme: Artikel mit
-  Remote-Bildern und Einbettungen aus Freigabelisten (siehe
-  [Medien](/content/media.md)).
+* No wikilinks. Linking uses Markdown links. A graph built from these links is
+  a goal (see [Glossary](/features/glossary.md)), a digital garden with
+  wikilinks is not.
+* No comments on the Memos instance itself.
+* No run-time requests from the browser to third-party services. Exception:
+  articles with remote images and embeds from allowlists (see
+  [Media](/content/media.md)).
 
-# Gliederung
+# Structure
 
-* Architektur: [System](/architecture/system.md), [Docker](/architecture/docker.md)
-* Inhalt: [Nextcloud](/content/nextcloud-source.md),
+* Architecture: [System](/architecture/system.md),
+  [Docker](/architecture/docker.md)
+* Content: [Nextcloud](/content/nextcloud-source.md),
   [Frontmatter](/content/frontmatter.md), [Memos](/content/memos-source.md),
-  [Medien](/content/media.md)
-* Frontend: [Feed](/frontend/feed.md), [Live-Update](/frontend/live-update.md),
-  [URLs und SEO](/frontend/urls-seo.md)
-* Funktionen: [Suche](/features/search.md), [RSS](/features/rss.md)
-* Community: [Kommentare](/community/comments.md),
+  [Media](/content/media.md)
+* Frontend: [Feed](/frontend/feed.md),
+  [Live update](/frontend/live-update.md),
+  [URLs and SEO](/frontend/urls-seo.md)
+* Features: [Search](/features/search.md), [RSS](/features/rss.md)
+* Community: [Comments](/community/comments.md),
   [Webmentions](/community/webmentions.md)
-* [Bereinigung](/security/sanitization.md), [Pipeline](/ops/pipeline.md)
-* [Offene Punkte](/open-points.md)
+* [Sanitizing](/security/sanitization.md), [Pipeline](/ops/pipeline.md)
+* [Open points](/open-points.md)

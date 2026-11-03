@@ -1,89 +1,91 @@
 ---
 type: Feature
-title: Kommentare mit Remark42
-description: Selbst gehostete Kommentare mit E-Mail-Login, Widget und statischer Kopie.
-tags: [kommentare, remark42, smtp, migadu]
+title: Comments with Remark42
+description: Self-hosted comments with email login, widget and a static copy.
+tags: [comments, remark42, smtp, migadu]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 sources:
   - id: remark42-docs
     resource: https://github.com/umputun/remark42/tree/master/site/content/docs
-    title: Remark42 Dokumentation im Repository
+    title: Remark42 documentation in the repository
   - id: remark42-api
     resource: https://raw.githubusercontent.com/umputun/remark42/master/site/content/docs/contributing/api/index.md
-    title: Remark42 REST-API
+    title: Remark42 REST API
   - id: remark42-create
     resource: https://raw.githubusercontent.com/umputun/remark42/master/backend/app/rest/api/rest_private.go
     title: Remark42 createCommentCtrl
   - id: pkgz-auth
     resource: https://raw.githubusercontent.com/go-pkgz/auth/master/middleware/auth.go
-    title: go-pkgz/auth Middleware mit Admin-Basic-Auth
+    title: go-pkgz/auth middleware with admin basic auth
 ---
 
-# Entscheidungen
+# Decisions
 
-* **[E]** Remark42 als selbst gehostete Lösung, keine GitHub-Abhängigkeit.
-* **[E]** Kommentare auf Posts und Memos. Keine Kommentare auf der Memos-
-  Instanz selbst.
-* **[E]** Login nur per E-Mail, kein anonymes Kommentieren, keine Social-Logins.
-* **[E]** Das Widget ist aktiv und lädt vom eigenen Server. Zusätzlich liegt eine
-  statische Kopie der Kommentare im HTML für SEO und für Besucher ohne
-  JavaScript.
-* **[E]** SMTP über Migadu. Die Absenderadresse kommt per Umgebungsvariable.
-* **[E]** Webmentions erscheinen als Einträge in derselben Zeitleiste (siehe
+* **[E]** Remark42 as the self-hosted solution, no GitHub dependency.
+* **[E]** Comments on posts and memos. No comments on the Memos instance
+  itself.
+* **[E]** Login only by email, no anonymous commenting, no social logins.
+* **[E]** The widget is active and loads from the own server. In addition
+  there is a static copy of the comments in the HTML for SEO and for visitors
+  without JavaScript.
+* **[E]** SMTP through Migadu. The sender address comes from an environment
+  variable.
+* **[E]** Webmentions appear as entries in the same timeline (see
   [Webmentions](/community/webmentions.md)).
 
-# Konfiguration
+# Configuration
 
 * `AUTH_EMAIL_ENABLE=true`, `AUTH_EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`,
-  `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_TLS` oder `SMTP_STARTTLS`.[^remark42-docs]
-* `AUTH_ANON` ist standardmäßig aus. OAuth-Anbieter sind nur aktiv, wenn ihre
-  Client-ID gesetzt ist. Keine IDs setzen.[^remark42-docs]
-* `ADMIN_PASSWD` aktiviert Basic-Auth für den Nutzer `admin`. Standardmäßig ist
-  das aus.[^remark42-docs]
-* **[U]** Für Migadu sind `smtp.migadu.com` mit Port 465 (TLS) oder 587
-  (STARTTLS) üblich. Absender muss ein Postfach oder Alias der Domain sein, SPF,
-  DKIM und DMARC müssen gesetzt sein. Nicht geprüft.
-* **[V]** Das Widget bekommt `host`, `site_id` und `url` (kanonische URL der
-  Seite). Der Pfad der Seite ist der Schlüssel der Kommentare.
+  `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_TLS` or
+  `SMTP_STARTTLS`.[^remark42-docs]
+* `AUTH_ANON` is off by default. OAuth providers are active only if their
+  client id is set. Do not set any ids.[^remark42-docs]
+* `ADMIN_PASSWD` enables basic auth for the user `admin`. It is off by
+  default.[^remark42-docs]
+* **[U]** For Migadu `smtp.migadu.com` with port 465 (TLS) or 587 (STARTTLS) is
+  usual. The sender must be a mailbox or alias of the domain, SPF, DKIM and
+  DMARC must be set. Not checked.
+* **[V]** The widget gets `host`, `site_id` and `url` (canonical URL of the
+  page). The path of the page is the key of the comments.
 
-# Lesen für den Build
+# Reading for the build
 
-`GET /api/v1/find?site=...&url=...` ist öffentlich und braucht keine
-Authentifizierung.[^remark42-api] Die statische Kopie wird daraus erzeugt und
-nach [Bereinigung](/security/sanitization.md) gerendert.
+`GET /api/v1/find?site=...&url=...` is public and needs no
+authentication.[^remark42-api] The static copy is created from it and rendered
+after [sanitizing](/security/sanitization.md).
 
-# Moderation und Spam
+# Moderation and spam
 
-* **[V]** Moderation über die Remark42-Oberfläche als Admin.
-* Ein freigegebener oder neuer Kommentar erscheint in der statischen Kopie
-  erst nach dem nächsten Scheduler-Lauf. Im Widget sofort.
-* Die E-Mail-Adressen der Kommentierenden liegen beim Betreiber
-  (Datenschutz, siehe O15).
+* **[V]** Moderation through the Remark42 interface as admin.
+* An approved or new comment appears in the static copy only after the next
+  scheduler run. In the widget immediately.
+* The email addresses of the commenters are held by the operator (privacy, see
+  O15).
 
-# Admin-Zugriff für Skripte
+# Admin access for scripts
 
-Skripte authentifizieren sich per HTTP Basic Auth mit Benutzer `admin` und
-`ADMIN_PASSWD`.[^pkgz-auth] Die Auth-Middleware setzt die feste Identität
-`admin`, auch für `POST /api/v1/comment`.[^remark42-create]
+Scripts authenticate with HTTP basic auth using the user `admin` and
+`ADMIN_PASSWD`.[^pkgz-auth] The auth middleware sets the fixed identity
+`admin`, also for `POST /api/v1/comment`.[^remark42-create]
 
-* `ADMIN_PASSWD` ist ein Master-Schlüssel. Er erlaubt auch Export und Import
-  unter `/api/v1/admin/...`. Ein Import ersetzt alle Kommentare der Site
-  (siehe [Webmentions](/community/webmentions.md)).
-* **[V]** Der Reverse-Proxy lehnt Anfragen mit `Authorization: Basic` von außen
-  ab (siehe [Docker](/architecture/docker.md)).
-* **[U]** Ob Remark42 einen eigenen `BasicAuthChecker` setzt, der diesen Weg
-  abschaltet, ist nicht geprüft.
+* `ADMIN_PASSWD` is a master key. It also allows export and import under
+  `/api/v1/admin/...`. An import replaces all comments of the site (see
+  [Webmentions](/community/webmentions.md)).
+* **[V]** The reverse proxy rejects requests with `Authorization: Basic` from
+  outside (see [Docker](/architecture/docker.md)).
+* **[U]** Whether Remark42 sets its own `BasicAuthChecker` that switches off
+  this path has not been checked.
 
-# Unbestätigt
+# Unconfirmed
 
-* **[U]** Das Widget wird per Script in ein `<div>` eingehängt. Ob es dabei einen
-  iframe nutzt, steht in den gelesenen Seiten nicht.
-* **[U]** Standardsortierung im Widget (nach Zeit oder Bewertung) und ob der
-  Betreiber sie festlegen kann: nicht geprüft (O4).
-* **[U]** Betrieb unter einem Pfad statt einer Subdomain: nicht geprüft (O9).
+* **[U]** The widget is attached to a `<div>` by script. Whether it uses an
+  iframe is not stated in the pages that were read.
+* **[U]** Default sorting in the widget (by time or rating) and whether the
+  operator can set it: not checked (O4).
+* **[U]** Operation under a path instead of a subdomain: not checked (O9).
 
-[^remark42-docs]: Remark42 Dokumentation im Repository
-[^remark42-api]: Remark42 REST-API
+[^remark42-docs]: Remark42 documentation in the repository
+[^remark42-api]: Remark42 REST API
 [^remark42-create]: Remark42 createCommentCtrl
-[^pkgz-auth]: go-pkgz/auth Middleware mit Admin-Basic-Auth
+[^pkgz-auth]: go-pkgz/auth middleware with admin basic auth

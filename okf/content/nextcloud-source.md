@@ -1,58 +1,60 @@
 ---
 type: Data Source
-title: Nextcloud-Quelle
-description: Public Share eines Nextcloud-Ordners als alleinige Quelle der Artikel.
+title: Nextcloud source
+description: Public share of a Nextcloud folder as the only source of the articles.
 tags: [nextcloud, webdav, sync, obsidian]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-# Entscheidungen
+# Decisions
 
-* **[E]** Der Ordner wird als Public Share bereitgestellt, mit Passwort.
-* **[E]** Der Builder verwendet den Root des Shares, der Ordnername ist egal.
-* **[E]** Nextcloud ist die einzige Quelle. Bearbeitet wird mit Obsidian (auch
-  mobil), im Notfall mit Nextcloud Notes.
-* **[E]** Nur Dateien mit `publish: true` werden berücksichtigt (siehe
+* **[E]** The folder is provided as a public share, with a password.
+* **[E]** The builder uses the root of the share, the folder name does not
+  matter.
+* **[E]** Nextcloud is the only source. Editing is done with Obsidian (also on
+  mobile), in an emergency with Nextcloud Notes.
+* **[E]** Only files with `publish: true` are taken into account (see
   [Frontmatter](/content/frontmatter.md)).
-* **[E]** Ändert sich die Nextcloud-Version oder Memos-Version, soll jeweils die
-  neueste laufen.
+* **[E]** If the Nextcloud version or the Memos version changes, the newest
+  one should run.
 
-# Zugriff
+# Access
 
-* **[V]** Sync per `rclone` (WebDAV) in den `cache`-Bereich, Polling alle 3
-  Minuten.
-* **[U]** Public Shares sind per WebDAV unter `/public.php/webdav/` erreichbar.
-  Der Benutzername ist der Share-Token, das Passwort das Share-Passwort. Das
-  muss vor der Umsetzung gegen die Nextcloud-Version geprüft werden.
-* **[V]** Änderungserkennung über Dateiliste mit Größe und Änderungsdatum bzw.
-  ETag, damit nur bei echter Änderung gebaut wird.
+* **[V]** Sync with `rclone` (WebDAV) into the `cache` area, polling every 3
+  minutes.
+* **[U]** Public shares are reachable through WebDAV at `/public.php/webdav/`.
+  The user name is the share token, the password is the share password. This
+  must be checked against the Nextcloud version before implementation.
+* **[V]** Change detection through the file list with size and modification
+  date or ETag, so a build happens only on a real change.
 
-# Risiken
+# Risks
 
-* Der Share-Link macht den gesamten Ordner abrufbar, auch Entwürfe,
-  `.obsidian/` und Dateien ohne `publish: true`. Das Passwort ist die einzige
-  Schutzschicht. Das Passwort ist daher Pflicht und ein Secret (siehe
+* The share link makes the whole folder retrievable, including drafts,
+  `.obsidian/` and files without `publish: true`. The password is the only
+  layer of protection. The password is therefore mandatory and a secret (see
   [Docker](/architecture/docker.md)).
-* Obsidian-Mobil synchronisiert halbfertige Dateien. Gegenmaßnahmen: Opt-in per
-  `publish`, Debounce im Scheduler (siehe [Pipeline](/ops/pipeline.md)).
-* Nextcloud legt bei Konflikten Kopien an.
+* Obsidian mobile synchronizes half-finished files. Countermeasures: opt-in
+  through `publish`, debounce in the scheduler (see
+  [Pipeline](/ops/pipeline.md)).
+* Nextcloud creates copies on conflicts.
 
-# Ausschlüsse
+# Exclusions
 
-**[V]** Beim Einlesen werden ignoriert:
+**[V]** When reading, the following are ignored:
 
-* Ordner und Dateien, die mit `.` beginnen (`.obsidian/`, `.trash/`)
-* Konfliktkopien (Muster `*(conflicted copy)*` und die von Nextcloud
-  verwendeten Varianten)
-* Dateien ohne `.md`-Endung (außer referenzierten Medien, siehe
-  [Medien](/content/media.md))
-* Dateien ohne `publish: true`
+* folders and files that start with `.` (`.obsidian/`, `.trash/`)
+* conflict copies (pattern `*(conflicted copy)*` and the variants Nextcloud
+  uses)
+* files without the `.md` extension (except referenced media, see
+  [Media](/content/media.md))
+* files without `publish: true`
 
-# Obsidian-Einstellungen
+# Obsidian settings
 
-* **[E]** Keine Wikilinks.
-* **[V]** In Obsidian muss "Use Wikilinks" aus sein, sonst entstehen Bild-
-  Einbettungen als `![[bild.png]]`, die der Build nicht auflöst. Der Build soll
-  Wikilink-Syntax erkennen und den Build mit einer Warnung für diese Datei
-  überspringen, statt kaputtes HTML zu erzeugen.
+* **[E]** No wikilinks.
+* **[V]** "Use Wikilinks" must be off in Obsidian, otherwise image embeds
+  appear as `![[image.png]]`, which the build does not resolve. The build
+  should recognize wikilink syntax and skip that file with a warning, instead
+  of producing broken HTML.

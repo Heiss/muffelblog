@@ -1,87 +1,88 @@
 ---
 type: Deployment
-title: Docker-Betrieb
-description: Dienste, Netze, Volumes, Secrets und Release-Austausch der Docker-Auslieferung.
-tags: [docker, betrieb, caddy, remark42]
+title: Docker operation
+description: Services, networks, volumes, secrets and release swap of the Docker delivery.
+tags: [docker, operations, caddy, remark42]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-# Entscheidung
+# Decision
 
-**[E]** Alles wird über Docker verteilt, auf einem Server.
+**[E]** Everything is delivered through Docker, on one server.
 
-# Dienste (Vorschlag)
+# Services (proposal)
 
-**[V]** Drei Container in einer Compose-Datei:
+**[V]** Three containers in one Compose file:
 
-| Dienst | Inhalt | Netz |
+| Service | Content | Network |
 |---|---|---|
-| `web` | Caddy: TLS, statische Auslieferung, Reverse-Proxy zu Remark42 | intern + öffentlich |
-| `builder` | Node/Astro, Pagefind, rclone, Scheduler, Mention-Sync, Mention-Versand | intern |
-| `remark42` | Kommentare, E-Mail-Login | intern |
+| `web` | Caddy: TLS, static delivery, reverse proxy to Remark42 | internal + public |
+| `builder` | Node/Astro, Pagefind, rclone, scheduler, mention sync, mention sending | internal |
+| `remark42` | Comments, email login | internal |
 
-Memos und Nextcloud laufen extern bzw. bereits vorhanden und sind nicht Teil
-der Compose-Datei.
+Memos and Nextcloud run externally or already exist and are not part of the
+Compose file.
 
-# Volumes (Vorschlag)
+# Volumes (proposal)
 
-* `releases`: Build-Ausgaben `releases/<build-id>/` plus Symlink `current`,
-  von `web` gelesen, vom `builder` geschrieben.
-* `state`: Zustand des Builders (zuletzt gesehene Stände, gesendete
-  Webmentions, Zuordnung Mention zu Kommentar).
-* `remark42-var`: Datenbank und Backups von Remark42 (persistent, gesichert).
-* `cache`: Zwischenspeicher für gespiegelte Bilder und Sync-Stand.
+* `releases`: build outputs `releases/<build-id>/` plus the symlink `current`,
+  read by `web`, written by the `builder`.
+* `state`: state of the builder (last seen states, sent webmentions, mapping
+  of mention to comment).
+* `remark42-var`: database and backups of Remark42 (persistent, backed up).
+* `cache`: cache for mirrored images and the sync state.
 
-# Release-Austausch (Vorschlag)
+# Release swap (proposal)
 
-* Build in ein neues Verzeichnis `releases/<id>/`.
-* `build.json` wird als letzte Datei geschrieben.
-* Danach Symlink `current` atomar umhängen (neuer Symlink, dann `rename`).
-* Die letzten N Releases bleiben erhalten (Vorschlag: 3), damit offene Tabs
-  ihre gehashten Assets noch laden können.
+* Build into a new directory `releases/<id>/`.
+* `build.json` is written as the last file.
+* Then switch the symlink `current` atomically (new symlink, then `rename`).
+* The last N releases are kept (proposal: 3), so open tabs can still load
+  their hashed assets.
 
-# Reverse-Proxy-Regeln (Vorschlag)
+# Reverse proxy rules (proposal)
 
-* `Authorization: Basic ...` wird auf allen öffentlichen Routen von Remark42
-  abgewiesen. Der Builder spricht Remark42 direkt im internen Netz an.
-* Caddy setzt eine strikte Content-Security-Policy: `script-src 'self'`.
-  `img-src` enthält `'self'` und die Bild-Hosts aus `policy.ts`, `frame-src`
-  die Hosts der Einbettungs-Regeln. Das Widget kommt vom eigenen Host. Die
-  Hosts werden aus derselben Liste erzeugt wie die Prüfung im Build.
-* `build.json` wird mit `Cache-Control: no-cache` und ETag ausgeliefert, damit
-  bedingte Abfragen mit 304 antworten. Alle anderen Assets sind gehasht und
-  langfristig cachebar.
+* `Authorization: Basic ...` is rejected on all public routes of Remark42. The
+  builder talks to Remark42 directly in the internal network.
+* Caddy sets a strict Content Security Policy: `script-src 'self'`. `img-src`
+  contains `'self'` and the image hosts from `policy.ts`, `frame-src` the hosts
+  of the embed rules. The widget comes from the own host. The hosts are
+  generated from the same list as the check in the build.
+* `build.json` is served with `Cache-Control: no-cache` and ETag, so
+  conditional requests answer with 304. All other assets are hashed and can be
+  cached for a long time.
 
-# Secrets und Umgebungsvariablen
+# Secrets and environment variables
 
-**[E]** Die Absenderadresse für Login-Mails kommt per Umgebungsvariable.
+**[E]** The sender address for login mails comes from an environment variable.
 
-**[E]** Der Build der Seite liest `CONTENT_DIR` (synchronisierter Nextcloud-
-Ordner) und `MEMOS_URL` (Adresse der Memos-Instanz, intern erreichbar). Fehlt eine
-der beiden, bricht der Build ab.
+**[E]** The build of the site reads `CONTENT_DIR` (synchronized Nextcloud
+folder) and `MEMOS_URL` (address of the Memos instance, reachable internally).
+If one of the two is missing, the build stops. The numeric settings and the
+UI language are environment variables as well (see
+[Configuration](/ops/config.md) and [Languages](/ops/language.md)).
 
-**[V]** Secrets nicht ins Repo, sondern als Docker-Secrets oder `.env` auf dem
-Server:
+**[V]** Secrets not in the repo, but as Docker secrets or `.env` on the
+server:
 
-* Nextcloud: Share-Token und Share-Passwort
-* Memos: URL (und ein Token, falls Anhänge es verlangen)
+* Nextcloud: share token and share password
+* Memos: URL (and a token if attachments require it)
 * Remark42: `SECRET`, `ADMIN_PASSWD`, `AUTH_EMAIL_FROM`, `SMTP_*`
-* webmention.io: Zugangsdaten, falls für die API nötig
+* webmention.io: credentials, if the API needs them
 
-`ADMIN_PASSWD` ist ein Master-Schlüssel (siehe
-[Kommentare](/community/comments.md)) und liegt nur im `builder` und in
-`remark42`.
+`ADMIN_PASSWD` is a master key (see [Comments](/community/comments.md)) and
+lives only in the `builder` and in `remark42`.
 
-# Image-Versionen
+# Image versions
 
-**[E]** Der Nutzer will für Memos und Nextcloud "immer das neueste".
-**[V]** Für die eigenen Container (Remark42, Caddy, Node-Basis) werden Tags
-oder Digests gepinnt, weil ein unbemerktes Update den Build oder die API
-brechen kann. Der Widerspruch zu "immer neueste" ist in
-[Offene Punkte](/open-points.md) als O8 erfasst.
+**[E]** For Memos and Nextcloud the user wants "always the newest".
+**[V]** For the own containers (Remark42, Caddy, Node base) tags or digests
+are pinned, because an unnoticed update can break the build or the API. The
+contradiction with "always newest" is recorded in
+[Open points](/open-points.md) as O8.
 
-# Offen
+# Open
 
-O9 (Reverse-Proxy, Domain, Hostname von Remark42), O10 (Image-Build auf dem
-Server oder über eine Registry), O18 (Backup, Monitoring).
+O9 (reverse proxy, domain, host name of Remark42), O10 (image build on the
+server or through a registry), O18 (backup, monitoring).

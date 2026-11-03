@@ -1,94 +1,93 @@
 ---
 type: Open Questions
-title: Offene Punkte aus der kritischen Durchsicht
-description: Priorisierte Liste der ungeklärten Entscheidungen, Widersprüche und ungeprüften Fakten.
-tags: [offen, review, risiken]
+title: Open points from the critical review
+description: Prioritized list of unresolved decisions, contradictions and unverified facts.
+tags: [open, review, risks]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-Die IDs (O1 bis O39) werden in den anderen Konzepten referenziert. Jeder Punkt
-nennt, was der Spezifikation heute dazu eingetragen ist ("Eintrag") und was
-dagegen spricht.
+The IDs (O1 to O39) are referenced in the other concepts. Every point states what
+is entered in the specification today ("entry") and what speaks against it.
 
-# A. Entscheidungen mit Auswirkung auf die Architektur
+# A. Decisions that affect the architecture
 
-| ID | Thema | Eintrag / Problem | Auswirkung |
+| ID | Topic | Entry / problem | Impact |
 |---|---|---|---|
-| O1 | Block-Reihen für den Filter | **[E]** Drei Reihen technischer Blöcke (gemischt, Memos, Posts), Blockgröße 20, umgesetzt in W05. Die Split-View entfällt. | [Feed](/frontend/feed.md) |
-| O2 | Datumsformat und Zeitzone | **[E] entschieden:** reines Datum = 12:00 Uhr Berlin, Uhrzeit ohne Zone = Berliner Ortszeit, mit Zone gilt der Zeitpunkt. | [Frontmatter](/content/frontmatter.md) |
-| O3 | Zustand des Mention-Sync | Bei Verlust der Statusdatei würden alle Mentions doppelt gepostet. Vorschlag: Marker (Quell-URL) im Kommentartext, aus dem der Zustand aus Remark42 wiederhergestellt wird. | [Webmentions](/community/webmentions.md) |
-| O5 | Fremdinhalte in Markdown | **[E] entschieden:** In Artikeln erlaubt, aber nur aus Freigabelisten. Bilder: `upload.wikimedia.org`, `raw.githubusercontent.com`, `user-images.githubusercontent.com`. Einbettungen: `www.youtube-nocookie.com`, erst nach Klick. Memos bleiben strikt (Bilder gespiegelt). Das weicht von der früheren Regel "nichts von anderen Diensten laden" ab. Risiko: IP-Adressen der Besucher gehen an die Bild-Hosts (O15). | [Medien](/content/media.md) |
-| O8 | Versionen: "immer neueste" gegen Pinning | Der Nutzer will für Memos und Nextcloud die neueste Version. Eine API-Änderung kann den Build brechen. Remark42, Caddy und Node sollten gepinnt sein. Widerspruch bleibt für Memos. | [Docker](/architecture/docker.md) |
-| O9 | Reverse-Proxy, Domain, Remark42-Host | Läuft schon ein Proxy auf dem Server (Traefik, nginx)? Caddy ist nur ein Vorschlag. Remark42 braucht die öffentliche URL, vermutlich Subdomain. Betrieb unter Pfad ungeprüft. Domain steht aus. | [Docker](/architecture/docker.md) |
-| O10 | Image-Build | Teilentscheidung **[E]**: CI läuft mit GitHub Actions. Das Dockerfile für die Seite liegt vor (W00) und baut in der CI (`node:26-slim` existiert). Ebenfalls **[E]**: Images werden nur auf einem CalVer-Tag `YY.M.MICRO` (z. B. `26.11.0`) in CI gebaut und in eine Registry gelegt (siehe [Branching und Release](/ops/branching-release.md)). Offen: welche Registry (Vorschlag GHCR). | [Docker](/architecture/docker.md) |
-| O28 | Basis-Branch und Branch-Konvention | **[E] entschieden:** Basis ist `main`, aus dem Stand von Spezifikation und Roadmap angelegt. Konvention `feature/wNN-<kurzname>` ist ein Vorschlag **[V]**. | [Roadmap](/roadmap.md) |
-| O29 | Teststrategie für externe Dienste | **[E] entschieden:** TDD mit Mocks, E2E-Tests und Contract-Tests gegen echte, gepinnte Testinstanzen. Die volle Suite läuft bei jedem PR und erneut beim Tag. Siehe [Teststrategie](/ops/testing.md). Betrifft W02, W04, W13, W14. |
-| O32 | webmention.io-Test | **[E]** Werkzeuge: Vitest und Playwright. Offen: Gibt es zusätzlich einen Lesetest gegen den echten webmention.io-Dienst, obwohl er extern und möglicherweise wackelig ist? | [Teststrategie](/ops/testing.md) |
-| O33 | Branch muss aktuell sein | Branch-Protection-Option gegen semantische Konflikte gleichzeitig grüner PRs. Kostet bei vielen Renovate-PRs Neuaufsetzen. Alternative: Merge Queue. Nicht entschieden. | [Teststrategie](/ops/testing.md) |
-| O34 | Sichtbarkeit des Repos und CI-Minuten | Öffentliche Repos haben unbegrenzte Minuten, private nicht. Die volle Suite pro PR mit vier Containern verbraucht viel. Sichtbarkeit ist ungeklärt. | [Teststrategie](/ops/testing.md) | [Roadmap](/roadmap.md) |
-| O30 | Default-Branch von GitHub | Aktuell der Sitzungs-Branch `ccr-01da7c96-avlx2l`, gewünscht `main`. Umstellung nur durch den Nutzer in den Repo-Einstellungen. | [Branching und Release](/ops/branching-release.md) |
-| O31 | Auto-Updater | **[E]** Renovate als GitHub-App, Pull Requests für Fremd-Images und pnpm-Abhängigkeiten, Patch-Updates ohne Ausnahme automatisch gemergt (Minor und Major von Hand, Erweiterung auf Minor vertagt), TypeScript bei Version 6 gehalten, 3 Tage Wartezeit, kein automatisches Ziehen auf dem Server. Offen: Gruppierung der Updates, Zeitplan, ob die Wartezeit mit GitHubs Auto-Merge wirklich greift. Risiko: Auto-Merge setzt eine CI als Pflicht-Check voraus (erst ab W00), und ein Remark42-Patch kann Datenbankänderungen enthalten, deshalb Backup vor dem nächsten Tag. | [Branching und Release](/ops/branching-release.md) |
-| O27 | Auslegung von "standalone" | Der Nutzer schrieb "Der Dienst sollte standalone funktionieren, wenn etwas ausgeliefert wird". Eintrag: ausgelieferte Seite läuft ohne Nextcloud, Memos und Fremddienste. Das wurde nicht ausdrücklich bestätigt. | [System](/architecture/system.md) |
+| O1 | Block series for the filter | **[E]** Three series of technical blocks (mixed, memos, posts), block size 20, implemented in W05. The split view is dropped. | [Feed](/frontend/feed.md) |
+| O2 | Date format and time zone | **[E] decided:** plain date = 12:00 Berlin time, time without a zone = Berlin local time, with a zone the instant counts. | [Frontmatter](/content/frontmatter.md) |
+| O3 | State of the mention sync | If the state file is lost, all mentions would be posted twice. Proposal: a marker (source URL) in the comment text, from which the state is restored from Remark42. | [Webmentions](/community/webmentions.md) |
+| O5 | Foreign content in Markdown | **[E] decided:** allowed in articles, but only from allowlists. Images: `upload.wikimedia.org`, `raw.githubusercontent.com`, `user-images.githubusercontent.com`. Embeds: `www.youtube-nocookie.com`, only after a click. Memos stay strict (images mirrored). This deviates from the earlier rule "load nothing from other services". Risk: the IP addresses of visitors go to the image hosts (O15). | [Media](/content/media.md) |
+| O8 | Versions: "always newest" against pinning | The user wants the newest version for Memos and Nextcloud. An API change can break the build. Remark42, Caddy and Node should be pinned. The contradiction remains for Memos. | [Docker](/architecture/docker.md) |
+| O9 | Reverse proxy, domain, Remark42 host | Is a proxy already running on the server (Traefik, nginx)? Caddy is only a proposal. Remark42 needs the public URL, probably a subdomain. Operation under a path is unchecked. The domain is pending. | [Docker](/architecture/docker.md) |
+| O10 | Image build | Partial decision **[E]**: CI runs with GitHub Actions. The Dockerfile for the site exists (W00) and builds in the CI (`node:26-slim` exists). Also **[E]**: images are built only on a CalVer tag `YY.M.MICRO` (e.g. `26.11.0`) in CI and put into a registry (see [Branching and release](/ops/branching-release.md)). Open: which registry (proposal GHCR). | [Docker](/architecture/docker.md) |
+| O28 | Base branch and branch convention | **[E] decided:** the base is `main`, created from the state of specification and roadmap. The convention `feature/wNN-<short name>` is a proposal **[V]**. | [Roadmap](/roadmap.md) |
+| O29 | Test strategy for external services | **[E] decided:** TDD with mocks, E2E tests and contract tests against real, pinned test instances. The full suite runs on every PR and again on the tag. See [Test strategy](/ops/testing.md). Concerns W02, W04, W13, W14. | [Test strategy](/ops/testing.md) |
+| O32 | webmention.io test | **[E]** Tools: Vitest and Playwright. Open: is there an additional read test against the real webmention.io service, although it is external and possibly flaky? | [Test strategy](/ops/testing.md) |
+| O33 | Branch must be up to date | Branch protection option against semantic conflicts of PRs that are green at the same time. Costs re-basing with many Renovate PRs. Alternative: merge queue. Not decided. | [Test strategy](/ops/testing.md) |
+| O34 | Visibility of the repo and CI minutes | Public repos have unlimited minutes, private ones do not. The full suite per PR with four containers uses a lot. Visibility is unclear. | [Test strategy](/ops/testing.md) |
+| O30 | Default branch of GitHub | Currently the session branch `ccr-01da7c96-avlx2l`, `main` is wanted. The switch can only be done by the user in the repo settings. | [Branching and release](/ops/branching-release.md) |
+| O31 | Auto-updaters | **[E]** Renovate as a GitHub app, pull requests for foreign images and pnpm dependencies, patch updates merged automatically without exception (minor and major by hand, extension to minor postponed), TypeScript held at version 6, 3 days of waiting, no automatic pulling on the server. Open: grouping of the updates, schedule, whether the waiting time really holds with GitHub's auto-merge. Risk: auto-merge presupposes a CI as a required check (only from W00), and a Remark42 patch can contain database changes, so a backup before the next tag. | [Branching and release](/ops/branching-release.md) |
+| O27 | Reading of "standalone" | The user wrote "the service should work standalone when something is delivered". Entry: the delivered site runs without Nextcloud, Memos and foreign services. This was not explicitly confirmed. | [System](/architecture/system.md) |
 
-# B. Inhalt und Verhalten
+# B. Content and behavior
 
-| ID | Thema | Eintrag / Problem |
+| ID | Topic | Entry / problem |
 |---|---|---|
-| O4 | Remark42-Darstellung | Standardsortierung im Widget und Darstellung des Autors `admin` sind ungeprüft. Die Zeitleiste mit Mentions funktioniert nur bei Sortierung nach Zeit. |
-| O6 | Anhänge, die keine Bilder sind | **[E] entschieden:** PDF, Audio und Video werden mit Größenlimit (25 MB) gespiegelt, nur für erlaubte Endungen und mit passender Dateikennung. Alles andere wird übersprungen (siehe [Medien](/content/media.md)). |
-| O7 | Bildgrößen und Formate | **[E] entschieden:** Lokale Artikelbilder in mehreren Breiten (480 bis 1920) als WebP, EXIF und Farbprofil entfernt, SVG abgelehnt. Umgesetzt mit `sharp`. |
-| O11 | Webmentions: Sender und Microformats | Implementierung des Senders offen. `h-entry`/`h-card`, `rel=me`, IndieAuth wurden nicht besprochen, sind für sinnvolle Anzeige aber nötig. |
-| O12 | Senden aus Memos | Der Nutzer sagte "ja auf jeden Fall" für Senden und "auch für Memo-Seiten" für Mentions. Senden aus Memos ist eine Annahme. |
-| O13 | Tag-Regeln | **[E] teilweise entschieden:** Tags durchgehend kleingeschrieben, auch in der Anzeige. Verschachtelte Memos-Tags (`#a/b`) bleiben ein Tag **[E]**. Tag-Seiten: Übersicht `/tag/` und Liste je Tag **[E]** (W05). Offen: zählen Inline-`#tags` in Artikeln? Gemeinsamer Namensraum für Posts und Memos ist ein Vorschlag. |
-| O14 | Memo-Datum | **[E] entschieden:** `createTime` (die API hat kein `displayTime`). Titel immer aus Datum und Uhrzeit, auch bei Memos mit nur einem Bild. |
-| O20 | Feed-Darstellung von Posts, RSS-Umfang | **[E teilweise]** Feed-Auszug: Beschreibung, sonst Textanfang, höchstens 200 Zeichen (W05). Offen: Anzahl RSS-Einträge, Volltext oder Auszug im RSS. |
-| O21 | Zurückgezogene Artikel | **[E] entschieden:** einfach weg (404), kein gespeicherter Zustand. Offen: ob beim Zurückziehen eine Löschbenachrichtigung per Webmention gesendet wird (W15). |
-| O26 | Doppelte Slugs | **[E] entschieden:** Suffix `-2`, `-3`, der ältere Artikel behält den Slug. Risiko: Kommt ein Artikel mit älterem Datum und gleichem Slug dazu, tauschen die URLs. Ein `slug:` im Frontmatter vermeidet das. |
+| O4 | Remark42 display | The default sorting in the widget and the display of the author `admin` are unchecked. The timeline with mentions works only with sorting by time. |
+| O6 | Attachments that are not images | **[E] decided:** PDF, audio and video are mirrored with a size limit (25 MB), only for allowed extensions and with a matching file signature. Everything else is skipped (see [Media](/content/media.md)). |
+| O7 | Image sizes and formats | **[E] decided:** local article images in several widths (480 to 1920) as WebP, EXIF and color profile removed, SVG rejected. Implemented with `sharp`. |
+| O11 | Webmentions: sender and microformats | The implementation of the sender is open. `h-entry`/`h-card`, `rel=me`, IndieAuth were not discussed, but are needed for a useful display. |
+| O12 | Sending from memos | The user said "yes, definitely" for sending and "also for memo pages" for mentions. Sending from memos is an assumption. |
+| O13 | Tag rules | **[E] partly decided:** tags lowercased throughout, also in the display. Nested Memos tags (`#a/b`) stay one tag **[E]**. Tag pages: overview `/tag/` and a list per tag **[E]** (W05). Open: do inline `#tags` in articles count? A shared namespace for posts and memos is a proposal. |
+| O14 | Memo date | **[E] decided:** `createTime` (the API has no `displayTime`). The title is always built from date and time, also for memos with only an image. |
+| O20 | Feed display of posts, RSS scope | **[E partly]** Feed excerpt: description, otherwise the start of the text, at most 200 characters (W05). Open: number of RSS entries, full text or excerpt in the RSS. |
+| O21 | Withdrawn articles | **[E] decided:** simply gone (404), no stored state. Open: whether a deletion notice is sent through webmention on withdrawal (W15). |
+| O26 | Duplicate slugs | **[E] decided:** suffix `-2`, `-3`, the older article keeps the slug. Risk: if an article with an older date and the same slug is added, the URLs swap. A `slug:` in the frontmatter avoids that. |
 
-# C. Betrieb, Recht, Gestaltung
+# C. Operation, law, design
 
-| ID | Thema | Eintrag / Problem |
+| ID | Topic | Entry / problem |
 |---|---|---|
-| O15 | Impressum, Datenschutz | Ein Blog mit Kommentaren, E-Mail-Login und Server-Logs braucht voraussichtlich Impressum und Datenschutzerklärung. Rechtlich zu klären. Statische Seiten wie "Über" und "Impressum" sind im Konzept nicht vorgesehen (aus Markdown in Nextcloud?). |
-| O16 | Gestaltung | Name der Seite, Farben, Typografie, Dark Mode, Favicon, Barrierefreiheit wurden nicht besprochen. |
-| O17 | Open Graph, Social Cards | Vorschaubilder und Meta-Tags wurden nicht besprochen. |
-| O18 | Backup, Alerting | Remark42-Daten und `state` sichern. Kanal für Build-Fehler (E-Mail, Push, Matrix?). Remark42 sichert täglich nach `BACKUP_PATH`, ersetzt aber kein externes Backup. |
-| O19 | Statistik | Eintrag: keine. Falls doch, ohne Fremddienste. |
-| O22 | Moderation | Benachrichtigung bei neuen Kommentaren, Spam-Maßnahmen jenseits der E-Mail-Pflicht. |
-| O23 | Entwicklungsablauf | Lokales Arbeiten (`astro dev` mit Beispieldaten), Tests, Linting des Frontmatter-Schemas. |
-| O24 | 404-Seite, `robots.txt` | Nicht besprochen. |
-| O25 | Ungeprüfte Fakten | siehe Abschnitt D. |
-| O36 | HEIC-Fotos | Handyfotos im HEIC-Format (iPhone) lassen sich mit der verwendeten Bildbibliothek nicht verarbeiten und werden mit Hinweis übersprungen. Offen: Fotos als JPEG hochladen oder eine HEIC-Verarbeitung ergänzen? |
-| O37 | Codequalität, Komplexität, Mutationstests | Wunsch des Nutzers (W18): statische Analyse und später Mutationstests mit mehr als 80 %. Offen: Werkzeuge, Schwellen, blockierend oder berichtend, Umfang, Laufzeit in der CI. | [Roadmap](/roadmap.md) |
-| O38 | Glossar und Graph | **[E]** Glossar als Eintragsart im selben Ordner, Markdown-Links, Graph lokal und gesamt (siehe [Glossar](/features/glossary.md)). **[E]** Feld `type: glossary`, Filter **Begriffe**, series `/terms/`, letter view `/glossary/`, Begriffe auch in Alle (gekennzeichnet), Beschriftungen Kurz und Lang statt Memos und Beiträge. Offen: Frageform des Titels mit eigenem Begriff-Feld wie im Vorbild, Kommentare und Webmentions auf Begriffen, Sortierung der Umlaute. | [Glossar](/features/glossary.md) |
-| O39 | Languages | **[E]** Development in English, UI language per `MUFFEL_LANG` (de, en), no URL prefix, articles not translated, no history rewrite, English URLs (`/page/N/`, `/glossary/`, `/terms/`, `/search/`). Open: default value, feed and search texts. | [Languages](/ops/language.md) |
-| O35 | Themes | **[E]** Mehrere Themes im Stil bekannter Editor-Themes (siehe [Themes](/frontend/themes.md)). **[E]** Alle zehn Themes der Vorschau bleiben, Standard ist Solarized Light. **[E]** Syntaxfarben je Theme (lowlight, beim Build), bei dunkler Systemeinstellung Solarized Dark, Schriften selbst gehostet (W06c). |
+| O15 | Imprint, privacy policy | A blog with comments, email login and server logs probably needs an imprint and a privacy policy. To be clarified legally. Static pages such as "About" and "Imprint" are not provided for in the concept (from Markdown in Nextcloud?). |
+| O16 | Design | Name of the site, colors, typography, dark mode, favicon, accessibility were not discussed. Partly settled by the themes (O35). |
+| O17 | Open Graph, social cards | Preview images and meta tags were not discussed. |
+| O18 | Backup, alerting | Back up Remark42 data and `state`. Channel for build errors (email, push, Matrix?). Remark42 backs up daily to `BACKUP_PATH`, but does not replace an external backup. |
+| O19 | Statistics | Entry: none. If there are any, without foreign services. |
+| O22 | Moderation | Notification on new comments, anti-spam measures beyond the email requirement. |
+| O23 | Development workflow | Working locally (`astro dev` with sample data), tests, linting of the frontmatter schema. |
+| O24 | 404 page, `robots.txt` | Not discussed. |
+| O25 | Unverified facts | see section D. |
+| O35 | Themes | **[E]** Several themes in the style of well-known editor themes (see [Themes](/frontend/themes.md)). **[E]** All ten themes of the preview stay, the default is Solarized Light. **[E]** Syntax colors per theme (lowlight, at build time), Solarized Dark with a dark system setting, fonts self-hosted (W06c). |
+| O36 | HEIC photos | Phone photos in HEIC format (iPhone) cannot be processed with the image library in use and are skipped with a note. Open: upload photos as JPEG or add HEIC processing? |
+| O37 | Code quality, complexity, mutation tests | Wish of the user (W18): static analysis and later mutation tests with more than 80 %. Open: tools, thresholds, blocking or reporting, scope, run time in the CI. |
+| O38 | Glossary and graph | **[E]** Glossary as a kind of content in the same folder, Markdown links, graph local and overall (see [Glossary](/features/glossary.md)). **[E]** Field `type: glossary`, filter **Begriffe**, series `/terms/`, letter view `/glossary/`, terms also in All (marked), labels Kurz and Lang instead of memos and posts. Open: question form of the title with a separate term field as in the model, comments and webmentions on terms, sorting of umlauts. |
+| O39 | Languages | **[E]** Development in English, UI language per `MUFFEL_LANG` (de, en), no URL prefix, articles not translated, no history rewrite, English URLs (`/page/N/`, `/glossary/`, `/terms/`, `/search/`). Open: default value, feed and search texts. See [Languages](/ops/language.md). |
 
-# D. Ungeprüfte Fakten (müssen vor der Umsetzung belegt werden)
+# D. Unverified facts (must be proven before implementation)
 
-* Memos: Aus dem Quellcode belegt (Version 26.11.0): öffentliche Liste und Anhänge
-  sind ohne Token abrufbar, wenn der Zugriffsmodus PUBLIC ist, Pfade und Felder
-  stehen in [Memos](/content/memos-source.md). Durch den Contract-Test gegen
-  eine echte Instanz 26.11.0 belegt: Pfade, Feldnamen, anonymer Abruf und
-  Dateiroute, außerdem dass Memos zu `#a/b` auch den Tag `a` liefert. Noch
-  ungeprüft: Stabilität der `uid`, externe Anhänge.
-* Nextcloud: Public-Share-WebDAV mit Token und Passwort, Verhalten von
-  `getlastmodified`, Konfliktdatei-Muster.
-* webmention.io: öffentliche API ohne Token, Parameter `since`, Verhalten bei
-  Löschung.
-* Remark42: Admin-Basic-Auth auf `POST /api/v1/comment` (laut Quellcode
-  möglich, kein eigener `BasicAuthChecker` geprüft), Darstellung von Links im
-  Kommentartext, Widget-Sortierung, iframe oder nicht, Betrieb unter Pfad,
-  Länge-Limit für Kommentare.
-* Migadu: Host, Ports, Absender-Regeln.
-* Pagefind: deutsche Oberfläche.
-* Astro: Verhalten des Standard-Slugger bei Umlauten.
+* Memos: proven from the source code (version 26.11.0): the public list and
+  attachments can be fetched without a token if the access mode is PUBLIC,
+  paths and fields are in [Memos](/content/memos-source.md). Proven by the
+  contract test against a real instance 26.11.0: paths, field names, anonymous
+  fetching and the file route, and also that Memos returns the tag `a` for
+  `#a/b`. Still unchecked: stability of the `uid`, external attachments.
+* Nextcloud: public-share WebDAV with token and password, behavior of
+  `getlastmodified`, conflict file patterns.
+* webmention.io: public API without a token, parameter `since`, behavior on
+  deletion.
+* Remark42: admin basic auth on `POST /api/v1/comment` (possible according to the
+  source code, no own `BasicAuthChecker` checked), display of links in the
+  comment text, widget sorting, iframe or not, operation under a path, length
+  limit for comments.
+* Migadu: host, ports, sender rules.
+* Pagefind: German interface.
+* Astro: behavior of the default slugger with umlauts.
 
-# Korrekturen gegenüber früheren Aussagen
+# Corrections to earlier statements
 
-* Memos live per `fetch`: verworfen, Memos kommen zur Build-Zeit.
-* Kommentare "nur auf Posts": geändert auf Posts und Memos.
-* Mentions per Import in Remark42: verworfen (`DeleteAll`), stattdessen Posten
-  über die API.
-* Das Remark42-Widget war als iframe beschrieben: unbestätigt.
+* Memos live through `fetch`: discarded, memos come at build time.
+* Comments "only on posts": changed to posts and memos.
+* Mentions through import into Remark42: discarded (`DeleteAll`), posting through
+  the API instead.
+* The Remark42 widget was described as an iframe: unconfirmed.

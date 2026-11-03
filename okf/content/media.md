@@ -1,108 +1,108 @@
 ---
 type: Policy
-title: Medien
-description: Umgang mit Bildern und Fremdinhalten in Artikeln und Memos.
-tags: [bilder, medien, datenschutz, einbettungen]
+title: Media
+description: Handling of images and foreign content in articles and memos.
+tags: [images, media, privacy, embeds]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-# Entscheidungen
+# Decisions
 
-* **[E]** Memo-Bilder werden beim Build auf die eigene Domain gespiegelt.
-* **[E]** Artikel dürfen Fremdinhalte laden, aber nur aus Freigabelisten
-  (O5). Das weicht von der Regel "der Browser lädt nichts von Drittdiensten"
-  ab und gilt nur für Artikel, nicht für Memos.
-  * Remote-Bilder (nur https): `upload.wikimedia.org`,
+* **[E]** Memo images are mirrored to the own domain at build time.
+* **[E]** Articles may load foreign content, but only from allowlists (O5).
+  This deviates from the rule "the browser loads nothing from third-party
+  services" and applies only to articles, not to memos.
+  * Remote images (https only): `upload.wikimedia.org`,
     `raw.githubusercontent.com`, `user-images.githubusercontent.com`.
-  * Einbettungen: `www.youtube-nocookie.com`, Pfad `/embed/<11 Zeichen>`.
-    Sie starten erst nach einem Klick, vorher geht keine Anfrage an YouTube.
-* **[E]** Lokale Artikelbilder (O7): verkleinern, als WebP ausliefern, EXIF
-  entfernen.
+  * Embeds: `www.youtube-nocookie.com`, path `/embed/<11 characters>`. They
+    start only after a click, before that no request goes to YouTube.
+* **[E]** Local article images (O7): scale down, serve as WebP, remove EXIF.
 
-Die Listen stehen im Code (`packages/core/src/policy.ts`) und speisen später
-die Content-Security-Policy. Eine neue Domain ist eine Codeänderung mit Test.
+The lists live in the code (`packages/core/src/policy.ts`) and will later feed
+the Content Security Policy. A new domain is a code change with a test.
 
-# Lokale Artikelbilder
+# Local article images
 
-* Bilder liegen im Nextcloud-Ordner und sind per relativem Markdown-Pfad
-  eingebunden (`![](pfad/bild.png)`, Leerzeichen als `%20`).
-* **[V]** Der Pfad gilt relativ zur Notiz. Wird die Datei dort nicht gefunden
-  und beginnt der Pfad nicht mit `./` oder `../`, gilt er danach ab der
-  Ordnerwurzel (so schreibt Obsidian bei absoluten Vault-Pfaden).
-* Erlaubt sind PNG, JPEG, WebP, GIF und AVIF bis 25 MB. SVG wird abgelehnt.
-* Ausgabe: WebP in den Breiten 480, 960, 1440 und 1920 (soweit das Original
-  breit genug ist, nie vergrößert), `srcset`, Breite und Höhe, `loading="lazy"`.
-  Ein Bild unter 480 px Breite wird in Originalbreite ausgeliefert.
-* Die EXIF-Ausrichtung wird angewandt, danach entfallen alle Metadaten
-  (GPS, Kamera, Farbprofil). Animierte GIFs bleiben animiert.
-* Dateinamen der Varianten bestehen aus einer Kennung des Inhalts
-  (`<16 Hex-Zeichen>-<Breite>.webp`) unter `/media/`. Dasselbe Bild wird nur
-  einmal verarbeitet.
-* Abgewiesen werden: Pfade außerhalb des Inhaltsordners (`../`, absolute
-  Pfade), versteckte Ordner (`.obsidian/`), Verweise (Symlinks) aus dem Ordner
-  heraus, Pfade mit `?` oder `#`.
-* Nur Bilder, die ein veröffentlichter Artikel verwendet, gelangen in den Build.
-* Ein fehlendes oder unbrauchbares Bild lässt den Build nicht scheitern. Es
-  erscheint ein Platzhalter mit Alt-Text, und das Log warnt.
+* Images live in the Nextcloud folder and are included through a relative
+  Markdown path (`![](path/image.png)`, spaces as `%20`).
+* **[V]** The path is relative to the note. If the file is not found there and
+  the path does not start with `./` or `../`, it is then taken from the folder
+  root (this is how Obsidian writes absolute vault paths).
+* Allowed are PNG, JPEG, WebP, GIF and AVIF up to 25 MB. SVG is rejected.
+* Output: WebP in the widths 480, 960, 1440 and 1920 (as far as the original
+  is wide enough, never enlarged), `srcset`, width and height,
+  `loading="lazy"`. An image narrower than 480 px is served at its original
+  width.
+* The EXIF orientation is applied, then all metadata is dropped (GPS, camera,
+  color profile). Animated GIFs stay animated.
+* File names of the variants consist of an identifier of the content
+  (`<16 hex characters>-<width>.webp`) under `/media/`. The same image is
+  processed only once.
+* Rejected: paths outside the content folder (`../`, absolute paths), hidden
+  folders (`.obsidian/`), links (symlinks) leading out of the folder, paths
+  with `?` or `#`.
+* Only images that a published article uses reach the build.
+* A missing or unusable image does not make the build fail. A placeholder with
+  the alt text appears, and the log warns.
 
-# Remote-Bilder
+# Remote images
 
-* Bilder freigegebener Hosts bleiben als Adresse stehen, mit `loading="lazy"`,
-  `decoding="async"` und `referrerpolicy="no-referrer"`. Sie werden nicht
-  gespiegelt.
-* Bilder anderer Hosts, mit `http`, mit Zugangsdaten oder fremdem Port, `data:`-
-  Adressen und protokoll-relative Adressen werden entfernt. Das Log warnt, der
-  Alt-Text bleibt als Text.
-* Risiko: Jeder Aufruf eines Remote-Bildes verrät die IP-Adresse des
-  Besuchers an den Host. Das ist ein Datenschutzthema (O15).
+* Images from allowed hosts stay as an address, with `loading="lazy"`,
+  `decoding="async"` and `referrerpolicy="no-referrer"`. They are not mirrored.
+* Images from other hosts, with `http`, with credentials or a foreign port,
+  `data:` addresses and protocol-relative addresses are removed. The log warns,
+  the alt text stays as text.
+* Risk: every request of a remote image reveals the IP address of the visitor to
+  the host. This is a privacy topic (O15).
 
-# Einbettungen
+# Embeds
 
-* Ein `<iframe>` im Markdown wird nur übernommen, wenn seine Adresse genau zu
-  einer Regel passt (https, genauer Host, genauer Pfad, keine Parameter, keine
-  Zugangsdaten). Alle Attribute des Autors entfallen.
-* Stattdessen steht ein Platzhalter mit Hinweis, Knopf "Inhalt laden" und einem
-  Link zur Ursprungsseite. Ohne JavaScript bleibt der Link.
-* Nach dem Klick setzt ein kleines Skript ein `iframe` mit
+* An `<iframe>` in the Markdown is accepted only if its address matches a rule
+  exactly (https, exact host, exact path, no parameters, no credentials). All
+  attributes of the author are dropped.
+* Instead there is a placeholder with a note, a button "load content" and a
+  link to the original site. Without JavaScript the link stays.
+* After the click a small script inserts an `iframe` with
   `sandbox="allow-scripts allow-same-origin allow-presentation"`,
-  `referrerpolicy="no-referrer"` und `loading="lazy"` ein. Es prüft die Adresse
-  noch einmal gegen dieselbe Richtlinie.
-* Alle anderen Einbettungen werden entfernt und im Log gemeldet.
+  `referrerpolicy="no-referrer"` and `loading="lazy"`. It checks the address
+  once more against the same policy.
+* All other embeds are removed and reported in the log.
 
-# Memo-Bilder
+# Memo images
 
-* **[E]** Werden auf die eigene Domain gespiegelt, nichts wird von der
-  Memos-Instanz geladen (siehe [Memos](/content/memos-source.md)).
-* **[E]** Beim Spiegeln werden EXIF-Daten entfernt, insbesondere GPS.
-  Handyfotos aus Memos tragen sonst Standortdaten. Dieselbe Verarbeitung
-  (`processImage`) wie bei Artikelbildern, WebP in mehreren Breiten.
-* **[E]** Alt-Text: Dateiname ohne Endung, Unter- und Bindestriche werden
-  Leerzeichen (`IMG_2043.jpg` wird "IMG 2043").
-* **[V]** Bilder ab Formaten PNG, JPEG, WebP, GIF und AVIF. HEIC und HEIF werden
-  nicht dekodiert und mit einem Hinweis übersprungen (O36).
-* **[V]** Größenlimit je Datei: 25 MB. Zeitlimit je Abruf: 30 Sekunden.
-  Weiterleitungen werden nie befolgt.
+* **[E]** Mirrored to the own domain, nothing is loaded from the Memos instance
+  (see [Memos](/content/memos-source.md)).
+* **[E]** When mirroring, EXIF data is removed, in particular GPS. Phone photos
+  from Memos would otherwise carry location data. The same processing
+  (`processImage`) as for article images, WebP in several widths.
+* **[E]** Alt text: file name without extension, underscores and hyphens become
+  spaces (`IMG_2043.jpg` becomes "IMG 2043").
+* **[V]** Image formats PNG, JPEG, WebP, GIF and AVIF. HEIC and HEIF are not
+  decoded and are skipped with a note (O36).
+* **[V]** Size limit per file: 25 MB (configurable, see
+  [Configuration](/ops/config.md)). Time limit per fetch: 30 seconds.
+  Redirects are never followed.
 
-## Andere Anhänge (O6)
+## Other attachments (O6)
 
-* **[E]** PDF, Audio und Video werden auf die eigene Domain gespiegelt und
-  eingebunden: PDF als Link mit Größe, Audio und Video mit `controls` und
+* **[E]** PDF, audio and video are mirrored to the own domain and included: PDF
+  as a link with its size, audio and video with `controls` and
   `preload="none"`.
-* **[V]** Erlaubt sind nur diese Endungen: `pdf`, `mp3`, `m4a`, `ogg`, `opus`,
-  `wav`, `flac`, `mp4`, `m4v`, `webm`, `mov`. Der Anfang der Daten muss zur
-  Endung passen (Dateikennung), sonst wird die Datei abgewiesen.
-* **[V]** Alles andere (HTML, SVG, Skripte, Archive, Programme, Office-Dateien)
-  wird nicht übernommen, weil der Server solche Dateien sonst unter der eigenen
-  Adresse mit einem aktiven Inhaltstyp ausliefern könnte. Der Dateiname wird
-  URL-tauglich gemacht (`<16 Hex-Zeichen>-<name>.<endung>`).
-* **[V]** Die Auslieferung nutzt eine feste Tabelle Endung zu Inhaltstyp, nie den
-  Typ aus Memos. Unbekannte Endungen liefern 404.
-* Extern gespeicherte Anhänge (`externalLink`) werden nicht geladen.
-* Ein fehlender Anhang (HTTP 404) lässt das Memo stehen und warnt. Netz- und
-  Serverfehler brechen den Build ab.
+* **[V]** Only these extensions are allowed: `pdf`, `mp3`, `m4a`, `ogg`, `opus`,
+  `wav`, `flac`, `mp4`, `m4v`, `webm`, `mov`. The start of the data must match
+  the extension (file signature), otherwise the file is rejected.
+* **[V]** Everything else (HTML, SVG, scripts, archives, programs, office files)
+  is not accepted, because the server could otherwise serve such files under the
+  own address with an active content type. The file name is made URL-safe
+  (`<16 hex characters>-<name>.<extension>`).
+* **[V]** Serving uses a fixed table from extension to content type, never the
+  type from Memos. Unknown extensions give 404.
+* Externally stored attachments (`externalLink`) are not loaded.
+* A missing attachment (HTTP 404) leaves the memo in place and warns. Network
+  and server errors stop the build.
 
-# Offene Fragen
+# Open questions
 
-Abrufe von Fremd-URLs für Mention-Avatare (W14) sind noch nicht umgesetzt. Sie
-brauchen den SSRF-Schutz aus [Bereinigung](/security/sanitization.md).
+Fetching foreign URLs for mention avatars (W14) is not implemented yet. It
+needs the SSRF protection from [Sanitizing](/security/sanitization.md).

@@ -1,67 +1,66 @@
 ---
 type: Feature
 title: Themes
-description: Umschaltbare Farbschemata im Stil bekannter Editor-Themes, umgesetzt als CSS-Dateien mit Variablen.
+description: Switchable color schemes in the style of well-known editor themes, implemented as CSS with variables.
 tags: [themes, design, css, dark-mode]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T18:00:00Z }
 ---
 
-# Anlass
+# Occasion
 
-Die erste Vorschau (siehe [Feed](/frontend/feed.md)) gefiel im Aufbau, wirkte
-aber zu einheitlich ("zu gleich wie alles"). Der Nutzer will deshalb mehrere
-Themes im Stil beliebter Editor-Themes, auch mit Matrix-Grün. Der Aufbau bleibt
-unverändert, nur die CSS-Dateien unterscheiden sich.
+The first preview (see [Feed](/frontend/feed.md)) was liked for its structure,
+but looked too uniform ("too much alike"). The user therefore wants several
+themes in the style of popular editor themes, also a Matrix green. The
+structure stays unchanged, only the CSS files differ.
 
-# Entscheidungen
+# Decisions
 
-* **[E]** Es gibt mehrere Themes, die sich nur im CSS unterscheiden.
-* **[E]** Sie orientieren sich an bekannten Editor-Themes (zum Beispiel
-  Dracula) und enthalten einen Matrix-Stil in Grün.
-* **[E]** Alle zehn Themes der Vorschau bleiben im Angebot, damit jeder
-  Besucher das nutzen kann, was er will: Hell (bisheriges Aussehen), Dracula,
-  Matrix, Solarized Dark, Solarized Light, Nord, Gruvbox, Monokai, Tokyo
-  Night, Catppuccin Mocha.
-* **[E]** Das Standard-Theme ist Solarized Light. Bei dunkler Systemeinstellung
-  ohne gespeicherte Wahl gilt Solarized Dark. Eine gespeicherte Wahl gewinnt.
-* **[E]** Umschalter: Auswahlfeld (`select`) in der Kopfleiste, nur mit
-  JavaScript sichtbar.
-* **[E]** Schriften je Theme selbst gehostet (Source Sans 3, Source Serif 4,
-  JetBrains Mono, IBM Plex Mono aus den Paketen `@fontsource/*`, OFL-1.1, nur
-  `latin`). Keine Google Fonts.
-* **[E]** Code-Blöcke werden beim Build mit `lowlight` gefärbt. Die Farben
-  kommen als Variablen `--tok-*` aus dem Theme.
+* **[E]** There are several themes that differ only in CSS.
+* **[E]** They follow well-known editor themes (for example Dracula) and
+  include a Matrix style in green.
+* **[E]** All ten themes of the preview stay on offer, so every visitor can use
+  what they like: Hell (the former look), Dracula, Matrix, Solarized Dark,
+  Solarized Light, Nord, Gruvbox, Monokai, Tokyo Night, Catppuccin Mocha.
+* **[E]** The default theme is Solarized Light. With a dark system setting and
+  no stored choice, Solarized Dark applies. A stored choice wins.
+* **[E]** Switcher: a select field (`select`) in the header, visible only with
+  JavaScript.
+* **[E]** Fonts per theme are self-hosted (Source Sans 3, Source Serif 4,
+  JetBrains Mono, IBM Plex Mono from the packages `@fontsource/*`, OFL-1.1,
+  `latin` only). No Google Fonts.
+* **[E]** Code blocks are colored at build time with `lowlight`. The colors come
+  as variables `--tok-*` from the theme.
 
-# Umsetzung (W06c)
-* **[V]** Umsetzung: Pro Theme ein Block mit CSS-Variablen unter
-  `[data-theme="<name>"]`, im echten Aufbau je eine CSS-Datei. Variablen:
-  `--bg`, `--panel`, `--line`, `--fg`, `--dim`, `--ac`, `--on-ac`, `--tint`,
-  `--radius`, `--pill`, `--font-body`, `--font-head`, `--font-meta`.
-* **[V]** Die Themes unterscheiden sich nicht nur in Farben, sondern auch in
-  Ecken-Rundung und Schriften. Die IDE-Themes setzen Überschriften und
-  Metazeilen in einer Monospace-Schrift, Matrix ist komplett Monospace mit
-  eckigen Kanten und leichtem Glühen auf Titeln.
-* **[E]** Die Wahl bleibt im Browser erhalten (`localStorage`, Schlüssel
-  `muffel:theme`, optional).
-* **[E]** Damit beim Laden nicht kurz das falsche Theme aufblitzt, setzt
-  `/theme-init.js` das Attribut `data-theme` vor dem ersten Zeichnen. Wegen
-  `script-src 'self'` liegt es als eigene Datei vor und wird blockierend aus
-  dem `<head>` geladen, nicht inline. Es wird aus derselben Liste wie der
-  Umschalter erzeugt.
-* **[E]** Alle Schriften kommen von der eigenen Domain. Die Vorschau lud sie
-  von Google, die Seite nicht.
+# Implementation (W06c)
 
-# Kontrast
+* **[V]** One block of CSS variables per theme under `[data-theme="<name>"]`,
+  in the real structure one CSS file. Variables: `--bg`, `--panel`, `--line`,
+  `--fg`, `--dim`, `--ac`, `--on-ac`, `--tint`, `--radius`, `--pill`,
+  `--font-body`, `--font-head`, `--font-meta`.
+* **[V]** The themes differ not only in colors but also in corner rounding and
+  fonts. The IDE themes set headings and meta lines in a monospace font,
+  Matrix is entirely monospace with square corners and a slight glow on titles.
+* **[E]** The choice is kept in the browser (`localStorage`, key `muffel:theme`,
+  optional).
+* **[E]** So the wrong theme does not flash briefly while loading,
+  `/theme-init.js` sets the attribute `data-theme` before the first paint.
+  Because of `script-src 'self'` it is a file of its own and is loaded blocking
+  from the `<head>`, not inline. It is generated from the same list as the
+  switcher.
+* **[E]** All fonts come from the own domain. The preview loaded them from
+  Google, the site does not.
 
-* **[E]** Jedes Theme erreicht für Text auf Hintergrund, Fläche und Tönung,
-  gedämpften Text, Akzent, Text auf Akzent und die sechs Code-Farben auf der
-  Fläche mindestens 4,5:1. Das prüft `lib/themes.test.ts` gegen `themes.css`.
-* In der Vorschau mussten drei Paletten angepasst werden: Solarized Light
-  (dunklerer gedämpfter Text und Akzent), Nord (Tönung der Flächen) und
-  Monokai (Akzent Limettengrün statt Pink).
+# Contrast
 
-# Offene Punkte
+* **[E]** Every theme reaches at least 4.5:1 for text on background, panel and
+  tint, muted text, accent, text on accent and the six code colors on the
+  panel. `lib/themes.test.ts` checks this against `themes.css`.
+* In the preview three palettes had to be adjusted: Solarized Light (darker
+  muted text and accent), Nord (tint of the panels) and Monokai (accent lime
+  green instead of pink).
 
-Keine. O35 ist entschieden. Randnotiz: Rahmenlinien (`--line`) sind nicht
-auf Kontrast geprüft, nur Text.
+# Open points
+
+None. O35 is decided. Side note: border lines (`--line`) are not checked for
+contrast, only text.

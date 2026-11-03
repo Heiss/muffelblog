@@ -2,53 +2,53 @@
 okf_version: "0.2"
 ---
 
-# Überblick
+# Overview
 
-* [Überblick und Ziele](/overview.md) - Zweck, Umfang, Legende der Kennzeichnungen (E/V/U)
-* [Offene Punkte](/open-points.md) - Ergebnis der kritischen Durchsicht, priorisiert
+* [Overview and goals](/overview.md) - purpose, scope, legend of the markers (E/V/U)
+* [Open points](/open-points.md) - result of the critical review, prioritized
 
-# Planung
+# Planning
 
-* [Roadmap](/roadmap.md) - Arbeitspakete W00 bis W17 mit Abhängigkeiten und Definition of Done
+* [Roadmap](/roadmap.md) - work packages with dependencies and definition of done
 
-# Architektur
+# Architecture
 
-* [Systemarchitektur](/architecture/system.md) - Komponenten, Datenflüsse, Grundregeln
-* [Docker-Betrieb](/architecture/docker.md) - Dienste, Volumes, Secrets, Release-Austausch
+* [System architecture](/architecture/system.md) - components, data flows, basic rules
+* [Docker operation](/architecture/docker.md) - services, volumes, secrets, release swap
 
-# Inhalt und Quellen
+# Content and sources
 
-* [Nextcloud-Quelle](/content/nextcloud-source.md) - Public Share, Sync, Ausschlüsse
-* [Frontmatter-Schema](/content/frontmatter.md) - Pflichtfelder, Fallbacks, Tags, Slug
-* [Memos-Quelle](/content/memos-source.md) - Abruf zur Build-Zeit, Memo-Seiten
-* [Medien](/content/media.md) - Bilder spiegeln, Fremdinhalte
+* [Nextcloud source](/content/nextcloud-source.md) - public share, sync, exclusions
+* [Frontmatter schema](/content/frontmatter.md) - required fields, fallbacks, tags, slug
+* [Memos source](/content/memos-source.md) - fetching at build time, memo pages
+* [Media](/content/media.md) - mirroring images, foreign content
 
 # Frontend
 
-* [Feed](/frontend/feed.md) - Kombinierter Feed, Filter, Endless Scroll
-* [Live-Update](/frontend/live-update.md) - build.json und Banner "N neue Einträge"
-* [URLs und SEO](/frontend/urls-seo.md) - URL-Schema, Canonical, Sitemap
-* [Themes](/frontend/themes.md) - Farbschemata im Stil bekannter Editor-Themes
+* [Feed](/frontend/feed.md) - combined feed, filter, endless scroll
+* [Live update](/frontend/live-update.md) - build.json and the banner "N new entries"
+* [URLs and SEO](/frontend/urls-seo.md) - URL scheme, canonical, sitemap
+* [Themes](/frontend/themes.md) - color schemes in the style of well-known editor themes
 
-# Funktionen
+# Features
 
-* [Suche](/features/search.md) - Pagefind
-* [RSS](/features/rss.md) - Kombinierter Feed
-* [Glossar und Wissensgraph](/features/glossary.md) - Begriffe, Buchstabenansicht, Verlinkung, Graph
+* [Search](/features/search.md) - Pagefind
+* [RSS](/features/rss.md) - combined feed
+* [Glossary and knowledge graph](/features/glossary.md) - terms, letter view, linking, graph
 
 # Community
 
-* [Kommentare](/community/comments.md) - Remark42 mit E-Mail-Login
-* [Webmentions](/community/webmentions.md) - Empfangen, Senden, Anzeige als Remark42-Kommentare
+* [Comments](/community/comments.md) - Remark42 with email login
+* [Webmentions](/community/webmentions.md) - receiving, sending, display as Remark42 comments
 
-# Sicherheit
+# Security
 
-* [Bereinigung fremder Inhalte](/security/sanitization.md) - Sanitizing, SSRF-Schutz, Secrets
+* [Sanitizing foreign content](/security/sanitization.md) - sanitizing, SSRF protection, secrets
 
-# Betrieb
+# Operations
 
-* [Build-Pipeline](/ops/pipeline.md) - Scheduler, Änderungserkennung, atomarer Austausch, Fehlerregeln
-* [Teststrategie](/ops/testing.md) - Vitest, Playwright, Contract-Tests, volle Suite pro PR
-* [Branching und Release](/ops/branching-release.md) - GitHub Flow, Squash-Merge, CalVer-Tags YY.M.MICRO, Auto-Updater
-* [Konfiguration](/ops/config.md) - Environment variables for numeric settings, ranges, failure behavior
+* [Build pipeline](/ops/pipeline.md) - scheduler, change detection, atomic swap, failure rules
+* [Test strategy](/ops/testing.md) - Vitest, Playwright, contract tests, full suite per PR
+* [Branching and release](/ops/branching-release.md) - GitHub Flow, squash merge, CalVer tags YY.M.MICRO, auto-updaters
+* [Configuration](/ops/config.md) - environment variables for numeric settings, ranges, failure behavior
 * [Languages](/ops/language.md) - Development in English, UI language per variable, translation order

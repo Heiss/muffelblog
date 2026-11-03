@@ -24,9 +24,9 @@ generated: { by: claude-code/web, at: 2026-11-03T14:00:00Z }
 * **[E]** URLs are English and independent of the UI language: `/page/N/`,
   `/memos/`, `/posts/`, `/tag/<tag>/`, `/glossary/` (A to Z), `/terms/` (series
   for the Terms filter), `/search/`, `/p/<slug>/`, `/m/<uid>/`, `/g/<slug>/`.
-* **[E]** The existing German route names change with W22c: `/seite/N/` becomes
-  `/page/N/` (also under `/memos/`, `/posts/` and `/tag/<tag>/`). The other
-  concepts still say `/seite/N/` until they are translated in W22d.
+* **[E]** The German route names changed with W22c: `/seite/N/` became
+  `/page/N/` (also under `/memos/`, `/posts/` and `/tag/<tag>/`). The whole OKF
+  bundle was translated in W22d.
 * **[E]** No history rewrite: existing German commit messages stay. Everything
   new is English, and the existing text is translated through normal pull
   requests. A force push is limited to the author's own unmerged feature

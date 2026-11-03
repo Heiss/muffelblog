@@ -1,53 +1,55 @@
 ---
 type: Policy
-title: Konfiguration per Umgebungsvariable
-description: Welche Zahlenwerte per Umgebungsvariable einstellbar sind, ihre Standardwerte, Spannen und das Fehlerverhalten.
-tags: [konfiguration, umgebungsvariablen, betrieb]
+title: Configuration through environment variables
+description: Which numeric values can be set through environment variables, their defaults, ranges and the failure behavior.
+tags: [configuration, environment-variables, operations]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-03T05:30:00Z }
 ---
 
-# Entscheidungen
+# Decisions
 
-* **[E]** Zahlenwerte, die der Betreiber ändern können soll, sind
-  Umgebungsvariablen nach dem Schema `MUFFEL_<BEREICH>_<NAME>`. Die bestehenden
-  Namen `CONTENT_DIR`, `MEMOS_URL` und `SITE_URL` bleiben unverändert.
-* **[E]** Ein ungültiger Wert bricht den Build ab, die letzte gute Version bleibt
-  online. Es gibt keine Warnung mit Rückfall auf den Standardwert.
-* **[E]** Umfang: Feed und Memos. Medien (Bildbreiten, Dateigrenze für Bilder)
-  bleiben vorerst im Code.
-* **[E]** Freigabelisten für Hosts und Dateitypen sowie die Prüfung der
-  Dateikennung sind nicht konfigurierbar. Eine Fehlkonfiguration soll keine
-  Sicherheitslücke öffnen.
+* **[E]** Numeric values that the operator should be able to change are
+  environment variables following the scheme `MUFFEL_<AREA>_<NAME>`. The
+  existing names `CONTENT_DIR`, `MEMOS_URL` and `SITE_URL` stay unchanged.
+* **[E]** An invalid value stops the build, the last good version stays online.
+  There is no warning with a fallback to the default value.
+* **[E]** Scope: feed and memos. Media (image widths, size limit for images)
+  stay in the code for now.
+* **[E]** Allowlists for hosts and file types and the check of the file
+  signature are not configurable. A misconfiguration must not open a security
+  hole.
+* **[E]** The UI language is an environment variable too, `MUFFEL_LANG`
+  (`de` or `en`), see [Languages](/ops/language.md) (W23).
 
-# Regeln
+# Rules
 
-* Alle Werte gelten beim Build und sind in die Seiten geschrieben. Eine
-  Änderung wirkt erst nach dem nächsten Build.
-* Erlaubt sind nur Ganzzahlen ohne Vorzeichen, Leerraum außen wird entfernt.
-  Eine leere Variable gilt als nicht gesetzt (Compose liefert sie so).
-* Alle Fehler werden auf einmal gemeldet, mit Variablenname und Spanne.
-* Quelle der Wahrheit ist `packages/core/src/config.ts` (`SETTING_SPECS`). Die
-  Tabelle unten muss dazu passen, ein Test prüft Standardwerte und Grenzen.
+* All values apply at build time and are written into the pages. A change takes
+  effect only after the next build.
+* Only unsigned integers are allowed, whitespace around them is removed. An
+  empty variable counts as unset (Compose delivers it like that).
+* All errors are reported at once, with variable name and range.
+* The source of truth is `packages/core/src/config.ts` (`SETTING_SPECS`). The
+  table below must match it, a test checks defaults and bounds.
 
-# Variablen
+# Variables
 
-| Variable | Standard | Spanne | Wirkung |
+| Variable | Default | Range | Effect |
 |---|---|---|---|
-| `MUFFEL_FEED_PAGE_SIZE` | 20 | 1 bis 200 | Einträge pro Block des Feeds |
-| `MUFFEL_FEED_EXCERPT_CHARS` | 200 | 20 bis 2000 | Länge des Artikelauszugs im Feed |
-| `MUFFEL_MEMOS_DESCRIPTION_CHARS` | 160 | 20 bis 500 | Länge der Beschreibung einer Memo-Seite |
-| `MUFFEL_MEMOS_TIMEOUT_MS` | 30000 | 1000 bis 300000 | Zeitlimit je Anfrage an Memos |
-| `MUFFEL_MEMOS_MAX_FILE_MB` | 25 | 1 bis 500 | Höchstgröße je gespiegelter Memo-Datei |
+| `MUFFEL_FEED_PAGE_SIZE` | 20 | 1 to 200 | Entries per block of the feed |
+| `MUFFEL_FEED_EXCERPT_CHARS` | 200 | 20 to 2000 | Length of the article excerpt in the feed |
+| `MUFFEL_MEMOS_DESCRIPTION_CHARS` | 160 | 20 to 500 | Length of the description of a memo page |
+| `MUFFEL_MEMOS_TIMEOUT_MS` | 30000 | 1000 to 300000 | Time limit per request to Memos |
+| `MUFFEL_MEMOS_MAX_FILE_MB` | 25 | 1 to 500 | Maximum size per mirrored memo file |
 
-Weitere Variablen: `CONTENT_DIR`, `MEMOS_URL` (Pflicht), `SITE_URL`
-(optional, Sitemap und Canonical), `MUFFEL_FIXTURES=1` (nur Entwicklung und
-Tests). Der Test-Build im Repo setzt `MUFFEL_FEED_PAGE_SIZE=4`.
+Further variables: `CONTENT_DIR`, `MEMOS_URL` (required), `SITE_URL` (optional,
+sitemap and canonical), `MUFFEL_FIXTURES=1` (development and tests only). The
+test build in the repo sets `MUFFEL_FEED_PAGE_SIZE=4`.
 
-# Offen
+# Open
 
-* **[U]** Bildbreiten und Größenlimit für Bilder (`media.ts`), Polling-
-  Intervall und Zeitlimits späterer Pakete sind nicht umgestellt. Neue
-  Zahlenwerte sollen mit ihrem Arbeitspaket eine Variable bekommen.
-* **[U]** Ob die Docker-Dienste die Variablen durchreichen, steht erst mit
-  W11/W12 fest.
+* **[U]** Image widths and the size limit for images (`media.ts`), the polling
+  interval and time limits of later packages are not converted. New numeric
+  values should get a variable with their work package.
+* **[U]** Whether the Docker services pass the variables through is settled only
+  with W11/W12.
