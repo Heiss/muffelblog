@@ -121,7 +121,7 @@ try {
     );
     await seite.goto(`${ORIGIN}${a.pfad}`);
     await seite.waitForLoadState('networkidle');
-    await seite.evaluate(() => document.fonts.ready);
+    await seite.evaluate('document.fonts.ready');
     const png = await seite.screenshot();
     await writeFile(
       path.join(ziel, `${a.datei}.webp`),
