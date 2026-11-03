@@ -157,6 +157,16 @@ describe('glossary in the feed', () => {
   });
 });
 
+describe('pages in the feed', () => {
+  it('never puts static pages into the feed', () => {
+    const feed = buildFeed(
+      [artikel({ slug: 'impressum', type: 'page' }), artikel({ slug: 'x' })],
+      [],
+    );
+    expect(feed.map((i) => i.id)).toEqual(['post:x']);
+  });
+});
+
 describe('filterKind', () => {
   it('filters by kind', () => {
     const feed = buildFeed([artikel({ slug: 'a' })], [memo({ uid: 'u' })]);

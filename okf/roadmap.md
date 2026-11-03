@@ -423,11 +423,18 @@ Applies to every work package in addition to its own criteria:
 * Depends on: W05
 * Decisions: Open Graph (O17), microformats (O11), imprint and privacy policy
   (O15), 404 and `robots.txt` (O24).
+* Decided (2026-11-03): static pages (Impressum, Datenschutz, ...) come from
+  Nextcloud as files with `type: page` (URL `/<slug>/`, no date, not in feed, RSS,
+  tags or search; reserved names are refused); footer on every page lists them;
+  404 page and `robots.txt`; Open Graph (`og:*`, `twitter:card=summary`, no
+  images); `h-entry` on posts, memos and terms, `h-card` for the site (author
+  and `rel=me` follow in W14). The demo set carries clearly marked placeholder
+  pages, no legal text is in the repo.
 * DoD:
-  * [ ] Every page has a title, description and canonical.
-  * [ ] Post and memo pages carry valid `h-entry` markup.
-  * [ ] Static pages such as the imprint can be published.
-  * [ ] A 404 page and `robots.txt` exist.
+  * [x] Every page has a title, description and canonical.
+  * [x] Post and memo pages carry valid `h-entry` markup.
+  * [x] Static pages such as the imprint can be published.
+  * [x] A 404 page and `robots.txt` exist.
 
 ## W11 - Docker scaffold
 

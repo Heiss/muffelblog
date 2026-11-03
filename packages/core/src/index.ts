@@ -13,6 +13,7 @@ export {
   loadArticles,
   parseArticle,
 } from './articles.ts';
+export { RESERVED_PAGE_SLUGS } from './articles.ts';
 export type { Article, ArticleType, ParseResult } from './articles.ts';
 export { berlinLocalToInstant, parseDate } from './date.ts';
 export { splitFrontmatter } from './frontmatter.ts';

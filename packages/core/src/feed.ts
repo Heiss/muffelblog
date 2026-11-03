@@ -27,15 +27,17 @@ export function buildFeed(
 ): FeedItem[] {
   const auszugMax = optionen.excerptChars ?? DEFAULT_SETTINGS.feedExcerptChars;
   const items: FeedItem[] = [
-    ...articles.map((a): FeedItem => ({
-      kind: a.type === 'glossary' ? 'glossary' : 'post',
-      id: `${a.type}:${a.slug}`,
-      url: a.type === 'glossary' ? `/g/${a.slug}/` : `/p/${a.slug}/`,
-      title: a.title,
-      date: a.date,
-      tags: a.tags,
-      excerpt: a.description?.trim() || plainExcerpt(a.html, auszugMax),
-    })),
+    ...articles
+      .filter((a) => a.type !== 'page')
+      .map((a): FeedItem => ({
+        kind: a.type === 'glossary' ? 'glossary' : 'post',
+        id: `${a.type}:${a.slug}`,
+        url: a.type === 'glossary' ? `/g/${a.slug}/` : `/p/${a.slug}/`,
+        title: a.title,
+        date: a.date,
+        tags: a.tags,
+        excerpt: a.description?.trim() || plainExcerpt(a.html, auszugMax),
+      })),
     ...memos.map((m): FeedItem => ({
       kind: 'memo',
       id: `memo:${m.uid}`,

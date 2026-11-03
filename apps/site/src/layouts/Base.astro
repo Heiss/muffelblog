@@ -15,6 +15,7 @@ import '../styles/base.css';
 import { SITE_LANG, SITE_NAME, pageTitle } from '@muffelblog/core';
 import { canonicalUrl, siteUrl } from '../lib/feed';
 import { messages } from '../i18n/messages';
+import { getContent } from '../lib/articles';
 import { DEFAULT_LIGHT, THEMES } from '../lib/themes';
 
 interface Props {
@@ -22,10 +23,16 @@ interface Props {
   description?: string;
   /** Search engines should not index the page (technical block pages). */
   noindex?: boolean;
+  /** Open Graph type: posts, memos and terms are articles. */
+  ogType?: 'website' | 'article';
 }
 
-const { title, description, noindex } = Astro.props;
+const { title, description, noindex, ogType = 'website' } = Astro.props;
 const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
+const { articles } = await getContent();
+const legalPages = articles
+  .filter((a) => a.type === 'page')
+  .sort((a, b) => a.title.localeCompare(b.title, 'de'));
 ---
 
 <!doctype html>
@@ -44,15 +51,24 @@ const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
         href="/feed.xml"
       />
     )}
+    <meta property="og:title" content={title ?? SITE_NAME} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content={messages.locale.replace('-', '_')} />
+    {description && <meta property="og:description" content={description} />}
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta name="twitter:card" content="summary" />
     {noindex && <meta name="robots" content="noindex, follow" />}
     <!-- Sets data-theme before the first paint, so it is blocking and from the own domain. -->
     <script is:inline src="/theme-init.js"></script>
   </head>
   <body>
     <header class="site-header">
-      <a href="/" class="site-name">
-        {SITE_NAME}
-      </a>
+      <div class="h-card">
+        <a href="/" class="site-name u-url p-name">
+          {SITE_NAME}
+        </a>
+      </div>
       <nav aria-label={messages.nav.label}>
         <a href="/">{messages.nav.home}</a>
         <a href="/tag/">{messages.nav.tags}</a>
@@ -71,6 +87,15 @@ const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
     <main>
       <slot />
     </main>
+    <footer class="site-footer" aria-label={messages.footer.label}>
+      <nav>
+        {legalPages.map((p) => (
+          <a href={`/${p.slug}/`}>{p.title}</a>
+        ))}
+        <a href="/glossary/">{messages.footer.glossary}</a>
+        {siteUrl() && <a href="/feed.xml">{messages.footer.rss}</a>}
+      </nav>
+    </footer>
   </body>
 </html>
 

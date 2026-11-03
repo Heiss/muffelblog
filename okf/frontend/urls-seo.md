@@ -21,8 +21,10 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 | Tag | `/tag/<tag>/`, blocks `/tag/<tag>/page/N/` | **[E]** |
 | Glossary (A to Z) | `/glossary/` | **[E]** |
 | Technical blocks (terms) | `/terms/`, `/terms/page/N/` | **[E]** |
-| Search | `/search/` | **[V]** |
-| RSS | `/feed.xml` | **[V]** |
+| Static page (Impressum, ...) | `/<slug>/`, from `type: page` | **[E]** |
+| 404 page, `robots.txt` | `/404.html`, `/robots.txt` | **[E]** |
+| Search | `/search/` | **[E]** |
+| RSS | `/feed.xml` | **[E]** |
 | Build signal | `/build.json` | **[E]** |
 
 The names for tag, search and the RSS path are proposals for the short and
@@ -52,5 +54,5 @@ are lost.
 
 # Open
 
-Open Graph and social cards (O17), 404 page, `robots.txt`, favicon (O16),
-imprint and privacy policy as pages of their own (O15).
+Social preview images (O17, tags are done), favicon (O16), the legal text of
+imprint and privacy policy itself (O15, to be written by the user in Nextcloud).

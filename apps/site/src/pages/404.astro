@@ -1,0 +1,14 @@
+---
+import { messages } from '../i18n/messages';
+import Base from '../layouts/Base.astro';
+
+const t = messages.notFound;
+---
+
+<Base title={t.title} noindex>
+  <h1>{t.title}</h1>
+  <p>{t.text}</p>
+  <p>
+    <a href="/">{t.home}</a>
+  </p>
+</Base>

@@ -29,7 +29,7 @@ describe('demo set: articles and terms', () => {
   it('has 9 articles and 15 glossary terms, all publishable, without warnings', async () => {
     const { articles, warnings } = await loadArticles(content);
     expect(warnings).toEqual([]);
-    expect(articles).toHaveLength(24);
+    expect(articles.filter((a) => a.type !== 'page')).toHaveLength(24);
     expect((await termFiles()).length).toBe(15);
   });
 
@@ -64,7 +64,9 @@ describe('demo set: articles and terms', () => {
   });
 
   it('has unique slugs and dates that spread over several months', async () => {
-    const { articles } = await loadArticles(content);
+    const loaded = await loadArticles(content);
+    // Static pages have no date of their own.
+    const articles = loaded.articles.filter((a) => a.type !== 'page');
     expect(new Set(articles.map((a) => a.slug)).size).toBe(articles.length);
     const months = new Set(
       articles.map((a) => a.date.toISOString().slice(0, 7)),
