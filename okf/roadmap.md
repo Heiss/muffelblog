@@ -401,11 +401,11 @@ Applies to every work package in addition to its own criteria:
 
 * Branch: `feature/w08-suche`
 * Depends on: W05
-* Decisions: interface (O16), checking the German texts (O25).
+* Decided: own UI on the Pagefind JS API (O16), see [Search](/features/search.md).
 * DoD:
-  * [ ] Posts and memos can be found, filter by type and tag.
-  * [ ] Technical blocks are not in the index, no duplicate hits.
-  * [ ] Search works without foreign requests.
+  * [x] Posts and memos can be found, filter by type and tag.
+  * [x] Technical blocks are not in the index, no duplicate hits.
+  * [x] Search works without foreign requests.
 
 ## W09 - RSS
 
