@@ -23,9 +23,17 @@ unverändert, nur die CSS-Dateien unterscheiden sich.
   Besucher das nutzen kann, was er will: Hell (bisheriges Aussehen), Dracula,
   Matrix, Solarized Dark, Solarized Light, Nord, Gruvbox, Monokai, Tokyo
   Night, Catppuccin Mocha.
-* **[E]** Das Standard-Theme ist Solarized Light.
+* **[E]** Das Standard-Theme ist Solarized Light. Bei dunkler Systemeinstellung
+  ohne gespeicherte Wahl gilt Solarized Dark. Eine gespeicherte Wahl gewinnt.
+* **[E]** Umschalter: Auswahlfeld (`select`) in der Kopfleiste, nur mit
+  JavaScript sichtbar.
+* **[E]** Schriften je Theme selbst gehostet (Source Sans 3, Source Serif 4,
+  JetBrains Mono, IBM Plex Mono aus den Paketen `@fontsource/*`, OFL-1.1, nur
+  `latin`). Keine Google Fonts.
+* **[E]** Code-Blöcke werden beim Build mit `lowlight` gefärbt. Die Farben
+  kommen als Variablen `--tok-*` aus dem Theme.
 
-# Vorschlag (aus der Vorschau, noch nicht bestätigt)
+# Umsetzung (W06c)
 * **[V]** Umsetzung: Pro Theme ein Block mit CSS-Variablen unter
   `[data-theme="<name>"]`, im echten Aufbau je eine CSS-Datei. Variablen:
   `--bg`, `--panel`, `--line`, `--fg`, `--dim`, `--ac`, `--on-ac`, `--tint`,
@@ -34,26 +42,26 @@ unverändert, nur die CSS-Dateien unterscheiden sich.
   Ecken-Rundung und Schriften. Die IDE-Themes setzen Überschriften und
   Metazeilen in einer Monospace-Schrift, Matrix ist komplett Monospace mit
   eckigen Kanten und leichtem Glühen auf Titeln.
-* **[V]** Umschalter im Seitenkopf, die Wahl bleibt im Browser erhalten. Ohne
-  gespeicherte Wahl gilt der Standard Solarized Light. Ob Besucher mit dunkler
-  Systemeinstellung stattdessen Solarized Dark als Gegenstück bekommen, ist
-  offen (O35).
-* **[V]** Damit beim Laden nicht kurz das falsche Theme aufblitzt, setzt ein
-  kleines Skript im `<head>` das Attribut `data-theme` vor dem ersten Zeichnen.
-  Wegen `script-src 'self'` liegt es als eigene Datei vor und wird blockierend
-  geladen, nicht inline.
-* **[V]** Alle Schriften kommen von der eigenen Domain, keine Google Fonts. Die
-  Vorschau lädt sie nur aus technischen Gründen von Google.
+* **[E]** Die Wahl bleibt im Browser erhalten (`localStorage`, Schlüssel
+  `muffel:theme`, optional).
+* **[E]** Damit beim Laden nicht kurz das falsche Theme aufblitzt, setzt
+  `/theme-init.js` das Attribut `data-theme` vor dem ersten Zeichnen. Wegen
+  `script-src 'self'` liegt es als eigene Datei vor und wird blockierend aus
+  dem `<head>` geladen, nicht inline. Es wird aus derselben Liste wie der
+  Umschalter erzeugt.
+* **[E]** Alle Schriften kommen von der eigenen Domain. Die Vorschau lud sie
+  von Google, die Seite nicht.
 
 # Kontrast
 
-* **[V]** Jedes Theme erreicht für Text auf Hintergrund und Fläche, gedämpften
-  Text, Akzent und Text auf Akzent mindestens 4,5:1. Das prüft ein Test.
+* **[E]** Jedes Theme erreicht für Text auf Hintergrund, Fläche und Tönung,
+  gedämpften Text, Akzent, Text auf Akzent und die sechs Code-Farben auf der
+  Fläche mindestens 4,5:1. Das prüft `lib/themes.test.ts` gegen `themes.css`.
 * In der Vorschau mussten drei Paletten angepasst werden: Solarized Light
   (dunklerer gedämpfter Text und Akzent), Nord (Tönung der Flächen) und
   Monokai (Akzent Limettengrün statt Pink).
 
 # Offene Punkte
 
-Syntaxfarben für Code-Blöcke je Theme, Verhalten bei `prefers-color-scheme`
-(dunkle Systemeinstellung) und die Schriftdateien selbst hosten: O35.
+Keine. O35 ist entschieden. Randnotiz: Rahmenlinien (`--line`) sind nicht
+auf Kontrast geprüft, nur Text.
