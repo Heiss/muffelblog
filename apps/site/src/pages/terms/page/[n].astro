@@ -1,0 +1,26 @@
+---
+import { filterKind, paginate } from '@muffelblog/core';
+import FeedPage from '../../../components/FeedPage.astro';
+import { messages } from '../../../i18n/messages';
+import { getFeed, restPages } from '../../../lib/feed';
+import { getSettings } from '../../../lib/settings';
+
+export async function getStaticPaths() {
+  const entries = filterKind(await getFeed(), 'glossary');
+  return restPages(entries.length, getSettings().feedPageSize).map((n) => ({
+    params: { n: String(n) },
+    props: { entries },
+  }));
+}
+
+const { entries } = Astro.props;
+const page = paginate(
+  entries,
+  Number(Astro.params.n),
+  '/terms/',
+  getSettings().feedPageSize,
+);
+const title = messages.filter.terms;
+---
+
+<FeedPage series="glossary" {title} heading={title} {page} />

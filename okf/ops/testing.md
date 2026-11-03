@@ -44,7 +44,7 @@ generated: { by: claude-code/web, at: 2026-11-02T14:40:00Z }
 * **[E]** The demo images are generated placeholders, clearly marked as such
   (`generate-images.mjs`), never photos.
 * **[E]** The glossary terms carry `type: glossary` already (folder
-  `content/glossar/`). Until W19 they appear as normal articles.
+  `content/glossar/`) and appear as terms since W19.
 * A unit test (`packages/core/src/demo.test.ts`) keeps the demo set clean: counts,
   3 + 5 per topic, valid frontmatter, no warnings while rendering, all images
   found. A finding while writing it: an article and a term must not share a file

@@ -6,10 +6,12 @@ import type { RenderedArticle } from '../../lib/articles';
 
 export async function getStaticPaths() {
   const { articles } = await getContent();
-  return articles.map((article) => ({
-    params: { slug: article.slug },
-    props: { article },
-  }));
+  return articles
+    .filter((a) => a.type === 'post')
+    .map((article) => ({
+      params: { slug: article.slug },
+      props: { article },
+    }));
 }
 
 interface Props {

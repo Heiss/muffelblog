@@ -4,7 +4,11 @@ import { parseDate } from './date.ts';
 import { splitFrontmatter } from './frontmatter.ts';
 import { normalizeTag, toSlug } from './slug.ts';
 
+export type ArticleType = 'post' | 'glossary';
+
 export interface Article {
+  /** `glossary` for a term (frontmatter `type: glossary`), otherwise `post`. */
+  type: ArticleType;
   slug: string;
   title: string;
   date: Date;
@@ -139,7 +143,17 @@ export function parseArticle(input: {
     if (tag !== null && !tags.includes(tag)) tags.push(tag);
   }
 
+  let type: ArticleType = 'post';
+  if (data.type === 'glossary') {
+    type = 'glossary';
+  } else if (data.type !== undefined) {
+    warn(
+      `unknown type ${JSON.stringify(data.type)}, treated as a post (known: glossary)`,
+    );
+  }
+
   const article: Article = {
+    type,
     slug,
     title,
     date,
@@ -222,8 +236,17 @@ export async function loadArticles(
     if (result.kind === 'article') found.push(result.article);
   }
 
-  const unique = assignUniqueSlugs(found);
-  warnings.push(...unique.warnings);
-  const articles = unique.articles.reverse();
+  // Slugs are unique per type: /p/ and /g/ are separate namespaces.
+  const merged: Article[] = [];
+  for (const type of ['post', 'glossary'] as const) {
+    const unique = assignUniqueSlugs(found.filter((a) => a.type === type));
+    warnings.push(...unique.warnings);
+    merged.push(...unique.articles);
+  }
+  const articles = merged.sort(
+    (a, b) =>
+      b.date.getTime() - a.date.getTime() ||
+      (a.path < b.path ? 1 : a.path > b.path ? -1 : 0),
+  );
   return { articles, warnings };
 }

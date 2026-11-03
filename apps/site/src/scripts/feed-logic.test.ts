@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { blockPath, freshIds, parseFilter, seriesPath } from './feed-logic';
 
 describe('parseFilter', () => {
-  it('knows all, post and memo', () => {
+  it('knows all, post, memo and glossary', () => {
+    expect(parseFilter('glossary')).toBe('glossary');
     expect(parseFilter('all')).toBe('all');
     expect(parseFilter('post')).toBe('post');
     expect(parseFilter('memo')).toBe('memo');
@@ -20,6 +21,7 @@ describe('seriesPath', () => {
     expect(seriesPath('all')).toBe('/');
     expect(seriesPath('post')).toBe('/posts/');
     expect(seriesPath('memo')).toBe('/memos/');
+    expect(seriesPath('glossary')).toBe('/terms/');
   });
 });
 
@@ -33,6 +35,8 @@ describe('blockPath', () => {
       '/memos/',
       '/memos/page/3/',
       '/posts/page/12/',
+      '/terms/',
+      '/terms/page/2/',
       '/tag/rust/',
       '/tag/a-b/page/2/',
     ]) {

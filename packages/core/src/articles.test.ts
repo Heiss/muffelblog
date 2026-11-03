@@ -155,8 +155,37 @@ describe('parseArticle', () => {
   });
 });
 
+describe('parseArticle type', () => {
+  const base = (type: string) =>
+    `---\npublish: true\ntitle: Begriff\ndate: 2026-01-05\n${type}---\nText\n`;
+
+  it('is a post without the field', () => {
+    const r = parse('a.md', base(''));
+    expect(r.kind === 'article' && r.article.type).toBe('post');
+  });
+
+  it('reads type: glossary', () => {
+    const r = parse('a.md', base('type: glossary\n'));
+    expect(r.kind === 'article' && r.article.type).toBe('glossary');
+    expect(r.kind === 'article' && r.warnings).toEqual([]);
+  });
+
+  it('treats an unknown type as a post and warns', () => {
+    const r = parse('a.md', base('type: wiki\n'));
+    expect(r.kind === 'article' && r.article.type).toBe('post');
+    expect(r.kind === 'article' && r.warnings.length).toBe(1);
+  });
+
+  it('warns when type is not text', () => {
+    const r = parse('a.md', base('type: [x]\n'));
+    expect(r.kind === 'article' && r.article.type).toBe('post');
+    expect(r.kind === 'article' && r.warnings.length).toBe(1);
+  });
+});
+
 describe('assignUniqueSlugs', () => {
   const make = (path: string, slug: string, date: string) => ({
+    type: 'post' as const,
     slug,
     title: path,
     date: new Date(date),
@@ -209,22 +238,60 @@ describe('assignUniqueSlugs', () => {
   });
 });
 
+describe('loadArticles slugs per type', () => {
+  it('lets a post and a term share a slug', async () => {
+    const { mkdtemp, writeFile, mkdir } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = await mkdtemp(join(tmpdir(), 'muffel-'));
+    await mkdir(join(dir, 'g'));
+    const head = '---\npublish: true\ndate: 2026-01-05\n';
+    await writeFile(join(dir, 'x.md'), `${head}---\nA`);
+    await writeFile(join(dir, 'g', 'x.md'), `${head}type: glossary\n---\nB`);
+    await writeFile(join(dir, 'g', 'y.md'), `${head}type: glossary\n---\nC`);
+    await writeFile(join(dir, 'y.md'), `${head}---\nD`);
+    const { articles, warnings } = await loadArticles(dir);
+    expect(warnings.filter((w) => w.includes('taken'))).toEqual([]);
+    expect(articles.map((a) => `${a.type}:${a.slug}`).sort()).toEqual([
+      'glossary:x',
+      'glossary:y',
+      'post:x',
+      'post:y',
+    ]);
+  });
+
+  it('still numbers duplicates within the glossary', async () => {
+    const { mkdtemp, writeFile } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = await mkdtemp(join(tmpdir(), 'muffel-'));
+    const t = '---\npublish: true\ntype: glossary\ndate: 2026-01-05\n---\nT';
+    await writeFile(join(dir, 'a.md'), t);
+    await writeFile(join(dir, 'b.md'), t.replace('---\nT', 'slug: a\n---\nT'));
+    const { articles } = await loadArticles(dir);
+    expect(articles.map((a) => a.slug).sort()).toEqual(['a', 'a-2']);
+  });
+});
+
 describe('loadArticles (Fixtures)', () => {
   const dir = fileURLToPath(new URL('../fixtures/content', import.meta.url));
 
   it('loads exactly the publishable articles', async () => {
     const { articles } = await loadArticles(dir);
-    expect(articles.map((a) => a.slug).sort()).toEqual(
+    expect(articles.map((a) => `${a.type}:${a.slug}`).sort()).toEqual(
       [
-        'gleich',
-        'gleich-2',
-        'groesse-und-masse',
-        'hallo-welt',
-        'ohne-datum',
-        'rendering-demo',
-        'tief',
-        'unsicher',
-        'zeit-ohne-zone',
+        'glossary:aether',
+        'glossary:cache',
+        'glossary:hallo-welt',
+        'post:gleich',
+        'post:gleich-2',
+        'post:groesse-und-masse',
+        'post:hallo-welt',
+        'post:ohne-datum',
+        'post:rendering-demo',
+        'post:tief',
+        'post:unsicher',
+        'post:zeit-ohne-zone',
       ].sort(),
     );
   });

@@ -20,6 +20,7 @@ const date = new Intl.DateTimeFormat(messages.locale, {
   data-kind={item.kind}
   data-id={item.id}
 >
+  {item.kind === 'glossary' && <p class="kind">{messages.glossary.term}</p>}
   <h2>
     <a href={item.url}>{item.title}</a>
   </h2>

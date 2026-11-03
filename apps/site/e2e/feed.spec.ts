@@ -2,12 +2,12 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 // The test build uses blocks of 4 entries (MUFFEL_FEED_PAGE_SIZE), the sample data
-// has 9 articles and 6 memos.
+// has 9 articles, 3 terms and 6 memos.
 // The static structure (blocks, next links) is checked without JavaScript;
 // loading more in the browser is covered by feed-client.spec.ts.
 test.use({ javaScriptEnabled: false });
 
-const TOTAL = 15;
+const TOTAL = 18;
 const BLOCK = 4;
 
 interface Zeile {
@@ -46,7 +46,9 @@ test.describe('Shared feed', () => {
     const alle = await allPages(page, '/');
     expect(alle).toHaveLength(TOTAL);
     expect(new Set(alle.map((z) => z.href)).size).toBe(TOTAL);
-    expect(new Set(alle.map((z) => z.kind))).toEqual(new Set(['post', 'memo']));
+    expect(new Set(alle.map((z) => z.kind))).toEqual(
+      new Set(['post', 'memo', 'glossary']),
+    );
     const zeiten = alle.map((z) => Date.parse(z.datum));
     expect(zeiten).toEqual([...zeiten].sort((a, b) => b - a));
   });
@@ -54,7 +56,7 @@ test.describe('Shared feed', () => {
   test('splits into blocks and links back and forth', async ({ page }) => {
     await page.goto('/');
     expect(await rows(page)).toHaveLength(BLOCK);
-    await expect(page.getByText('Seite 1 von 4')).toBeVisible();
+    await expect(page.getByText('Seite 1 von 5')).toBeVisible();
     await expect(
       page.getByRole('link', { name: 'Neuere Einträge' }),
     ).toHaveCount(0);
@@ -76,12 +78,12 @@ test.describe('Shared feed', () => {
     page,
     request,
   }) => {
-    await page.goto('/page/4/');
-    expect(await rows(page)).toHaveLength(TOTAL - 3 * BLOCK);
+    await page.goto('/page/5/');
+    expect(await rows(page)).toHaveLength(TOTAL - 4 * BLOCK);
     await expect(
       page.getByRole('link', { name: 'Ältere Einträge' }),
     ).toHaveCount(0);
-    expect((await request.get('/page/5/')).status()).toBe(404);
+    expect((await request.get('/page/6/')).status()).toBe(404);
     expect((await request.get('/page/1/')).status()).toBe(404);
   });
 
@@ -128,7 +130,7 @@ test.describe('Shared feed', () => {
 });
 
 test.describe('Filter by kind', () => {
-  test('/memos/ shows only memos, /posts/ only articles, each complete', async ({
+  test('/memos/, /posts/ and /terms/ show only their kind, each complete', async ({
     page,
   }) => {
     await page.goto('/memos/');
@@ -140,7 +142,10 @@ test.describe('Filter by kind', () => {
     const posts = await allPages(page, '/posts/');
     expect(posts.length).toBeGreaterThan(0);
     expect(posts.every((z) => z.kind === 'post')).toBe(true);
-    expect(memos.length + posts.length).toBe(TOTAL);
+    const terms = await allPages(page, '/terms/');
+    expect(terms.length).toBe(3);
+    expect(terms.every((z) => z.kind === 'glossary')).toBe(true);
+    expect(memos.length + posts.length + terms.length).toBe(TOTAL);
   });
 });
 

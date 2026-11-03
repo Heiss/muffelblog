@@ -9,7 +9,7 @@ interface Props {
   heading: string;
   page: Page<FeedItem>;
   /** Series the page belongs to. Only there the filter is shown. */
-  series?: 'all' | 'post' | 'memo';
+  series?: 'all' | 'post' | 'memo' | 'glossary';
   /** Hint shown when the block is empty. */
   empty?: string;
 }
@@ -29,6 +29,7 @@ const filters = [
   { id: 'all', name: messages.filter.all, href: '/' },
   { id: 'post', name: messages.filter.long, href: '/posts/' },
   { id: 'memo', name: messages.filter.short, href: '/memos/' },
+  { id: 'glossary', name: messages.filter.terms, href: '/terms/' },
 ] as const;
 ---
 
