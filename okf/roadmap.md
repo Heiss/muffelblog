@@ -50,8 +50,10 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 | W03 | Rendering, Bereinigung, Artikel-Bilder | W01 | W02 |
 | W04 | Memos-Quelle und Bild-Spiegelung | W03 | W11 |
 | W05 | Statischer Feed, Blöcke, Tags, Sitemap | W01, W04 | W11 |
-| W06 | Feed-Client (Scroll, Filter, Split-View) | W05 | W08, W09, W10, W11 |
-| W07 | build.json und Banner | W05, W06 | W08, W09, W10 |
+| W06a | Feed-Client: Endless Scroll, Filter, Rücksprung | W05 | W08, W09, W10, W11 |
+| W06b | Feed-Client: Split-View | W06a | W08, W09, W10, W11 |
+| W06c | Themes | W06a | W06b, W08, W09, W10, W11 |
+| W07 | build.json und Banner | W05, W06a | W08, W09, W10 |
 | W08 | Suche (Pagefind) | W05 | W06, W09, W10 |
 | W09 | RSS | W05 | W06, W08, W10 |
 | W10 | SEO, Microformats, statische Seiten | W05 | W06, W08, W09 |
@@ -62,6 +64,7 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
 | W15 | Webmentions Senden | W14 | - |
 | W16 | Härtung und Betrieb | W12, W13, W14, W15 | - |
 | W17 | Go-live | alle | - |
+| W18 | Codequalität, Komplexität, Mutationstests | W05; später ausbauen | W06b bis W16 |
 
 **Kritischer Pfad:** W00, W01, W03, W04, W05, W12, W13, W14, W15, W16, W17.
 
@@ -300,22 +303,61 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * Artikelseiten `/p/<slug>/` und Memo-Seiten nutzen das neue Grundlayout
     noch nicht (Navigation fehlt dort), das folgt mit W06/W10.
 
-## W06 - Feed-Client
+## W06 - Feed-Client (in drei Pull Requests)
+
+* Entschieden **[E]**: Zuschnitt in drei Pull Requests W06a (Endless Scroll,
+  Filter, Rücksprung), W06b (Split-View) und W06c (Themes).
+* Entschieden **[E]**: Die Spalten der Split-View holen ihre erste Seite per
+  `fetch` aus `/memos/` und `/posts/`. Ohne JavaScript bleibt der gemischte
+  Strom.
+* Entschieden **[E]**: Ein Moduswechsel baut die Liste neu auf und springt nach
+  oben. Modus, Verhältnis und Filter bleiben erhalten.
+* Entschieden **[E]**: Ohne gespeicherte Wahl nimmt die Seite bei dunkler
+  Systemeinstellung Solarized Dark, sonst Solarized Light. Eine gespeicherte
+  Wahl gewinnt.
+
+### W06a - Endless Scroll, Filter, Rücksprung
 
 * Branch: `feature/w06-feed-client`
 * Abhängig von: W05
-* Entscheidungen: Gestaltung (O16), Verhalten bei Tastatur und Screenreader.
-* Umfang: Endless Scroll, Filter im Unified-Modus, Split-View ab 1024px mit
-  verschiebbarem Balken und ausblendbaren Seiten, Zustand im Browser,
-  umschaltbare Themes (siehe [Themes](/frontend/themes.md)).
+* Umfang: Nachladen per `IntersectionObserver`, Filter Alle / Beiträge / Memos
+  im Unified-Modus, Speicherung des Filters, Wiederherstellen von Blöcken und
+  Scrollposition beim Rücksprung.
 * DoD:
-  * [ ] Endless Scroll lädt Blöcke nach, ohne Doppelungen.
+  * [x] Endless Scroll lädt Blöcke nach, ohne Doppelungen (E2E über alle
+    4 Blöcke, Reihenfolge geprüft).
+  * [x] Ohne JavaScript bleiben Weiter-Link und Filter normale Links.
+  * [x] Ohne nutzbaren `localStorage` gelten Standardwerte.
+  * [x] Zurück-Navigation stellt geladene Blöcke und Scrollposition wieder
+    her.
+  * [x] Nachladefehler zeigen einen Hinweis mit normalem Link als Ausweg.
+  * [x] Nachgeladen werden nur Adressen der eigenen Seite in der Form der
+    Blöcke (Unit-Test für die Prüfung).
+* Befunde bei der Umsetzung:
+  * Der Filter ändert die Adresse per `replaceState` auf die Reihe
+    (`/memos/`, `/posts/`, `/`). Ein Neuladen von `/memos/` zeigt dann
+    dieselbe Liste. Auf `/` gewinnt ein gespeicherter Filter, eine
+    ausdrücklich aufgerufene Reihe nicht. Beim Aufruf von `/` mit gespeichertem
+    Filter erscheint kurz der gemischte Strom, bevor er ersetzt wird.
+  * Mit JavaScript ist der Pager (auch "Neuere Einträge") verborgen.
+
+### W06b - Split-View
+
+* Branch: `feature/w06b-split-view`
+* Abhängig von: W06a
+* Entscheidungen: Tastaturbedienung des Balkens, Standardverhältnis, Verhalten
+  bei Fensterbreite um 1024px.
+* DoD:
   * [ ] Ab 1024px lassen sich Modus, Verhältnis und ausgeblendete Seite
     umschalten und bleiben nach dem Neuladen erhalten.
   * [ ] Unter 1024px gibt es nur Unified mit Filter.
-  * [ ] Ohne `localStorage` gelten Standardwerte.
   * [ ] Der Balken ist per Tastatur bedienbar.
-  * [ ] Zurück-Navigation stellt die Scrollposition wieder her.
+
+### W06c - Themes
+
+* Branch: `feature/w06c-themes`
+* Abhängig von: W06a
+* DoD:
   * [ ] Alle zehn Themes sind wählbar, Solarized Light ist der Standard.
   * [ ] Jedes Theme besteht den Kontrasttest (Text mindestens 4,5:1), und das
     gewählte Theme bleibt nach dem Neuladen erhalten, ohne dass beim Laden
@@ -469,3 +511,24 @@ Gilt für jedes Arbeitspaket zusätzlich zu den eigenen Kriterien:
   * [ ] Erster Echtlauf mit den echten Quellen ist erfolgreich.
   * [ ] Alle offenen Punkte in `open-points.md` sind entschieden oder
     bewusst vertagt.
+
+## W18 - Codequalität, Komplexität, Mutationstests
+
+* Branch: `feature/w18-qualitaet`
+* Abhängig von: W05 (genug Code zum Messen); bewusst nicht am Anfang
+* Anlass: Der Nutzer wünscht statische Analyse (Codequalität, Komplexität) und
+  später Mutationstests mit mehr als 80 %, damit der Code zu den TDD-Tests
+  passt.
+* Entscheidungen (offen, O37): Werkzeuge, Schwellen für Komplexität, ob die
+  Analyse die CI blockiert oder nur berichtet, Umfang und Laufzeit der
+  Mutationstests (alle Pakete oder nur `packages/core`), Zeitpunkt der
+  Einführung der 80-%-Schwelle.
+* DoD (Entwurf, **[V]**):
+  * [ ] Komplexitätsgrenzen sind in der Lint-Konfiguration gesetzt und die CI
+    prüft sie.
+  * [ ] Ein Bericht zur Codequalität liegt vor, bestehende Befunde sind
+    behoben oder bewusst akzeptiert.
+  * [ ] Mutationstests laufen für die gewählten Pakete, der Mutation Score
+    liegt bei mindestens 80 %, überlebende Mutanten sind bewertet.
+  * [ ] Laufzeit und CI-Kosten sind gemessen (siehe O34), der Lauf blockiert
+    Pull Requests nicht unnötig lange.

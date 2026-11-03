@@ -7,4 +7,4 @@ import { getSettings } from '../lib/settings';
 const page = paginate(await getFeed(), 1, '/', getSettings().feedPageSize);
 ---
 
-<FeedSeite heading={SITE_NAME} {page} />
+<FeedSeite reihe="alle" heading={SITE_NAME} {page} />

@@ -14,7 +14,11 @@ const datum = new Intl.DateTimeFormat('de-DE', {
 }).format(item.date);
 ---
 
-<article class={`eintrag eintrag-${item.kind}`} data-kind={item.kind}>
+<article
+  class={`eintrag eintrag-${item.kind}`}
+  data-kind={item.kind}
+  data-id={item.id}
+>
   <h2>
     <a href={item.url}>{item.title}</a>
   </h2>

@@ -44,10 +44,10 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 
 # Verhalten im Browser
 
-* **[V]** `IntersectionObserver` am Listenende lädt den nächsten Block.
-  Doppelte Einträge werden anhand ihrer ID verworfen.
-* **[V]** Scrollposition und geladene Blöcke werden bei Rücksprung vom
-  Artikel wiederhergestellt (History-API).
+* **[E]** `IntersectionObserver` am Listenende lädt den nächsten Block.
+  Doppelte Einträge werden anhand ihrer ID verworfen (umgesetzt in W06a).
+* **[E]** Scrollposition und geladene Blöcke werden bei Rücksprung vom
+  Artikel wiederhergestellt (umgesetzt in W06a, Merkzettel im `sessionStorage`).
 * **[V]** Der Footer ist bei Endless Scroll schwer erreichbar. Wichtige Links
   (Impressum, Datenschutz, RSS) gehören deshalb in die feste Kopf- oder
   Seitenleiste.

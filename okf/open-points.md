@@ -7,7 +7,7 @@ status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-Die IDs (O1 bis O36) werden in den anderen Konzepten referenziert. Jeder Punkt
+Die IDs (O1 bis O37) werden in den anderen Konzepten referenziert. Jeder Punkt
 nennt, was der Spezifikation heute dazu eingetragen ist ("Eintrag") und was
 dagegen spricht.
 
@@ -60,6 +60,7 @@ dagegen spricht.
 | O24 | 404-Seite, `robots.txt` | Nicht besprochen. |
 | O25 | Ungeprüfte Fakten | siehe Abschnitt D. |
 | O36 | HEIC-Fotos | Handyfotos im HEIC-Format (iPhone) lassen sich mit der verwendeten Bildbibliothek nicht verarbeiten und werden mit Hinweis übersprungen. Offen: Fotos als JPEG hochladen oder eine HEIC-Verarbeitung ergänzen? |
+| O37 | Codequalität, Komplexität, Mutationstests | Wunsch des Nutzers (W18): statische Analyse und später Mutationstests mit mehr als 80 %. Offen: Werkzeuge, Schwellen, blockierend oder berichtend, Umfang, Laufzeit in der CI. | [Roadmap](/roadmap.md) |
 | O35 | Themes | **[E]** Mehrere Themes im Stil bekannter Editor-Themes (siehe [Themes](/frontend/themes.md)). **[E]** Alle zehn Themes der Vorschau bleiben, Standard ist Solarized Light. Offen: Syntaxfarben für Code-Blöcke je Theme, Umgang mit `prefers-color-scheme` (Vorschlag: bei dunkler Systemeinstellung Solarized Dark), Schriften selbst hosten. |
 
 # D. Ungeprüfte Fakten (müssen vor der Umsetzung belegt werden)

@@ -1,6 +1,8 @@
 # Update Log
 
 ## 2026-11-03
+* **Update**: W06 in drei Pull Requests geteilt (W06a Endless Scroll, Filter, Rücksprung; W06b Split-View; W06c Themes); Entscheidungen zu Split-Daten, Moduswechsel und dunkler Systemeinstellung eingetragen.
+* **Update**: Arbeitspaket W18 (Codequalität, Komplexität, Mutationstests ab 80 %) und O37 aufgenommen, bewusst nicht am Anfang.
 * **Creation**: [Konfiguration](/ops/config.md) angelegt: Zahlenwerte für Feed und Memos als Umgebungsvariablen `MUFFEL_<BEREICH>_<NAME>`, ungültige Werte brechen den Build ab.
 * **Update**: W05 umgesetzt (Branch `feature/w05-feed-statisch`): gemeinsamer Feed mit Blöcken zu 20, Reihen `/`, `/memos/`, `/posts/`, Tag-Übersicht und Tag-Listen, Sitemap und Canonical nur mit `SITE_URL`; Entscheidungen zu O1, O13, O20 eingetragen, siehe [Feed](/frontend/feed.md).
 * **Update**: Merge-Regel festgehalten: eigene Pull Requests mergt Claude nach grüner CI selbst, siehe [Branching und Release](/ops/branching-release.md).

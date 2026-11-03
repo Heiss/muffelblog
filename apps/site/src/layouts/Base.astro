@@ -29,9 +29,7 @@ const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
         {SITE_NAME}
       </a>
       <nav aria-label="Hauptnavigation">
-        <a href="/">Alles</a>
-        <a href="/posts/">Beiträge</a>
-        <a href="/memos/">Memos</a>
+        <a href="/">Start</a>
         <a href="/tag/">Tags</a>
       </nav>
     </header>
@@ -42,6 +40,9 @@ const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
 </html>
 
 <style is:global>
+  [hidden] {
+    display: none !important;
+  }
   .inhalt img,
   .inhalt video {
     max-width: 100%;
