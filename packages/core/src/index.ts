@@ -13,7 +13,7 @@ export {
   loadArticles,
   parseArticle,
 } from './articles.ts';
-export type { Article, ParseResult } from './articles.ts';
+export type { Article, ArticleType, ParseResult } from './articles.ts';
 export { berlinLocalToInstant, parseDate } from './date.ts';
 export { splitFrontmatter } from './frontmatter.ts';
 export { normalizeTag, tagSlug, toSlug } from './slug.ts';
@@ -78,3 +78,5 @@ export {
   readSettings,
 } from './config.ts';
 export type { SettingSpec, Settings } from './config.ts';
+export { groupByLetter, letterOf } from './glossary.ts';
+export type { LetterGroup } from './glossary.ts';

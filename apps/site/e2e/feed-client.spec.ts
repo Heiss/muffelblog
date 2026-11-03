@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 // Test build: blocks of 4 entries, 9 articles and 6 memos, so 4 mixed blocks.
-const TOTAL = 15;
+const TOTAL = 18;
 const MEMOS = 6;
 const POSTS = 9;
 

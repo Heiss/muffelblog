@@ -16,6 +16,8 @@ export const GET: APIRoute = async () => {
     { path: '/', lastmod: newest },
     { path: '/posts/' },
     { path: '/memos/' },
+    { path: '/terms/' },
+    { path: '/glossary/' },
     { path: '/tag/' },
     ...groupByTag(feed).map((g) => ({
       path: `/tag/${g.slug}/`,

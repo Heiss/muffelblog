@@ -10,6 +10,7 @@ export const messages = {
     label: 'Hauptnavigation',
     home: 'Start',
     tags: 'Tags',
+    glossary: 'Glossar',
   },
   theme: {
     label: 'Farbschema',
@@ -19,6 +20,13 @@ export const messages = {
     all: 'Alle',
     long: 'Lang',
     short: 'Kurz',
+    terms: 'Begriffe',
+  },
+  glossary: {
+    title: 'Glossar',
+    lettersLabel: 'Buchstaben',
+    none: 'Noch keine Begriffe.',
+    term: 'Begriff',
   },
   feed: {
     empty: 'Noch keine Einträge.',

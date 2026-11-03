@@ -559,14 +559,20 @@ Applies to every work package in addition to its own criteria:
   view `/glossary/`, third kind in the feed with a filter, inclusion in the
   sitemap (see [Glossary](/features/glossary.md)). Search and RSS follow in W08
   and W09.
-* DoD (draft, **[V]**):
-  * [ ] A file with `type: glossary` and `publish: true` creates `/g/<slug>/`;
+* Implemented (2026-11-03): `type: glossary` in the loader (unknown values warn
+  and count as posts), slugs unique per type (`/p/` and `/g/` are separate
+  namespaces), kind `glossary` in the feed, `/g/<slug>/`, `/glossary/`,
+  `/terms/` with `/terms/page/N/`, filter **Begriffe**, terms in the sitemap.
+  The title counts as the term; the separate term field and the question form
+  stay open (O38). Sorting uses the German collation (`de`, base letters).
+* DoD:
+  * [x] A file with `type: glossary` and `publish: true` creates `/g/<slug>/`;
     without `type` it stays an article.
-  * [ ] Terms appear in the feed in chronological order and can be filtered.
-  * [ ] `/glossary/` groups by letter of the term, umlauts under the base letter,
+  * [x] Terms appear in the feed in chronological order and can be filtered.
+  * [x] `/glossary/` groups by letter of the term, umlauts under the base letter,
     the bar consists of real links.
-  * [ ] Duplicate slugs in the glossary get a counter and do not disturb `/p/`.
-  * [ ] Everything is reachable without JavaScript.
+  * [x] Duplicate slugs in the glossary get a counter and do not disturb `/p/`.
+  * [x] Everything is reachable without JavaScript.
 
 ## W20 - Linking and backlinks
 

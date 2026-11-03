@@ -4,11 +4,11 @@ import { plainExcerpt } from './excerpt.ts';
 import type { MemoEntry } from './memos.ts';
 import { tagSlug } from './slug.ts';
 
-export type FeedKind = 'post' | 'memo';
+export type FeedKind = 'post' | 'memo' | 'glossary';
 
 export interface FeedItem {
   kind: FeedKind;
-  /** Unique across both kinds: `post:<slug>` or `memo:<uid>`. */
+  /** Unique across both kinds: `post:<slug>`, `glossary:<slug>` or `memo:<uid>`. */
   id: string;
   url: string;
   title: string;
@@ -28,9 +28,9 @@ export function buildFeed(
   const auszugMax = optionen.excerptChars ?? DEFAULT_SETTINGS.feedExcerptChars;
   const items: FeedItem[] = [
     ...articles.map((a): FeedItem => ({
-      kind: 'post',
-      id: `post:${a.slug}`,
-      url: `/p/${a.slug}/`,
+      kind: a.type === 'glossary' ? 'glossary' : 'post',
+      id: `${a.type}:${a.slug}`,
+      url: a.type === 'glossary' ? `/g/${a.slug}/` : `/p/${a.slug}/`,
       title: a.title,
       date: a.date,
       tags: a.tags,

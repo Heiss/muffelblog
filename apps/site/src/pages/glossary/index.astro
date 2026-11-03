@@ -1,0 +1,39 @@
+---
+import { groupByLetter } from '@muffelblog/core';
+import { messages } from '../../i18n/messages';
+import Base from '../../layouts/Base.astro';
+import { getContent } from '../../lib/articles';
+
+const { articles } = await getContent();
+const groups = groupByLetter(articles.filter((a) => a.type === 'glossary'));
+const title = messages.glossary.title;
+---
+
+<Base {title}>
+  <h1>{title}</h1>
+  {groups.length === 0 && <p>{messages.glossary.none}</p>}
+  {groups.length > 0 && (
+    <nav aria-label={messages.glossary.lettersLabel} class="letters">
+      {groups.map((g) => (
+        <a href={`#letter-${g.letter === '#' ? 'other' : g.letter}`}>
+          {g.letter}
+        </a>
+      ))}
+    </nav>
+  )}
+  {groups.map((g) => (
+    <section class="letter-group">
+      <h2 id={`letter-${g.letter === '#' ? 'other' : g.letter}`}>{g.letter}</h2>
+      <ul>
+        {g.items.map((term) => (
+          <li>
+            <a href={`/g/${term.slug}/`}>{term.title}</a>
+            {term.description && (
+              <span class="excerpt"> {term.description}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</Base>

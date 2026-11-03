@@ -14,6 +14,7 @@ function artikel(
   teil: Partial<Article & { html: string }> & { slug: string },
 ): Article & { html: string } {
   return {
+    type: 'post',
     title: teil.slug,
     date: new Date('2026-01-01T00:00:00Z'),
     dateSource: 'frontmatter',
@@ -113,6 +114,46 @@ describe('buildFeed', () => {
     ];
     buildFeed(arts, []);
     expect(arts.map((a) => a.slug)).toEqual(['b', 'a']);
+  });
+});
+
+describe('glossary in the feed', () => {
+  it('builds a glossary item with /g/ URL, its own id and the description', () => {
+    const feed = buildFeed(
+      [
+        artikel({
+          slug: 'cache',
+          type: 'glossary',
+          description: 'Zwischenspeicher',
+        }),
+      ],
+      [],
+    );
+    expect(feed[0]).toMatchObject({
+      kind: 'glossary',
+      id: 'glossary:cache',
+      url: '/g/cache/',
+      excerpt: 'Zwischenspeicher',
+    });
+  });
+
+  it('keeps a post and a term with the same slug apart', () => {
+    const feed = buildFeed(
+      [artikel({ slug: 'x' }), artikel({ slug: 'x', type: 'glossary' })],
+      [],
+    );
+    expect(feed.map((i) => i.id).sort()).toEqual(['glossary:x', 'post:x']);
+  });
+
+  it('never puts terms into the post filter', () => {
+    const feed = buildFeed(
+      [artikel({ slug: 'x' }), artikel({ slug: 'y', type: 'glossary' })],
+      [],
+    );
+    expect(filterKind(feed, 'post').map((i) => i.id)).toEqual(['post:x']);
+    expect(filterKind(feed, 'glossary').map((i) => i.id)).toEqual([
+      'glossary:y',
+    ]);
   });
 });
 

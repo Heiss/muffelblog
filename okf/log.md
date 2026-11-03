@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-03
+* **Update**: W19 done: `type: glossary` kind, `/g/<slug>/`, `/glossary/` letter view, `/terms/` series with the Begriffe filter, slugs unique per type; see [Glossary and knowledge graph](/features/glossary.md).
 * **Update**: Demo set added (`MUFFEL_FIXTURES=demo`): 9 articles, 9 memos, 15 glossary terms on IT, photography and timber construction with generated placeholder images; README images retaken, see [Test strategy](/ops/testing.md).
 * **Update**: W22d done: the whole OKF bundle is translated to English (see [Languages](/ops/language.md)).
 * **Update**: W22c done: `apps/site` translated, routes `/page/N/`, UI texts collected in `apps/site/src/i18n/messages.ts`, English CSS classes, English CI job names.
