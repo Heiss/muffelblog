@@ -1,0 +1,58 @@
+# Caddy: static delivery of the current release, reverse proxy to Remark42.
+# SITE_ADDRESS is `:80` locally (plain HTTP). With a domain it is the host name
+# and Caddy fetches the certificate itself.
+{
+	admin off
+}
+
+(hardening) {
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
+
+(security) {
+	import hardening
+	header {
+		# No foreign sources. The hosts below are the allowlists of
+		# packages/core/src/policy.ts (a unit test keeps both in sync).
+		Content-Security-Policy "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; font-src 'self'; img-src 'self' https://upload.wikimedia.org https://raw.githubusercontent.com https://user-images.githubusercontent.com; frame-src https://www.youtube-nocookie.com; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
+
+{$SITE_ADDRESS::80} {
+	import security
+	root * /srv/releases/current
+	encode zstd gzip
+
+	# The build signal is always revalidated (ETag, 304), hashed files never.
+	@buildjson path /build.json
+	header @buildjson Cache-Control "no-cache"
+	@hashed path /_astro/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+
+	file_server
+
+	handle_errors {
+		rewrite * /404.html
+		file_server
+	}
+}
+
+# Remark42 for the public, on a host of its own. Basic auth from outside is
+# refused: the admin API is reachable only inside the Docker network.
+{$COMMENTS_ADDRESS::8081} {
+	# Remark42 brings its own scripts and styles, so the strict policy of the
+	# site does not apply here.
+	import hardening
+	@basic header Authorization Basic*
+	respond @basic "Forbidden" 403
+	reverse_proxy remark42:8080 {
+		header_up -Authorization
+	}
+}
