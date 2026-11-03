@@ -1,0 +1,32 @@
+---
+import { messages } from '../i18n/messages';
+import { commentsConfig } from '../lib/comments';
+import { canonicalUrl, siteUrl } from '../lib/feed';
+
+const config = commentsConfig();
+const url = canonicalUrl(siteUrl(), Astro.url.pathname);
+const t = messages.comments;
+---
+
+{config && (
+  <section
+    id="comments"
+    class="comments"
+    data-pagefind-ignore
+    data-comments
+    data-host={config.host}
+    data-site-id={config.siteId}
+    data-url={url}
+    data-error={t.unavailable}
+    data-locale={messages.locale.slice(0, 2)}
+  >
+    <h2>{t.title}</h2>
+    <p data-comments-nojs>{t.needsJs}</p>
+    <div id="remark42"></div>
+    <p data-comments-error role="alert" hidden></p>
+  </section>
+)}
+
+<script>
+  import '../scripts/comments';
+</script>

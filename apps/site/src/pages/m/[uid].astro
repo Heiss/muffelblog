@@ -1,6 +1,7 @@
 ---
 import type { MemoEntry } from '@muffelblog/core';
 import { messages } from '../../i18n/messages';
+import Comments from '../../components/Comments.astro';
 import Base from '../../layouts/Base.astro';
 import { getContent } from '../../lib/articles';
 
@@ -47,4 +48,5 @@ const { memo } = Astro.props;
     )}
     <div class="content e-content" set:html={memo.html} />
   </article>
+  <Comments />
 </Base>

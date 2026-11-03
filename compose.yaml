@@ -20,6 +20,7 @@ services:
     environment:
       MUFFEL_FIXTURES: ${MUFFEL_FIXTURES:-demo}
       SITE_URL: ${SITE_URL:-http://localhost:8080}
+      COMMENTS_URL: ${COMMENTS_URL:-http://localhost:8081}
       MUFFEL_FEED_PAGE_SIZE: ${MUFFEL_FEED_PAGE_SIZE:-}
       MUFFEL_FEED_EXCERPT_CHARS: ${MUFFEL_FEED_EXCERPT_CHARS:-}
       MUFFEL_RSS_ITEMS: ${MUFFEL_RSS_ITEMS:-}
@@ -56,6 +57,8 @@ services:
     environment:
       REMARK_URL: ${COMMENTS_URL:-http://localhost:8081}
       SITE: muffelblog
+      # The blog may embed the widget (frame-ancestors).
+      ALLOWED_HOSTS: "'self',${SITE_URL:-http://localhost:8080}"
       SECRET: ${REMARK_SECRET:?set REMARK_SECRET in .env, see .env.example}
       ADMIN_PASSWD: ${REMARK_ADMIN_PASSWD:?set REMARK_ADMIN_PASSWD in .env, see .env.example}
       AUTH_EMAIL_ENABLE: 'true'

@@ -44,7 +44,8 @@ generated: { by: claude-code/web, at: 2026-11-03T05:30:00Z }
 | `MUFFEL_RSS_ITEMS` | 50 | 1 to 500 | Number of entries in the RSS feed |
 | `MUFFEL_RELEASES_KEPT` | 3 | 1 to 50 | Number of releases kept on disk |
 
-Further variables: `CONTENT_DIR`, `MEMOS_URL` (required), `SITE_URL` (optional,
+Further variables: `COMMENTS_URL` (origin of Remark42 as the browser reaches it; no
+comments without it), `COMMENTS_SITE_ID` (default `muffelblog`), `CONTENT_DIR`, `MEMOS_URL` (required), `SITE_URL` (optional,
 sitemap and canonical), `MUFFEL_FIXTURES` (development and tests only): `1` is the edge-case set of the tests,
 `demo` is the realistic demo content (see [Test strategy](/ops/testing.md)). Any other value counts as unset. The
 test build in the repo sets `MUFFEL_FEED_PAGE_SIZE=4`.

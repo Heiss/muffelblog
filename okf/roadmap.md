@@ -474,14 +474,20 @@ Applies to every work package in addition to its own criteria:
 * Depends on: W05, W11, W12
 * Decisions: host name and path (O9), sorting and display (O4), moderation
   (O22), privacy (O15).
+* Done in 26.11.0 (2026-11-03): widget on posts and memos from the own comments
+  host (`COMMENTS_URL`, default `:8081` locally; embed script and iframe allowed
+  in the CSP for exactly that origin), configured by a bundled script (no inline
+  script), login only by email via Mailpit (Migadu by variables), basic auth
+  from outside refused (W11). Open for 26.11.1: static sanitized copy (needs the
+  scheduler), backup test, contract test against a real Remark42 with login.
 * DoD:
-  * [ ] Login only by email, the mail arrives through Migadu (in a test
+  * [x] Login only by email, the mail arrives through Migadu (in a test
     environment with a mail sink).
-  * [ ] The widget loads only from the own host.
+  * [x] The widget loads only from the own host.
   * [ ] The static copy of the comments is sanitized and visible without
     JavaScript.
-  * [ ] Without login no commenting is possible.
-  * [ ] Comments are possible on posts and memos.
+  * [x] Without login no commenting is possible.
+  * [x] Comments are possible on posts and memos.
   * [ ] The data of Remark42 is backed up (volume, backup test).
   * [ ] A contract test against a real Remark42 test instance with a mail sink
     exists.

@@ -35,6 +35,13 @@ until [ "$(status "$COMMENTS/ping")" = "200" ] || [ $i -ge 30 ]; do i=$((i+1)); 
 check "Remark42 answers"             200 "$(status "$COMMENTS/ping")"
 check "basic auth is refused"        403 "$(status -H 'Authorization: Basic YWRtaW46eA==' "$COMMENTS/ping")"
 
+# Login only by email: no anonymous, no social providers.
+providers="$(curl -s --max-time 10 "$COMMENTS/api/v1/config?site=muffelblog" || true)"
+case "$providers" in
+  *'"auth_providers":["email"]'*) echo "ok    login only by email" ;;
+  *) echo "FAIL  auth providers are not only email: $providers"; fail=1 ;;
+esac
+
 check "mail sink"                    200 "$(status "$MAIL/")"
 
 exit $fail

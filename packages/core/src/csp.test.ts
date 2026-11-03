@@ -34,16 +34,24 @@ describe('Content Security Policy of the Caddyfile', () => {
     );
   });
 
-  it('lets frames load from exactly the embed hosts', async () => {
+  // The origin of the comments server comes from the environment.
+  const COMMENTS = '{$COMMENTS_URL:http://localhost:8081}';
+
+  it('lets frames load from exactly the embed hosts and the comments server', async () => {
     const frame = (await policy()).get('frame-src') ?? [];
     expect(frame.sort()).toEqual(
-      [...new Set(EMBED_RULES.map((r) => `https://${r.host}`))].sort(),
+      [
+        ...new Set(EMBED_RULES.map((r) => `https://${r.host}`)),
+        COMMENTS,
+      ].sort(),
     );
   });
 
-  it('allows scripts only from the own host (plus WebAssembly for the search)', async () => {
+  it('allows scripts only from the own host, the comments server and WebAssembly (search)', async () => {
     const script = (await policy()).get('script-src') ?? [];
-    expect(script.sort()).toEqual(["'self'", "'wasm-unsafe-eval'"]);
+    expect(script.sort()).toEqual(
+      ["'self'", "'wasm-unsafe-eval'", COMMENTS].sort(),
+    );
   });
 
   it('has no unsafe-inline and starts from nothing', async () => {
