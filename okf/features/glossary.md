@@ -1,116 +1,110 @@
 ---
 type: Feature
-title: Glossar und Wissensgraph
-description: Glossareinträge als dritte Inhaltsart im Feed mit Buchstabenansicht, Suche, Verlinkung zwischen Begriffen und Beiträgen und einem Wissensgraphen.
-tags: [glossar, graph, backlinks, verlinkung]
+title: Glossary and knowledge graph
+description: Glossary entries as a third kind of content in the feed with a letter view, search, linking between terms and posts, and a knowledge graph.
+tags: [glossary, graph, backlinks, linking]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-03T12:30:00Z }
 ---
 
-# Entscheidungen
+# Decisions
 
-* **[E]** Es gibt ein Glossar nach dem Vorbild von newworkglossar.de. Der Nutzer
-  hat den HTML-Quelltext der Startseite eingefügt; die Seite selbst war aus
-  der Sitzung nicht erreichbar. Beobachtet ist nur die Startseite, **nicht**
-  eine einzelne Begriffsseite.
-* **[E]** Neue Glossareinträge erscheinen im zeitlichen Verlauf des Blogs. Dazu
-  gibt es eine Auswahl nach Buchstaben und die Suche.
-* **[E]** Quelle ist derselbe Nextcloud-Ordner. Eine Markdown-Datei mit dem
-  Frontmatter-Feld `type: glossary` ist ein Glossareintrag (Feldname und Wert
-  englisch wie die übrigen Felder, entschieden am 2026-11-03). Pipeline, Rendering
-  und Bereinigung sind dieselben wie bei Artikeln.
-* **[E]** Verlinkung geschieht mit normalen Markdown-Links auf eigene Seiten,
-  nicht mit Wikilinks. Die Regel "Wikilink = Datei überspringen" bleibt.
-* **[E]** Ein Wissensgraph zeigt die Verlinkung zwischen Begriffen und
-  Beiträgen: ein lokaler Graph je Seite und eine Gesamtansicht `/graph/`.
-* **[E]** Filter im Feed: Alle, **Lang** (Blogbeiträge), **Kurz** (Memos) und
-  **Begriffe** (Glossar). Begriffe werden getrennt von den Blogbeiträgen
-  geführt: `Lang` enthält nie Begriffe. In **Alle** erscheinen Begriffe im
-  zeitlichen Verlauf, eigens als Begriff gekennzeichnet. Die Reihe heißt
-  `/terms/` and `/terms/page/N/`.
-* **[E]** Die Split-View entfällt. Der Unified-Modus mit Filter bleibt die
-  einzige Ansicht des Feeds (siehe [Feed](/frontend/feed.md)).
+* **[E]** There is a glossary modeled on newworkglossar.de. The user pasted the
+  HTML source of the home page; the site itself was not reachable from the
+  session. Only the home page was observed, **not** a single term page.
+* **[E]** New glossary entries appear in the chronological stream of the blog.
+  In addition there is a selection by letter and the search.
+* **[E]** The source is the same Nextcloud folder. A Markdown file with the
+  frontmatter field `type: glossary` is a glossary entry (field name and value
+  in English like the other fields, decided on 2026-11-03). Pipeline, rendering
+  and sanitizing are the same as for articles.
+* **[E]** Linking uses normal Markdown links to own pages, not wikilinks. The
+  rule "wikilink = skip the file" stays.
+* **[E]** A knowledge graph shows the linking between terms and posts: a local
+  graph per page and an overall view `/graph/`.
+* **[E]** Filters in the feed: All, **Lang** (blog posts), **Kurz** (memos) and
+  **Begriffe** (glossary terms). Terms are kept separate from blog posts:
+  `Lang` never contains terms. In **All** the terms appear in the chronological
+  stream, marked as a term. The series is `/terms/` and `/terms/page/N/`.
+* **[E]** The split view is dropped. The unified mode with a filter stays the
+  only view of the feed (see [Feed](/frontend/feed.md)).
 
-# Beobachtungen am Vorbild (Startseite)
+# Observations on the model (home page)
 
-* Kopf mit Logo und einem Satz zum Zweck, darunter eine Leiste A bis Z. Die
-  Buchstaben sind dort `span`-Elemente, keine Links (Sprung per Skript).
-* Darunter alle Begriffe, nach Buchstaben gruppiert, je Buchstabe eine
-  Überschrift mit `id` (`A` bis `Z`). Jeder Eintrag ist ein Link auf eine
-  eigene Seite.
-* Der Linktext ist eine **Frage** ("Was ist Agilität?", "Wie funktioniert
-  Selbstorganisation?"), der Begriff darin ist hervorgehoben. Die Gruppierung
-  folgt dem Begriff, nicht dem Fragewort.
-* Die URL leitet sich aus der Frage ab (`/was-ist-agilitaet/`), liegt direkt
-  an der Wurzel, mit Umlauten als `ae`, `oe`, `ue`.
-* Begriffe mit Sonderzeichen stehen unter dem ersten Buchstaben (`Coach*in`
-  unter C). Es gibt keine Daten, keine Tags und keinen Graphen auf der
-  Startseite. Einzelne Begriffe stehen nicht streng alphabetisch (zum Beispiel
-  "self-made man" am Ende von S).
-* Fußzeile mit Datenschutz, Impressum und weiteren Links. Das Vorbild bindet
-  Fremdskripte ein (Cookie-Banner, Formular-Einbettung). Das übernehmen wir
-  nicht.
+* A header with a logo and a sentence on the purpose, below it a bar A to Z. The
+  letters there are `span` elements, not links (jump by script).
+* Below that all terms, grouped by letter, one heading with an `id` (`A` to `Z`)
+  per letter. Every entry is a link to a page of its own.
+* The link text is a **question** ("Was ist Agilität?", "Wie funktioniert
+  Selbstorganisation?"), the term in it is highlighted. The grouping follows the
+  term, not the question word.
+* The URL derives from the question (`/was-ist-agilitaet/`), sits directly at the
+  root, with umlauts as `ae`, `oe`, `ue`.
+* Terms with special characters stand under the first letter (`Coach*in` under
+  C). There are no dates, no tags and no graph on the home page. Some terms are
+  not strictly alphabetical (for example "self-made man" at the end of S).
+* A footer with privacy policy, imprint and further links. The model embeds
+  foreign scripts (cookie banner, form embed). We do not take that over.
 
-# Vorschlag: Glossar
+# Proposal: glossary
 
-* **[V]** URL eines Begriffs: `/g/<slug>/`. Der Slug entsteht wie bei Artikeln
-  aus dem Titel, bei Doppelungen innerhalb des Glossars mit Zähler. Der
-  Namensraum ist von `/p/` getrennt, ein Begriff kann also nie einen Artikel
-  verdrängen.
-* **[V]** Felder wie bei Artikeln (`title`, `date`, `tags`, `description`,
-  `publish`) plus ein optionales Feld für den Begriff. Der Titel darf wie im
-  Vorbild eine Frage sein ("Was ist Agilität?"). Der Begriff ("Agilität")
-  bestimmt Buchstabe und Sortierung und wird im Titel hervorgehoben. Fehlt das
-  Feld, gilt der Titel als Begriff. Die Beschreibung ist die Kurzdefinition
-  für den Feed-Auszug.
-* **[V]** Der Feed bekommt eine dritte Art `glossar` und einen vierten Filter.
-  Ein Eintrag zeigt Begriff, Datum und Kurzdefinition, nicht den ganzen Text.
-* **[V]** letter view `/glossary/`: Leiste A bis Z und alle Begriffe nach
-  Anfangsbuchstaben des Begriffs gruppiert. Die Buchstaben der Leiste sind
-  echte Links (Sprungmarken), nicht nur Skript-Elemente. Umlaute zählen zum Grundbuchstaben (Ä unter A),
-  Ziffern und Sonderzeichen unter `#`. Die Seite ist statisch und vollständig,
-  bei der erwarteten Menge (einige hundert Begriffe) reicht eine Seite.
-* **[V]** Die Suche findet Begriffe über Pagefind, mit Filter nach Art. RSS und
-  Sitemap enthalten Begriffe.
+* **[V]** URL of a term: `/g/<slug>/`. The slug is built from the title like for
+  articles, with a counter for duplicates within the glossary. The namespace is
+  separate from `/p/`, so a term can never displace an article.
+* **[V]** Fields like for articles (`title`, `date`, `tags`, `description`,
+  `publish`) plus an optional field for the term. The title may be a question
+  like in the model ("Was ist Agilität?"). The term ("Agilität") determines
+  letter and sorting and is highlighted in the title. If the field is missing,
+  the title counts as the term. The description is the short definition for the
+  feed excerpt.
+* **[V]** The feed gets a third kind `glossary` and a fourth filter. An entry
+  shows term, date and short definition, not the whole text.
+* **[V]** Letter view `/glossary/`: a bar A to Z and all terms grouped by the
+  first letter of the term. The letters of the bar are real links (anchors), not
+  only script elements. Umlauts count as the base letter (Ä under A), digits and
+  special characters under `#`. The page is static and complete, with the
+  expected amount (a few hundred terms) one page is enough.
+* **[V]** Search finds terms through Pagefind, with a filter by kind. RSS and the
+  sitemap contain terms.
 
-# Vorschlag: Verlinkung und Graph
+# Proposal: linking and graph
 
-* **[V]** Ein Markdown-Link auf eine Datei im Ordner (relativer Pfad, zum
-  Beispiel `Datei.md` oder `../ordner/Datei.md` als Ziel) wird
-  beim Build gegen die veröffentlichten Dateien aufgelöst und zur Seite des
-  Ziels (`/p/<slug>/` oder `/g/<slug>/`). Das ist **neues Verhalten**: der
-  Renderer lässt relative Links heute unverändert. Ein Link auf eine
-  unbekannte oder nicht veröffentlichte Datei wird zu reinem Text und erzeugt
-  eine Warnung.
-* **[V]** Knoten sind Artikel und Begriffe. Memos sind keine Knoten, sie haben
-  keinen Titel und werden im strengen Modus bereinigt. Kanten sind aufgelöste
-  Links, gerichtet, ohne Doppelte und ohne Selbstbezug.
-* **[V]** Jede Seite zeigt zwei Listen: "Verweist auf" und "Verlinkt von"
-  (Backlinks). Die Listen sind reines HTML und der Zugang ohne JavaScript, für
-  Screenreader und Suchmaschinen.
-* **[V]** Der Build schreibt `graph.json` (Knoten mit Art, Titel, URL; Kanten).
-  Der Browser zeichnet daraus per kleinem Vanilla-TS einen Graphen als SVG,
-  lokal mit den direkten Nachbarn, in `/graph/` vollständig. Keine
-  Fremdbibliothek, keine Anfrage an Dritte.
-* **[V]** Veröffentlichung schützt: Kanten zu Dateien ohne `publish: true`
-  entstehen nie. Sonst würden Titel und Slug unveröffentlichter Dateien über
-  `graph.json` abfließen.
+* **[V]** A Markdown link to a file in the folder (a relative path, for example
+  `file.md` or `../folder/file.md` as the target) is resolved at build time
+  against the published files and leads to the page of the target (`/p/<slug>/`
+  or `/g/<slug>/`). This is **new behavior**: today the renderer leaves relative
+  links unchanged. A link to an unknown or unpublished file becomes plain text
+  and produces a warning.
+* **[V]** Nodes are articles and terms. Memos are not nodes, they have no title
+  and are sanitized in the strict mode. Edges are resolved links, directed,
+  without duplicates and without self-references.
+* **[V]** Every page shows two lists: "Links to" and "Linked from" (backlinks).
+  The lists are plain HTML and the access without JavaScript, for screen readers
+  and search engines.
+* **[V]** The build writes `graph.json` (nodes with kind, title, URL; edges). The
+  browser draws a graph from it as SVG with a small piece of vanilla TS, locally
+  with the direct neighbors, complete in `/graph/`. No foreign library, no
+  request to third parties.
+* **[V]** Publishing protects: edges to files without `publish: true` never
+  arise. Otherwise titles and slugs of unpublished files would leak through
+  `graph.json`.
 
-# Risiken
+# Risks
 
-* **Wert des Graphen:** Bei wenigen Knoten ist der Graph Dekoration. Den
-  Nutzen tragen die Backlink-Listen. Der Graph wird erst sinnvoll, wenn sich
-  Begriffe und Beiträge dicht verlinken.
-* **Obsidian-Einstellung:** Obsidian erzeugt Markdown-Links nur, wenn
-  "Use Wikilinks" aus ist (siehe [Nextcloud-Quelle](/content/nextcloud-source.md)).
-  Der Graph aus Obsidian selbst ist davon unberührt.
-* **Pfade im Link:** Obsidian kodiert Leerzeichen als `%20`. Die Auflösung muss
-  das dekodieren und gegen Unicode-Normalisierung (NFC) abgleichen.
-* **Größe von `graph.json`:** wächst mit Knoten und Kanten. Bei der erwarteten
-  Menge unkritisch, ein Schwellwert wird in W21 festgelegt.
+* **Value of the graph:** with few nodes the graph is decoration. The backlink
+  lists carry the benefit. The graph becomes useful only when terms and posts
+  link densely.
+* **Obsidian setting:** Obsidian creates Markdown links only if "Use Wikilinks"
+  is off (see [Nextcloud source](/content/nextcloud-source.md)). The graph of
+  Obsidian itself is not affected.
+* **Paths in the link:** Obsidian encodes spaces as `%20`. The resolution must
+  decode that and compare against Unicode normalization (NFC).
+* **Size of `graph.json`:** grows with nodes and edges. Not critical at the
+  expected amount, a threshold is set in W21.
 
-# Offen
+# Open
 
-Siehe O38 in [Offene Punkte](/open-points.md): Kommentare und Webmentions auf Begriffen, Sortierung der
-Umlaute, Frageform des Titels und Name des Begriff-Felds, Anzeige von Memos im
-Graph, Aufbau einer einzelnen Begriffsseite im Vorbild (unbeobachtet).
+See O38 in [Open points](/open-points.md): comments and webmentions on terms,
+sorting of umlauts, question form of the title and name of the term field,
+display of memos in the graph, structure of a single term page in the model
+(not observed).
