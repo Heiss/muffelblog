@@ -443,12 +443,15 @@ Applies to every work package in addition to its own criteria:
 * Decisions: reverse proxy (O9), image build (O10), versions (O8).
 * Scope: Compose with `web`, `builder`, `remark42` as placeholders, volumes,
   secrets, Caddy rules, health checks (see [Docker](/architecture/docker.md)).
+* Done 2026-11-03, see [Docker](/architecture/docker.md). The compose run is
+  verified in CI (job "Compose stack"); the session had no usable container
+  network, the Caddyfile and the release folder were checked with a real Caddy.
 * DoD:
-  * [ ] `docker compose up` starts all services in a test environment.
-  * [ ] Secrets come from secrets or `.env`, not from the repo.
-  * [ ] Delivery uses a symlink to the current release.
-  * [ ] Caddy rejects basic auth on the Remark42 routes from outside.
-  * [ ] A CSP without foreign sources is set.
+  * [x] `docker compose up` starts all services in a test environment.
+  * [x] Secrets come from secrets or `.env`, not from the repo.
+  * [x] Delivery uses a symlink to the current release.
+  * [x] Caddy rejects basic auth on the Remark42 routes from outside.
+  * [x] A CSP without foreign sources is set.
 
 ## W12 - Build pipeline and scheduler
 
@@ -456,11 +459,13 @@ Applies to every work package in addition to its own criteria:
 * Depends on: W02, W04, W11
 * Decisions: debounce time, number of releases kept, reporting channel for errors
   (O18).
+* Partly done in W11 (release, swap, prune). Open: scheduler every 3 minutes,
+  change detection, debounce, error reporting (26.11.1).
 * DoD:
   * [ ] Every 3 minutes changes are checked, without a change no build.
-  * [ ] The release swap is atomic, `build.json` comes last.
-  * [ ] On a fetch error the last good version stays online.
-  * [ ] Earlier releases are kept for open tabs.
+  * [x] The release swap is atomic, `build.json` comes last.
+  * [x] On a fetch error the last good version stays online.
+  * [x] Earlier releases are kept for open tabs.
   * [ ] A failed build is reported.
 
 ## W13 - Comments (Remark42)

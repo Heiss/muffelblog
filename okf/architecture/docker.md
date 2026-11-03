@@ -11,6 +11,31 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 
 **[E]** Everything is delivered through Docker, on one server.
 
+# Implemented in release 26.11.0 (W11, 2026-11-03)
+
+* **[E]** `compose.yaml` at the repo root with `builder` (one-shot: builds into
+  a new release folder, `build.json` last, atomic swap of `current`, last good
+  version stays online on failure, newest `MUFFEL_RELEASES_KEPT` kept),
+  `web` (Caddy 2.11, `docker/Caddyfile`), `remark42` (v1.18.0) and `mailpit`
+  (v1.33, local mail sink). The scheduler (every 3 minutes) is W12 and follows
+  with 26.11.1.
+* **[E]** Remark42 gets a host of its own (`COMMENTS_ADDRESS`, port 8081 locally)
+  instead of a path; requests with `Authorization: Basic` are answered with 403
+  and the header is never passed on. The site blocks keep a strict CSP; the
+  comments host only gets the hardening headers because Remark42 brings its own
+  scripts and styles.
+* **[E]** CSP of the site: `default-src 'none'`, `script-src 'self'
+  'wasm-unsafe-eval'` (Pagefind), `style-src 'self'`, images only from the hosts
+  of `policy.ts`, frames only from the embed hosts. A unit test keeps the
+  Caddyfile and `policy.ts` in sync; Astro is configured to emit no inline
+  scripts or styles (E2E test). Checked against a real Caddy with a browser:
+  no violations on feed, article, term, memo and search.
+* **[E]** Secrets come from `.env` (created by `docker/init-env.sh`, not
+  committed); `REMARK_SECRET` and `REMARK_ADMIN_PASSWD` are required.
+* **[E]** The builder image runs as root for now; hardening is W16.
+* **[E]** CI job "Compose stack" builds the images, starts the stack and runs
+  `docker/smoke.sh`.
+
 # Services (proposal)
 
 **[V]** Three containers in one Compose file:

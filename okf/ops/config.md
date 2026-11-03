@@ -42,6 +42,7 @@ generated: { by: claude-code/web, at: 2026-11-03T05:30:00Z }
 | `MUFFEL_MEMOS_TIMEOUT_MS` | 30000 | 1000 to 300000 | Time limit per request to Memos |
 | `MUFFEL_MEMOS_MAX_FILE_MB` | 25 | 1 to 500 | Maximum size per mirrored memo file |
 | `MUFFEL_RSS_ITEMS` | 50 | 1 to 500 | Number of entries in the RSS feed |
+| `MUFFEL_RELEASES_KEPT` | 3 | 1 to 50 | Number of releases kept on disk |
 
 Further variables: `CONTENT_DIR`, `MEMOS_URL` (required), `SITE_URL` (optional,
 sitemap and canonical), `MUFFEL_FIXTURES` (development and tests only): `1` is the edge-case set of the tests,

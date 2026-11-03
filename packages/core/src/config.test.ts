@@ -15,6 +15,7 @@ describe('readSettings', () => {
       memosTimeoutMs: 30_000,
       memosMaxFileBytes: 25 * 1024 * 1024,
       rssItems: 50,
+      releasesKept: 3,
     });
     expect(readSettings({})).toEqual(DEFAULT_SETTINGS);
   });
@@ -35,6 +36,7 @@ describe('readSettings', () => {
       memosTimeoutMs: 5000,
       memosMaxFileBytes: 10 * 1024 * 1024,
       rssItems: 30,
+      releasesKept: 3,
     });
   });
 

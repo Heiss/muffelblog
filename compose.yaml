@@ -1,0 +1,81 @@
+# Muffelblog: static blog, built by the builder, served by Caddy.
+#
+#   docker compose up --build        build the images here and start
+#   docker compose up                use the published images (MUFFEL_VERSION)
+#
+# The default is the demo set. The site is on http://localhost:8080, the
+# comments server on :8081 and the mail sink (Mailpit) on http://localhost:8025.
+# Settings come from the environment or an `.env` file, see `.env.example`.
+
+name: muffelblog
+
+services:
+  builder:
+    image: ghcr.io/heiss/muffelblog-builder:${MUFFEL_VERSION:-latest}
+    build:
+      context: .
+      target: builder
+    # One build per start; the scheduler for Nextcloud and Memos follows later.
+    restart: 'no'
+    environment:
+      MUFFEL_FIXTURES: ${MUFFEL_FIXTURES:-demo}
+      SITE_URL: ${SITE_URL:-http://localhost:8080}
+      MUFFEL_FEED_PAGE_SIZE: ${MUFFEL_FEED_PAGE_SIZE:-}
+      MUFFEL_FEED_EXCERPT_CHARS: ${MUFFEL_FEED_EXCERPT_CHARS:-}
+      MUFFEL_RSS_ITEMS: ${MUFFEL_RSS_ITEMS:-}
+      MUFFEL_RELEASES_KEPT: ${MUFFEL_RELEASES_KEPT:-}
+    volumes:
+      - releases:/data/releases
+
+  web:
+    image: caddy:2.11-alpine
+    restart: unless-stopped
+    depends_on:
+      builder:
+        condition: service_completed_successfully
+    environment:
+      SITE_ADDRESS: ':80'
+      COMMENTS_ADDRESS: ':8081'
+    ports:
+      - '${MUFFEL_PORT:-8080}:80'
+      - '${MUFFEL_COMMENTS_PORT:-8081}:8081'
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - releases:/srv/releases:ro
+      - caddy-data:/data
+    healthcheck:
+      test:
+        ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1/build.json']
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
+  remark42:
+    image: umputun/remark42:v1.18.0
+    restart: unless-stopped
+    environment:
+      REMARK_URL: ${COMMENTS_URL:-http://localhost:8081}
+      SITE: muffelblog
+      SECRET: ${REMARK_SECRET:?set REMARK_SECRET in .env, see .env.example}
+      ADMIN_PASSWD: ${REMARK_ADMIN_PASSWD:?set REMARK_ADMIN_PASSWD in .env, see .env.example}
+      AUTH_EMAIL_ENABLE: 'true'
+      AUTH_EMAIL_FROM: ${MAIL_FROM:-blog@localhost}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_TLS: ${SMTP_TLS:-false}
+    volumes:
+      - remark42-var:/srv/var
+
+  # Local mail sink: login mails of Remark42 land here, none leave the machine.
+  mailpit:
+    image: axllent/mailpit:v1.33
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${MUFFEL_MAIL_PORT:-8025}:8025'
+
+volumes:
+  releases:
+  caddy-data:
+  remark42-var:

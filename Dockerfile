@@ -22,3 +22,11 @@ RUN pnpm build
 # docker build --target site-dist --output type=local,dest=out .
 FROM scratch AS site-dist
 COPY --from=site-build /repo/apps/site/dist/ /
+
+# The builder: builds the site into a new release folder and switches the link
+# `current`. Run with `docker build --target builder .`
+FROM deps AS builder
+ENV REPO_DIR=/repo \
+    RELEASES_DIR=/data/releases
+WORKDIR /repo/apps/builder
+CMD ["pnpm", "start"]

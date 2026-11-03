@@ -18,6 +18,8 @@ export interface Settings {
   memosMaxFileBytes: number;
   /** Number of entries in the RSS feed. */
   rssItems: number;
+  /** Number of releases kept on disk (open tabs still load their assets). */
+  releasesKept: number;
 }
 
 export interface SettingSpec {
@@ -94,6 +96,16 @@ export const SETTING_SPECS: readonly SettingSpec[] = [
     factor: 1,
     unit: 'entries',
     description: 'Number of entries in the RSS feed',
+  },
+  {
+    key: 'releasesKept',
+    env: 'MUFFEL_RELEASES_KEPT',
+    default: 3,
+    min: 1,
+    max: 50,
+    factor: 1,
+    unit: 'releases',
+    description: 'Number of releases kept on disk',
   },
 ];
 

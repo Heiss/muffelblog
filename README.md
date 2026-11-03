@@ -69,6 +69,30 @@ docker build --target site-dist --output type=local,dest=out .
 
 This writes the built site to `out/`.
 
+### Try it locally with Docker Compose
+
+Needs Docker with Compose. The stack serves the demo set (no Nextcloud, no
+Memos needed).
+
+```sh
+docker/init-env.sh              # creates .env with random secrets
+docker compose up --build       # builds the images here and starts everything
+```
+
+| What                                                     | Where                 |
+| -------------------------------------------------------- | --------------------- |
+| Site                                                     | http://localhost:8080 |
+| Comments server (Remark42, not yet wired into the pages) | http://localhost:8081 |
+| Mail sink (Mailpit)                                      | http://localhost:8025 |
+
+The `builder` builds the site once per start into a new release folder and
+switches the link `current` atomically; it exits when done. `web` (Caddy) serves
+that release with a strict Content Security Policy. Stop with
+`docker compose down` (add `--volumes` to delete the data). Ports and further
+settings are in `.env.example`.
+
+`docker/smoke.sh` checks a running stack; CI runs it on every code change.
+
 ## CI
 
 `.github/workflows/ci.yml` checks every pull request. The **CI Gate** job is the
