@@ -30,8 +30,9 @@ Diese Spezifikation trennt Bestätigtes von Vorschlägen:
   Zugriff per WebDAV. Nextcloud ist die einzige Quelle, kein Git-Inhalt.
 * **[E]** Veröffentlicht wird nur, was `publish: true` trägt.
 * **[E]** Memos (Public) werden zur Build-Zeit geholt und bekommen eigene Seiten.
-* **[E]** Kombinierter Feed, rein chronologisch, Endless Scroll, Split-View
-  ab 1024px, mobil nur Unified mit Filter.
+* **[E]** Kombinierter Feed, rein chronologisch, Endless Scroll, ein Strom
+  mit Filter (die Split-View entfällt).
+* **[E]** Glossar und Wissensgraph, siehe [Glossar](/features/glossary.md).
 * **[E]** Auto-Update über `build.json`, Banner "N neue Einträge".
 * **[E]** Suche mit Pagefind, Tags, kombinierter RSS-Feed.
 * **[E]** Kommentare: Remark42 mit E-Mail-Login, für Posts und Memos.
@@ -42,7 +43,9 @@ Diese Spezifikation trennt Bestätigtes von Vorschlägen:
 
 # Nicht-Ziele
 
-* Keine Wikilinks, kein Digital-Garden-Graph.
+* Keine Wikilinks. Verlinkt wird mit Markdown-Links. Ein Graph aus diesen
+  Links ist Ziel (siehe [Glossar](/features/glossary.md)), ein
+  Digital-Garden mit Wikilinks nicht.
 * Keine Kommentare auf der Memos-Instanz selbst.
 * Keine Laufzeit-Requests des Browsers an Drittdienste. Ausnahme: Artikel mit
   Remote-Bildern und Einbettungen aus Freigabelisten (siehe

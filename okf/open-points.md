@@ -7,7 +7,7 @@ status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-Die IDs (O1 bis O37) werden in den anderen Konzepten referenziert. Jeder Punkt
+Die IDs (O1 bis O38) werden in den anderen Konzepten referenziert. Jeder Punkt
 nennt, was der Spezifikation heute dazu eingetragen ist ("Eintrag") und was
 dagegen spricht.
 
@@ -15,7 +15,7 @@ dagegen spricht.
 
 | ID | Thema | Eintrag / Problem | Auswirkung |
 |---|---|---|---|
-| O1 | Block-Quellen der Split-View | **[E]** Drei Reihen technischer Blöcke (gemischt, Memos, Posts), Blockgröße 20, umgesetzt in W05. Offen bleibt nur, ob die Split-View (W06) damit auskommt. | [Feed](/frontend/feed.md) |
+| O1 | Block-Reihen für den Filter | **[E]** Drei Reihen technischer Blöcke (gemischt, Memos, Posts), Blockgröße 20, umgesetzt in W05. Die Split-View entfällt. | [Feed](/frontend/feed.md) |
 | O2 | Datumsformat und Zeitzone | **[E] entschieden:** reines Datum = 12:00 Uhr Berlin, Uhrzeit ohne Zone = Berliner Ortszeit, mit Zone gilt der Zeitpunkt. | [Frontmatter](/content/frontmatter.md) |
 | O3 | Zustand des Mention-Sync | Bei Verlust der Statusdatei würden alle Mentions doppelt gepostet. Vorschlag: Marker (Quell-URL) im Kommentartext, aus dem der Zustand aus Remark42 wiederhergestellt wird. | [Webmentions](/community/webmentions.md) |
 | O5 | Fremdinhalte in Markdown | **[E] entschieden:** In Artikeln erlaubt, aber nur aus Freigabelisten. Bilder: `upload.wikimedia.org`, `raw.githubusercontent.com`, `user-images.githubusercontent.com`. Einbettungen: `www.youtube-nocookie.com`, erst nach Klick. Memos bleiben strikt (Bilder gespiegelt). Das weicht von der früheren Regel "nichts von anderen Diensten laden" ab. Risiko: IP-Adressen der Besucher gehen an die Bild-Hosts (O15). | [Medien](/content/media.md) |
@@ -61,6 +61,7 @@ dagegen spricht.
 | O25 | Ungeprüfte Fakten | siehe Abschnitt D. |
 | O36 | HEIC-Fotos | Handyfotos im HEIC-Format (iPhone) lassen sich mit der verwendeten Bildbibliothek nicht verarbeiten und werden mit Hinweis übersprungen. Offen: Fotos als JPEG hochladen oder eine HEIC-Verarbeitung ergänzen? |
 | O37 | Codequalität, Komplexität, Mutationstests | Wunsch des Nutzers (W18): statische Analyse und später Mutationstests mit mehr als 80 %. Offen: Werkzeuge, Schwellen, blockierend oder berichtend, Umfang, Laufzeit in der CI. | [Roadmap](/roadmap.md) |
+| O38 | Glossar und Graph | **[E]** Glossar als Eintragsart im selben Ordner, Markdown-Links, Graph lokal und gesamt (siehe [Glossar](/features/glossary.md)). Offen: Feldname und Wert von `typ` (die übrigen Felder heißen englisch, `publish`, `title`), Frageform des Titels mit eigenem Begriff-Feld wie im Vorbild, Pfad der Block-Reihe, Kommentare und Webmentions auf Begriffen, Sortierung der Umlaute. | [Glossar](/features/glossary.md) |
 | O35 | Themes | **[E]** Mehrere Themes im Stil bekannter Editor-Themes (siehe [Themes](/frontend/themes.md)). **[E]** Alle zehn Themes der Vorschau bleiben, Standard ist Solarized Light. Offen: Syntaxfarben für Code-Blöcke je Theme, Umgang mit `prefers-color-scheme` (Vorschlag: bei dunkler Systemeinstellung Solarized Dark), Schriften selbst hosten. |
 
 # D. Ungeprüfte Fakten (müssen vor der Umsetzung belegt werden)

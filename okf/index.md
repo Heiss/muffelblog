@@ -25,7 +25,7 @@ okf_version: "0.2"
 
 # Frontend
 
-* [Feed](/frontend/feed.md) - Kombinierter Feed, Split-View, Filter, Endless Scroll
+* [Feed](/frontend/feed.md) - Kombinierter Feed, Filter, Endless Scroll
 * [Live-Update](/frontend/live-update.md) - build.json und Banner "N neue Einträge"
 * [URLs und SEO](/frontend/urls-seo.md) - URL-Schema, Canonical, Sitemap
 * [Themes](/frontend/themes.md) - Farbschemata im Stil bekannter Editor-Themes
@@ -34,6 +34,7 @@ okf_version: "0.2"
 
 * [Suche](/features/search.md) - Pagefind
 * [RSS](/features/rss.md) - Kombinierter Feed
+* [Glossar und Wissensgraph](/features/glossary.md) - Begriffe, Buchstabenansicht, Verlinkung, Graph
 
 # Community
 

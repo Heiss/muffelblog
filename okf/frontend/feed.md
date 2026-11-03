@@ -1,8 +1,8 @@
 ---
 type: Feature
 title: Feed
-description: Kombinierter, chronologischer Feed mit Split-View, Filter und Endless Scroll.
-tags: [feed, split-view, endless-scroll, frontend]
+description: Kombinierter, chronologischer Feed mit Filter und Endless Scroll.
+tags: [feed, endless-scroll, frontend]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
@@ -12,18 +12,13 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 * **[E]** Eine Startseite (`/`) zeigt Posts und Memos zusammen, rein
   chronologisch, neueste zuerst.
 * **[E]** Endless Scroll statt sichtbarer Pagination.
-* **[E]** Ab 1024px Breite gibt es eine Split-View: links Memos, rechts Posts,
-  jeweils zeitlich sortiert. Der Balken in der Mitte ist verschiebbar, jede
-  Seite lässt sich komplett ausblenden.
-* **[E]** Zusätzlich gibt es den Unified-Modus (ein Strom) mit Filter
-  (Alle / Posts / Memos).
-* **[E]** Unter 1024px gibt es nur den Unified-Modus mit Filter.
-* **[E]** Modus, Teilungsverhältnis, ausgeblendete Seite und Filter bleiben
-  erhalten (Browser-Speicher).
+* **[E]** Der Feed ist ein einziger Strom (Unified-Modus) mit Filter
+  (Alle / Posts / Memos, später auch Glossar). Der Filter bleibt im
+  Browser-Speicher erhalten.
+* **[E]** Die Split-View (zwei Spalten mit verschiebbarem Balken) entfällt. Der
+  Nutzer hält sie für unnötige Komplexität. Die Entscheidung vom Anfang ist
+  damit ersetzt.
 * **[E]** Memos erscheinen vollständig mit Bildern.
-* **[E]** Posts erscheinen im Feed mit Auszug: Beschreibung, sonst Textanfang
-  (höchstens 200 Zeichen, an der Wortgrenze gekürzt).
-* **[E]** Posts und Memos haben eigene Seiten, die der Feed verlinkt.
 
 # Datenquelle für Endless Scroll
 
@@ -35,12 +30,9 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   in der Sitemap. Seite 1 hat keine eigene Route (`/seite/1/` gibt 404), sie
   liegt an der Basis (`/`, `/memos/`, `/posts/`, `/tag/<tag>/`).
 * **[E]** Tag-Listen nutzen dasselbe Verfahren.
-* **[V]** Die Split-View braucht pro Spalte eine eigene chronologische Liste.
-  Aus den gemischten Blöcken ließen sich die Spalten nur durch Filtern
-  füllen, was ungleich lange Spalten erzeugt. Deshalb werden drei Block-
-  Reihen erzeugt: gemischt (`/seite/N/`), nur Memos (`/memos/seite/N/`), nur
-  Posts (`/posts/seite/N/`). Der Filter im Unified-Modus nutzt die
-  passende Reihe. **[E]** Blockgröße 20 Einträge. Umgesetzt in W05.
+* **[E]** Der Filter nutzt je eine Block-Reihe: gemischt (`/seite/N/`), nur
+  Memos (`/memos/seite/N/`), nur Posts (`/posts/seite/N/`). **[E]** Blockgröße
+  20 Einträge. Umgesetzt in W05.
 
 # Verhalten im Browser
 
@@ -51,14 +43,10 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 * **[V]** Der Footer ist bei Endless Scroll schwer erreichbar. Wichtige Links
   (Impressum, Datenschutz, RSS) gehören deshalb in die feste Kopf- oder
   Seitenleiste.
-* **[V]** Eine Spalte der Split-View kann den Fokus behalten, ohne dass die
-  andere mitscrollt. Beide Spalten scrollen unabhängig.
-* **[V]** Der Browser-Speicher (`localStorage`) ist optional. Fehlt er, gelten
-  Standardwerte (Unified auf schmalen, Split auf breiten Schirmen,
-  Verhältnis 50:50).
+* **[E]** Der Browser-Speicher (`localStorage`) ist optional. Fehlt er, gilt der
+  Standardfilter "Alle".
 
 # Barrierefreiheit
 
-**[V]** Der Balken zwischen den Spalten ist per Tastatur bedienbar
-(`role="separator"`, Pfeiltasten). Neue Blöcke werden per `aria-live` nicht
-einzeln angesagt.
+**[V]** Neue Blöcke werden per `aria-live` nicht einzeln angesagt. Fehler beim
+Nachladen stehen in einem Bereich mit `role="status"` samt normalem Link.
