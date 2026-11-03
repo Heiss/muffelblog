@@ -18,6 +18,7 @@
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
     "build:site": "pnpm --filter @muffelblog/site build",
     "test:contract": "vitest run --config vitest.contract.config.ts",
+    "dev:demo": "pnpm --filter @muffelblog/site dev:demo",
     "screenshots": "pnpm --filter @muffelblog/site screenshots"
   },
   "devDependencies": {

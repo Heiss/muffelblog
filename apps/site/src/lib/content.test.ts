@@ -26,6 +26,14 @@ describe('contentConfig', () => {
     );
   });
 
+  it('uses the realistic demo set with MUFFEL_FIXTURES=demo', () => {
+    const config = contentConfig({ MUFFEL_FIXTURES: 'demo' });
+    expect(config.contentDir).toMatch(
+      /packages\/core\/fixtures\/demo\/content$/,
+    );
+    expect(typeof config.memos.listPublicMemos).toBe('function');
+  });
+
   it('stops on an invalid time limit instead of ignoring it', () => {
     const env = { CONTENT_DIR: '/content', MEMOS_URL: 'http://memos:5230' };
     expect(() =>

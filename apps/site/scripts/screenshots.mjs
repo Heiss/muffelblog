@@ -1,5 +1,5 @@
-// Creates the README images from the built site with sample data.
-// Usage: pnpm screenshots (builds first with MUFFEL_FIXTURES=1).
+// Creates the README images from the built site with the demo content.
+// Usage: pnpm screenshots (builds first with MUFFEL_FIXTURES=demo).
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -47,7 +47,7 @@ const views = [
   {
     name: 'artikel',
     theme: 'solarized-light',
-    route: '/p/rendering-demo/',
+    route: '/p/statischer-blog/',
     width: 1280,
     height: 1000,
     scale: 1,
@@ -55,7 +55,7 @@ const views = [
   {
     name: 'artikel-matrix',
     theme: 'matrix',
-    route: '/p/rendering-demo/',
+    route: '/p/backups-zurueckspielen/',
     width: 1280,
     height: 1000,
     scale: 1,
