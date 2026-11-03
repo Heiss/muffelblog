@@ -1,122 +1,122 @@
 ---
 type: Process
-title: Branching und Release
-description: Branching-Modell, Merge-Art und Release-Verfahren für Code, Images und Compose-Konfiguration.
+title: Branching and release
+description: Branching model, merge method and release procedure for code, images and Compose configuration.
 tags: [git, branching, release, ci]
 status: draft
 generated: { by: claude-code/web, at: 2026-11-02T13:40:00Z }
 ---
 
-# Entscheidungen
+# Decisions
 
-* **[E]** Branching-Modell: GitHub Flow.
-  * `main` ist immer auslieferbar.
-  * Ein kurzlebiger Branch pro Arbeitspaket der [Roadmap](/roadmap.md), ein Pull
-    Request gegen `main`, danach wird der Branch gelöscht.
-* **[E]** Pull Requests werden per Squash-Merge gemergt: ein Commit pro
-  Arbeitspaket, lineare Historie.
-* **[E]** Eigene Pull Requests (Arbeitspakete) mergt Claude selbst, sobald die
-  CI grün ist, inklusive des Contract-Tests. Der Nutzer hat das am 2026-11-03
-  bestätigt.
-* **[E]** Release des Codes: Git-Tag in CalVer `YY.M.MICRO`, zum Beispiel
-  `26.11.0` oder `26.1.0`, ohne `v`-Präfix. `YY` ist das Jahr zweistellig, `M`
-  der Monat ohne führende Null, `MICRO` zählt die Releases innerhalb des
-  Monats ab 0. Die Form ist gültiges SemVer (Major = Jahr, Minor = Monat,
-  Patch = Zähler), damit Auto-Updater die Tags verstehen. Es gibt keine API,
-  die jemand einbindet, deshalb zählt das Alter der Version, nicht die
-  Kompatibilität. Git-Tag und Image-Tag sind identisch.
-* **[E]** Die CI baut und veröffentlicht die Docker-Images nur auf einem Tag,
-  nicht bei jedem Merge. Der Server zieht bewusst eine Version, ein Rollback
-  ist der vorherige Tag.
-* **[E]** Inhalte (Artikel, Memos, Mentions) brauchen kein Release. Der
-  Scheduler baut sie automatisch (siehe [Pipeline](/ops/pipeline.md)).
+* **[E]** Branching model: GitHub Flow.
+  * `main` is always deliverable.
+  * One short-lived branch per work package of the [roadmap](/roadmap.md), one
+    pull request against `main`, afterwards the branch is deleted.
+* **[E]** Pull requests are merged with a squash merge: one commit per work
+  package, linear history.
+* **[E]** The assistant merges its own pull requests (work packages) itself as
+  soon as the CI is green, including the contract test. The user confirmed this
+  on 2026-11-03.
+* **[E]** Release of the code: a Git tag in CalVer `YY.M.MICRO`, for example
+  `26.11.0` or `26.1.0`, without a `v` prefix. `YY` is the two-digit year, `M`
+  the month without a leading zero, `MICRO` counts the releases within the
+  month starting at 0. The form is valid SemVer (major = year, minor = month,
+  patch = counter), so auto-updaters understand the tags. There is no API that
+  anyone consumes, so the age of the version counts, not compatibility. Git tag
+  and image tag are identical.
+* **[E]** The CI builds and publishes the Docker images only on a tag, not on
+  every merge. The server deliberately pulls one version, a rollback is the
+  previous tag.
+* **[E]** Content (articles, memos, mentions) needs no release. The scheduler
+  builds it automatically (see [Pipeline](/ops/pipeline.md)).
+* **[E]** Git history is never rewritten on `main`. Existing commit messages
+  stay as they are. A force push (`--force-with-lease`) is allowed only on the
+  author's own, not yet merged feature branches (see
+  [Languages](/ops/language.md)).
 
-# Vorschläge
+# Proposals
 
-* **[V]** Branch-Namen: `feature/wNN-<kurzname>`.
-* **[E]** Der Tag-Workflow führt vor dem Bauen der Images die volle Suite
-  erneut aus (siehe [Teststrategie](/ops/testing.md)). Ist sie rot, erscheinen
-  keine Images.
-* **[V]** Schutz für `main`: Pull Request Pflicht, CI muss grün sein. Keine
-  Pflicht-Reviews, weil sie sich bei gleichem Konto von Autor und Prüfer
-  selbst blockieren würden (ungeprüft). Die Abnahme ist der Merge durch den
-  Nutzer.
-* **[V]** Remark42-Upgrades laufen als eigenes Release mit einem Backup
-  davor, weil Datenbankänderungen nicht ohne Backup rückgängig zu machen sind.
-* **[V]** Abhängige Arbeitspakete (zum Beispiel W01, W03, W04) werden
-  nacheinander gemergt: Der Vorgänger kommt zuerst nach `main`, dann wird der
-  Folge-Branch davon aufgesetzt. Das vermeidet Konflikte durch Squash-Merge
-  bei gestapelten Branches.
-* **[V]** Wird ein PR vorübergehend auf einen Feature-Branch gestapelt, prüft
-  die CI ihn trotzdem: Der Workflow läuft für Pull Requests gegen jeden
-  Branch, nicht nur gegen `main`. Nach dem Merge des Vorgängers wird der Basis-
-  Branch auf `main` umgestellt. Eine Änderung des Basis-Branchs löst die CI
-  nicht erneut aus, dafür braucht es einen Push.
+* **[V]** Branch names: `feature/wNN-<short name>`.
+* **[E]** Before building the images, the tag workflow runs the full suite again
+  (see [Test strategy](/ops/testing.md)). If it is red, no images appear.
+* **[V]** Protection for `main`: a pull request is required, the CI must be
+  green. No required reviews, because with the same account for author and
+  reviewer they would block themselves (unchecked). The approval is the merge.
+* **[V]** Remark42 upgrades run as a release of their own with a backup before
+  it, because database changes cannot be undone without a backup.
+* **[V]** Dependent work packages (for example W01, W03, W04) are merged one
+  after another: the predecessor goes to `main` first, then the follow-up
+  branch is created from it. This avoids conflicts from the squash merge on
+  stacked branches.
+* **[V]** If a PR is temporarily stacked on a feature branch, the CI still
+  checks it: the workflow runs for pull requests against any branch, not only
+  against `main`. After the predecessor is merged, the base branch is switched
+  to `main`. A change of the base branch does not trigger the CI again, that
+  needs a push.
 
-# Default-Branch
+# Default branch
 
-Der Default-Branch von GitHub ist derzeit der Branch `ccr-01da7c96-avlx2l`
-(geprüft mit `git remote show origin`), weil er als erster gepusht wurde.
-Gewünscht ist `main`. Die Umstellung erfolgt in GitHub unter
-Settings → Branches → Default branch. Erst danach lässt sich der
-Sitzungs-Branch löschen.
+The default branch of GitHub was the branch `ccr-01da7c96-avlx2l` (checked with
+`git remote show origin` on 2026-11-02), because it was pushed first. `main` is
+wanted. The switch is done in GitHub under Settings → Branches → Default
+branch. Only after that can the session branch be deleted. State of
+2026-11-02, not checked since.
 
-# Risiken
+# Risks
 
-* Ein fehlerhaftes Builder-Release stoppt die Inhalts-Updates, ohne dass die
-  Seite ausfällt. Die Regel "letzte gute Version bleibt online" und das Alerting
-  (O18) fangen das ab.
-* Mit Tags und Images auf Tag braucht es eine Registry (O10). Die Registry ist
-  noch nicht gewählt.
-* Parallele Pull Requests ändern alle `okf/log.md` und `okf/open-points.md`.
-  Konflikte dort sind wahrscheinlich und werden per Rebase gelöst.
-* CalVer sagt nichts über Brüche aus. Für diesen Dienst ist das gewollt, denn
-  es gibt keine Konsumenten. Ein Bruch, der Betrieb oder Konfiguration
-  betrifft (zum Beispiel ein neues Secret), gehört deshalb in die
-  Release-Notiz des Tags.
-* Ohne führende Null im Monat sortiert eine reine Textsortierung falsch
-  (`26.10.0` vor `26.9.0`). SemVer-fähige Werkzeuge vergleichen numerisch und
-  sind nicht betroffen.
-* Updater leiten Major, Minor und Patch aus der Position ab. Der Jahreswechsel
-  (`26.12.0` zu `27.1.0`) gilt als "Major", ein Monatswechsel als "Minor". Für
-  unsere eigenen Images ist das heute ohne Folgen, weil keine Updater sie
-  verwenden (siehe unten).
-* Mit höchstens einem Release pro Monat bleibt `MICRO` bei 0. Mehrere Releases
-  im selben Monat zählen hoch. Der Zähler beginnt jeden Monat neu bei 0.
+* A faulty builder release stops the content updates without the site going
+  down. The rule "last good version stays online" and the alerting (O18) catch
+  that.
+* With tags and images on a tag a registry is needed (O10). The registry has not
+  been chosen yet.
+* Parallel pull requests all change `okf/log.md` and `okf/open-points.md`.
+  Conflicts there are likely and are resolved by a merge.
+* CalVer says nothing about breaks. For this service that is intended, because
+  there are no consumers. A break that affects operation or configuration (for
+  example a new secret) therefore belongs in the release note of the tag.
+* Without a leading zero in the month, a pure text sort sorts wrongly
+  (`26.10.0` before `26.9.0`). SemVer-aware tools compare numerically and are
+  not affected.
+* Updaters derive major, minor and patch from the position. The turn of the
+  year (`26.12.0` to `27.1.0`) counts as "major", a change of month as "minor".
+  For our own images this has no consequences today, because no updaters use
+  them (see below).
+* With at most one release per month, `MICRO` stays at 0. Several releases in
+  the same month count up. The counter starts again at 0 every month.
 
-# Auto-Updater
+# Auto-updaters
 
-* **[E]** Renovate öffnet Pull Requests für Fremd-Images (Remark42, Caddy,
-  Node-Basisimages) und für Abhängigkeiten des Astro-Projekts (pnpm).
-* **[E]** Patch-Updates werden automatisch gemergt, ohne Ausnahmen (auch
-  Remark42, Astro und Pagefind). Minor- und Major-Updates nimmst du als Pull
-  Request ab.
-* **[E]** Auto-Merge bleibt auf Patch-Updates beschränkt. Das wurde nach den
-  ersten Renovate-PRs bestätigt: Ein Minor-Update (pnpm `10.28.0` zu
-  `10.34.9`) und Major-Updates werden nicht automatisch gemergt, Renovate
-  vermerkt in diesen PRs "Automerge: Disabled by config". Eine Erweiterung auf
-  Minor-Updates wurde wegen der noch dünnen Test-Suite verschoben.
-* **[E]** TypeScript bleibt bei Version 6 (`allowedVersions: "<7"` in
-  `renovate.json`), weil `astro check` TypeScript 7 nicht unterstützt. Die
-  Regel entstand aus dem Renovate-PR #7.
-* **[E]** Renovate wartet nach Erscheinen einer Version 3 Tage, bevor es
-  merged (`minimumReleaseAge`). Dass die Option existiert, bestätigt der
-  Validator `renovate-config-validator --strict`. Ob die Wartezeit mit
-  GitHubs Auto-Merge tatsächlich eingehalten wird, ist ungeprüft.
-* **[E]** Renovate läuft als GitHub-App. Die Installation für das Repo nimmst
-  du in GitHub vor.
-* **[V]** Auto-Merge gilt nur, wenn die CI als Pflicht-Check in der Branch-
-  Protection von `main` eingetragen ist und grün ist. Vor W00 gibt es keine
-  CI, bis dahin darf nichts automatisch gemergt werden.
-* **[V]** Auto-Merge ändert nur `main`. In den Betrieb gelangt eine Änderung
-  erst mit dem nächsten Tag. Vor jedem Tag wird geprüft, ob sich ein Fremd-
-  Image geändert hat. Bei einer geänderten Remark42-Version läuft vorher ein
-  Backup, weil auch Patch-Updates Datenbankänderungen enthalten können. Der
-  Nutzer hat bewusst keine Ausnahme für Remark42 gewünscht.
-* **[E]** Kein automatisches Ziehen und Starten von Images auf dem Server. Der
-  Server zieht bewusst eine Version.
-* **[E]** Für eigene Images gibt es keinen Updater, denn es gibt kein
-  getrenntes Deploy-Repo. Falls das später kommt, ist die SemVer-gültige
-  Form der Tags bereits passend.
-* Offen sind Details der Konfiguration, zum Beispiel Gruppierung von Updates
-  und Zeitplan (O31).
+* **[E]** Renovate opens pull requests for foreign images (Remark42, Caddy,
+  Node base images) and for dependencies of the Astro project (pnpm).
+* **[E]** Patch updates are merged automatically, without exceptions (also
+  Remark42, Astro and Pagefind). Minor and major updates you accept as a pull
+  request.
+* **[E]** Auto-merge stays limited to patch updates. This was confirmed after
+  the first Renovate PRs: a minor update (pnpm `10.28.0` to `10.34.9`) and major
+  updates are not merged automatically, Renovate notes "Automerge: Disabled by
+  config" in these PRs. An extension to minor updates was postponed because of
+  the still thin test suite.
+* **[E]** TypeScript stays at version 6 (`allowedVersions: "<7"` in
+  `renovate.json`), because `astro check` does not support TypeScript 7. The rule
+  came from Renovate PR #7.
+* **[E]** After a version appears, Renovate waits 3 days before it merges
+  (`minimumReleaseAge`). The validator `renovate-config-validator --strict`
+  confirms that the option exists. Whether the waiting time is really kept with
+  GitHub's auto-merge is unchecked.
+* **[E]** Renovate runs as a GitHub app. You install it for the repo in GitHub.
+* **[V]** Auto-merge applies only if the CI is entered as a required check in
+  the branch protection of `main` and is green. Before W00 there is no CI, until
+  then nothing may be merged automatically.
+* **[V]** Auto-merge changes only `main`. A change reaches operation only with
+  the next tag. Before every tag it is checked whether a foreign image changed.
+  If the Remark42 version changed, a backup runs beforehand, because even patch
+  updates can contain database changes. The user deliberately did not want an
+  exception for Remark42.
+* **[E]** No automatic pulling and starting of images on the server. The server
+  deliberately pulls one version.
+* **[E]** For the own images there is no updater, because there is no separate
+  deploy repo. If that comes later, the SemVer-valid form of the tags already
+  fits.
+* Details of the configuration are open, for example grouping of updates and
+  schedule (O31).
