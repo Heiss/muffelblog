@@ -6,7 +6,7 @@ Static blog with a Memos microblog. The specification is an OKF bundle in
 
 ## Preview
 
-Status with sample data. Nextcloud integration, operations and comments are
+Status with demo content (IT, photography, timber construction; the images are placeholders). Nextcloud integration, operations and comments are
 still missing (see the [roadmap](okf/roadmap.md)). There are ten color schemes,
 the default is Solarized Light.
 
@@ -53,6 +53,7 @@ pnpm test                 # unit tests (Vitest)
 pnpm build                # build the site
 pnpm test:e2e             # E2E tests (Playwright) against apps/site/dist
 pnpm check                # lint, format:check, typecheck, test and build
+pnpm dev:demo             # dev server with the demo content (IT, photography, timber)
 pnpm screenshots          # regenerate the README images (docs/screenshots)
 ```
 

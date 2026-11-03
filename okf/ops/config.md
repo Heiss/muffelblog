@@ -43,7 +43,8 @@ generated: { by: claude-code/web, at: 2026-11-03T05:30:00Z }
 | `MUFFEL_MEMOS_MAX_FILE_MB` | 25 | 1 to 500 | Maximum size per mirrored memo file |
 
 Further variables: `CONTENT_DIR`, `MEMOS_URL` (required), `SITE_URL` (optional,
-sitemap and canonical), `MUFFEL_FIXTURES=1` (development and tests only). The
+sitemap and canonical), `MUFFEL_FIXTURES` (development and tests only): `1` is the edge-case set of the tests,
+`demo` is the realistic demo content (see [Test strategy](/ops/testing.md)). Any other value counts as unset. The
 test build in the repo sets `MUFFEL_FEED_PAGE_SIZE=4`.
 
 # Open

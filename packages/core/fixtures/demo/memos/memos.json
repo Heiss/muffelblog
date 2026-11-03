@@ -1,0 +1,152 @@
+{
+  "memos": [
+    {
+      "name": "memos/it-bisect",
+      "creator": "users/beispiel",
+      "content": "Mal wieder `git bisect` benutzt: 12 Commits, vier Schritte bis zum Übeltäter. Unterschätztes Werkzeug. #it #git",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [
+        {
+          "name": "attachments/img-bisect",
+          "filename": "Screenshot_bisect.jpg",
+          "type": "image/jpeg",
+          "size": "20000"
+        }
+      ],
+      "relations": [],
+      "reactions": [],
+      "tags": ["it", "git"],
+      "createTime": "2026-10-07T18:20:00Z",
+      "updateTime": "2026-10-07T18:20:00Z"
+    },
+    {
+      "name": "memos/it-ssh-jump",
+      "creator": "users/beispiel",
+      "content": "TIL: `ssh -J bastion ziel` springt über einen Zwischenhost, ohne dass die Konfiguration angepasst werden muss. #it #ssh",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [],
+      "relations": [],
+      "reactions": [],
+      "tags": ["it", "ssh"],
+      "createTime": "2026-10-21T07:45:00Z",
+      "updateTime": "2026-10-21T07:45:00Z"
+    },
+    {
+      "name": "memos/it-zeit",
+      "creator": "users/beispiel",
+      "content": "Zeitzonen sind der Fehler, der immer wiederkommt. Intern UTC speichern, erst zur Anzeige umrechnen. #it #zeit",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [],
+      "relations": [],
+      "reactions": [],
+      "tags": ["it", "zeit"],
+      "createTime": "2026-11-02T16:05:00Z",
+      "updateTime": "2026-11-02T16:05:00Z"
+    },
+    {
+      "name": "memos/foto-nebel",
+      "creator": "users/beispiel",
+      "content": "Nebel im Park, kurz nach Sonnenaufgang. f/2,8, 1/250 s, ISO 100, aus der Hand. #fotografie #nebel",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [
+        {
+          "name": "attachments/img-nebel",
+          "filename": "IMG_NEBEL_PARK.jpg",
+          "type": "image/jpeg",
+          "size": "20000"
+        }
+      ],
+      "relations": [],
+      "reactions": [],
+      "tags": ["fotografie", "nebel"],
+      "createTime": "2026-10-10T07:12:00Z",
+      "updateTime": "2026-10-10T07:12:00Z"
+    },
+    {
+      "name": "memos/foto-objektiv",
+      "creator": "users/beispiel",
+      "content": "Objektiv gereinigt: erst den Staub mit dem Blasebalg weg, dann das Mikrofasertuch. Nie trocken darüberwischen. #fotografie #technik",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [],
+      "relations": [],
+      "reactions": [],
+      "tags": ["fotografie", "technik"],
+      "createTime": "2026-10-24T12:30:00Z",
+      "updateTime": "2026-10-24T12:30:00Z"
+    },
+    {
+      "name": "memos/foto-festbrennweite",
+      "creator": "users/beispiel",
+      "content": "Übung für heute: eine Stunde nur mit einer Festbrennweite losziehen. Das zwingt zum Gehen statt zum Zoomen. #fotografie #uebung",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [],
+      "relations": [],
+      "reactions": [],
+      "tags": ["fotografie", "uebung"],
+      "createTime": "2026-11-01T09:00:00Z",
+      "updateTime": "2026-11-01T09:00:00Z"
+    },
+    {
+      "name": "memos/holz-hobel",
+      "creator": "users/beispiel",
+      "content": "Fichte gehobelt: Ist der Hobel scharf, rollt sich der Span zu einer langen Locke. #holzbau #werkzeug",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [
+        {
+          "name": "attachments/img-hobel",
+          "filename": "IMG_HOBELSPAN.jpg",
+          "type": "image/jpeg",
+          "size": "20000"
+        }
+      ],
+      "relations": [],
+      "reactions": [],
+      "tags": ["holzbau", "werkzeug"],
+      "createTime": "2026-10-13T14:50:00Z",
+      "updateTime": "2026-10-13T14:50:00Z"
+    },
+    {
+      "name": "memos/holz-jahrringe",
+      "creator": "users/beispiel",
+      "content": "Merkregel: Bretter mit stehenden Jahrringen verziehen sich weniger als solche mit liegenden. #holzbau #holz",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [],
+      "relations": [],
+      "reactions": [],
+      "tags": ["holzbau", "holz"],
+      "createTime": "2026-10-27T10:15:00Z",
+      "updateTime": "2026-10-27T10:15:00Z"
+    },
+    {
+      "name": "memos/holz-bleistift",
+      "creator": "users/beispiel",
+      "content": "Der Zimmermannsbleistift ist flach und oval, damit er nicht vom Balken rollt. #holzbau #werkzeug",
+      "visibility": "PUBLIC",
+      "state": "NORMAL",
+      "pinned": false,
+      "attachments": [],
+      "relations": [],
+      "reactions": [],
+      "tags": ["holzbau", "werkzeug"],
+      "createTime": "2026-11-02T08:40:00Z",
+      "updateTime": "2026-11-02T08:40:00Z"
+    }
+  ],
+  "nextPageToken": ""
+}

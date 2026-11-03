@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-03
+* **Update**: Demo set added (`MUFFEL_FIXTURES=demo`): 9 articles, 9 memos, 15 glossary terms on IT, photography and timber construction with generated placeholder images; README images retaken, see [Test strategy](/ops/testing.md).
 * **Update**: W22d done: the whole OKF bundle is translated to English (see [Languages](/ops/language.md)).
 * **Update**: W22c done: `apps/site` translated, routes `/page/N/`, UI texts collected in `apps/site/src/i18n/messages.ts`, English CSS classes, English CI job names.
 * **Update**: W22b done: `packages/core` translated to English (identifiers, comments, test names, warning messages); UI texts in core collected in `UI` objects.

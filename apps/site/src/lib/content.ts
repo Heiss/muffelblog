@@ -33,17 +33,26 @@ function findRepoRoot(start: string): string {
  * Intent: a build without explicit configuration must never publish sample
  * data. That is why `CONTENT_DIR` (synchronized Nextcloud folder) and
  * `MEMOS_URL` (address of the Memos instance) must be set. Sample data exists
- * only with `MUFFEL_FIXTURES=1` (development, tests).
+ * only with `MUFFEL_FIXTURES=1` (edge cases for the tests) or
+ * `MUFFEL_FIXTURES=demo` (realistic sample content).
  */
 export function contentConfig(
   env: Record<string, string | undefined> = process.env,
 ): ContentConfig {
-  if (env.MUFFEL_FIXTURES === '1') {
+  // `1`: the edge-case fixtures of the tests. `demo`: realistic sample content.
+  const set =
+    env.MUFFEL_FIXTURES === '1'
+      ? ''
+      : env.MUFFEL_FIXTURES === 'demo'
+        ? 'demo'
+        : undefined;
+  if (set !== undefined) {
     const fixtures = path.join(
       findRepoRoot(process.cwd()),
       'packages',
       'core',
       'fixtures',
+      set,
     );
     return {
       contentDir: path.join(fixtures, 'content'),

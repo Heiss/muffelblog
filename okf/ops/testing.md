@@ -29,6 +29,27 @@ generated: { by: claude-code/web, at: 2026-11-02T14:40:00Z }
   `CI Gate` was green.
 * **[E]** Visual regression is not part of it.
 
+# Sample data
+
+* **[E]** Two sets exist (decided on 2026-11-03):
+  * The **edge-case fixtures** (`packages/core/fixtures/content` and `memos`,
+    `MUFFEL_FIXTURES=1`): deliberately odd files (wikilink, conflict copy,
+    duplicate, unsafe HTML, no date). The unit and E2E tests rely on their names
+    and numbers.
+  * The **demo set** (`packages/core/fixtures/demo`, `MUFFEL_FIXTURES=demo`):
+    realistic sample content on three topics (IT, photography, timber
+    construction), each with 3 articles, 3 memos and 5 glossary terms (9, 9 and
+    15 in total). Used for the README images (`pnpm screenshots`) and for
+    development (`pnpm dev:demo`).
+* **[E]** The demo images are generated placeholders, clearly marked as such
+  (`generate-images.mjs`), never photos.
+* **[E]** The glossary terms carry `type: glossary` already (folder
+  `content/glossar/`). Until W19 they appear as normal articles.
+* A unit test (`packages/core/src/demo.test.ts`) keeps the demo set clean: counts,
+  3 + 5 per topic, valid frontmatter, no warnings while rendering, all images
+  found. A finding while writing it: an article and a term must not share a file
+  name, because the slug comes from the file name.
+
 # Purpose
 
 The user wants to reduce the risk of errors in `main` and in the automatically
