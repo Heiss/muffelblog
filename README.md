@@ -93,6 +93,14 @@ settings are in `.env.example`.
 
 `docker/smoke.sh` checks a running stack; CI runs it on every code change.
 
+### Releases
+
+A Git tag like `26.11.0` (year.month.counter, no `v`) runs the whole CI again and
+only then publishes `ghcr.io/heiss/muffelblog-builder:<tag>` (amd64 and arm64)
+and creates a GitHub release. `docker compose up` then uses the published image
+(`MUFFEL_VERSION` selects the tag). A new GHCR package is private until you make
+it public in its settings on GitHub.
+
 ## CI
 
 `.github/workflows/ci.yml` checks every pull request. The **CI Gate** job is the
