@@ -7,7 +7,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "typecheck": "astro check",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "screenshots": "MUFFEL_FIXTURES=1 astro build && node scripts/screenshots.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.12",

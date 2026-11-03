@@ -17,7 +17,8 @@
     "test:e2e": "pnpm --filter @muffelblog/site test:e2e",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
     "build:site": "pnpm --filter @muffelblog/site build",
-    "test:contract": "vitest run --config vitest.contract.config.ts"
+    "test:contract": "vitest run --config vitest.contract.config.ts",
+    "screenshots": "pnpm --filter @muffelblog/site screenshots"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
