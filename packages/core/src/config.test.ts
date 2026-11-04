@@ -19,6 +19,16 @@ describe('readSettings', () => {
       checkIntervalSeconds: 180,
       debounceChecks: 1,
       lang: 'en',
+      webmentionsTimeoutMs: 10_000,
+      webmentionsMaxBytes: 1024 * 1024,
+      webmentionsMaxTargets: 10,
+      webmentionsDelayMs: 1000,
+      webmentionsAttempts: 3,
+      webmentionsNoEndpointDays: 30,
+      webmentionsEndpointDays: 7,
+      webmentionsSend: false,
+      webmentionsAllowPrivate: false,
+      webmentionsBlock: [],
     });
     expect(readSettings({})).toEqual(DEFAULT_SETTINGS);
   });
@@ -44,6 +54,16 @@ describe('readSettings', () => {
       checkIntervalSeconds: 180,
       debounceChecks: 1,
       lang: 'de',
+      webmentionsTimeoutMs: 10_000,
+      webmentionsMaxBytes: 1024 * 1024,
+      webmentionsMaxTargets: 10,
+      webmentionsDelayMs: 1000,
+      webmentionsAttempts: 3,
+      webmentionsNoEndpointDays: 30,
+      webmentionsEndpointDays: 7,
+      webmentionsSend: false,
+      webmentionsAllowPrivate: false,
+      webmentionsBlock: [],
     });
   });
 
@@ -134,6 +154,66 @@ describe('readSettings', () => {
       ).toThrow(
         /MUFFEL_LANG[\s\S]*MUFFEL_RSS_ITEMS|MUFFEL_RSS_ITEMS[\s\S]*MUFFEL_LANG/,
       );
+    });
+  });
+
+  describe('webmention sending', () => {
+    it('is off by default and does not allow private addresses', () => {
+      const s = readSettings({});
+      expect(s.webmentionsSend).toBe(false);
+      expect(s.webmentionsAllowPrivate).toBe(false);
+      expect(s.webmentionsBlock).toEqual([]);
+    });
+
+    it('switches on only with 1 and off with 0, anything else stops the build', () => {
+      expect(
+        readSettings({ MUFFEL_WEBMENTIONS_SEND: '1' }).webmentionsSend,
+      ).toBe(true);
+      expect(
+        readSettings({ MUFFEL_WEBMENTIONS_SEND: '0' }).webmentionsSend,
+      ).toBe(false);
+      expect(
+        readSettings({ MUFFEL_WEBMENTIONS_SEND: '' }).webmentionsSend,
+      ).toBe(false);
+      for (const bad of ['true', 'yes', '2', 'on']) {
+        expect(() => readSettings({ MUFFEL_WEBMENTIONS_SEND: bad })).toThrow(
+          /MUFFEL_WEBMENTIONS_SEND/,
+        );
+        expect(() =>
+          readSettings({ MUFFEL_WEBMENTIONS_ALLOW_PRIVATE: bad }),
+        ).toThrow(/MUFFEL_WEBMENTIONS_ALLOW_PRIVATE/);
+      }
+    });
+
+    it('reads the block list as lower case host names', () => {
+      expect(
+        readSettings({
+          MUFFEL_WEBMENTIONS_BLOCK: ' Example.org, news.example.com ,,',
+        }).webmentionsBlock,
+      ).toEqual(['example.org', 'news.example.com']);
+    });
+
+    it('rejects entries of the block list that are not host names', () => {
+      for (const bad of ['https://example.org', 'a b', 'exa_mple.org', '/x']) {
+        expect(() => readSettings({ MUFFEL_WEBMENTIONS_BLOCK: bad })).toThrow(
+          /MUFFEL_WEBMENTIONS_BLOCK/,
+        );
+      }
+    });
+
+    it('reads the limits, the size in KB', () => {
+      const s = readSettings({
+        MUFFEL_WEBMENTIONS_TIMEOUT_MS: '5000',
+        MUFFEL_WEBMENTIONS_MAX_KB: '256',
+        MUFFEL_WEBMENTIONS_MAX_TARGETS: '5',
+        MUFFEL_WEBMENTIONS_DELAY_MS: '0',
+        MUFFEL_WEBMENTIONS_ATTEMPTS: '1',
+      });
+      expect(s.webmentionsTimeoutMs).toBe(5000);
+      expect(s.webmentionsMaxBytes).toBe(256 * 1024);
+      expect(s.webmentionsMaxTargets).toBe(5);
+      expect(s.webmentionsDelayMs).toBe(0);
+      expect(s.webmentionsAttempts).toBe(1);
     });
   });
 });
