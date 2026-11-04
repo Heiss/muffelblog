@@ -33,6 +33,8 @@ services:
       NEXTCLOUD_SHARE_PASSWORD: ${NEXTCLOUD_SHARE_PASSWORD:-}
       MEMOS_URL: ${MEMOS_URL:-}
       COMMENTS_URL: ${COMMENTS_URL:-http://localhost:8081}
+      # How the builder reaches Remark42 inside the network (static copy of the comments).
+      REMARK_INTERNAL_URL: http://remark42:8080
       MUFFEL_FEED_PAGE_SIZE: ${MUFFEL_FEED_PAGE_SIZE:-}
       MUFFEL_FEED_EXCERPT_CHARS: ${MUFFEL_FEED_EXCERPT_CHARS:-}
       MUFFEL_RSS_ITEMS: ${MUFFEL_RSS_ITEMS:-}
@@ -41,6 +43,8 @@ services:
       MUFFEL_DEBOUNCE_CHECKS: ${MUFFEL_DEBOUNCE_CHECKS:-}
       MUFFEL_ALERT_WEBHOOK: ${MUFFEL_ALERT_WEBHOOK:-}
       MUFFEL_ALERT_FORMAT: ${MUFFEL_ALERT_FORMAT:-}
+    depends_on:
+      - remark42
     volumes:
       - releases:/data/releases
       - cache:/data/cache

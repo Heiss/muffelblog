@@ -31,6 +31,7 @@ export const messages = {
     title: 'Kommentare',
     needsJs: 'Die Kommentare brauchen JavaScript.',
     unavailable: 'Die Kommentare konnten nicht geladen werden.',
+    deleted: 'Dieser Kommentar wurde gelöscht.',
   },
   footer: {
     label: 'Fußbereich',

@@ -1,0 +1,39 @@
+[
+  {
+    "id": "c1",
+    "text": "<p>Schöner erster Beitrag, <strong>danke</strong>!</p>",
+    "user": { "name": "Anna" },
+    "time": "2026-01-06T09:00:00Z",
+    "locator": { "url": "/p/hallo-welt/" }
+  },
+  {
+    "id": "c2",
+    "pid": "c1",
+    "text": "<p>Gern geschehen. <a href=\"https://example.org/\">Mehr hier</a></p>",
+    "user": { "name": "Bernd" },
+    "time": "2026-01-06T10:30:00Z",
+    "locator": { "url": "/p/hallo-welt/" }
+  },
+  {
+    "id": "c3",
+    "text": "<p>Böse</p><script>alert('x')</script><img src=\"https://evil.example/t.png\"><a href=\"javascript:alert(1)\">klick</a>",
+    "user": { "name": "<b>Mallory</b>" },
+    "time": "2026-01-07T08:00:00Z",
+    "locator": { "url": "/p/hallo-welt/" }
+  },
+  {
+    "id": "c4",
+    "text": "geheim",
+    "delete": true,
+    "user": { "name": "Weg" },
+    "time": "2026-01-05T12:00:00Z",
+    "locator": { "url": "/p/hallo-welt/" }
+  },
+  {
+    "id": "c5",
+    "text": "<p>Memo-Kommentar</p>",
+    "user": { "name": "Carla" },
+    "time": "2026-11-02T15:00:00Z",
+    "locator": { "url": "/m/memo-text/" }
+  }
+]

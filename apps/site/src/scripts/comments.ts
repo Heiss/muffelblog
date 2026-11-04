@@ -35,6 +35,12 @@ if (section) {
   const script = document.createElement('script');
   script.src = `${host}/web/embed.js`;
   script.async = true;
+  // The widget shows the same comments, so the static copy steps aside once it is loaded.
+  script.onload = () => {
+    section
+      .querySelector<HTMLElement>('[data-comments-static]')
+      ?.setAttribute('hidden', '');
+  };
   script.onerror = () => {
     if (error) {
       error.textContent = section.dataset.error ?? '';

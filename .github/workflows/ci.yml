@@ -105,11 +105,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker/init-env.sh
+      - name: Short check interval for the comment flow
+        run: |
+          echo 'MUFFEL_CHECK_INTERVAL_SECONDS=10' >> .env
+          echo 'MUFFEL_DEBOUNCE_CHECKS=1' >> .env
       - run: docker compose up --detach --build
       - name: rclone is in the builder image
         run: docker compose run --rm --no-deps --entrypoint rclone builder version
       - name: Smoke test
         run: docker/smoke.sh
+      - name: A comment reaches the page through the scheduler
+        run: docker/comment-flow.sh
       - name: The builder reports its status
         run: |
           docker compose exec -T builder cat /data/state/status.json | tee /dev/stderr | grep -q '"state": "ok"'
@@ -137,8 +143,22 @@ jobs:
           NEXTCLOUD_ADMIN_USER: admin
           NEXTCLOUD_ADMIN_PASSWORD: contract-admin-password-1234
           NEXTCLOUD_TRUSTED_DOMAINS: localhost localhost:8081
+      remark42:
+        image: umputun/remark42:v1.18.0
+        ports:
+          - 8082:8080
+        # Remark42 refuses to start without a place for its data.
+        volumes:
+          - remark42-contract:/srv/var
+        env:
+          REMARK_URL: http://localhost:8082
+          SITE: contract
+          SECRET: contract-secret-1234567890
+          ADMIN_PASSWD: contract-admin-passwd-1234
     env:
       MEMOS_CONTRACT_URL: http://localhost:5230
+      REMARK42_CONTRACT_URL: http://localhost:8082
+      REMARK42_CONTRACT_ADMIN_PASSWD: contract-admin-passwd-1234
       NEXTCLOUD_CONTRACT_URL: http://localhost:8081
       NEXTCLOUD_CONTRACT_PASSWORD: contract-admin-password-1234
     steps:

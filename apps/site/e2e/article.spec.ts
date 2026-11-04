@@ -13,7 +13,7 @@ test.describe('Article pages under /p/<slug>/', () => {
       'Der erste Artikel.',
     );
     // A plain date counts as 12:00 in Berlin, in January that is 11:00 UTC.
-    await expect(page.locator('time')).toHaveAttribute(
+    await expect(page.locator('article time')).toHaveAttribute(
       'datetime',
       '2026-01-05T11:00:00.000Z',
     );

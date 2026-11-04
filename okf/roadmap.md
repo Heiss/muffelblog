@@ -480,19 +480,19 @@ Applies to every work package in addition to its own criteria:
   host (`COMMENTS_URL`, default `:8081` locally; embed script and iframe allowed
   in the CSP for exactly that origin), configured by a bundled script (no inline
   script), login only by email via Mailpit (Migadu by variables), basic auth
-  from outside refused (W11). Open for 26.11.1: static sanitized copy (needs the
-  scheduler), backup test, contract test against a real Remark42 with login.
+  from outside refused (W11). Static sanitized copy and its contract test were added on
+  2026-11-04 (see [Comments](/community/comments.md)). Open: backup test.
 * DoD:
   * [x] Login only by email, the mail arrives through Migadu (in a test
     environment with a mail sink).
   * [x] The widget loads only from the own host.
-  * [ ] The static copy of the comments is sanitized and visible without
+  * [x] The static copy of the comments is sanitized and visible without
     JavaScript.
   * [x] Without login no commenting is possible.
   * [x] Comments are possible on posts and memos.
   * [ ] The data of Remark42 is backed up (volume, backup test).
-  * [ ] A contract test against a real Remark42 test instance with a mail sink
-    exists.
+  * [x] A contract test against a real Remark42 test instance exists (the mail
+    sink part is covered by the smoke test, a real login mail is not tested).
 
 ## W14 - Webmentions: receiving and display
 

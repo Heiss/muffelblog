@@ -14,7 +14,7 @@ export interface ContentConfig {
   memos: MemosSource;
 }
 
-function findRepoRoot(start: string): string {
+export function findRepoRoot(start: string): string {
   let folder = path.resolve(start);
   for (;;) {
     if (existsSync(path.join(folder, 'pnpm-workspace.yaml'))) return folder;

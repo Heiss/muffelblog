@@ -1,11 +1,15 @@
 ---
 import { messages } from '../i18n/messages';
 import { commentsConfig } from '../lib/comments';
+import { commentsFor } from '../lib/comments-static';
 import { canonicalUrl, siteUrl } from '../lib/feed';
+import CommentTree from './CommentTree.astro';
 
 const config = commentsConfig();
 const url = canonicalUrl(siteUrl(), Astro.url.pathname);
 const t = messages.comments;
+// The static copy: visible without JavaScript and until the widget is there.
+const existing = config ? await commentsFor(Astro.url.pathname) : undefined;
 ---
 
 {config && (
@@ -22,6 +26,11 @@ const t = messages.comments;
   >
     <h2>{t.title}</h2>
     <p data-comments-nojs>{t.needsJs}</p>
+    {existing && existing.length > 0 && (
+      <div data-comments-static>
+        <CommentTree nodes={existing} />
+      </div>
+    )}
     <div id="remark42"></div>
     <p data-comments-error role="alert" hidden></p>
   </section>
