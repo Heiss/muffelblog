@@ -15,8 +15,14 @@ services:
     build:
       context: .
       target: builder
-    # One build per start; the scheduler for Nextcloud and Memos follows later.
-    restart: 'no'
+    # Checks Nextcloud and Memos every MUFFEL_CHECK_INTERVAL_SECONDS and builds on a change.
+    restart: unless-stopped
+    healthcheck:
+      # Healthy as soon as a release is online.
+      test: ['CMD', 'test', '-s', '/data/releases/current/build.json']
+      interval: 5s
+      timeout: 3s
+      retries: 120
     environment:
       # Dash without colon: only an unset variable gives the demo; `MUFFEL_FIXTURES=` switches it off.
       MUFFEL_FIXTURES: ${MUFFEL_FIXTURES-demo}
