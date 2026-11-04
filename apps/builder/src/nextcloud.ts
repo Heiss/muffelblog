@@ -96,7 +96,8 @@ export function rcloneEnv(
 ): Record<string, string> {
   return {
     RCLONE_WEBDAV_URL: `${config.url}/public.php/webdav/`,
-    RCLONE_WEBDAV_VENDOR: 'nextcloud',
+    // "nextcloud" would insist on a /dav/files/USER address, which a public share is not.
+    RCLONE_WEBDAV_VENDOR: 'other',
     RCLONE_WEBDAV_USER: config.token,
     RCLONE_WEBDAV_PASS: obscuredPassword,
   };

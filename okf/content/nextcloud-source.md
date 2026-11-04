@@ -23,7 +23,9 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 
 * **[E]** Tool: `rclone` (pinned `1.75.2`, copied into the builder image) over
   WebDAV at `<NEXTCLOUD_URL>/public.php/webdav/`, user = share token, password =
-  share password. The connection goes through `RCLONE_WEBDAV_*` environment
+  share password. The rclone vendor is `other`: the contract test showed that
+  `nextcloud` refuses any address that does not end in `/dav/files/USER`, which
+  a public share never does. The connection goes through `RCLONE_WEBDAV_*` environment
   variables, the password is obscured through stdin, so it never appears in a
   process list or in logs.
 * **[E]** Configuration: `NEXTCLOUD_URL`, `NEXTCLOUD_SHARE_TOKEN` and

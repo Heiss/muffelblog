@@ -99,7 +99,7 @@ describe('rcloneEnv', () => {
     );
     expect(env).toMatchObject({
       RCLONE_WEBDAV_URL: 'https://c.example/public.php/webdav/',
-      RCLONE_WEBDAV_VENDOR: 'nextcloud',
+      RCLONE_WEBDAV_VENDOR: 'other',
       RCLONE_WEBDAV_USER: 'tok',
       RCLONE_WEBDAV_PASS: 'OBSCURED',
     });
