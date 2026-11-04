@@ -9,7 +9,11 @@ public link with a password**. It never gets your account password.
 ## 1. Create the folder and the share
 
 1. Make a folder, for example `blog`, and put your Markdown files in it
-   (see [Writing](/muffelblog/guides/writing/)).
+   (see [Writing](/muffelblog/guides/writing/)). To start with something that
+   works, copy the content of the
+   [example folder](https://github.com/Heiss/muffelblog/tree/main/examples/nextcloud-folder):
+   a first post with an image, a glossary entry and two legal pages. The legal
+   pages are **templates with placeholders**, not legal advice.
 2. Share the folder: _Share link_, **set a password** (mandatory, see below),
    permission _read only_.
 3. The link looks like `https://cloud.example.org/s/AbC123xyz...`. The part after
