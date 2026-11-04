@@ -96,6 +96,32 @@ if (post.status !== 201) {
         }),
       ].join(' | '),
   );
+  const base = {
+    'Content-Type': 'application/json',
+    Cookie: `JWT=${cookies.JWT}; XSRF-TOKEN=${cookies['XSRF-TOKEN']}`,
+    'X-XSRF-TOKEN': cookies['XSRF-TOKEN'],
+  };
+  const origin = process.env.REMARK_PUBLIC_URL || 'http://localhost:8081';
+  for (const [label, extra] of [
+    ['origin', { Origin: origin }],
+    ['origin+referer', { Origin: origin, Referer: `${origin}/` }],
+    ['x-jwt', { 'X-JWT': cookies.JWT }],
+  ]) {
+    const r = await fetch(`${remark}/api/v1/comment`, {
+      method: 'POST',
+      headers: { ...base, ...extra },
+      body: JSON.stringify({
+        text: `${text} (${label})`,
+        locator: { site, url: pageUrl },
+      }),
+    });
+    console.error(
+      `debug: post ${label}=${r.status} ${(await r.text()).slice(0, 100)}`,
+    );
+  }
+  console.error(
+    `debug: refused headers=${JSON.stringify(Object.fromEntries(post.headers))}`,
+  );
   console.error(
     `comment refused: ${post.status} ${(await post.text()).slice(0, 200)}`,
   );
