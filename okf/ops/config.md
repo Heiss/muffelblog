@@ -43,8 +43,10 @@ generated: { by: claude-code/web, at: 2026-11-03T05:30:00Z }
 | `MUFFEL_MEMOS_MAX_FILE_MB` | 25 | 1 to 500 | Maximum size per mirrored memo file |
 | `MUFFEL_RSS_ITEMS` | 50 | 1 to 500 | Number of entries in the RSS feed |
 | `MUFFEL_RELEASES_KEPT` | 3 | 1 to 50 | Number of releases kept on disk |
+| `MUFFEL_CHECK_INTERVAL_SECONDS` | 180 | 10 to 3600 | Seconds between two checks of Nextcloud and Memos |
+| `MUFFEL_DEBOUNCE_CHECKS` | 1 | 0 to 10 | Equal checks in a row after a change before it is built |
 
-Further variables: `NEXTCLOUD_URL`, `NEXTCLOUD_SHARE_TOKEN`,
+Further variables: `MUFFEL_ALERT_WEBHOOK` (optional URL that receives a POST when a build fails and when it works again), `MUFFEL_ALERT_FORMAT` (`text` default, ntfy style; `json` for Slack style), `NEXTCLOUD_URL`, `NEXTCLOUD_SHARE_TOKEN`,
 `NEXTCLOUD_SHARE_PASSWORD` or `NEXTCLOUD_SHARE_PASSWORD_FILE` (builder; see
 [Nextcloud source](/content/nextcloud-source.md)), `COMMENTS_URL` (origin of Remark42 as the browser reaches it; no
 comments without it), `COMMENTS_SITE_ID` (default `muffelblog`), `CONTENT_DIR`, `MEMOS_URL` (required), `SITE_URL` (optional,

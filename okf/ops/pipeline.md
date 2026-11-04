@@ -7,7 +7,33 @@ status: draft
 generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 ---
 
-# Flow
+# Implemented (W12, 2026-11-04)
+
+* **[E]** The builder runs permanently (`restart: unless-stopped`). Every
+  `MUFFEL_CHECK_INTERVAL_SECONDS` (180) it reads a **marker** of each source
+  without downloading: Nextcloud = fingerprint of the file list (path, size,
+  `getlastmodified`), Memos = fingerprint of the public memos (text, date, tags,
+  attachment names and sizes). A source that cannot be read completely, or an
+  empty Nextcloud list, is an error and never a change.
+* **[E]** Debounce (decided 2026-11-04): a changed marker is built only after it
+  stayed the same for `MUFFEL_DEBOUNCE_CHECKS` further checks (default 1, so new
+  content appears 3 to 6 minutes after the last change; 0 = at once). With no
+  release online yet, the first build happens at once.
+* **[E]** The built marker is remembered in `state/scheduler.json`: a restart
+  does not rebuild without a change. Folders in `releases/` without
+  `build.json` (a build that was killed) are removed at the start.
+* **[E]** Reporting (O18, decided 2026-11-04): log, `state/status.json`
+  (`ok` or `failing`, last success, last error with the start of the failure)
+  and an optional webhook `MUFFEL_ALERT_WEBHOOK` (POST; `text` for ntfy style,
+  `json` for Slack style). One message when a failure starts and one when it is
+  over, not one per check. The webhook never stops the builder. The last good
+  release stays online in every failure case.
+* **[E]** Compose: `web` waits until the builder is healthy, that is until the
+  first release is online.
+* **[U]** Not covered: a change of the content of an attachment that keeps its
+  name and size (Memos), and Remark42 and webmention sources (W13 copy, W14).
+
+# Flow (original proposal)
 
 1. **[E]** Every 3 minutes the scheduler checks Nextcloud, Memos, webmention.io
    and Remark42.

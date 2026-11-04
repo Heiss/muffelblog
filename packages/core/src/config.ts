@@ -20,6 +20,10 @@ export interface Settings {
   rssItems: number;
   /** Number of releases kept on disk (open tabs still load their assets). */
   releasesKept: number;
+  /** Seconds between two checks of the sources. */
+  checkIntervalSeconds: number;
+  /** Equal checks in a row after a change before it is built (0 = at once). */
+  debounceChecks: number;
 }
 
 export interface SettingSpec {
@@ -106,6 +110,26 @@ export const SETTING_SPECS: readonly SettingSpec[] = [
     factor: 1,
     unit: 'releases',
     description: 'Number of releases kept on disk',
+  },
+  {
+    key: 'checkIntervalSeconds',
+    env: 'MUFFEL_CHECK_INTERVAL_SECONDS',
+    default: 180,
+    min: 10,
+    max: 3600,
+    factor: 1,
+    unit: 'seconds',
+    description: 'Seconds between two checks of Nextcloud and Memos',
+  },
+  {
+    key: 'debounceChecks',
+    env: 'MUFFEL_DEBOUNCE_CHECKS',
+    default: 1,
+    min: 0,
+    max: 10,
+    factor: 1,
+    unit: 'checks',
+    description: 'Equal checks in a row after a change before it is built',
   },
 ];
 

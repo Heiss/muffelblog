@@ -66,6 +66,28 @@ export async function pruneReleases(root: string, keep: number): Promise<void> {
   }
 }
 
+/**
+ * Removes release folders without `build.json`. It is written last, so such a
+ * folder is the leftover of a build that was stopped (restart, kill).
+ */
+export async function removeIncomplete(root: string): Promise<void> {
+  let entries;
+  try {
+    entries = await readdir(root, { withFileTypes: true });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
+    throw error;
+  }
+  for (const e of entries) {
+    if (!e.isDirectory() || e.name.startsWith('.')) continue;
+    const done = await stat(path.join(root, e.name, 'build.json')).then(
+      () => true,
+      () => false,
+    );
+    if (!done) await rm(path.join(root, e.name), { recursive: true });
+  }
+}
+
 /** The build signal. It is written as the last file of a release. */
 export async function writeBuildJson(
   releaseDir: string,

@@ -461,14 +461,14 @@ Applies to every work package in addition to its own criteria:
 * Depends on: W02, W04, W11
 * Decisions: debounce time, number of releases kept, reporting channel for errors
   (O18).
-* Partly done in W11 (release, swap, prune). Open: scheduler every 3 minutes,
-  change detection, debounce, error reporting (26.11.1).
+* Done 2026-11-04, see [Pipeline](/ops/pipeline.md). The reading of the
+  Remark42 and webmention sources is added with W13 (copy) and W14.
 * DoD:
-  * [ ] Every 3 minutes changes are checked, without a change no build.
+  * [x] Every 3 minutes changes are checked, without a change no build.
   * [x] The release swap is atomic, `build.json` comes last.
   * [x] On a fetch error the last good version stays online.
   * [x] Earlier releases are kept for open tabs.
-  * [ ] A failed build is reported.
+  * [x] A failed build is reported.
 
 ## W13 - Comments (Remark42)
 

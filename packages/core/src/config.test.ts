@@ -16,6 +16,8 @@ describe('readSettings', () => {
       memosMaxFileBytes: 25 * 1024 * 1024,
       rssItems: 50,
       releasesKept: 3,
+      checkIntervalSeconds: 180,
+      debounceChecks: 1,
     });
     expect(readSettings({})).toEqual(DEFAULT_SETTINGS);
   });
@@ -37,6 +39,8 @@ describe('readSettings', () => {
       memosMaxFileBytes: 10 * 1024 * 1024,
       rssItems: 30,
       releasesKept: 3,
+      checkIntervalSeconds: 180,
+      debounceChecks: 1,
     });
   });
 

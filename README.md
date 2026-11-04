@@ -85,8 +85,10 @@ docker compose up --build       # builds the images here and starts everything
 | Comments server (Remark42, not yet wired into the pages) | http://localhost:8081 |
 | Mail sink (Mailpit)                                      | http://localhost:8025 |
 
-The `builder` builds the site once per start into a new release folder and
-switches the link `current` atomically; it exits when done. `web` (Caddy) serves
+The `builder` builds the site into a new release folder and switches the link
+`current` atomically. It keeps running: every `MUFFEL_CHECK_INTERVAL_SECONDS`
+(default 180) it checks Nextcloud and Memos and builds again after a change
+(see `.env.example`); the status is in `/data/state/status.json`. `web` (Caddy) serves
 that release with a strict Content Security Policy. Stop with
 `docker compose down` (add `--volumes` to delete the data). Ports and further
 settings are in `.env.example`.

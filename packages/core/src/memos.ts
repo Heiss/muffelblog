@@ -585,3 +585,25 @@ export async function buildMemoEntries(
   );
   return { memos: entries, warnings };
 }
+
+/**
+ * Stable summary of the public memos: it changes when a memo is added, removed
+ * or edited (text, date, tags, attachments by name and size). The builder
+ * compares it between checks to know when to build.
+ */
+export function memosFingerprint(memos: readonly MemoRaw[]): string {
+  const lines = memos
+    .map((m) =>
+      JSON.stringify([
+        m.name,
+        m.createTime,
+        m.content,
+        [...(m.tags ?? [])].sort(),
+        (m.attachments ?? [])
+          .map((a) => [a.name, a.filename, a.type, String(a.size ?? '')])
+          .sort(),
+      ]),
+    )
+    .sort();
+  return createHash('sha256').update(lines.join('\n')).digest('hex');
+}
