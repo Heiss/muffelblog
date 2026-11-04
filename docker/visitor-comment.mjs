@@ -80,6 +80,19 @@ const post = await fetch(`${remark}/api/v1/comment`, {
   body: JSON.stringify({ text, locator: { site, url: pageUrl } }),
 });
 if (post.status !== 201) {
+  const who = await fetch(`${remark}/api/v1/user?site=${site}`, {
+    headers: {
+      Cookie: `JWT=${cookies.JWT}; XSRF-TOKEN=${cookies['XSRF-TOKEN']}`,
+    },
+  });
+  console.error(
+    `debug: login body=${(await redeemed.text()).slice(0, 200)} cookies=${redeemed.headers
+      .getSetCookie()
+      .map((c) => c.replace(/=[^;]+/, '=…'))
+      .join(
+        ' | ',
+      )} user-endpoint=${who.status} ${(await who.text()).slice(0, 200)}`,
+  );
   console.error(
     `comment refused: ${post.status} ${(await post.text()).slice(0, 200)}`,
   );
