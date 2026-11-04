@@ -15,13 +15,21 @@ const auth = `Basic ${Buffer.from(`admin:${PASSWORD}`).toString('base64')}`;
 const PAGE = 'https://blog.example/p/kontrakt/';
 
 async function post(body: unknown): Promise<{ id: string }> {
-  const res = await fetch(`${URL_}/api/v1/comment`, {
-    method: 'POST',
-    headers: { Authorization: auth, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  expect(res.status, await res.clone().text()).toBe(201);
-  return (await res.json()) as { id: string };
+  // Remark42 limits how fast one user may write (429), so wait and try again.
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const res = await fetch(`${URL_}/api/v1/comment`, {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 429) {
+      await new Promise((r) => setTimeout(r, 1500));
+      continue;
+    }
+    expect(res.status, await res.clone().text()).toBe(201);
+    return (await res.json()) as { id: string };
+  }
+  throw new Error('Remark42 kept answering 429');
 }
 
 async function waitUntilUp(): Promise<void> {

@@ -101,8 +101,10 @@ Scripts authenticate with HTTP basic auth using the user `admin` and
   [Webmentions](/community/webmentions.md)).
 * **[V]** The reverse proxy rejects requests with `Authorization: Basic` from
   outside (see [Docker](/architecture/docker.md)).
-* **[U]** Whether Remark42 sets its own `BasicAuthChecker` that switches off
-  this path has not been checked.
+* **[E]** Checked 2026-11-04 against Remark42 v1.18.0 (contract test):
+  `POST /api/v1/comment` with the admin basic auth works (201). The write
+  endpoint is rate limited (429 "maximum request limit") when comments follow
+  each other within about a second.
 
 # Unconfirmed
 
