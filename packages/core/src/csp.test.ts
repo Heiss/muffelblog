@@ -63,3 +63,11 @@ describe('Content Security Policy of the Caddyfile', () => {
     }
   });
 });
+
+describe('Caddyfile and client addresses', () => {
+  it('overwrites X-Real-IP for Remark42, so a visitor cannot choose their address', async () => {
+    const text = await readFile(caddyfile, 'utf8');
+    expect(text).toMatch(/header_up X-Real-IP \{client_ip\}/);
+    expect(text).toMatch(/header_up -Authorization/);
+  });
+});

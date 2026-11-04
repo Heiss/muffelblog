@@ -132,6 +132,8 @@ jobs:
         run: docker/smoke.sh
       - name: A comment reaches the page through the scheduler
         run: docker/comment-flow.sh
+      - name: Moderation, backup and restore of comments
+        run: docker/moderation-flow.sh
       - name: The builder reports its status
         run: |
           docker compose exec -T builder cat /data/state/status.json | tee /dev/stderr | grep -q '"state": "ok"'

@@ -54,7 +54,7 @@ is entered in the specification today ("entry") and what speaks against it.
 | O17 | Open Graph, social cards | Preview images and meta tags were not discussed. |
 | O18 | Backup, alerting | Back up Remark42 data and `state`. Channel for build errors (email, push, Matrix?). Remark42 backs up daily to `BACKUP_PATH`, but does not replace an external backup. |
 | O19 | Statistics | Entry: none. If there are any, without foreign services. |
-| O22 | Moderation | Notification on new comments, anti-spam measures beyond the email requirement. |
+| O22 | Moderation | **[E partly 2026-11-04]** Administrator by email (`REMARK_ADMIN_EMAIL`), mail on every new comment, command line tools. Open: anti-spam beyond the email requirement (not wanted for now). |
 | O23 | Development workflow | Working locally (`astro dev` with sample data), tests, linting of the frontmatter schema. |
 | O24 | 404 page, `robots.txt` | Not discussed. |
 | O25 | Unverified facts | see section D. |

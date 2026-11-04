@@ -53,17 +53,30 @@ very first build starts at once.
 
 What is worth a backup:
 
-| Data          | Where                                     | Why                                 |
-| ------------- | ----------------------------------------- | ----------------------------------- |
-| Remark42 data | volume `remark42-var`                     | the comments, **cannot be rebuilt** |
-| `.env`        | the repository folder                     | the secrets                         |
-| Caddy data    | volume `caddy-data` (only with our Caddy) | certificates                        |
+| Data              | Where                                     | Why                   |
+| ----------------- | ----------------------------------------- | --------------------- |
+| Remark42 comments | volume `remark42-var`                     | **cannot be rebuilt** |
+| `.env`            | the repository folder                     | the secrets           |
+| Caddy data        | volume `caddy-data` (only with our Caddy) | certificates          |
 
 Posts live in Nextcloud and memos in Memos, back those up there. Releases, the
-Nextcloud cache and the state can be rebuilt. Remark42 also writes its own
-daily backup into `var/backup` inside its volume; that is **not** a replacement
-for a copy somewhere else. A tested backup and restore routine is not part of
-the project yet.
+Nextcloud cache and the state can be rebuilt.
+
+```sh
+docker/backup.sh /srv/backups          # writes muffelblog-<time>.tar.gz
+docker/restore.sh /srv/backups/muffelblog-20261104T100000Z.tar.gz
+```
+
+`backup.sh` asks Remark42 for its official export and packs it together with
+`.env`. The file contains your **secrets**: it is created readable by you only,
+keep it that way and copy it to another machine; a backup on the same disk is not
+one. `restore.sh` puts the comments back (Remark42 replaces the comments of the
+site with those of the backup); the old `.env` inside the file is not applied
+automatically. CI runs the whole cycle on every change: write a comment, back up,
+delete the comment, restore, see it on the page again.
+
+Remark42 also writes its own daily export into `var/backup` inside its volume.
+That is the same kind of file, but on the same disk.
 
 ## Updating
 

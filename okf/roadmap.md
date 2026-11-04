@@ -490,7 +490,8 @@ Applies to every work package in addition to its own criteria:
     JavaScript.
   * [x] Without login no commenting is possible.
   * [x] Comments are possible on posts and memos.
-  * [ ] The data of Remark42 is backed up (volume, backup test).
+  * [x] The data of Remark42 is backed up (volume, backup test). `docker/backup.sh`
+    and `docker/restore.sh`, tested in CI (2026-11-04).
   * [x] A contract test against a real Remark42 test instance exists (the mail
     sink part is covered by the smoke test, a real login mail is not tested).
 
