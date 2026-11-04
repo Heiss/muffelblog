@@ -130,3 +130,28 @@ describe('compose.domain.yaml (our Caddy with a domain)', () => {
     expect(web?.ports).toEqual(['80:80', '443:443', '443:443/udp']);
   });
 });
+
+describe('Remark42 hardening and moderation', () => {
+  it('trusts forwarding headers only from the proxy network (rate limit cannot be bypassed)', async () => {
+    const { remark42 } = await services();
+    expect(remark42?.environment?.TRUSTED_PROXY).toMatch(
+      /TRUSTED_PROXY:-172\.16\.0\.0\/12/,
+    );
+  });
+
+  it('names an administrator by email and notifies admins about new comments by email', async () => {
+    const { remark42 } = await services();
+    expect(remark42?.environment?.ADMIN_SHARED_EMAIL).toMatch(
+      /REMARK_ADMIN_EMAIL/,
+    );
+    expect(remark42?.environment?.NOTIFY_ADMINS).toBe('email');
+    expect(remark42?.environment?.NOTIFY_EMAIL_FROM).toMatch(/MAIL_FROM/);
+  });
+
+  it('requires the administrator email in production, where a guessable default would be a risk', async () => {
+    for (const file of ['compose.production.yaml', 'compose.domain.yaml']) {
+      const { remark42 } = await services(file);
+      expect(remark42?.environment?.ADMIN_SHARED_EMAIL, file).toMatch(/:\?/);
+    }
+  });
+});

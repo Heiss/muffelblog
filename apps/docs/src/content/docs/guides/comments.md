@@ -30,12 +30,37 @@ port and encryption in your provider's settings).
 
 ## Moderation
 
-**Not set up yet (open point).** Remark42 needs an admin user for its moderation
-interface (for example through `ADMIN_SHARED_EMAIL`), and this setup does not set
-one. Until that is decided, comments can only be removed by an operator through
-the Remark42 API with `ADMIN_PASSWD` from inside the Docker network. A deleted
-comment disappears from the page at the next build; if it has replies, a
-placeholder remains.
+Two ways, both with the administrator login.
+
+### On the command line (tested in CI)
+
+```sh
+docker/moderate.sh list 20                        # latest comments: id, time, author, user id, page
+docker/moderate.sh delete <comment-id> <page-url> # delete one comment
+docker/moderate.sh block <user-id> 7d             # block a user for 7 days (without 7d: permanent)
+docker/moderate.sh unblock <user-id>
+```
+
+It runs inside the builder container with `REMARK_ADMIN_PASSWD` from `.env`, so the
+password never crosses the network. With a production override set the files first,
+for example `COMPOSE_FILE=compose.yaml:compose.production.yaml`. The deleted
+comment leaves the page at the next build.
+
+### In the Remark42 interface
+
+Set `REMARK_ADMIN_EMAIL` in `.env`. Whoever logs in **with this address by email**
+is the administrator and sees delete and block buttons on every comment. In the
+local demo the default is `admin@localhost`; read the login mail in Mailpit.
+In production this variable is **required**: Remark42's own default would be
+`admin@<your comments host>`, a guessable address.
+
+This follows the Remark42 documentation; the clicks in the interface are not
+covered by the project's tests (the command line is).
+
+### Notification
+
+Every new comment is mailed to the administrator (`NOTIFY_ADMINS=email`, with
+`MAIL_FROM` as sender). Locally the mail lands in Mailpit.
 
 ## Good to know
 

@@ -26,6 +26,7 @@ MUFFEL_RELEASES_DIR=/srv/muffelblog/releases
 SITE_URL=https://blog.example.org
 COMMENTS_URL=https://comments.example.org
 MAIL_FROM=blog@example.org
+REMARK_ADMIN_EMAIL=you@example.org          # the comment administrator, see Comments
 SMTP_HOST=smtp.example.org
 SMTP_PORT=465
 SMTP_USERNAME=blog@example.org
@@ -94,6 +95,7 @@ comments.example.org {
 	respond @basic "Forbidden" 403
 	reverse_proxy 127.0.0.1:8082 {
 		header_up -Authorization
+		header_up X-Real-IP {client_ip}
 	}
 }
 ```
@@ -142,6 +144,7 @@ server {
     location / {
         proxy_set_header Authorization "";
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_pass http://127.0.0.1:8082;
@@ -195,6 +198,25 @@ http:
 Set `COMMENTS_URL=https://comments.example.org` in `.env` so the policy names the
 right origin. The two ports are published on all interfaces by `compose.yaml`;
 block them from outside in your firewall.
+
+## Client addresses and the rate limit
+
+Remark42 limits how fast one visitor may read and write. It finds the visitor's
+address in the header `X-Real-IP`. Two things must be true, or anybody can pick
+any address and get around the limit (Remark42 warns about this in its log):
+
+1. **Your proxy sets `X-Real-IP` itself** and never passes on the visitor's value.
+   The Caddy and nginx examples above do exactly that. A proxy that only appends
+   to `X-Forwarded-For` (Traefik, most cloud load balancers) does not do it, which
+   is one more reason to let our Caddy sit in between.
+2. **`TRUSTED_PROXY` names the network your proxy connects from**, and nothing
+   wider. The default `172.16.0.0/12` covers the Docker networks, which is right
+   when the proxy is on this host: a proxy on the host reaches the published
+   port `127.0.0.1:8082` through the Docker gateway, an address in that range.
+   For a proxy on **another machine** set `TRUSTED_PROXY` to its address.
+   Remark42's own port must never be reachable from outside (this setup binds it
+   to `127.0.0.1`). If your Docker uses address pools outside `172.16.0.0/12`
+   or IPv6, add them.
 
 ## 4. Check
 

@@ -79,6 +79,32 @@ sources:
   fixture file, a contract test against a real Remark42 (CI), and a flow test in
   the Compose job: a comment is written in Remark42 and must appear in the page.
 
+# Moderation, hardening, backup (2026-11-04)
+
+* **[E]** Facts checked in the Remark42 v1.18.0 documentation: `ADMIN_SHARED_EMAIL`
+  (default `admin@<host of REMARK_URL>`, so it is set explicitly and required in
+  production), `NOTIFY_ADMINS=email` with `NOTIFY_EMAIL_FROM`, `TRUSTED_PROXY`.
+  Admin API with basic auth: `DELETE /api/v1/admin/comment/{id}?site&url`,
+  `PUT /api/v1/admin/user/{id}?block=1|0&ttl`, `GET /api/v1/admin/export?mode=file`,
+  `POST /api/v1/admin/import`, `GET /api/v1/admin/wait`.
+* **[E]** `docker/moderate.sh` (list, delete, block, unblock), `docker/backup.sh`
+  and `docker/restore.sh` use that API from inside the builder container
+  (`apps/builder/src/remark-admin*.ts`). The CI flow `docker/moderation-flow.sh`
+  writes a comment, checks the administrator mail, backs up, deletes the comment
+  (it leaves the page), wipes the Remark42 data and restores the backup (the
+  comment returns).
+* **[E]** Restore only works into an empty Remark42: `BoltDB.Create` rejects ids
+  that exist, also soft-deleted ones (Remark42 keeps a deleted comment as a shell
+  in `last/1000`). Found in CI, confirmed in the Remark42 source.
+* **[E]** Rate limit and client address: Remark42 keys its limits on `X-Real-IP`.
+  Our Caddy overwrites it with `{client_ip}` (checked with an echo server: a
+  spoofed `X-Real-IP` and `X-Forwarded-For` are replaced), and `TRUSTED_PROXY`
+  defaults to `172.16.0.0/12` (the Docker networks). Remark42's port is published
+  on `127.0.0.1` only. Consequence for other proxies: they must set `X-Real-IP`
+  themselves (documented for Caddy and nginx; a plain Traefik does not).
+* **[U]** Moderation in the browser interface (clicks as an administrator by
+  email login) is from the documentation, not covered by a test.
+
 # Reading for the build (original proposal)
 
 `GET /api/v1/find?site=...&url=...` is public and needs no

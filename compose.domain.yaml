@@ -22,6 +22,7 @@ services:
   remark42:
     environment:
       AUTH_EMAIL_FROM: ${MAIL_FROM:?set MAIL_FROM, the sender of the login mails}
+      ADMIN_SHARED_EMAIL: ${REMARK_ADMIN_EMAIL:?set REMARK_ADMIN_EMAIL, the address of the comment administrator}
       SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST, the mail server of the login mails}
       SMTP_PORT: ${SMTP_PORT:?set SMTP_PORT}
       SMTP_USERNAME: ${SMTP_USERNAME:?set SMTP_USERNAME}

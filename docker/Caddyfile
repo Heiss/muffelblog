@@ -60,5 +60,7 @@ http://:2020 {
 	respond @basic "Forbidden" 403
 	reverse_proxy remark42:8080 {
 		header_up -Authorization
+		# Remark42 reads X-Real-IP first, so it is set here, never taken from the visitor.
+		header_up X-Real-IP {client_ip}
 	}
 }

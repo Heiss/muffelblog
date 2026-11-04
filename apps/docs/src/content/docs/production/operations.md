@@ -53,17 +53,32 @@ very first build starts at once.
 
 What is worth a backup:
 
-| Data          | Where                                     | Why                                 |
-| ------------- | ----------------------------------------- | ----------------------------------- |
-| Remark42 data | volume `remark42-var`                     | the comments, **cannot be rebuilt** |
-| `.env`        | the repository folder                     | the secrets                         |
-| Caddy data    | volume `caddy-data` (only with our Caddy) | certificates                        |
+| Data              | Where                                     | Why                   |
+| ----------------- | ----------------------------------------- | --------------------- |
+| Remark42 comments | volume `remark42-var`                     | **cannot be rebuilt** |
+| `.env`            | the repository folder                     | the secrets           |
+| Caddy data        | volume `caddy-data` (only with our Caddy) | certificates          |
 
 Posts live in Nextcloud and memos in Memos, back those up there. Releases, the
-Nextcloud cache and the state can be rebuilt. Remark42 also writes its own
-daily backup into `var/backup` inside its volume; that is **not** a replacement
-for a copy somewhere else. A tested backup and restore routine is not part of
-the project yet.
+Nextcloud cache and the state can be rebuilt.
+
+```sh
+docker/backup.sh /srv/backups          # writes muffelblog-<time>.tar.gz
+docker/restore.sh /srv/backups/muffelblog-20261104T100000Z.tar.gz
+```
+
+`backup.sh` asks Remark42 for its official export and packs it together with
+`.env`. The file contains your **secrets**: it is created readable by you only,
+keep it that way and copy it to another machine; a backup on the same disk is not
+one. `restore.sh` imports the comments into an **empty** Remark42, as after a lost
+disk. Remark42 refuses comment ids it already knows, also deleted ones, so
+importing into a running site does not bring a deleted comment back. The old
+`.env` inside the file is not applied automatically. CI runs this cycle on every
+change: write a comment, back up, delete it, wipe the Remark42 data, restore, see
+the comment on the page again.
+
+Remark42 also writes its own daily export into `var/backup` inside its volume.
+That is the same kind of file, but on the same disk.
 
 ## Updating
 

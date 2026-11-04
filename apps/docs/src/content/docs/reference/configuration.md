@@ -35,11 +35,13 @@ a message that names the variable; nothing is silently ignored.
 
 ## Secrets and mail
 
-| Variable                                                               | Meaning                                                                                                                     |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `REMARK_SECRET`, `REMARK_ADMIN_PASSWD`                                 | Required. `docker/init-env.sh` creates them. `REMARK_ADMIN_PASSWD` is the administrator login of Remark42: keep it private. |
-| `MAIL_FROM`                                                            | Sender of the login mails                                                                                                   |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_TLS` | The mail server. Locally Mailpit. Required in production.                                                                   |
+| Variable                                                               | Meaning                                                                                                                                                   |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `REMARK_SECRET`, `REMARK_ADMIN_PASSWD`                                 | Required. `docker/init-env.sh` creates them. `REMARK_ADMIN_PASSWD` is the administrator login of Remark42: keep it private.                               |
+| `MAIL_FROM`                                                            | Sender of the login mails and of the notifications                                                                                                        |
+| `REMARK_ADMIN_EMAIL`                                                   | Whoever logs in with this address by email administers the comments. Default in the local demo: `admin@localhost`. **Required** in production.            |
+| `TRUSTED_PROXY`                                                        | Network your reverse proxy connects from (default `172.16.0.0/12`, the Docker networks). See [Your own reverse proxy](/muffelblog/production/own-proxy/). |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_TLS` | The mail server. Locally Mailpit. Required in production.                                                                                                 |
 
 ## Behaviour
 

@@ -49,6 +49,21 @@ describe('documentation matches the code', () => {
     expect(page.split(csp as string).length - 1).toBeGreaterThanOrEqual(3);
   });
 
+  it('tells every proxy to set X-Real-IP itself for the comments host', async () => {
+    const page = await read(
+      'apps',
+      'docs',
+      'src',
+      'content',
+      'docs',
+      'production',
+      'own-proxy.md',
+    );
+    expect(page).toMatch(/header_up X-Real-IP \{client_ip\}/); // Caddy
+    expect(page).toMatch(/proxy_set_header X-Real-IP \$remote_addr;/); // nginx
+    expect(page).toContain('TRUSTED_PROXY');
+  });
+
   it('lists every setting of the code in the configuration reference', async () => {
     const page = await read(
       'apps',
@@ -78,6 +93,8 @@ describe('documentation matches the code', () => {
       'MUFFEL_ALERT_FORMAT',
       'MUFFEL_RELEASES_DIR',
       'REMARK_PORT',
+      'REMARK_ADMIN_EMAIL',
+      'TRUSTED_PROXY',
     ]) {
       expect(page, name).toContain(`\`${name}\``);
     }
