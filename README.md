@@ -95,6 +95,15 @@ settings are in `.env.example`.
 
 `docker/smoke.sh` checks a running stack; CI runs it on every code change.
 
+### Production
+
+Two ready-made overrides: `compose.production.yaml` for **your own reverse
+proxy** with a shared mount (the builder writes the releases into a folder on the
+host, your proxy serves `current/`), and `compose.domain.yaml` for **our Caddy
+with a domain** and automatic HTTPS. Both need a real mail server instead of
+Mailpit. Details, proxy examples and the Content Security Policy are in the
+documentation.
+
 ### Releases
 
 A Git tag like `26.11.0` (year.month.counter, no `v`) runs the whole CI again and

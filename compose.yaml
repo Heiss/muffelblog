@@ -57,8 +57,9 @@ services:
       builder:
         condition: service_healthy
     environment:
-      SITE_ADDRESS: ':80'
-      COMMENTS_ADDRESS: ':8081'
+      # A host name here makes Caddy fetch a certificate itself (see compose.domain.yaml).
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+      COMMENTS_ADDRESS: ${COMMENTS_ADDRESS:-:8081}
     ports:
       - '${MUFFEL_PORT:-8080}:80'
       - '${MUFFEL_COMMENTS_PORT:-8081}:8081'
@@ -67,8 +68,16 @@ services:
       - releases:/srv/releases:ro
       - caddy-data:/data
     healthcheck:
+      # Answered by a port that only exists inside the container (docker/Caddyfile).
       test:
-        ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1/build.json']
+        [
+          'CMD',
+          'wget',
+          '-q',
+          '-O',
+          '/dev/null',
+          'http://127.0.0.1:2020/healthz',
+        ]
       interval: 10s
       timeout: 3s
       retries: 6
