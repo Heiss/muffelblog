@@ -147,6 +147,9 @@ jobs:
         image: umputun/remark42:v1.18.0
         ports:
           - 8082:8080
+        # Remark42 refuses to start without a place for its data.
+        volumes:
+          - remark42-contract:/srv/var
         env:
           REMARK_URL: http://localhost:8082
           SITE: contract
