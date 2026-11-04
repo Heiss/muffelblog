@@ -51,10 +51,13 @@ sources:
 
 # Implemented: static copy (W13, 2026-11-04)
 
-* **[E]** At build time the builder reads the comments of every post and memo
-  page through the public API (`GET /api/v1/find?site&url&format=plain&sort=time`)
+* **[E]** At build time the builder reads the comments through the public API
   at the **internal** address `REMARK_INTERNAL_URL` (`http://remark42:8080` in
-  Compose). The key is the canonical address (`SITE_URL` + path), the same the
+  Compose): **one** request `GET /api/v1/last/1000?site`, grouped by page address
+  in the builder. Remark42 limits the request rate (429), found by the CI when
+  the first version asked once per page; the client now also waits and retries
+  on 429. If the answer has 1000 entries it may be cut off, then single pages
+  are asked for (`GET /api/v1/find?site&url&format=plain&sort=time`). The key is the canonical address (`SITE_URL` + path), the same the
   widget uses, so `SITE_URL` is required. The flat list becomes a tree (oldest
   first, replies below their comment, a missing parent promotes the reply to the
   top, loops are broken, deleted comments disappear unless they have replies,

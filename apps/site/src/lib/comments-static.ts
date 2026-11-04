@@ -1,11 +1,16 @@
 import path from 'node:path';
 import {
   createFixtureRemarkSource,
+  forPage,
   createRemarkSource,
   readSettings,
   toTree,
 } from '@muffelblog/core';
-import type { CommentNode, RemarkSource } from '@muffelblog/core';
+import type {
+  CommentNode,
+  RemarkComment,
+  RemarkSource,
+} from '@muffelblog/core';
 import { staticCommentsConfig } from './comments';
 import { canonicalUrl, siteUrl } from './feed';
 import { findRepoRoot } from './content';
@@ -41,6 +46,24 @@ function getSource(): RemarkSource | undefined {
   return source ?? undefined;
 }
 
+/** What `last` can return at most; a full answer may be cut off. */
+const LAST_LIMIT = 1000;
+let everything:
+  Promise<{ comments: RemarkComment[]; complete: boolean }> | undefined;
+
+/**
+ * One request for all comments of the site per build (Remark42 limits the
+ * request rate, so one request per page does not work). If the answer is as
+ * long as the limit it may be incomplete, then single pages are asked for.
+ */
+function loadEverything(src: RemarkSource) {
+  everything ??= src.last(LAST_LIMIT).then(({ comments, warnings }) => {
+    for (const w of warnings) console.warn(`[comments] ${w}`);
+    return { comments, complete: comments.length < LAST_LIMIT };
+  });
+  return everything;
+}
+
 /**
  * The comments of a page for the static copy, or `undefined` if there is no
  * source. The key is the canonical address (the one the widget uses); without a
@@ -55,10 +78,13 @@ export async function commentsFor(
   const key = canonicalUrl(siteUrl(), pathname) ?? pathname;
   let found = cache.get(key);
   if (!found) {
-    found = src.find(key).then(async ({ comments, warnings }) => {
+    found = (async () => {
+      const all = await loadEverything(src);
+      if (all.complete) return toTree(forPage(all.comments, key));
+      const { comments, warnings } = await src.find(key);
       for (const w of warnings) console.warn(`[comments] ${key}: ${w}`);
       return toTree(comments);
-    });
+    })();
     cache.set(key, found);
   }
   return found;

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { commentsFingerprint, parseComments, toTree } from './comments.ts';
+import {
+  commentsFingerprint,
+  forPage,
+  parseComments,
+  toTree,
+} from './comments.ts';
 import type { RemarkComment } from './comments.ts';
 
 const c = (over: Partial<RemarkComment> & { id: string }): RemarkComment => ({
@@ -121,5 +126,39 @@ describe('commentsFingerprint', () => {
       commentsFingerprint([a, { ...b, text: '<p>geändert</p>' }]),
     ).not.toBe(base);
     expect(commentsFingerprint([a, { ...b, delete: true }])).not.toBe(base);
+  });
+});
+
+describe('forPage', () => {
+  const a = c({ id: 'a', locator: { url: 'https://blog.example/p/x/' } });
+  const b = c({ id: 'b', locator: { url: 'https://blog.example/p/y/' } });
+  const d = c({ id: 'd', locator: { url: '/p/x/' } });
+
+  it('picks the comments of one page by its address', () => {
+    expect(
+      forPage([a, b], 'https://blog.example/p/x/').map((x) => x.id),
+    ).toEqual(['a']);
+  });
+
+  it('ignores differences in how the same address is written', () => {
+    const odd = c({
+      id: 'o',
+      locator: { url: 'HTTPS://Blog.Example:443/p/x/' },
+    });
+    expect(
+      forPage([odd], 'https://blog.example/p/x/').map((x) => x.id),
+    ).toEqual(['o']);
+  });
+
+  it('matches by path when the key is only a path (fixtures)', () => {
+    expect(
+      forPage([a, d], '/p/x/')
+        .map((x) => x.id)
+        .sort(),
+    ).toEqual(['a', 'd']);
+  });
+
+  it('finds nothing for an unknown page', () => {
+    expect(forPage([a, b], 'https://blog.example/p/none/')).toEqual([]);
   });
 });

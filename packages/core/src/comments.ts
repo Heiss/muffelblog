@@ -196,3 +196,37 @@ export function commentsFingerprint(
     .sort();
   return createHash('sha256').update(lines.join('\n')).digest('hex');
 }
+
+function normalizeAddress(address: string): string {
+  try {
+    return new URL(address).href;
+  } catch {
+    return address;
+  }
+}
+
+function pathOf(address: string): string | undefined {
+  try {
+    return new URL(address, 'http://fixture.invalid').pathname;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The comments of one page out of a list for the whole site. The page is found
+ * by its address (written in any equivalent form); a key that is only a path
+ * (test fixtures) is compared by path.
+ */
+export function forPage(
+  comments: readonly RemarkComment[],
+  key: string,
+): RemarkComment[] {
+  const wanted = normalizeAddress(key);
+  const pathOnly = key.startsWith('/');
+  return comments.filter((c) =>
+    pathOnly
+      ? pathOf(c.locator.url) === pathOf(key)
+      : normalizeAddress(c.locator.url) === wanted,
+  );
+}

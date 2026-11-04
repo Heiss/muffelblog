@@ -19,6 +19,8 @@ export interface RemarkOptions {
   site: string;
   timeoutMs?: number;
   fetch?: typeof fetch;
+  /** Pause between tries after a rate limit answer (tests replace it). */
+  sleep?: (ms: number) => Promise<void>;
 }
 
 /**
@@ -44,10 +46,13 @@ export function createRemarkSource(options: RemarkOptions): RemarkSource {
   const doFetch = options.fetch ?? globalThis.fetch;
   const timeoutMs = options.timeoutMs ?? DEFAULT_SETTINGS.memosTimeoutMs;
 
-  async function get(url: URL) {
-    let res: Response;
+  const sleep =
+    options.sleep ??
+    ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+
+  async function request(url: URL): Promise<Response> {
     try {
-      res = await doFetch(url.href, {
+      return await doFetch(url.href, {
         redirect: 'manual',
         signal: AbortSignal.timeout(timeoutMs),
         headers: { accept: 'application/json' },
@@ -57,6 +62,20 @@ export function createRemarkSource(options: RemarkOptions): RemarkSource {
         `Remark42 is unreachable (${error instanceof Error ? error.message : String(error)})`,
         { cause: error },
       );
+    }
+  }
+
+  async function get(url: URL) {
+    // Remark42 limits the request rate (429): wait as told and try again.
+    let res = await request(url);
+    for (let attempt = 1; res.status === 429 && attempt <= 4; attempt += 1) {
+      const told = Number(res.headers.get('retry-after'));
+      await sleep(
+        Number.isFinite(told) && told > 0
+          ? Math.min(told, 10) * 1000
+          : 1000 * attempt,
+      );
+      res = await request(url);
     }
     if (!res.ok)
       throw new Error(`Remark42 answered ${res.status} for ${url.pathname}`);

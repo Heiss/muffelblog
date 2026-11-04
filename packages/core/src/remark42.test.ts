@@ -51,6 +51,41 @@ describe('createRemarkSource', () => {
     expect(url.searchParams.get('sort')).toBe('time');
   });
 
+  it('waits and tries again when Remark42 says 429 (rate limit)', async () => {
+    let calls = 0;
+    const doFetch = (async () => {
+      calls += 1;
+      return calls < 3
+        ? new Response('{"error":"limit"}', {
+            status: 429,
+            headers: { 'retry-after': '2' },
+          })
+        : new Response(JSON.stringify([comment]), { status: 200 });
+    }) as unknown as typeof fetch;
+    const waits: number[] = [];
+    const source = createRemarkSource({
+      baseUrl: 'http://remark42:8080',
+      site: 's',
+      fetch: doFetch,
+      sleep: async (ms) => void waits.push(ms),
+    });
+    expect((await source.last(10)).comments).toHaveLength(1);
+    expect(calls).toBe(3);
+    expect(waits).toEqual([2000, 2000]);
+  });
+
+  it('gives up after a few rate limit answers', async () => {
+    const doFetch = (async () =>
+      new Response('', { status: 429 })) as unknown as typeof fetch;
+    const source = createRemarkSource({
+      baseUrl: 'http://remark42:8080',
+      site: 's',
+      fetch: doFetch,
+      sleep: async () => undefined,
+    });
+    await expect(source.last(10)).rejects.toThrow(/429/);
+  });
+
   it('fails when Remark42 answers with an error, so the build stops', async () => {
     const { doFetch } = fake({ error: 'x' }, 500);
     const source = createRemarkSource({
