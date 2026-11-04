@@ -26,6 +26,15 @@ export default defineConfig({
           items: [{ slug: 'start/what-is-it' }, { slug: 'start/quickstart' }],
         },
         {
+          label: 'Tutorial',
+          items: [
+            { slug: 'tutorial/1-prepare' },
+            { slug: 'tutorial/2-publish' },
+            { slug: 'tutorial/3-comments' },
+            { slug: 'tutorial/4-webmentions' },
+          ],
+        },
+        {
           label: 'Guides',
           items: [
             { slug: 'guides/writing' },

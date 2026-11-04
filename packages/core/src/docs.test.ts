@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -149,5 +149,77 @@ describe('documentation matches the code', () => {
         name,
       ).resolves.toBeTruthy();
     }
+  });
+
+  describe('the tutorial', () => {
+    const tutorial = async () =>
+      (
+        await Promise.all(
+          (await docFiles())
+            .filter((f) => f.includes(`${path.sep}tutorial${path.sep}`))
+            .map((f) => readFile(f, 'utf8')),
+        )
+      ).join('\n');
+
+    it('has the four chapters in the sidebar', async () => {
+      const config = await read('apps', 'docs', 'astro.config.mjs');
+      for (const slug of [
+        'tutorial/1-prepare',
+        'tutorial/2-publish',
+        'tutorial/3-comments',
+        'tutorial/4-webmentions',
+      ]) {
+        expect(config, slug).toContain(`slug: '${slug}'`);
+      }
+    });
+
+    it('only names scripts of the repository that exist and are executable', async () => {
+      const names = new Set(
+        (await tutorial()).match(/docker\/[a-z-]+\.(?:sh|mjs)/g) ?? [],
+      );
+      expect(names.size).toBeGreaterThan(3);
+      for (const name of names) {
+        const info = await stat(path.join(root, name));
+        expect(info.isFile(), name).toBe(true);
+        if (name.endsWith('.sh')) {
+          expect(info.mode & 0o111, `${name} is executable`).not.toBe(0);
+        }
+      }
+    });
+
+    it('only names files of the example folder that exist', async () => {
+      const text = await tutorial();
+      for (const name of [
+        'hello-world.md',
+        'pages/legal.md',
+        'pages/privacy.md',
+        'README.md',
+      ]) {
+        expect(text, name).toContain(name.split('/').pop() as string);
+        await stat(path.join(root, 'examples', 'nextcloud-folder', name));
+      }
+    });
+
+    it('only sets variables that the project knows', async () => {
+      const text = await tutorial();
+      const known = [
+        await read('.env.example'),
+        await read('compose.yaml'),
+        await read('compose.production.yaml'),
+        SETTING_SPECS.map((s) => s.env).join('\n'),
+      ].join('\n');
+      const set = new Set(
+        [...text.matchAll(/^([A-Z][A-Z0-9_]{3,})=/gm)].map((m) => m[1]),
+      );
+      expect(set.size).toBeGreaterThan(10);
+      for (const name of set) {
+        // the switch of sending is a flag, not a numeric setting
+        if (name === 'MUFFEL_WEBMENTIONS_SEND') {
+          expect(known, name).toContain('MUFFEL_WEBMENTIONS_SEND');
+          continue;
+        }
+        expect(known, name).toContain(name);
+      }
+    });
   });
 });
