@@ -1,0 +1,36 @@
+---
+import type { CommentNode } from '@muffelblog/core';
+import { messages } from '../i18n/messages';
+
+interface Props {
+  nodes: CommentNode[];
+}
+
+const { nodes } = Astro.props;
+const format = new Intl.DateTimeFormat(messages.locale, {
+  dateStyle: 'long',
+  timeStyle: 'short',
+  timeZone: 'Europe/Berlin',
+});
+---
+
+<ol class="comment-list">
+  {nodes.map((node) => (
+    <li class="comment" id={`comment-${node.id}`}>
+      {node.deleted ? (
+        <p class="comment-deleted">{messages.comments.deleted}</p>
+      ) : (
+        <>
+          <p class="comment-meta">
+            <span class="comment-author">{node.author}</span>
+            <time datetime={node.time}>
+              {format.format(new Date(node.time))}
+            </time>
+          </p>
+          <div class="comment-text" set:html={node.html} />
+        </>
+      )}
+      {node.replies.length > 0 && <Astro.self nodes={node.replies} />}
+    </li>
+  ))}
+</ol>

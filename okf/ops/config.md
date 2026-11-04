@@ -48,7 +48,7 @@ generated: { by: claude-code/web, at: 2026-11-03T05:30:00Z }
 
 Further variables: `MUFFEL_ALERT_WEBHOOK` (optional URL that receives a POST when a build fails and when it works again), `MUFFEL_ALERT_FORMAT` (`text` default, ntfy style; `json` for Slack style), `NEXTCLOUD_URL`, `NEXTCLOUD_SHARE_TOKEN`,
 `NEXTCLOUD_SHARE_PASSWORD` or `NEXTCLOUD_SHARE_PASSWORD_FILE` (builder; see
-[Nextcloud source](/content/nextcloud-source.md)), `COMMENTS_URL` (origin of Remark42 as the browser reaches it; no
+[Nextcloud source](/content/nextcloud-source.md)), `REMARK_INTERNAL_URL` (how the builder reaches Remark42, for the static copy of the comments; needs `SITE_URL`), `COMMENTS_URL` (origin of Remark42 as the browser reaches it; no
 comments without it), `COMMENTS_SITE_ID` (default `muffelblog`), `CONTENT_DIR`, `MEMOS_URL` (required), `SITE_URL` (optional,
 sitemap and canonical), `MUFFEL_FIXTURES` (development and tests only): `1` is the edge-case set of the tests,
 `demo` is the realistic demo content (see [Test strategy](/ops/testing.md)). Any other value counts as unset. The

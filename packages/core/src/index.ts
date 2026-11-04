@@ -82,3 +82,7 @@ export {
 export type { SettingSpec, Settings } from './config.ts';
 export { groupByLetter, letterOf } from './glossary.ts';
 export type { LetterGroup } from './glossary.ts';
+export { commentsFingerprint, parseComments, toTree } from './comments.ts';
+export type { CommentNode, RemarkComment } from './comments.ts';
+export { createFixtureRemarkSource, createRemarkSource } from './remark42.ts';
+export type { RemarkOptions, RemarkSource } from './remark42.ts';

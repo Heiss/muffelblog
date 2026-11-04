@@ -1,8 +1,10 @@
 import { spawn } from 'node:child_process';
-import { cp, rm } from 'node:fs/promises';
+import { cp, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import {
+  commentsFingerprint,
   createHttpMemosSource,
+  createRemarkSource,
   memosFingerprint,
   readSettings,
 } from '@muffelblog/core';
@@ -117,6 +119,26 @@ async function main(): Promise<void> {
     });
   }
 
+  // Comments: a change in Remark42 (new, edited, deleted) rebuilds the pages,
+  // so the static copy stays current.
+  const remarkUrl = process.env.REMARK_INTERNAL_URL?.trim();
+  if (remarkUrl) {
+    const remark = createRemarkSource({
+      baseUrl: remarkUrl,
+      site: process.env.COMMENTS_SITE_ID?.trim() || 'muffelblog',
+      timeoutMs: settings.memosTimeoutMs,
+    });
+    polled.push({
+      name: 'comments',
+      poll: async () => commentsFingerprint((await remark.last(1000)).comments),
+    });
+  }
+
+  const releaseOnline = () =>
+    stat(path.join(releasesDir, 'current', 'build.json')).then(
+      () => true,
+      () => false,
+    );
   const store = fileStore(stateDir);
   const scheduler = createScheduler({
     sources: polled,
@@ -125,13 +147,7 @@ async function main(): Promise<void> {
     loadState: store.loadState,
     saveState: store.saveState,
     writeStatus: store.writeStatus,
-    hasRelease: async () => {
-      const { stat } = await import('node:fs/promises');
-      return stat(path.join(releasesDir, 'current', 'build.json')).then(
-        () => true,
-        () => false,
-      );
-    },
+    hasRelease: releaseOnline,
     alert: async (event) => {
       log(`${event.kind}: ${event.message}`);
       if (alerts) await sendAlert(alerts, event);
@@ -186,8 +202,15 @@ async function main(): Promise<void> {
       exitCode = result === 'built' || result === 'idle' ? 0 : 1;
       break;
     }
+    // Without a release online (first start, a service still coming up) a
+    // failed check is tried again soon instead of after the full interval.
+    const failed = result === 'failed' || result === 'poll-failed';
+    const waitSeconds =
+      failed && !(await releaseOnline())
+        ? Math.min(10, settings.checkIntervalSeconds)
+        : settings.checkIntervalSeconds;
     await new Promise<void>((resolve) => {
-      const timer = setTimeout(resolve, settings.checkIntervalSeconds * 1000);
+      const timer = setTimeout(resolve, waitSeconds * 1000);
       wake = () => {
         clearTimeout(timer);
         resolve();

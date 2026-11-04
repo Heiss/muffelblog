@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-04
+* **Update**: W13 static copy of the comments done: sanitized tree in the HTML, steps aside for the widget, Remark42 changes trigger builds; contract test and comment-flow test in CI.
 * **Update**: W12 done: permanent builder with scheduler (check every 180 s, debounce 1 check, markers for Nextcloud and Memos, state, status file, optional webhook); O18 decided; compose waits for the first release.
 * **Update**: W02 done: Nextcloud sync with rclone over the public share, fingerprint change detection, checked download, empty list refused; contract test against a real Nextcloud in CI. Scope decision: Nextcloud, Memos, scheduler and comment copy move into 26.11.0; docs site (Starlight, English, github.io) with production setup (override and own-Caddy example) is added.
 

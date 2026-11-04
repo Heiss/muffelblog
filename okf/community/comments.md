@@ -49,7 +49,34 @@ sources:
 * **[V]** The widget gets `host`, `site_id` and `url` (canonical URL of the
   page). The path of the page is the key of the comments.
 
-# Reading for the build
+# Implemented: static copy (W13, 2026-11-04)
+
+* **[E]** At build time the builder reads the comments of every post and memo
+  page through the public API (`GET /api/v1/find?site&url&format=plain&sort=time`)
+  at the **internal** address `REMARK_INTERNAL_URL` (`http://remark42:8080` in
+  Compose). The key is the canonical address (`SITE_URL` + path), the same the
+  widget uses, so `SITE_URL` is required. The flat list becomes a tree (oldest
+  first, replies below their comment, a missing parent promotes the reply to the
+  top, loops are broken, deleted comments disappear unless they have replies,
+  then only a placeholder stays).
+* **[E]** The text goes through the same sanitizer as all content, without
+  foreign images; author names are plain text. No avatars.
+* **[E]** The copy is part of the HTML (readable without JavaScript) and steps
+  aside (`hidden`) when the widget script has loaded; if the widget fails, the
+  copy and a hint stay.
+* **[E]** Change detection: the scheduler fingerprints
+  `GET /api/v1/last/1000?site` every check, so a new, edited or deleted comment
+  triggers a build (after the debounce). **[U]** Beyond the latest 1000 comments
+  of the site a change to an old comment would not be noticed.
+* **[E]** If Remark42 cannot be read, the build stops and the last good version
+  stays online (reported by the scheduler). Without a release online a failed
+  check is repeated after 10 seconds instead of 3 minutes, so a starting stack
+  settles quickly.
+* **[E]** Tests: unit tests (tree, sanitizing, fingerprint, client), E2E with a
+  fixture file, a contract test against a real Remark42 (CI), and a flow test in
+  the Compose job: a comment is written in Remark42 and must appear in the page.
+
+# Reading for the build (original proposal)
 
 `GET /api/v1/find?site=...&url=...` is public and needs no
 authentication.[^remark42-api] The static copy is created from it and rendered
