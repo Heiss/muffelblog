@@ -46,6 +46,16 @@ generated: { by: claude-code/web, at: 2026-11-03T05:30:00Z }
 | `MUFFEL_RELEASES_KEPT` | 3 | 1 to 50 | Number of releases kept on disk |
 | `MUFFEL_CHECK_INTERVAL_SECONDS` | 180 | 10 to 3600 | Seconds between two checks of Nextcloud and Memos |
 | `MUFFEL_DEBOUNCE_CHECKS` | 1 | 0 to 10 | Equal checks in a row after a change before it is built |
+| `MUFFEL_WEBMENTIONS_SEND` | `0` | `0`, `1` | Send webmentions (see [Webmentions](/community/webmentions.md)); needs `SITE_URL`. Off by default ([Defaults stay inside](/ops/defaults.md)) |
+| `MUFFEL_WEBMENTIONS_BLOCK` | empty | host names | Hosts that are never asked, subdomains included |
+| `MUFFEL_WEBMENTIONS_ALLOW_PRIVATE` | `0` | `0`, `1` | Lifts the address check of the sender; tests and tutorial only |
+| `MUFFEL_WEBMENTIONS_TIMEOUT_MS` | 10000 | 1000 to 60000 | Time limit per request to a foreign server |
+| `MUFFEL_WEBMENTIONS_MAX_KB` | 1024 | 16 to 10240 | Largest part of a foreign response that is read |
+| `MUFFEL_WEBMENTIONS_MAX_TARGETS` | 10 | 1 to 100 | Links of one entry that are reported |
+| `MUFFEL_WEBMENTIONS_DELAY_MS` | 1000 | 0 to 60000 | Pause between two requests to foreign servers |
+| `MUFFEL_WEBMENTIONS_ATTEMPTS` | 3 | 1 to 10 | Tries per source and target over later builds |
+| `MUFFEL_WEBMENTIONS_NO_ENDPOINT_DAYS` | 30 | 1 to 365 | Days a host without an endpoint is not asked again |
+| `MUFFEL_WEBMENTIONS_ENDPOINT_DAYS` | 7 | 1 to 365 | Days a found endpoint is reused |
 
 Further variables: `MUFFEL_ALERT_WEBHOOK` (optional URL that receives a POST when a build fails and when it works again), `MUFFEL_ALERT_FORMAT` (`text` default, ntfy style; `json` for Slack style), `NEXTCLOUD_URL`, `NEXTCLOUD_SHARE_TOKEN`,
 `NEXTCLOUD_SHARE_PASSWORD` or `NEXTCLOUD_SHARE_PASSWORD_FILE` (builder; see

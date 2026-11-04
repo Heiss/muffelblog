@@ -286,11 +286,8 @@ describe('endpoint memory of hosts', () => {
         body: '<p>x</p>',
       },
     });
-    const first = await runWebmentionSend(
-      before,
-      [entry('/p/a/', 'h1', ['https://plain.example/1'])],
-      deps(net),
-    );
+    const same = entry('/p/a/', 'h1', ['https://plain.example/1']);
+    const first = await runWebmentionSend(before, [same], deps(net));
     expect(first.report.noEndpoint).toBe(1);
     expect(net.calls.filter((c) => c.method === 'POST')).toHaveLength(0);
 
@@ -298,7 +295,7 @@ describe('endpoint memory of hosts', () => {
     const net2 = fakeNet({});
     await runWebmentionSend(
       first.state,
-      [entry('/p/b/', 'h1', ['https://plain.example/2'])],
+      [same, entry('/p/b/', 'h1', ['https://plain.example/2'])],
       deps(net2, { now: () => later }),
     );
     expect(net2.calls).toEqual([]);
@@ -307,7 +304,7 @@ describe('endpoint memory of hosts', () => {
     const net3 = fakeNet({});
     await runWebmentionSend(
       first.state,
-      [entry('/p/c/', 'h1', ['https://plain.example/3'])],
+      [same, entry('/p/c/', 'h1', ['https://plain.example/3'])],
       deps(net3, { now: () => muchLater }),
     );
     expect(net3.calls.filter((c) => c.method === 'GET')).toHaveLength(1);

@@ -113,6 +113,8 @@ jobs:
         run: |
           echo 'MUFFEL_CHECK_INTERVAL_SECONDS=10' >> .env
           echo 'MUFFEL_DEBOUNCE_CHECKS=1' >> .env
+          # Sending is on in this job: the first start must send nothing.
+          echo 'MUFFEL_WEBMENTIONS_SEND=1' >> .env
       - name: The production variants are valid
         env:
           MUFFEL_RELEASES_DIR: /srv/muffelblog/releases
@@ -137,6 +139,8 @@ jobs:
         run: docker/comment-flow.sh
       - name: Moderation, backup and restore of comments
         run: docker/moderation-flow.sh
+      - name: Webmentions are on, the first start sends nothing
+        run: docker/webmention-flow.sh
       - name: The builder reports its status
         run: |
           docker compose exec -T builder cat /data/state/status.json | tee /dev/stderr | grep -q '"state": "ok"'

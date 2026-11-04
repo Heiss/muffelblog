@@ -7,15 +7,26 @@ export interface Source {
   poll(): Promise<string>;
 }
 
+/** What the webmention sender has done so far (totals of the state file). */
+export interface WebmentionSummary {
+  lastRun: string;
+  sent: number;
+  failed: number;
+  givenUp: number;
+  noEndpoint: number;
+}
+
 export interface Status {
   state: 'ok' | 'failing';
+  /** Only present when sending webmentions is switched on. */
+  webmentions?: WebmentionSummary;
   lastCheck: string;
   lastSuccess?: { id: string; at: string };
   lastError?: { message: string; at: string; since: string };
 }
 
 export interface AlertEvent {
-  kind: 'failed' | 'recovered';
+  kind: 'failed' | 'recovered' | 'webmention';
   message: string;
   at: string;
 }

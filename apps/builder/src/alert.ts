@@ -42,7 +42,9 @@ export async function sendAlert(
   const title =
     event.kind === 'failed'
       ? 'Muffelblog: build failed'
-      : 'Muffelblog: build works again';
+      : event.kind === 'webmention'
+        ? 'Muffelblog: webmentions given up'
+        : 'Muffelblog: build works again';
   const text = `${title}\n${event.message}\n${event.at}`;
   try {
     const res = await doFetch(config.url, {
