@@ -28,6 +28,14 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   `json` for Slack style). One message when a failure starts and one when it is
   over, not one per check. The webhook never stops the builder. The last good
   release stays online in every failure case.
+* **[E]** Monitoring from outside (2026-11-04): at every check the builder writes
+  `health.json` into the release that `current` points at (state, `lastCheck`,
+  `lastSuccess`, `failingSince`, `checkIntervalSeconds`, `generatedAt`, **no error
+  text**), so `/health.json` needs no rule in any proxy except `Cache-Control:
+  no-cache`. It is a static file: the HTTP status is 200 also when failing, and
+  a stopped builder leaves it as it was, so a monitor checks `state` and the age
+  of `lastCheck`. Chosen by the owner over a small HTTP server in the builder,
+  which could answer 503 and report "stale" itself.
 * **[E]** Compose: `web` waits until the builder is healthy, that is until the
   first release is online.
 * **[U]** Not covered: a change of the content of an attachment that keeps its

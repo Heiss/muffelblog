@@ -18,6 +18,15 @@ until [ "$(status "$SITE/build.json")" = "200" ] || [ $i -ge 60 ]; do i=$((i+1))
 
 check "site answers"                 200 "$(status "$SITE/")"
 check "build.json"                   200 "$(status "$SITE/build.json")"
+# health.json is written at every check, give the first check a moment.
+i=0
+until [ "$(status "$SITE/health.json")" = "200" ] || [ $i -ge 30 ]; do i=$((i+1)); sleep 2; done
+check "health.json"                  200 "$(status "$SITE/health.json")"
+health="$(curl -s --max-time 10 "$SITE/health.json" || true)"
+case "$health" in *'"state": "ok"'*) echo "ok    health.json says ok" ;; *) echo "FAIL  health.json: $health"; fail=1 ;; esac
+case "$health" in *'"message"'*) echo "FAIL  health.json shows an error text"; fail=1 ;; *) echo "ok    health.json has no error text" ;; esac
+hcache="$(curl -sI --max-time 10 "$SITE/health.json" | grep -i '^cache-control:' || true)"
+case "$hcache" in *no-cache*) echo "ok    health.json is not cached" ;; *) echo "FAIL  health.json cache header: $hcache"; fail=1 ;; esac
 check "search index"                 200 "$(status "$SITE/pagefind/pagefind.js")"
 check "RSS feed"                     200 "$(status "$SITE/feed.xml")"
 check "sitemap"                      200 "$(status "$SITE/sitemap.xml")"
