@@ -52,3 +52,4 @@ okf_version: "0.2"
 * [Branching and release](/ops/branching-release.md) - GitHub Flow, squash merge, CalVer tags YY.M.MICRO, auto-updaters
 * [Configuration](/ops/config.md) - environment variables for numeric settings, ranges, failure behavior
 * [Languages](/ops/language.md) - Development in English, UI language per variable, translation order
+* [Defaults stay inside](/ops/defaults.md) - a fresh instance does not talk to the outside world

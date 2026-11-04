@@ -34,24 +34,43 @@ generated: { by: claude-code/web, at: 2026-11-03T14:00:00Z }
 * **[E]** Translation comes before further features, split into several pull
   requests (see W22).
 
-# Proposal
+# Implementation (W23)
 
-* **[V]** `MUFFEL_LANG` defaults to `de` because the blog is German. An unknown
-  value stops the build (fail closed, like the numeric settings in
-  [Configuration](/ops/config.md)).
-* **[V]** UI strings live in one message catalog per language
-  (`apps/site/src/i18n/de.ts`, `en.ts`) with a shared type, so a missing key in
-  one language fails the type check. Dates and numbers use the locale of the
-  chosen language (`Intl`).
-* **[V]** `<html lang>` follows `MUFFEL_LANG`. A per-article `lang` in the
-  frontmatter may override it for a single article.
-* **[V]** Build and server log messages are developer-facing and are English.
+* **[E]** `MUFFEL_LANG` defaults to `en` (decided by the owner, 2026-11-04). An
+  unknown value stops the build (fail closed, like the numeric settings in
+  [Configuration](/ops/config.md)). The value is read case-insensitively; an
+  empty value counts as unset. A German blog sets `MUFFEL_LANG=de`.
+* **[E]** UI strings live in one message catalog per language
+  (`apps/site/src/i18n/de.ts`, `en.ts`). The English catalog defines the shape,
+  `types.ts` derives the type `Messages` from it, so a key that is missing in
+  German fails the type check. A test compares keys and the arity of the
+  functions of both languages.
+* **[E]** The language is a build-time constant: `astro.config.mjs` puts
+  `MUFFEL_LANG` in as `__MUFFEL_LANG__` (Vite `define`), so the scripts that
+  run in the browser carry exactly one language.
+* **[E]** Locale of dates and numbers: `en-GB` for `en` (24 hour clock, "2 Nov
+  2026, 14:32"), `de-DE` for `de`. All dates stay in Berlin time.
+* **[E]** `<html lang>`, the RSS `<language>`, the search page and its texts and
+  the locale of the comments widget follow `MUFFEL_LANG` (decided: feeds and
+  search follow the build language).
+* **[E]** Texts that the core generates into the HTML (memo title, PDF size,
+  embed placeholder, missing image) are kept per language in the core
+  (`memos.ts`, `render.ts`), because the core cannot reach the catalog of the
+  site. The option is `lang` of `buildMemoEntries` and `renderMarkdown`.
+* **[E]** The names of the themes are brand names; only `Hell`/`Light` is
+  translated (`theme.names` in the catalog). Theme ids do not change.
+* **[E]** Tests: the whole E2E suite runs against the English build and reads
+  its texts from the catalog (`ui` in `e2e/helpers.ts`). A small suite
+  (`e2e/language-de.spec.ts`) runs against a German build (`pnpm build:de`,
+  folder `dist-de`).
+* **[E]** The sort order of the glossary does not depend on the UI language,
+  because the content is not translated.
+* **[E]** Build and server log messages are developer-facing and are English.
 
 # Open
 
-* **[U]** The default of `MUFFEL_LANG` (proposal: `de`).
-* **[U]** Whether feeds (RSS) and search (Pagefind) need the UI language
-  (feed title, search placeholder): they follow the build language.
+* **[V]** A per-article `lang` in the frontmatter that overrides `<html lang>`
+  for one article. Not part of W23 (decided: not now).
 * **[U]** Which names of existing files and fixtures are translated: German
   fixture file names are part of tests (for example the umlaut and duplicate
   cases) and stay unless a test needs a change.

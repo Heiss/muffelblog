@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { ui } from './helpers';
 
 // The test build sets COMMENTS_URL=http://localhost:4322 (nothing listens
 // there); the widget script is answered by the test.
@@ -25,7 +26,7 @@ test.describe('Comments', () => {
     await page.goto('/p/hallo-welt/');
     const section = page.locator('#comments');
     await expect(
-      section.getByRole('heading', { name: 'Kommentare' }),
+      section.getByRole('heading', { name: ui.comments.title }),
     ).toBeVisible();
     await expect(page.locator('#remark42')).toHaveAttribute(
       'data-mock',

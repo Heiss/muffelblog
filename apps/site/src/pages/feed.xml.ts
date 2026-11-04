@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { SITE_LANG, SITE_NAME } from '@muffelblog/core';
+import { SITE_NAME } from '@muffelblog/core';
 import { getContent } from '../lib/articles';
 import { getFeed, siteUrl } from '../lib/feed';
 import { messages } from '../i18n/messages';
@@ -35,7 +35,7 @@ export const GET: APIRoute = async () => {
   const xml = rssXml(base, items, {
     title: SITE_NAME,
     description: messages.rss.description,
-    lang: SITE_LANG,
+    lang: messages.lang,
     limit: getSettings().rssItems,
   });
   return new Response(xml, {

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { ui } from './helpers';
 import type { Page } from '@playwright/test';
 
 // The test build uses blocks of 4 entries (MUFFEL_FEED_PAGE_SIZE), the sample data
@@ -32,7 +33,7 @@ async function allPages(page: Page, start: string): Promise<Zeile[]> {
   await page.goto(start);
   for (let i = 0; i < 20; i++) {
     alle.push(...(await rows(page)));
-    const weiter = page.getByRole('link', { name: 'Ältere Einträge' });
+    const weiter = page.getByRole('link', { name: ui.feed.older });
     if ((await weiter.count()) === 0) return alle;
     await weiter.click();
   }
@@ -56,20 +57,22 @@ test.describe('Shared feed', () => {
   test('splits into blocks and links back and forth', async ({ page }) => {
     await page.goto('/');
     expect(await rows(page)).toHaveLength(BLOCK);
-    await expect(page.getByText('Seite 1 von 5')).toBeVisible();
-    await expect(
-      page.getByRole('link', { name: 'Neuere Einträge' }),
-    ).toHaveCount(0);
+    await expect(page.getByText(ui.feed.pageOf(1, 5))).toBeVisible();
+    await expect(page.getByRole('link', { name: ui.feed.newer })).toHaveCount(
+      0,
+    );
 
-    await page.getByRole('link', { name: 'Ältere Einträge' }).click();
+    await page.getByRole('link', { name: ui.feed.older }).click();
     await expect(page).toHaveURL(/\/page\/2\/$/);
-    await expect(page).toHaveTitle('Muffelblog, Seite 2 – Muffelblog');
+    await expect(page).toHaveTitle(
+      `${ui.feed.pageTitle('Muffelblog', 2)} – Muffelblog`,
+    );
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
       'content',
       'noindex, follow',
     );
 
-    await page.getByRole('link', { name: 'Neuere Einträge' }).click();
+    await page.getByRole('link', { name: ui.feed.newer }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
   });
@@ -80,9 +83,9 @@ test.describe('Shared feed', () => {
   }) => {
     await page.goto('/page/5/');
     expect(await rows(page)).toHaveLength(TOTAL - 4 * BLOCK);
-    await expect(
-      page.getByRole('link', { name: 'Ältere Einträge' }),
-    ).toHaveCount(0);
+    await expect(page.getByRole('link', { name: ui.feed.older })).toHaveCount(
+      0,
+    );
     expect((await request.get('/page/6/')).status()).toBe(404);
     expect((await request.get('/page/1/')).status()).toBe(404);
   });
@@ -100,9 +103,7 @@ test.describe('Shared feed', () => {
 
   test('titles lead to the own page of the entry', async ({ page }) => {
     await page.goto('/');
-    await page
-      .getByRole('link', { name: 'Memo vom 2. Nov. 2026, 14:32' })
-      .click();
+    await page.getByRole('link', { name: 'Memo of 2 Nov 2026, 14:32' }).click();
     await expect(page).toHaveURL(/\/m\/memo-text\/$/);
   });
 
@@ -110,7 +111,7 @@ test.describe('Shared feed', () => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto('/');
-    await page.getByRole('link', { name: 'Ältere Einträge' }).click();
+    await page.getByRole('link', { name: ui.feed.older }).click();
     await expect(page).toHaveURL(/\/page\/2\/$/);
     await context.close();
   });
@@ -134,7 +135,7 @@ test.describe('Filter by kind', () => {
     page,
   }) => {
     await page.goto('/memos/');
-    await expect(page).toHaveTitle('Kurz – Muffelblog');
+    await expect(page).toHaveTitle(`${ui.filter.short} – Muffelblog`);
     const memos = await allPages(page, '/memos/');
     expect(memos.length).toBeGreaterThan(0);
     expect(memos.every((z) => z.kind === 'memo')).toBe(true);
@@ -152,8 +153,8 @@ test.describe('Filter by kind', () => {
 test.describe('Tags', () => {
   test('/tag/ lists all tags with a count', async ({ page }) => {
     await page.goto('/tag/');
-    await expect(page).toHaveTitle('Tags – Muffelblog');
-    const liste = page.getByRole('list', { name: 'Alle Tags' });
+    await expect(page).toHaveTitle(`${ui.tags.label} – Muffelblog`);
+    const liste = page.getByRole('list', { name: ui.tags.all });
     await expect(liste.getByRole('link', { name: 'tooling' })).toHaveAttribute(
       'href',
       '/tag/tooling/',
@@ -167,7 +168,7 @@ test.describe('Tags', () => {
 
   test('/tag/<tag>/ shows only entries with this tag', async ({ page }) => {
     await page.goto('/tag/tooling/');
-    await expect(page).toHaveTitle('Tag tooling – Muffelblog');
+    await expect(page).toHaveTitle(`${ui.tags.title('tooling')} – Muffelblog`);
     const z = await rows(page);
     expect(z.map((e) => e.href)).toContain('/m/memo-text/');
     for (const entry of await page.locator('article.entry').all()) {

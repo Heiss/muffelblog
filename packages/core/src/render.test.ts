@@ -214,6 +214,22 @@ describe('Embeds', () => {
     expect(warnings).toEqual([]);
   });
 
+  it('writes the texts of the placeholder in English and, on request, in German', async () => {
+    const md = `<iframe src="${yt}"></iframe>\n`;
+    const en = (await render(md)).html;
+    expect(en).toContain(
+      'This content is loaded from YouTube once you start it.',
+    );
+    expect(en).toContain('Load content');
+    expect(en).toContain('Open on YouTube');
+    const de = (await renderMarkdown(md, { ...optionen(), lang: 'de' })).html;
+    expect(de).toContain(
+      'Dieser Inhalt wird von YouTube geladen, sobald du ihn startest.',
+    );
+    expect(de).toContain('Inhalt laden');
+    expect(de).toContain('Auf YouTube öffnen');
+  });
+
   it('removes iframes from other hosts with a warning', async () => {
     const { html, warnings } = await render(
       '<iframe src="https://evil.example/x"></iframe>\n',
@@ -239,6 +255,21 @@ describe('Embeds', () => {
     expect(html).not.toContain('onload');
     expect(html).not.toContain('srcdoc');
     expect(html).not.toContain('sandbox');
+  });
+});
+
+describe('Missing images in German', () => {
+  it('uses the German marker for lang de', async () => {
+    const response = (): ImageResolveResult => ({
+      ok: false,
+      code: 'not-found',
+      reason: 'not found',
+    });
+    const { html } = await renderMarkdown('![Fehlt](weg.png)\n', {
+      ...optionen('a.md', [], response),
+      lang: 'de',
+    });
+    expect(html).toContain('[Bild fehlt: Fehlt]');
   });
 });
 
@@ -309,7 +340,7 @@ describe('Local images', () => {
     expect(html).toContain('Vorher');
     expect(html).toContain('nachher');
     expect(html).toContain('class="image-missing"');
-    expect(html).toContain('Fehlt');
+    expect(html).toContain('[Image missing: Fehlt]');
     expect(html).not.toContain('<img');
     expect(warnings.length).toBe(1);
     expect(warnings[0]).toContain('weg.png');

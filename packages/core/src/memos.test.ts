@@ -328,7 +328,7 @@ describe('buildMemoEntries: basic data', () => {
     const memo = memos[0];
     expect(memo?.uid).toBe('abc');
     expect(memo?.date.toISOString()).toBe('2026-11-02T13:32:00.000Z');
-    expect(memo?.title).toBe('Memo vom 2. Nov. 2026, 14:32');
+    expect(memo?.title).toBe('Memo of 2 Nov 2026, 14:32');
     expect(memo?.path).toBe('memos/abc');
     expect(memo?.html).toContain('<p>Renovate eingerichtet.</p>');
   });
@@ -338,7 +338,33 @@ describe('buildMemoEntries: basic data', () => {
       rawMemo('s', { createTime: '2026-07-01T07:30:00Z' }),
     ]);
     const { memos } = await buildMemoEntries(source, new Map());
-    expect(memos[0]?.title).toBe('Memo vom 1. Juli 2026, 09:30');
+    expect(memos[0]?.title).toBe('Memo of 1 Jul 2026, 09:30');
+  });
+
+  it('writes the title and the PDF label in German for lang de', async () => {
+    const source = fakeSource([rawMemo('d', { content: 'Hallo.' })]);
+    const { memos } = await buildMemoEntries(source, new Map(), {
+      lang: 'de',
+    });
+    expect(memos[0]?.title).toBe('Memo vom 2. Nov. 2026, 14:32');
+  });
+
+  it('writes the size of a PDF with the decimal mark of the language', async () => {
+    const pdf = Buffer.concat([
+      Buffer.from('%PDF-1.4\n'),
+      Buffer.alloc(1_500_000),
+    ]);
+    const build = (lang: 'de' | 'en') =>
+      buildMemoEntries(
+        fakeSource(
+          [rawMemo('p', { attachments: [attachmentRaw('p1', 'a.pdf')] })],
+          { 'attachments/p1': pdf },
+        ),
+        new Map(),
+        { lang, maxFileBytes: 10 * 1024 * 1024 },
+      );
+    expect((await build('en')).memos[0]?.html).toContain('(PDF, 1.4 MB)');
+    expect((await build('de')).memos[0]?.html).toContain('(PDF, 1,4 MB)');
   });
 
   it('builds the description from the text without Markdown and cuts it', async () => {

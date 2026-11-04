@@ -5,7 +5,14 @@
  * Allowlists and file signatures are deliberately not part of this.
  */
 
+/** UI languages. One build has exactly one (`MUFFEL_LANG`). */
+export const LANGUAGES = ['de', 'en'] as const;
+export type Language = (typeof LANGUAGES)[number];
+export const DEFAULT_LANG: Language = 'en';
+
 export interface Settings {
+  /** Language of the user interface (articles are not translated). */
+  lang: Language;
   /** Entries per block of the feed. */
   feedPageSize: number;
   /** Maximum length of an article excerpt in the feed, in characters. */
@@ -141,7 +148,7 @@ export class ConfigError extends Error {
 }
 
 function defaults(): Settings {
-  const s: Record<string, number> = {};
+  const s: Record<string, number | string> = { lang: DEFAULT_LANG };
   for (const spec of SETTING_SPECS) s[spec.key] = spec.default * spec.factor;
   return s as unknown as Settings;
 }
@@ -156,8 +163,16 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze(defaults());
 export function readSettings(
   env: Record<string, string | undefined> = process.env,
 ): Settings {
-  const values: Record<string, number> = {};
+  const values: Record<string, number | string> = { lang: DEFAULT_LANG };
   const errors: string[] = [];
+  const lang = env.MUFFEL_LANG?.trim().toLowerCase();
+  if (lang) {
+    if ((LANGUAGES as readonly string[]).includes(lang)) values.lang = lang;
+    else
+      errors.push(
+        `MUFFEL_LANG="${env.MUFFEL_LANG?.trim()}" is invalid, allowed are ${LANGUAGES.join(', ')}, default ${DEFAULT_LANG}`,
+      );
+  }
   for (const spec of SETTING_SPECS) {
     const raw = env[spec.env]?.trim();
     if (raw === undefined || raw === '') {

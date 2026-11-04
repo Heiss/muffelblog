@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build && pagefind --site dist",
+    "build:de": "MUFFEL_LANG=de astro build --outDir dist-de && MUFFEL_LANG=de pagefind --site dist-de",
     "preview": "astro preview",
     "typecheck": "astro check",
     "test:e2e": "playwright test",

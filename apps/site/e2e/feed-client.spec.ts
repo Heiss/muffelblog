@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { ui } from './helpers';
 import type { Page } from '@playwright/test';
 
 // Test build: blocks of 4 entries, 9 articles and 6 memos, so 4 mixed blocks.
@@ -38,9 +39,7 @@ test.describe('Endless Scroll', () => {
     const alle = await ids(page);
     expect(new Set(alle).size).toBe(TOTAL);
     // At the end there is no visible next link and no error message any more.
-    await expect(
-      page.getByRole('link', { name: 'Ältere Einträge' }),
-    ).toBeHidden();
+    await expect(page.getByRole('link', { name: ui.feed.older })).toBeHidden();
     await expect(page.locator('[data-feed-status]')).toBeHidden();
   });
 
@@ -65,7 +64,7 @@ test.describe('Endless Scroll', () => {
     const seite = await ohne.newPage();
     await seite.goto('/');
     await expect(
-      seite.getByRole('link', { name: 'Ältere Einträge' }),
+      seite.getByRole('link', { name: ui.feed.older }),
     ).toBeVisible();
     await ohne.close();
   });
@@ -79,19 +78,17 @@ test.describe('Endless Scroll', () => {
       window.scrollTo(0, document.documentElement.scrollHeight),
     );
     await expect(page.locator('[data-feed-status]')).toContainText(
-      'Nachladen fehlgeschlagen',
+      'Loading more failed',
     );
-    await expect(
-      page.getByRole('link', { name: 'Ältere Einträge' }),
-    ).toBeVisible();
+    await expect(page.getByRole('link', { name: ui.feed.older })).toBeVisible();
     await expect(entries(page)).toHaveCount(4);
   });
 
   test('loads more on tag pages without a filter there', async ({ page }) => {
     await page.goto('/tag/tooling/');
-    await expect(page.getByRole('navigation', { name: 'Filter' })).toHaveCount(
-      0,
-    );
+    await expect(
+      page.getByRole('navigation', { name: ui.filter.label }),
+    ).toHaveCount(0);
     const erste = await entries(page).count();
     expect(erste).toBeGreaterThan(0);
   });
@@ -102,25 +99,24 @@ test.describe('Filter in the unified mode', () => {
     page,
   }) => {
     await page.goto('/');
-    const filter = page.getByRole('navigation', { name: 'Filter' });
-    await filter.getByRole('link', { name: 'Kurz' }).click();
+    const filter = page.getByRole('navigation', { name: ui.filter.label });
+    await filter.getByRole('link', { name: ui.filter.short }).click();
     await expect(page).toHaveURL(/\/memos\/$/);
-    await expect(filter.getByRole('link', { name: 'Kurz' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
-    await expect(page).toHaveTitle('Kurz – Muffelblog');
+    await expect(
+      filter.getByRole('link', { name: ui.filter.short }),
+    ).toHaveAttribute('aria-current', 'page');
+    await expect(page).toHaveTitle(`${ui.filter.short} – Muffelblog`);
     await scrollToEnd(page, MEMOS);
     expect((await ids(page)).every((id) => id.startsWith('memo:'))).toBe(true);
   });
 
   test('Lang and Alle switch back', async ({ page }) => {
     await page.goto('/');
-    const filter = page.getByRole('navigation', { name: 'Filter' });
-    await filter.getByRole('link', { name: 'Lang' }).click();
+    const filter = page.getByRole('navigation', { name: ui.filter.label });
+    await filter.getByRole('link', { name: ui.filter.long }).click();
     await scrollToEnd(page, POSTS);
     expect((await ids(page)).every((id) => id.startsWith('post:'))).toBe(true);
-    await filter.getByRole('link', { name: 'Alle' }).click();
+    await filter.getByRole('link', { name: ui.filter.all }).click();
     await expect(page).toHaveURL(/\/$/);
     await scrollToEnd(page, TOTAL);
   });
@@ -130,8 +126,8 @@ test.describe('Filter in the unified mode', () => {
   }) => {
     await page.goto('/');
     await scrollToEnd(page, TOTAL);
-    const filter = page.getByRole('navigation', { name: 'Filter' });
-    await filter.getByRole('link', { name: 'Kurz' }).click();
+    const filter = page.getByRole('navigation', { name: ui.filter.label });
+    await filter.getByRole('link', { name: ui.filter.short }).click();
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     await expect(
       page.locator('[data-feed-list] > article[data-kind="post"]'),
@@ -140,15 +136,15 @@ test.describe('Filter in the unified mode', () => {
 
   test('the filter is kept after reloading /', async ({ page }) => {
     await page.goto('/');
-    const filter = page.getByRole('navigation', { name: 'Filter' });
-    await filter.getByRole('link', { name: 'Kurz' }).click();
+    const filter = page.getByRole('navigation', { name: ui.filter.label });
+    await filter.getByRole('link', { name: ui.filter.short }).click();
     await expect(page).toHaveURL(/\/memos\/$/);
     await page.goto('/');
     await expect(page).toHaveURL(/\/memos\/$/);
     await expect(
       page.locator('[data-feed-list] > article[data-kind="post"]'),
     ).toHaveCount(0);
-    await filter.getByRole('link', { name: 'Alle' }).click();
+    await filter.getByRole('link', { name: ui.filter.all }).click();
     await page.goto('/');
     await expect(page).toHaveURL(/\/$/);
   });
@@ -158,8 +154,8 @@ test.describe('Filter in the unified mode', () => {
   }) => {
     await page.goto('/');
     await page
-      .getByRole('navigation', { name: 'Filter' })
-      .getByRole('link', { name: 'Kurz' })
+      .getByRole('navigation', { name: ui.filter.label })
+      .getByRole('link', { name: ui.filter.short })
       .click();
     await page.goto('/posts/');
     await expect(page).toHaveURL(/\/posts\/$/);
@@ -179,8 +175,8 @@ test.describe('Filter in the unified mode', () => {
     await page.goto('/');
     await expect(entries(page)).toHaveCount(4);
     await page
-      .getByRole('navigation', { name: 'Filter' })
-      .getByRole('link', { name: 'Kurz' })
+      .getByRole('navigation', { name: ui.filter.label })
+      .getByRole('link', { name: ui.filter.short })
       .click();
     await scrollToEnd(page, MEMOS);
   });
@@ -192,8 +188,8 @@ test.describe('Filter in the unified mode', () => {
     const seite = await ohne.newPage();
     await seite.goto('/');
     await seite
-      .getByRole('navigation', { name: 'Filter' })
-      .getByRole('link', { name: 'Kurz' })
+      .getByRole('navigation', { name: ui.filter.label })
+      .getByRole('link', { name: ui.filter.short })
       .click();
     await expect(seite).toHaveURL(/\/memos\/$/);
     await ohne.close();

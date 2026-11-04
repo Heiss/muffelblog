@@ -35,6 +35,7 @@ async function build(): Promise<Content> {
     const result = await renderMarkdown(article.body, {
       articlePath: article.path,
       resolveImage: resolver.resolve,
+      lang: getSettings().lang,
     });
     warnings.push(...result.warnings);
     rendered.push({ ...article, html: result.html });
@@ -44,6 +45,7 @@ async function build(): Promise<Content> {
   const memoResult = await buildMemoEntries(config.memos, media, {
     maxFileBytes: getSettings().memosMaxFileBytes,
     descriptionChars: getSettings().memosDescriptionChars,
+    lang: getSettings().lang,
   });
   warnings.push(...memoResult.warnings);
 

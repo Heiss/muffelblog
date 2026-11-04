@@ -16,6 +16,7 @@
     "build": "MUFFEL_FIXTURES=1 MUFFEL_FEED_PAGE_SIZE=4 COMMENTS_URL=http://localhost:4322 pnpm --filter @muffelblog/site build",
     "test:e2e": "pnpm --filter @muffelblog/site test:e2e",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
+    "build:de": "MUFFEL_LANG=de MUFFEL_FIXTURES=1 MUFFEL_FEED_PAGE_SIZE=4 COMMENTS_URL=http://localhost:4322 pnpm --filter @muffelblog/site build:de",
     "build:site": "pnpm --filter @muffelblog/site build",
     "test:contract": "vitest run --config vitest.contract.config.ts",
     "dev:demo": "pnpm --filter @muffelblog/site dev:demo",

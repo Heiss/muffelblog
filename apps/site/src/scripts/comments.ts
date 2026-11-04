@@ -28,7 +28,7 @@ if (section) {
     url: section.dataset.url || `${location.origin}${location.pathname}`,
     components: ['embed'],
     theme: dark ? 'dark' : 'light',
-    locale: section.dataset.locale || 'de',
+    locale: section.dataset.locale || 'en',
   };
   (window as unknown as { remark_config: RemarkConfig }).remark_config = config;
 

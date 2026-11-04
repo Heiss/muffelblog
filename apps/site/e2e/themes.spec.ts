@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { ui } from './helpers';
 import type { Page } from '@playwright/test';
 
 const THEMES: Record<string, string> = {
@@ -31,7 +32,7 @@ test.describe('Default', () => {
     test('Solarized Dark, a stored choice wins', async ({ page }) => {
       await page.goto('/');
       expect(await dataTheme(page)).toBe('solarized-dark');
-      await page.getByLabel('Farbschema').selectOption('hell');
+      await page.getByLabel(ui.theme.label).selectOption('hell');
       await page.reload();
       expect(await dataTheme(page)).toBe('hell');
     });
@@ -42,7 +43,7 @@ test.describe('Switcher', () => {
   test('offers all ten themes', async ({ page }) => {
     await page.goto('/');
     const values = await page
-      .getByLabel('Farbschema')
+      .getByLabel(ui.theme.label)
       .locator('option')
       .evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value));
     expect(values.sort()).toEqual(Object.keys(THEMES).sort());
@@ -53,7 +54,7 @@ test.describe('Switcher', () => {
       page,
     }) => {
       await page.goto('/');
-      await page.getByLabel('Farbschema').selectOption(id);
+      await page.getByLabel(ui.theme.label).selectOption(id);
       expect(await dataTheme(page)).toBe(id);
       expect(await background(page)).toBe(color);
       await page.reload();
@@ -61,7 +62,7 @@ test.describe('Switcher', () => {
       expect(await background(page)).toBe(color);
       await page.goto('/tag/');
       expect(await dataTheme(page)).toBe(id);
-      await expect(page.getByLabel('Farbschema')).toHaveValue(id);
+      await expect(page.getByLabel(ui.theme.label)).toHaveValue(id);
     });
   }
 
@@ -79,7 +80,7 @@ test.describe('Switcher', () => {
     });
     await page.goto('/');
     expect(await dataTheme(page)).toBe('solarized-light');
-    await page.getByLabel('Farbschema').selectOption('nord');
+    await page.getByLabel(ui.theme.label).selectOption('nord');
     expect(await dataTheme(page)).toBe('nord');
     expect(fehler).toEqual([]);
   });
@@ -148,7 +149,7 @@ test.describe('Fonts and code', () => {
         foreign.push(r.url());
     });
     await page.goto('/');
-    await page.getByLabel('Farbschema').selectOption('matrix');
+    await page.getByLabel(ui.theme.label).selectOption('matrix');
     await page.evaluate(() => document.fonts.ready);
     const geladen = await page.evaluate(async () => {
       await document.fonts.load('16px "IBM Plex Mono"');
@@ -173,7 +174,7 @@ test.describe('Fonts and code', () => {
             .color,
       );
     expect(await color()).toBe('rgb(95, 112, 0)');
-    await page.getByLabel('Farbschema').selectOption('dracula');
+    await page.getByLabel(ui.theme.label).selectOption('dracula');
     expect(await color()).toBe('rgb(255, 121, 198)');
   });
 });
@@ -185,7 +186,7 @@ test.describe('Layout', () => {
     for (const pfad of ['/', '/p/hallo-welt/', '/m/memo-text/', '/tag/']) {
       await page.goto(pfad);
       await expect(
-        page.getByRole('navigation', { name: 'Hauptnavigation' }),
+        page.getByRole('navigation', { name: ui.nav.label }),
       ).toBeVisible();
     }
   });

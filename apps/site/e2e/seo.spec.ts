@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { ui } from './helpers';
 
 test.describe('Static pages', () => {
   test('a page lives at /<slug>/ and has no date or feed entry', async ({
@@ -69,7 +70,7 @@ test.describe('Open Graph', () => {
     expect(await og('title')).toBe('Hallo Welt');
     expect(await og('type')).toBe('article');
     expect(await og('site_name')).toBe('Muffelblog');
-    expect(await og('locale')).toBe('de_DE');
+    expect(await og('locale')).toBe(ui.locale.replace('-', '_'));
     expect(await og('description')).toBe('Der erste Artikel.');
     await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
       'content',

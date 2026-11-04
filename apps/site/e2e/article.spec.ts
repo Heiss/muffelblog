@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test';
+import { ui } from './helpers';
 
 test.describe('Article pages under /p/<slug>/', () => {
   test('shows title, date and tags of an article', async ({ page }) => {
     await page.goto('/p/hallo-welt/');
-    await expect(page.locator('html')).toHaveAttribute('lang', 'de');
+    await expect(page.locator('html')).toHaveAttribute('lang', ui.lang);
     await expect(page).toHaveTitle('Hallo Welt – Muffelblog');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'Hallo Welt',
@@ -18,7 +19,7 @@ test.describe('Article pages under /p/<slug>/', () => {
       '2026-01-05T11:00:00.000Z',
     );
     await expect(
-      page.getByRole('list', { name: 'Tags' }).getByRole('listitem'),
+      page.getByRole('list', { name: ui.tags.label }).getByRole('listitem'),
     ).toHaveText(['python', 'ml']);
   });
 
@@ -30,7 +31,7 @@ test.describe('Article pages under /p/<slug>/', () => {
       'Größe und Maße',
     );
     await expect(
-      page.getByRole('list', { name: 'Tags' }).getByRole('listitem'),
+      page.getByRole('list', { name: ui.tags.label }).getByRole('listitem'),
     ).toHaveText(['über größe']);
   });
 

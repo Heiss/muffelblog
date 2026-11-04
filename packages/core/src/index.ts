@@ -1,5 +1,4 @@
 export const SITE_NAME = 'Muffelblog';
-export const SITE_LANG = 'de';
 
 /** Title of a page: the site name, with the title in front if one is set. */
 export function pageTitle(title?: string): string {
@@ -75,11 +74,13 @@ export {
 export type { FeedItem, FeedKind, Page, TagGroup } from './feed.ts';
 export {
   ConfigError,
+  DEFAULT_LANG,
   DEFAULT_SETTINGS,
+  LANGUAGES,
   SETTING_SPECS,
   readSettings,
 } from './config.ts';
-export type { SettingSpec, Settings } from './config.ts';
+export type { Language, SettingSpec, Settings } from './config.ts';
 export { groupByLetter, letterOf } from './glossary.ts';
 export type { LetterGroup } from './glossary.ts';
 export {

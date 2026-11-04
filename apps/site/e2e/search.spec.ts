@@ -1,12 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { interceptForeign } from './helpers';
+import { interceptForeign, ui } from './helpers';
 
 test.describe('Search', () => {
   test('finds posts, memos and terms and links to their pages', async ({
     page,
   }) => {
     await page.goto('/search/');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Suche');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      ui.search.title,
+    );
     await page.getByRole('searchbox').fill('Renovate');
     const results = page.locator('[data-search-results]');
     await expect(results.getByRole('link').first()).toBeVisible();
@@ -27,13 +29,13 @@ test.describe('Search', () => {
   test('filters by kind with the same names as the feed', async ({ page }) => {
     await page.goto('/search/');
     await page.getByRole('searchbox').fill('Hallo');
-    const pills = page.getByRole('group', { name: 'Art' });
+    const pills = page.getByRole('group', { name: ui.search.kind });
     await expect(pills.getByRole('button')).toHaveText([
-      'Alle',
-      'Lang',
-      'Begriffe',
+      ui.search.all,
+      ui.filter.long,
+      ui.filter.terms,
     ]);
-    await pills.getByRole('button', { name: 'Begriffe' }).click();
+    await pills.getByRole('button', { name: ui.filter.terms }).click();
     const links = page.locator('[data-search-results] a[href]');
     await expect(links.first()).toHaveAttribute('href', /^\/g\//);
     for (const href of await links.evaluateAll((els) =>
@@ -45,9 +47,9 @@ test.describe('Search', () => {
 
   test('does not find technical blocks or listing pages', async ({ page }) => {
     await page.goto('/search/');
-    await page.getByRole('searchbox').fill('Ältere Einträge');
+    await page.getByRole('searchbox').fill(ui.feed.older);
     await expect(page.locator('[data-search-summary]')).toContainText(
-      'Keine Treffer',
+      'No results',
     );
     const hrefs = await page
       .locator('[data-search-results] a[href]')
@@ -75,8 +77,8 @@ test.describe('Search', () => {
   test('is linked in the navigation', async ({ page }) => {
     await page.goto('/');
     await page
-      .getByRole('navigation', { name: 'Hauptnavigation' })
-      .getByRole('link', { name: 'Suche' })
+      .getByRole('navigation', { name: ui.nav.label })
+      .getByRole('link', { name: ui.nav.search })
       .click();
     await expect(page).toHaveURL(/\/search\/$/);
   });

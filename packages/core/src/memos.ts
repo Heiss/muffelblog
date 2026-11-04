@@ -1,4 +1,5 @@
 import { DEFAULT_SETTINGS } from './config.ts';
+import type { Language } from './config.ts';
 import { createHash } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -365,21 +366,36 @@ export interface MemoEntry {
 }
 
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'avif']);
-// Texts that end up in the pages. They are UI text and move to the message
-// catalog together with the UI language (W23).
-const DATE_FORMAT = new Intl.DateTimeFormat('de-DE', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  timeZone: 'Europe/Berlin',
-});
-
-const UI = {
-  memoTitle: (date: Date) => `Memo vom ${DATE_FORMAT.format(date)}`,
-  pdfLabel: (bytes: number) => `PDF, ${formatSize(bytes)}`,
+// Texts that end up in the pages. The rest of the UI lives in the message
+// catalog of the site; these are built here because the memo entries are built
+// here. Dates are shown in Berlin time.
+const UI: Record<
+  Language,
+  { memoTitle: (date: string) => string; decimal: string; locale: string }
+> = {
+  en: {
+    memoTitle: (date) => `Memo of ${date}`,
+    decimal: '.',
+    locale: 'en-GB',
+  },
+  de: {
+    memoTitle: (date) => `Memo vom ${date}`,
+    decimal: ',',
+    locale: 'de-DE',
+  },
 };
+
+function memoTitle(date: Date, lang: Language): string {
+  const text = new Intl.DateTimeFormat(UI[lang].locale, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Europe/Berlin',
+  }).format(date);
+  return UI[lang].memoTitle(text);
+}
 
 function escapeHtml(text: string): string {
   return text
@@ -389,10 +405,10 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function formatSize(bytes: number): string {
+function formatSize(bytes: number, lang: Language): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', UI[lang].decimal)} MB`;
 }
 
 /** Short plain text from Markdown, at most `max` characters, cut at a word boundary. */
@@ -416,6 +432,8 @@ export interface BuildMemosOptions {
   /** Maximum length of the description in characters. Default: 160. */
   descriptionChars?: number;
   urlPrefix?: string;
+  /** Language of the generated texts (title, PDF label). Default: `en`. */
+  lang?: Language;
 }
 
 function contentId(data: Buffer): string {
@@ -437,6 +455,7 @@ export async function buildMemoEntries(
   const descriptionMax =
     options.descriptionChars ?? DEFAULT_SETTINGS.memosDescriptionChars;
   const prefix = options.urlPrefix ?? '/media/';
+  const lang = options.lang ?? DEFAULT_SETTINGS.lang;
   const list = await source.listPublicMemos();
   const warnings = [...list.warnings];
   const entries: MemoEntry[] = [];
@@ -476,6 +495,7 @@ export async function buildMemoEntries(
     const rendered = await renderMarkdown(raw.content, {
       articlePath: `memos/${uid}.md`,
       remoteContent: 'none',
+      lang,
       resolveImage: async () => ({
         ok: false,
         code: 'unsupported',
@@ -560,7 +580,7 @@ export async function buildMemoEntries(
         );
       } else {
         attachments.push(
-          `<p class="attachment">${link} (${UI.pdfLabel(data.length)})</p>`,
+          `<p class="attachment">${link} (PDF, ${formatSize(data.length, lang)})</p>`,
         );
       }
     }
@@ -572,7 +592,7 @@ export async function buildMemoEntries(
     entries.push({
       uid,
       path: `memos/${uid}`,
-      title: UI.memoTitle(createdAt),
+      title: memoTitle(createdAt, lang),
       description: makeDescription(raw.content, descriptionMax),
       date: createdAt,
       tags,
