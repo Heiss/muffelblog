@@ -19,7 +19,37 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 * **[E]** If the Nextcloud version or the Memos version changes, the newest
   one should run.
 
-# Access
+# Implemented (W02, 2026-11-03)
+
+* **[E]** Tool: `rclone` (pinned `1.75.2`, copied into the builder image) over
+  WebDAV at `<NEXTCLOUD_URL>/public.php/webdav/`, user = share token, password =
+  share password. The connection goes through `RCLONE_WEBDAV_*` environment
+  variables, the password is obscured through stdin, so it never appears in a
+  process list or in logs.
+* **[E]** Configuration: `NEXTCLOUD_URL`, `NEXTCLOUD_SHARE_TOKEN` and
+  `NEXTCLOUD_SHARE_PASSWORD` (or `NEXTCLOUD_SHARE_PASSWORD_FILE` for Docker
+  secrets, never both). The password is mandatory. `NEXTCLOUD_URL` together with
+  `MUFFEL_FIXTURES` stops the build.
+* **[E]** Change detection: `rclone lsjson -R` gives path, size and
+  `ModTime` (the WebDAV `getlastmodified`, one-second resolution). A SHA-256 over
+  the sorted list is remembered in `state/nextcloud.json`; same value, same
+  files in the cache: no download, no build. Content that changes within the same
+  second and with the same size is not noticed; Nextcloud updates the time on
+  every write, so this is only a theoretical gap.
+* **[E]** Safety: the download goes into a new folder
+  `cache/nextcloud/<id>/`, is checked against the listing (same files, same
+  sizes) and only then the link `current` is switched (the same atomic swap as
+  for releases). A failed list, a failed or incomplete download and an **empty**
+  list (also on the first run) leave the cache and the remembered state as they
+  were and stop the run. Paths with `..` or leading `/` are refused. The last 2
+  copies are kept.
+* **[E]** Hidden folders and files (`.obsidian/`, `.trash/`, `.*`) are not
+  listed and not downloaded, so Obsidian's own changes never trigger a build.
+* **[E]** Contract test: CI starts Nextcloud 35, creates a folder, a share with
+  password and files through the real APIs, and checks listing, filtering,
+  sync, change detection and a wrong password.
+
+# Access (original proposal)
 
 * **[V]** Sync with `rclone` (WebDAV) into the `cache` area, polling every 3
   minutes.
