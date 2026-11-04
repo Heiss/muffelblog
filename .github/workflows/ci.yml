@@ -109,6 +109,20 @@ jobs:
         run: |
           echo 'MUFFEL_CHECK_INTERVAL_SECONDS=10' >> .env
           echo 'MUFFEL_DEBOUNCE_CHECKS=1' >> .env
+      - name: The production variants are valid
+        env:
+          MUFFEL_RELEASES_DIR: /srv/muffelblog/releases
+          SITE_ADDRESS: blog.example.org
+          COMMENTS_ADDRESS: comments.example.org
+          MAIL_FROM: blog@example.org
+          SMTP_HOST: smtp.example.org
+          SMTP_PORT: '465'
+          SMTP_USERNAME: user
+          SMTP_PASSWORD: secret
+        run: |
+          set -a; . ./.env; set +a
+          docker compose -f compose.yaml -f compose.production.yaml config -q
+          docker compose -f compose.yaml -f compose.domain.yaml config -q
       - run: docker compose up --detach --build
       - name: rclone is in the builder image
         run: docker compose run --rm --no-deps --entrypoint rclone builder version

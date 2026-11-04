@@ -36,6 +36,24 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 * **[E]** CI job "Compose stack" builds the images, starts the stack and runs
   `docker/smoke.sh`.
 
+# Production variants (2026-11-04)
+
+* **[E]** `compose.production.yaml` (decided with the user): your own reverse
+  proxy, shared mount. `web` and `mailpit` are behind profiles and not started;
+  the builder writes into the host folder `MUFFEL_RELEASES_DIR` (bind mount),
+  the proxy serves `current/`; Remark42 listens on `127.0.0.1:${REMARK_PORT}` for
+  the proxy; the SMTP variables are required (fail-closed). A unit test checks
+  that Remark42 is never opened beyond the host.
+* **[E]** `compose.domain.yaml`: our Caddy with `SITE_ADDRESS` and
+  `COMMENTS_ADDRESS` as host names (automatic HTTPS), ports 80 and 443 instead of
+  the local ones.
+* **[E]** The Docker health check of `web` asks a port that exists only inside
+  the container (`:2020/healthz`), so it works with a host name as address too.
+* **[U]** Not run for real: a Caddy with a real domain and certificate, and
+  the proxy examples in the documentation against a real nginx/Traefik. The
+  Caddyfile validates with a host name, the merged Compose files are checked in
+  CI (`config -q`).
+
 # Services (proposal)
 
 **[V]** Three containers in one Compose file:

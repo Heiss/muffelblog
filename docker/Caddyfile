@@ -5,6 +5,12 @@
 	admin off
 }
 
+# Health check of Docker. Plain HTTP on a port that is not published, so it works
+# with a host name as SITE_ADDRESS too (no redirect to HTTPS).
+http://:2020 {
+	respond /healthz 200
+}
+
 (hardening) {
 	header {
 		X-Content-Type-Options nosniff
