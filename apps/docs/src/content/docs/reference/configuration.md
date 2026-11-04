@@ -47,6 +47,7 @@ a message that names the variable; nothing is silently ignored.
 
 | Variable                         | Default | Range          | Effect                                                                                 |
 | -------------------------------- | ------- | -------------- | -------------------------------------------------------------------------------------- |
+| `MUFFEL_LANG`                    | `en`    | `en`, `de`     | Language of the user interface (one per build, articles are not translated)            |
 | `MUFFEL_FEED_PAGE_SIZE`          | 20      | 1 to 200       | Entries per block of the feed                                                          |
 | `MUFFEL_FEED_EXCERPT_CHARS`      | 200     | 20 to 2000     | Length of the excerpt of a post in the feed                                            |
 | `MUFFEL_MEMOS_DESCRIPTION_CHARS` | 160     | 20 to 500      | Length of the description of a memo page                                               |

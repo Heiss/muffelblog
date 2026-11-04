@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SITE_LANG, SITE_NAME, pageTitle } from './index.ts';
+import { SITE_NAME, pageTitle } from './index.ts';
 
 describe('pageTitle', () => {
   it('returns the site name if no title is given', () => {
@@ -13,11 +13,5 @@ describe('pageTitle', () => {
   it('ignores empty and whitespace-only titles', () => {
     expect(pageTitle('')).toBe(SITE_NAME);
     expect(pageTitle('   ')).toBe(SITE_NAME);
-  });
-});
-
-describe('site constants', () => {
-  it('is German-language', () => {
-    expect(SITE_LANG).toBe('de');
   });
 });

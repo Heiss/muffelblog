@@ -86,6 +86,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @muffelblog/site exec playwright install --with-deps chromium
       - run: pnpm build
+      # German build for the small language suite (e2e/language-de.spec.ts)
+      - run: pnpm build:de
       - run: pnpm test:e2e
 
   docker:

@@ -10,5 +10,13 @@ export default defineConfig({
     // styles, so everything is delivered as files.
     inlineStylesheets: 'never',
   },
-  vite: { build: { assetsInlineLimit: 0 } },
+  vite: {
+    build: { assetsInlineLimit: 0 },
+    // The UI language is fixed per build (MUFFEL_LANG). It is put in as a
+    // constant, so the scripts for the browser carry only one language.
+    // Validation happens in `pickMessages` and in `readSettings`.
+    define: {
+      __MUFFEL_LANG__: JSON.stringify(process.env.MUFFEL_LANG ?? ''),
+    },
+  },
 });

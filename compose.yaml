@@ -35,6 +35,8 @@ services:
       COMMENTS_URL: ${COMMENTS_URL:-http://localhost:8081}
       # How the builder reaches Remark42 inside the network (static copy of the comments).
       REMARK_INTERNAL_URL: http://remark42:8080
+      # Language of the user interface: en (default) or de. One language per build.
+      MUFFEL_LANG: ${MUFFEL_LANG:-}
       MUFFEL_FEED_PAGE_SIZE: ${MUFFEL_FEED_PAGE_SIZE:-}
       MUFFEL_FEED_EXCERPT_CHARS: ${MUFFEL_FEED_EXCERPT_CHARS:-}
       MUFFEL_RSS_ITEMS: ${MUFFEL_RSS_ITEMS:-}

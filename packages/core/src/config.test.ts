@@ -18,6 +18,7 @@ describe('readSettings', () => {
       releasesKept: 3,
       checkIntervalSeconds: 180,
       debounceChecks: 1,
+      lang: 'en',
     });
     expect(readSettings({})).toEqual(DEFAULT_SETTINGS);
   });
@@ -30,6 +31,7 @@ describe('readSettings', () => {
       MUFFEL_MEMOS_TIMEOUT_MS: '5000',
       MUFFEL_MEMOS_MAX_FILE_MB: '10',
       MUFFEL_RSS_ITEMS: '30',
+      MUFFEL_LANG: 'de',
     });
     expect(s).toEqual({
       feedPageSize: 50,
@@ -41,6 +43,7 @@ describe('readSettings', () => {
       releasesKept: 3,
       checkIntervalSeconds: 180,
       debounceChecks: 1,
+      lang: 'de',
     });
   });
 
@@ -107,5 +110,30 @@ describe('readSettings', () => {
       expect(spec.default).toBeGreaterThanOrEqual(spec.min);
       expect(spec.default).toBeLessThanOrEqual(spec.max);
     }
+  });
+
+  describe('MUFFEL_LANG', () => {
+    it('defaults to English, also when empty', () => {
+      expect(readSettings({}).lang).toBe('en');
+      expect(readSettings({ MUFFEL_LANG: '' }).lang).toBe('en');
+    });
+
+    it('accepts the supported languages, in any case and with spaces', () => {
+      expect(readSettings({ MUFFEL_LANG: 'de' }).lang).toBe('de');
+      expect(readSettings({ MUFFEL_LANG: ' EN ' }).lang).toBe('en');
+    });
+
+    it('stops the build for an unknown language and names the allowed ones', () => {
+      expect(() => readSettings({ MUFFEL_LANG: 'fr' })).toThrow(ConfigError);
+      expect(() => readSettings({ MUFFEL_LANG: 'fr' })).toThrow(/de, en/);
+    });
+
+    it('reports it together with other invalid settings', () => {
+      expect(() =>
+        readSettings({ MUFFEL_LANG: 'fr', MUFFEL_RSS_ITEMS: 'x' }),
+      ).toThrow(
+        /MUFFEL_LANG[\s\S]*MUFFEL_RSS_ITEMS|MUFFEL_RSS_ITEMS[\s\S]*MUFFEL_LANG/,
+      );
+    });
   });
 });

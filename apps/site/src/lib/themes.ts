@@ -8,7 +8,7 @@ export interface Theme {
 /** Order in the switcher. The colors live in `styles/themes.css`. */
 export const THEMES: readonly Theme[] = [
   { id: 'solarized-light', label: 'Solarized Light', dark: false },
-  { id: 'hell', label: 'Hell', dark: false },
+  { id: 'hell', label: 'Light', dark: false },
   { id: 'solarized-dark', label: 'Solarized Dark', dark: true },
   { id: 'dracula', label: 'Dracula', dark: true },
   { id: 'matrix', label: 'Matrix', dark: true },

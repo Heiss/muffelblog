@@ -36,6 +36,7 @@ generated: { by: claude-code/web, at: 2026-11-03T05:30:00Z }
 
 | Variable | Default | Range | Effect |
 |---|---|---|---|
+| `MUFFEL_LANG` | `en` | `en`, `de` | Language of the user interface, one per build (see [Language](/ops/language.md)). Not a number: it is read next to `SETTING_SPECS` in `config.ts` (`LANGUAGES`, `DEFAULT_LANG`), an unknown value stops the build |
 | `MUFFEL_FEED_PAGE_SIZE` | 20 | 1 to 200 | Entries per block of the feed |
 | `MUFFEL_FEED_EXCERPT_CHARS` | 200 | 20 to 2000 | Length of the article excerpt in the feed |
 | `MUFFEL_MEMOS_DESCRIPTION_CHARS` | 160 | 20 to 500 | Length of the description of a memo page |

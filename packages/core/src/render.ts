@@ -1,3 +1,5 @@
+import { DEFAULT_LANG } from './config.ts';
+import type { Language } from './config.ts';
 import type { Element, ElementContent, Root, Text } from 'hast';
 import path from 'node:path';
 import rehypeRaw from 'rehype-raw';
@@ -39,6 +41,8 @@ export interface RenderOptions {
    * `none`: foreign content is always removed, for example for memos.
    */
   remoteContent?: 'allowlist' | 'none';
+  /** Language of the generated texts (placeholders). Default: `en`. */
+  lang?: Language;
 }
 
 export interface RenderResult {
@@ -137,17 +141,36 @@ function imageAsText(alt: string): ElementContent[] {
   return alt === '' ? [] : [text(alt)];
 }
 
-// Texts that end up in the rendered HTML. They are UI text and move to the
-// message catalog together with the UI language (W23).
-const UI = {
-  embedNotice: (label: string) =>
-    `Dieser Inhalt wird von ${label} geladen, sobald du ihn startest.`,
-  embedLoad: 'Inhalt laden',
-  embedOpen: (label: string) => `Auf ${label} öffnen`,
-  imageMissing: (alt: string) => `[Bild fehlt${alt === '' ? '' : `: ${alt}`}]`,
+// Texts that end up in the rendered HTML. The rest of the UI lives in the
+// message catalog of the site; the renderer is part of the core and cannot reach
+// it, so these few texts are kept here, per language.
+const UI: Record<
+  Language,
+  {
+    embedNotice: (label: string) => string;
+    embedLoad: string;
+    embedOpen: (label: string) => string;
+    imageMissing: (alt: string) => string;
+  }
+> = {
+  en: {
+    embedNotice: (label) =>
+      `This content is loaded from ${label} once you start it.`,
+    embedLoad: 'Load content',
+    embedOpen: (label) => `Open on ${label}`,
+    imageMissing: (alt) => `[Image missing${alt === '' ? '' : `: ${alt}`}]`,
+  },
+  de: {
+    embedNotice: (label) =>
+      `Dieser Inhalt wird von ${label} geladen, sobald du ihn startest.`,
+    embedLoad: 'Inhalt laden',
+    embedOpen: (label) => `Auf ${label} öffnen`,
+    imageMissing: (alt) => `[Bild fehlt${alt === '' ? '' : `: ${alt}`}]`,
+  },
 };
 
 function rehypeContent(options: RenderOptions, warnings: string[]) {
+  const ui = UI[options.lang ?? DEFAULT_LANG];
   return async (tree: Root): Promise<void> => {
     const images: Array<[Element, Element | Root]> = [];
     const frames: Array<[Element, Element | Root]> = [];
@@ -222,15 +245,15 @@ function rehypeContent(options: RenderOptions, warnings: string[]) {
           dataEmbedLabel: match.label,
         },
         [
-          element('p', {}, [text(UI.embedNotice(match.label))]),
+          element('p', {}, [text(ui.embedNotice(match.label))]),
           element('button', { type: 'button', className: ['embed-start'] }, [
-            text(UI.embedLoad),
+            text(ui.embedLoad),
           ]),
           element('p', {}, [
             element(
               'a',
               { href: match.openUrl, rel: ['noopener', 'noreferrer'] },
-              [text(UI.embedOpen(match.label))],
+              [text(ui.embedOpen(match.label))],
             ),
           ]),
         ],
@@ -305,7 +328,7 @@ function rehypeContent(options: RenderOptions, warnings: string[]) {
         );
         replaceNode(parent, node, [
           element('span', { className: ['image-missing'] }, [
-            text(UI.imageMissing(alt)),
+            text(ui.imageMissing(alt)),
           ]),
         ]);
       }

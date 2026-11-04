@@ -24,8 +24,9 @@ already use.
 ## What it does not do
 
 - It is not a multi-user CMS. One author, one Nextcloud folder, one Memos instance.
-- Posts are not translated. The interface language is planned as a setting
-  (`de` and `en`); today it is German.
+- Posts are not translated. The interface language is a setting
+  (`MUFFEL_LANG`, `en` by default or `de`), one language per build. Someone who
+  wants both runs two instances.
 - Webmentions, a link graph and backlinks are planned, not built.
 
 ## How the parts fit together

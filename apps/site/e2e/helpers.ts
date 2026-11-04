@@ -1,4 +1,8 @@
 import type { Page } from '@playwright/test';
+import { catalogs } from '../src/i18n/catalogs.ts';
+
+/** UI texts in the language the site under test was built with (`E2E_LANG`, default en). */
+export const ui = catalogs[process.env.E2E_LANG === 'de' ? 'de' : 'en'];
 
 // 1x1 PNG so the allowed foreign source does not have to go online in the test.
 const PIXEL = Buffer.from(

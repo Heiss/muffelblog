@@ -665,11 +665,17 @@ Applies to every work package in addition to its own criteria:
 * Branch: `feature/w23-ui-language`
 * Depends on: W22c
 * Decided **[E]**: `MUFFEL_LANG` (`de` or `en`), one language per build, no URL
-  prefix, no browser detection, content not translated.
-* DoD (draft, **[V]**):
-  * [ ] A message catalog per language with a shared type; a missing key fails
-    the type check.
-  * [ ] `MUFFEL_LANG=en` renders the whole UI in English, `de` in German, an
-    unknown value stops the build.
-  * [ ] `<html lang>`, date and number formats follow the language.
-  * [ ] E2E tests cover both languages.
+  prefix, no browser detection, content not translated. Default `en`, feeds and
+  search follow the build language, no per-article `lang` for now (2026-11-04).
+  Details: [Languages](/ops/language.md).
+* DoD:
+  * [x] A message catalog per language with a shared type; a missing key fails
+    the type check (`types.ts`, test `catalog.test.ts`).
+  * [x] `MUFFEL_LANG=en` renders the whole UI in English, `de` in German, an
+    unknown value stops the build (`readSettings`, `pickMessages`).
+  * [x] `<html lang>`, RSS `<language>`, date and number formats follow the
+    language; texts that the core generates (memo title, PDF size, embed
+    placeholder, missing image) too.
+  * [x] E2E tests cover both languages: the whole suite in English, a small
+    suite against a German build.
+  * [ ] All CI checks green on the pull request.

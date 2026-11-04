@@ -69,7 +69,7 @@ test.describe('Rendering demo (/p/rendering-demo/)', () => {
     ]);
 
     await expect(page.locator('.content .image-missing')).toHaveText(
-      '[Bild fehlt: Fehlt]',
+      '[Image missing: Fehlt]',
     );
   });
 
@@ -83,10 +83,10 @@ test.describe('Rendering demo (/p/rendering-demo/)', () => {
     await expect(page.locator('.content iframe')).toHaveCount(0);
     expect(foreign.filter((u) => u.includes('youtube'))).toEqual([]);
     await expect(
-      page.getByRole('link', { name: 'Auf YouTube öffnen' }),
+      page.getByRole('link', { name: 'Open on YouTube' }),
     ).toHaveAttribute('href', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
 
-    await page.getByRole('button', { name: 'Inhalt laden' }).click();
+    await page.getByRole('button', { name: 'Load content' }).click();
     const frame = page.locator('.content iframe');
     await expect(frame).toHaveAttribute(
       'src',

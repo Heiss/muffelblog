@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { ui } from './helpers';
 
 test('The home page is German and carries the site name', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('html')).toHaveAttribute('lang', 'de');
+  await expect(page.locator('html')).toHaveAttribute('lang', ui.lang);
   await expect(page).toHaveTitle('Muffelblog');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'Muffelblog',

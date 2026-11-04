@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { ui } from './helpers';
 
 test.describe('Glossary', () => {
   test('term page lives under /g/<slug>/ and is marked as a term', async ({
@@ -6,7 +7,7 @@ test.describe('Glossary', () => {
   }) => {
     await page.goto('/g/cache/');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cache');
-    await expect(page.locator('.kind')).toHaveText('Begriff');
+    await expect(page.locator('.kind')).toHaveText(ui.glossary.term);
     await expect(page.locator('.content')).toContainText(
       'hält Ergebnisse bereit',
     );
@@ -37,8 +38,12 @@ test.describe('Glossary', () => {
     page,
   }) => {
     await page.goto('/glossary/');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Glossar');
-    const bar = page.getByRole('navigation', { name: 'Buchstaben' });
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      ui.glossary.title,
+    );
+    const bar = page.getByRole('navigation', {
+      name: ui.glossary.lettersLabel,
+    });
     await expect(bar.getByRole('link')).toHaveText(['A', 'C', 'H']);
     await expect(page.locator('#letter-A + ul a')).toHaveText(['Äther']);
     await expect(page.locator('#letter-C + ul a')).toHaveText(['Cache']);
@@ -49,7 +54,7 @@ test.describe('Glossary', () => {
   }) => {
     await page.goto('/glossary/');
     await page
-      .getByRole('navigation', { name: 'Buchstaben' })
+      .getByRole('navigation', { name: ui.glossary.lettersLabel })
       .getByRole('link', { name: 'C' })
       .click();
     await expect(page).toHaveURL(/#letter-C$/);
@@ -58,7 +63,7 @@ test.describe('Glossary', () => {
   test('the Begriffe series lists only terms', async ({ page }) => {
     await page.goto('/terms/');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Begriffe',
+      ui.filter.terms,
     );
     const kinds = await page
       .locator('[data-feed-list] article')
@@ -87,7 +92,7 @@ test.describe('Glossary', () => {
         const marked = await page
           .locator('[data-kind="glossary"] .kind')
           .allTextContents();
-        expect(marked.every((t) => t === 'Begriff')).toBe(true);
+        expect(marked.every((t) => t === ui.glossary.term)).toBe(true);
       }
       return kinds;
     })();
@@ -97,14 +102,14 @@ test.describe('Glossary', () => {
 
   test('filter shows Begriffe with its series', async ({ page }) => {
     await page.goto('/');
-    const filter = page.getByRole('navigation', { name: 'Filter' });
+    const filter = page.getByRole('navigation', { name: ui.filter.label });
     await expect(filter.getByRole('link')).toHaveText([
-      'Alle',
-      'Lang',
-      'Kurz',
-      'Begriffe',
+      ui.filter.all,
+      ui.filter.long,
+      ui.filter.short,
+      ui.filter.terms,
     ]);
-    await filter.getByRole('link', { name: 'Begriffe' }).click();
+    await filter.getByRole('link', { name: ui.filter.terms }).click();
     await expect(
       page.locator('[data-feed-list] article[data-kind="post"]'),
     ).toHaveCount(0);

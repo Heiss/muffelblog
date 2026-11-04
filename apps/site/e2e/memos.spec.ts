@@ -1,22 +1,22 @@
 import { expect, test } from '@playwright/test';
-import { interceptForeign } from './helpers';
+import { interceptForeign, ui } from './helpers';
 
 test.describe('Memo pages under /m/<uid>/', () => {
   test('shows title from date and time, instant, tags and text', async ({
     page,
   }) => {
     await page.goto('/m/memo-text/');
-    await expect(page.locator('html')).toHaveAttribute('lang', 'de');
-    await expect(page).toHaveTitle('Memo vom 2. Nov. 2026, 14:32 – Muffelblog');
+    await expect(page.locator('html')).toHaveAttribute('lang', ui.lang);
+    await expect(page).toHaveTitle('Memo of 2 Nov 2026, 14:32 – Muffelblog');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Memo vom 2. Nov. 2026, 14:32',
+      'Memo of 2 Nov 2026, 14:32',
     );
     await expect(page.locator('h1 time')).toHaveAttribute(
       'datetime',
       '2026-11-02T13:32:00.000Z',
     );
     await expect(
-      page.getByRole('list', { name: 'Tags' }).getByRole('listitem'),
+      page.getByRole('list', { name: ui.tags.label }).getByRole('listitem'),
     ).toHaveText(['tooling', 'a/b']);
     await expect(page.locator('.content')).toContainText(
       'Renovate eingerichtet.',

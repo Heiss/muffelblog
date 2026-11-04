@@ -9,6 +9,7 @@ export default defineConfig(
   {
     ignores: [
       '**/dist/**',
+      '**/dist-de/**',
       '**/.astro/**',
       '**/node_modules/**',
       '**/playwright-report/**',

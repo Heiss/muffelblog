@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-04
+* **Update**: W23 UI language: `MUFFEL_LANG` (`en` default, `de`), catalogs per language with a shared type, texts of the core per language, German build for a small E2E suite; new policy [Defaults stay inside](/ops/defaults.md) (webmention sending off by default); restore only works into an empty Remark42 (documented).
 * **Update**: Moderation (administrator by email, mail on new comments, `docker/moderate.sh`), `TRUSTED_PROXY` and `X-Real-IP` handling, backup and restore (`docker/backup.sh`, `docker/restore.sh`), all with CI flows; docs updated.
 * **Update**: Documentation site added (`apps/docs`, Starlight, English): start, guides, production (own proxy with Caddy/nginx/Traefik examples, own Caddy with domain, operations), reference; Pages workflow; sync tests against the code.
 * **Update**: Production variants added: `compose.production.yaml` (own reverse proxy, shared mount) and `compose.domain.yaml` (own Caddy with domain); health check on an internal port.
