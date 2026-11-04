@@ -32,6 +32,7 @@ export default defineConfig({
             { slug: 'guides/nextcloud' },
             { slug: 'guides/memos' },
             { slug: 'guides/comments' },
+            { slug: 'guides/webmentions' },
           ],
         },
         {

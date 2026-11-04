@@ -19,8 +19,10 @@ import { createRcloneRemote } from './rclone.ts';
 import { removeIncomplete, runRelease } from './release.ts';
 import type { Step } from './release.ts';
 import { createScheduler } from './scheduler.ts';
-import type { Source } from './scheduler.ts';
+import type { AlertEvent, Source, Status } from './scheduler.ts';
 import { fileStore, sourcesFrom } from './serve.ts';
+import { createWebmentionRunner } from './webmentions.ts';
+import type { WebmentionSummary } from './scheduler.ts';
 
 /** Runs a command and fails with its exit code. Output goes to the container log. */
 function run(
@@ -140,18 +142,57 @@ async function main(): Promise<void> {
       () => false,
     );
   const store = fileStore(stateDir);
+
+  // Webmentions: off by default. When on, SITE_URL is needed (absolute source
+  // addresses), and the builder stops at the start if it is missing.
+  let webmentionSummary: WebmentionSummary | undefined;
+  let lastStatus: Status | undefined;
+  const writeStatus = (status: Status) => {
+    lastStatus = status;
+    return store.writeStatus(
+      webmentionSummary
+        ? { ...status, webmentions: webmentionSummary }
+        : status,
+    );
+  };
+  const sendAlertEvent = async (event: AlertEvent) => {
+    log(`${event.kind}: ${event.message}`);
+    if (alerts) await sendAlert(alerts, event);
+  };
+  const siteUrl = process.env.SITE_URL?.trim() ?? '';
+  if (settings.webmentionsSend) {
+    try {
+      new URL(siteUrl);
+    } catch {
+      throw new Error(
+        'MUFFEL_WEBMENTIONS_SEND=1 needs SITE_URL (the address of the blog, for example https://blog.example)',
+      );
+    }
+  }
+  const webmentions = settings.webmentionsSend
+    ? createWebmentionRunner({
+        releasesDir,
+        stateDir,
+        settings,
+        siteUrl,
+        alert: sendAlertEvent,
+        log: (line) => log(line),
+        onSummary: async (summary) => {
+          webmentionSummary = summary;
+          if (lastStatus) await writeStatus(lastStatus);
+        },
+      })
+    : undefined;
+
   const scheduler = createScheduler({
     sources: polled,
     debounceChecks: settings.debounceChecks,
     now: () => new Date(),
     loadState: store.loadState,
     saveState: store.saveState,
-    writeStatus: store.writeStatus,
+    writeStatus,
     hasRelease: releaseOnline,
-    alert: async (event) => {
-      log(`${event.kind}: ${event.message}`);
-      if (alerts) await sendAlert(alerts, event);
-    },
+    alert: sendAlertEvent,
     build: async () => {
       // The build gets the folder, not the secrets.
       const env: NodeJS.ProcessEnv = { ...process.env };
@@ -188,6 +229,12 @@ async function main(): Promise<void> {
     `started (${sources.mode}, check every ${settings.checkIntervalSeconds}s, debounce ${settings.debounceChecks})`,
   );
   let exitCode = 0;
+  // A release may already be online (restart): take the first state of the
+  // sender at once, so an entry written before the next build is not lost.
+  if (webmentions && (await releaseOnline())) {
+    const started = webmentions.run();
+    if (once) await started;
+  }
   while (!stopping) {
     let result: string;
     try {
@@ -198,6 +245,11 @@ async function main(): Promise<void> {
       console.error('[builder] unexpected error in the check', error);
     }
     if (result !== 'idle') log(`check: ${result}`);
+    if (webmentions && result === 'built') {
+      // In the background: slow foreign servers must not delay the next check.
+      const started = webmentions.run();
+      if (once) await started;
+    }
     if (once) {
       exitCode = result === 'built' || result === 'idle' ? 0 : 1;
       break;

@@ -31,6 +31,26 @@ export interface Settings {
   checkIntervalSeconds: number;
   /** Equal checks in a row after a change before it is built (0 = at once). */
   debounceChecks: number;
+  /** Time limit per request to a foreign server when sending webmentions, in ms. */
+  webmentionsTimeoutMs: number;
+  /** Maximum bytes read from a foreign response when sending webmentions. */
+  webmentionsMaxBytes: number;
+  /** Maximum number of targets per entry. */
+  webmentionsMaxTargets: number;
+  /** Pause between two requests to foreign servers, in ms. */
+  webmentionsDelayMs: number;
+  /** Tries per pair over later builds before it is given up. */
+  webmentionsAttempts: number;
+  /** Days a host without a webmention endpoint is not asked again. */
+  webmentionsNoEndpointDays: number;
+  /** Days a found endpoint is reused. */
+  webmentionsEndpointDays: number;
+  /** Send webmentions at all. Off by default: the instance stays inside. */
+  webmentionsSend: boolean;
+  /** Lift the address check (loopback, private). Only for tests and the tutorial. */
+  webmentionsAllowPrivate: boolean;
+  /** Hosts that are never asked, lower case. */
+  webmentionsBlock: string[];
 }
 
 export interface SettingSpec {
@@ -138,7 +158,93 @@ export const SETTING_SPECS: readonly SettingSpec[] = [
     unit: 'checks',
     description: 'Equal checks in a row after a change before it is built',
   },
+  {
+    key: 'webmentionsTimeoutMs',
+    env: 'MUFFEL_WEBMENTIONS_TIMEOUT_MS',
+    default: 10_000,
+    min: 1000,
+    max: 60_000,
+    factor: 1,
+    unit: 'milliseconds',
+    description: 'Time limit per request to a foreign server (webmentions)',
+  },
+  {
+    key: 'webmentionsMaxBytes',
+    env: 'MUFFEL_WEBMENTIONS_MAX_KB',
+    default: 1024,
+    min: 16,
+    max: 10_240,
+    factor: 1024,
+    unit: 'KB',
+    description:
+      'Largest part of a foreign response that is read (webmentions)',
+  },
+  {
+    key: 'webmentionsMaxTargets',
+    env: 'MUFFEL_WEBMENTIONS_MAX_TARGETS',
+    default: 10,
+    min: 1,
+    max: 100,
+    factor: 1,
+    unit: 'targets',
+    description: 'Most links of one entry that are reported (webmentions)',
+  },
+  {
+    key: 'webmentionsDelayMs',
+    env: 'MUFFEL_WEBMENTIONS_DELAY_MS',
+    default: 1000,
+    min: 0,
+    max: 60_000,
+    factor: 1,
+    unit: 'milliseconds',
+    description: 'Pause between two requests to foreign servers (webmentions)',
+  },
+  {
+    key: 'webmentionsAttempts',
+    env: 'MUFFEL_WEBMENTIONS_ATTEMPTS',
+    default: 3,
+    min: 1,
+    max: 10,
+    factor: 1,
+    unit: 'tries',
+    description: 'Tries per source and target over later builds (webmentions)',
+  },
+  {
+    key: 'webmentionsNoEndpointDays',
+    env: 'MUFFEL_WEBMENTIONS_NO_ENDPOINT_DAYS',
+    default: 30,
+    min: 1,
+    max: 365,
+    factor: 1,
+    unit: 'days',
+    description: 'Days a host without an endpoint is not asked again',
+  },
+  {
+    key: 'webmentionsEndpointDays',
+    env: 'MUFFEL_WEBMENTIONS_ENDPOINT_DAYS',
+    default: 7,
+    min: 1,
+    max: 365,
+    factor: 1,
+    unit: 'days',
+    description: 'Days a found endpoint is reused',
+  },
 ];
+
+/** Settings that are no numbers: switches (`0`/`1`) and the block list. */
+const FLAG_DEFAULTS = {
+  webmentionsSend: false,
+  webmentionsAllowPrivate: false,
+  webmentionsBlock: [] as string[],
+};
+
+const FLAGS = [
+  ['webmentionsSend', 'MUFFEL_WEBMENTIONS_SEND'],
+  ['webmentionsAllowPrivate', 'MUFFEL_WEBMENTIONS_ALLOW_PRIVATE'],
+] as const;
+
+const HOST_NAME =
+  /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
 
 export class ConfigError extends Error {
   constructor(message: string) {
@@ -148,7 +254,11 @@ export class ConfigError extends Error {
 }
 
 function defaults(): Settings {
-  const s: Record<string, number | string> = { lang: DEFAULT_LANG };
+  const s: Record<string, unknown> = {
+    lang: DEFAULT_LANG,
+    ...FLAG_DEFAULTS,
+    webmentionsBlock: [],
+  };
   for (const spec of SETTING_SPECS) s[spec.key] = spec.default * spec.factor;
   return s as unknown as Settings;
 }
@@ -163,8 +273,34 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze(defaults());
 export function readSettings(
   env: Record<string, string | undefined> = process.env,
 ): Settings {
-  const values: Record<string, number | string> = { lang: DEFAULT_LANG };
+  const values: Record<string, unknown> = {
+    lang: DEFAULT_LANG,
+    ...FLAG_DEFAULTS,
+    webmentionsBlock: [],
+  };
   const errors: string[] = [];
+  for (const [key, name] of FLAGS) {
+    const raw = env[name]?.trim();
+    if (raw === undefined || raw === '') continue;
+    if (raw === '1') values[key] = true;
+    else if (raw !== '0')
+      errors.push(
+        `${name}="${raw}" is invalid, allowed are 0 and 1, default 0`,
+      );
+  }
+  const block = env.MUFFEL_WEBMENTIONS_BLOCK?.trim();
+  if (block) {
+    const hosts = block
+      .split(',')
+      .map((h) => h.trim().toLowerCase())
+      .filter((h) => h !== '');
+    const bad = hosts.filter((h) => !HOST_NAME.test(h));
+    if (bad.length > 0)
+      errors.push(
+        `MUFFEL_WEBMENTIONS_BLOCK contains no host name: ${bad.map((h) => `"${h}"`).join(', ')} (comma separated host names such as example.org)`,
+      );
+    else values.webmentionsBlock = hosts;
+  }
   const lang = env.MUFFEL_LANG?.trim().toLowerCase();
   if (lang) {
     if ((LANGUAGES as readonly string[]).includes(lang)) values.lang = lang;

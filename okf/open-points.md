@@ -37,8 +37,8 @@ is entered in the specification today ("entry") and what speaks against it.
 | O4 | Remark42 display | The default sorting in the widget and the display of the author `admin` are unchecked. The timeline with mentions works only with sorting by time. |
 | O6 | Attachments that are not images | **[E] decided:** PDF, audio and video are mirrored with a size limit (25 MB), only for allowed extensions and with a matching file signature. Everything else is skipped (see [Media](/content/media.md)). |
 | O7 | Image sizes and formats | **[E] decided:** local article images in several widths (480 to 1920) as WebP, EXIF and color profile removed, SVG rejected. Implemented with `sharp`. |
-| O11 | Webmentions: sender and microformats | The implementation of the sender is open. `h-entry`/`h-card`, `rel=me`, IndieAuth were not discussed, but are needed for a useful display. |
-| O12 | Sending from memos | The user said "yes, definitely" for sending and "also for memo pages" for mentions. Sending from memos is an assumption. |
+| O11 | Webmentions: sender and microformats | **[E] decided (sender):** own small module, no library (see [Webmentions](/community/webmentions.md)). `h-entry`/`h-card`, `rel=me`, IndieAuth: open, they belong to W14 (receiving, needs the domain). `h-entry` and `u-url` exist on posts, memos and terms. |
+| O12 | Sending from memos | **[E] decided:** posts, memos and terms send (2026-11-04). Off by default. |
 | O13 | Tag rules | **[E] partly decided:** tags lowercased throughout, also in the display. Nested Memos tags (`#a/b`) stay one tag **[E]**. Tag pages: overview `/tag/` and a list per tag **[E]** (W05). Open: do inline `#tags` in articles count? A shared namespace for posts and memos is a proposal. |
 | O14 | Memo date | **[E] decided:** `createTime` (the API has no `displayTime`). The title is always built from date and time, also for memos with only an image. |
 | O20 | Feed display of posts, RSS scope | **[E partly]** Feed excerpt: description, otherwise the start of the text, at most 200 characters (W05). Open: number of RSS entries, full text or excerpt in the RSS. |

@@ -92,3 +92,24 @@ export {
 export type { CommentNode, RemarkComment } from './comments.ts';
 export { createFixtureRemarkSource, createRemarkSource } from './remark42.ts';
 export type { RemarkOptions, RemarkSource } from './remark42.ts';
+export { NetError, isPublicAddress, safeFetch } from './webmention-net.ts';
+export type {
+  Resolved,
+  SafeFetchInit,
+  SafeFetchOptions,
+  SafeResponse,
+} from './webmention-net.ts';
+export {
+  extractEntry,
+  findEndpoint,
+  parseLinkHeader,
+} from './webmention-extract.ts';
+export type { EntryContent, FetchedPage } from './webmention-extract.ts';
+export { emptyWebmentionState, runWebmentionSend } from './webmention-send.ts';
+export type {
+  PairState,
+  SendDeps,
+  SendReport,
+  SourceEntry,
+  WebmentionState,
+} from './webmention-send.ts';

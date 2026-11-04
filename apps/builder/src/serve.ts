@@ -4,7 +4,7 @@ import type { SavedState, Status } from './scheduler.ts';
 import { readFile } from 'node:fs/promises';
 
 /** Writes a file so that a reader never sees half of it. */
-async function writeAtomic(file: string, text: string): Promise<void> {
+export async function writeAtomic(file: string, text: string): Promise<void> {
   await mkdir(path.dirname(file), { recursive: true });
   const temp = `${file}.${process.pid}.tmp`;
   await writeFile(temp, text);

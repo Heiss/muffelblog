@@ -514,13 +514,25 @@ Applies to every work package in addition to its own criteria:
 ## W15 - Webmentions: sending
 
 * Branch: `feature/w15-webmentions-senden`
-* Depends on: W14
-* Decisions: sending from memos (O12), sender implementation (O11).
+* Depends on: W14 on paper; decoupled on 2026-11-04: sending needs only
+  `SITE_URL` and the `h-entry` markup, W14 (receiving, needs the domain) follows
+  later.
+* Decisions **[E]** (2026-11-04): all in [Webmentions](/community/webmentions.md):
+  posts, memos and terms send (O12), own module (O11), block list instead of
+  allow list, host memory, baseline at the first start, limits, visibility and
+  alert. Off by default.
 * DoD:
-  * [ ] Sending happens only after the new build is served.
-  * [ ] Sent pairs are stored, rebuilds do not send again.
-  * [ ] Changes and deletions trigger a new notification.
-  * [ ] Time limits and error handling for foreign servers.
+  * [x] Sending happens only after the new build is served (the sender reads
+    the release that `current` points at, in the background of the builder).
+  * [x] Sent pairs are stored (`state/webmentions.json`), rebuilds do not send
+    again; the first start sends nothing.
+  * [x] Changes and deletions trigger a new notification.
+  * [x] Time limits, size limits, address checks and error handling for foreign
+    servers (`safeFetch`, tested with real local servers).
+  * [x] Compose job checks that the first start sends nothing
+    (`docker/webmention-flow.sh`).
+  * [ ] A real receiver on the internet is not tested; the tutorial covers it
+    with a local receiver (`docker/webmention-receiver.mjs`).
 
 ## W16 - Hardening and operation
 

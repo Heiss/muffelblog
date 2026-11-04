@@ -63,15 +63,50 @@ acceptable.
 
 # Sending
 
+Decided by the owner on 2026-11-04 (W15). Sending is **off by default**
+(`MUFFEL_WEBMENTIONS_SEND`, see [Defaults stay inside](/ops/defaults.md)).
+
 * **[E]** Webmentions are sent, because the network does not work otherwise.
-* **[V]** Sending happens only after the new build is served. The receiver
-  fetches the source URL and checks the link.
-* **[V]** The sent pairs of source and target are stored, so not all pings go
-  out again on every rebuild. If a post changes, it is sent again. If a post is
-  removed, a deletion notice is sent.
-* **[V]** Looking up the endpoint of the targets fetches foreign servers and
-  runs asynchronously to the build, with time limits.
-* The implementation of the sender is open (O11).
+  W15 does not wait for W14: sending needs only `SITE_URL` and the `h-entry`
+  markup of the pages. Without `SITE_URL` the sender refuses to run with a clear
+  message (no relative source URLs).
+* **[E]** Which entries send: posts, memos and terms (O12 decided).
+* **[E]** Own small module, no library, no external service (O11 decided):
+  endpoint discovery by the W3C rules (HTTP `Link` header, then `<link>` and
+  `<a>` with `rel="webmention"`), POST `application/x-www-form-urlencoded` with
+  `source` and `target`. Success is any 2xx.
+* **[E]** Targets: every external `http(s)` link in the content of the entry
+  (`.e-content` of the `h-entry`) except the hosts of a block list
+  (`MUFFEL_WEBMENTIONS_BLOCK`, comma separated, empty by default). The own
+  domain, non-`http(s)` links, links with credentials and private or local
+  addresses are never targets.
+* **[E]** The sender reads the **built pages** of the release that just went
+  online, not the Markdown: that is exactly what the receiver will fetch.
+  Sending starts only after `current` points at the new release.
+* **[E]** A change of the content of an entry (hash) sends again to all its
+  targets. If a link is removed from an entry, or the entry is gone, the same
+  notification is sent to that target once more; the receiver sees that the
+  link or the page is gone (this is how the specification handles deletion).
+* **[E]** First activation: the current state is stored as "already sent"
+  without sending anything. Only new and changed entries are sent afterwards.
+  A command sends the existing entries on purpose.
+* **[E]** Limits, all adjustable by variable: 10 s per request, 1 MB read per
+  response, at most 10 targets per entry, one request per second, at most 3
+  redirects (each one checked again). A failed pair is tried up to 3 times over
+  later builds, then given up.
+* **[E]** Host memory: a host without an endpoint is not asked again for 30
+  days, a found endpoint is reused for 7 days. Timeouts and server errors are
+  not remembered.
+* **[E]** Safety of the requests: only `http` and `https`, no credentials in
+  the URL, the host name is resolved and every address is checked (loopback,
+  private, link-local, carrier-grade NAT, metadata addresses, IPv4-mapped
+  IPv6), and the connection uses exactly the checked address (no DNS
+  rebinding). `MUFFEL_WEBMENTIONS_ALLOW_PRIVATE=1` lifts the address check and
+  exists only for tests and the tutorial (local receiver).
+* **[E]** Visibility: one log line per sent pair, the file `state/webmentions.json`
+  (pairs with time, status, attempts) and counters in `state/status.json`. A
+  pair that was given up also goes to the alert webhook
+  (`MUFFEL_ALERT_WEBHOOK`). A failure never fails a build.
 
 # Prerequisites
 
