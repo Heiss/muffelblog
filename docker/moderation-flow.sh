@@ -9,7 +9,6 @@ MAIL="${2:-http://localhost:8025}"
 PAGE="/p/backups-zurueckspielen/"
 MARK="Moderation-Test-$(date +%s)"
 cd "$(dirname "$0")/.."
-PASSWORD="$(sed -n 's/^REMARK_ADMIN_PASSWD=//p' .env)"
 backups="$(mktemp -d)"
 trap 'rm -rf "$backups"' EXIT
 
@@ -19,7 +18,8 @@ wait_for() { # description, shell test that must succeed
     i=$((i+1))
     if [ $i -ge 60 ]; then
       echo "FAIL  $1"
-      docker compose logs --no-color --tail 40 builder
+      echo "--- mails in Mailpit:"; curl -s "$MAIL/api/v1/messages?limit=10" | head -c 1500; echo
+      docker compose logs --no-color --tail 15 builder remark42
       exit 1
     fi
     sleep 3
@@ -28,15 +28,8 @@ wait_for() { # description, shell test that must succeed
 }
 on_page() { curl -s "$SITE$PAGE" | grep -q "$MARK"; }
 
-# 1. A comment is written (as the administrator would, from inside the network).
-docker compose exec -T -e PW="$PASSWORD" -e URL="$SITE$PAGE" -e MARK="$MARK" builder node -e '
-  const auth = "Basic " + Buffer.from("admin:" + process.env.PW).toString("base64");
-  fetch("http://remark42:8080/api/v1/comment", {
-    method: "POST",
-    headers: { Authorization: auth, "Content-Type": "application/json" },
-    body: JSON.stringify({ text: process.env.MARK, locator: { site: "muffelblog", url: process.env.URL } }),
-  }).then(async (r) => { if (r.status !== 201) { console.error(r.status, await r.text()); process.exit(1); } });
-'
+# 1. A reader comments: login by email, then comment (as in the browser).
+docker compose exec -T builder node /repo/docker/visitor-comment.mjs "$SITE$PAGE" "$MARK"
 wait_for "the comment is on the page" "curl -s '$SITE$PAGE' | grep -q '$MARK'"
 
 # 2. The administrator gets a mail about the new comment.
@@ -54,6 +47,15 @@ url="$(echo "$line" | awk '{print $NF}')"
 [ -n "$id" ] && [ -n "$url" ] || { echo "FAIL  the comment is not in the list: $line"; exit 1; }
 docker/moderate.sh delete "$id" "$url"
 wait_for "the deleted comment is gone from the page" "! curl -s '$SITE$PAGE' | grep -q '$MARK'"
+
+# 4b. Moderation: block the reader, they can no longer comment; unblock, they can.
+uid="$(echo "$line" | sed 's/.*(\(.*\)).*/\1/' | awk '{print $NF}')"
+docker/moderate.sh block "$uid"
+if docker compose exec -T builder node /repo/docker/visitor-comment.mjs "$SITE$PAGE" "$MARK-blocked" >/dev/null 2>&1; then
+  echo "FAIL  a blocked reader could comment"; exit 1
+fi
+echo "ok    a blocked reader cannot comment"
+docker/moderate.sh unblock "$uid"
 
 # 5. Restore.
 docker/restore.sh "$file"
