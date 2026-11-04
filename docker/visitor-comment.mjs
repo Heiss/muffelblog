@@ -80,18 +80,21 @@ const post = await fetch(`${remark}/api/v1/comment`, {
   body: JSON.stringify({ text, locator: { site, url: pageUrl } }),
 });
 if (post.status !== 201) {
-  const who = await fetch(`${remark}/api/v1/user?site=${site}`, {
-    headers: {
-      Cookie: `JWT=${cookies.JWT}; XSRF-TOKEN=${cookies['XSRF-TOKEN']}`,
-    },
-  });
+  const probe = async (label, headers) => {
+    const r = await fetch(`${remark}/api/v1/user?site=${site}`, { headers });
+    return `${label}=${r.status} ${(await r.text()).slice(0, 120).replace(/\s+/g, ' ')}`;
+  };
+  const claims = Buffer.from(cookies.JWT.split('.')[1], 'base64url').toString();
   console.error(
-    `debug: login body=${(await redeemed.text()).slice(0, 200)} cookies=${redeemed.headers
-      .getSetCookie()
-      .map((c) => c.replace(/=[^;]+/, '=…'))
-      .join(
-        ' | ',
-      )} user-endpoint=${who.status} ${(await who.text()).slice(0, 200)}`,
+    `debug: claims=${claims} | ` +
+      [
+        await probe('cookie-only-jwt', { Cookie: `JWT=${cookies.JWT}` }),
+        await probe('x-jwt-header', { 'X-JWT': cookies.JWT }),
+        await probe('cookie+xsrf', {
+          Cookie: `JWT=${cookies.JWT}; XSRF-TOKEN=${cookies['XSRF-TOKEN']}`,
+          'X-XSRF-TOKEN': cookies['XSRF-TOKEN'],
+        }),
+      ].join(' | '),
   );
   console.error(
     `comment refused: ${post.status} ${(await post.text()).slice(0, 200)}`,
