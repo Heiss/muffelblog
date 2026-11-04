@@ -70,7 +70,9 @@ if (!cookies.JWT || !cookies['XSRF-TOKEN'])
   );
 
 // 4. Comment, with the cookie and the matching XSRF header.
-const post = await fetch(`${remark}/api/v1/comment`, {
+// Remark42 requires ?site= on every write of a logged-in user (matchSiteID),
+// otherwise it answers 403 "Access denied". Only the basic-auth admin is exempt.
+const post = await fetch(`${remark}/api/v1/comment?site=${site}`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -80,48 +82,6 @@ const post = await fetch(`${remark}/api/v1/comment`, {
   body: JSON.stringify({ text, locator: { site, url: pageUrl } }),
 });
 if (post.status !== 201) {
-  const probe = async (label, headers) => {
-    const r = await fetch(`${remark}/api/v1/user?site=${site}`, { headers });
-    return `${label}=${r.status} ${(await r.text()).slice(0, 120).replace(/\s+/g, ' ')}`;
-  };
-  const claims = Buffer.from(cookies.JWT.split('.')[1], 'base64url').toString();
-  console.error(
-    `debug: claims=${claims} | ` +
-      [
-        await probe('cookie-only-jwt', { Cookie: `JWT=${cookies.JWT}` }),
-        await probe('x-jwt-header', { 'X-JWT': cookies.JWT }),
-        await probe('cookie+xsrf', {
-          Cookie: `JWT=${cookies.JWT}; XSRF-TOKEN=${cookies['XSRF-TOKEN']}`,
-          'X-XSRF-TOKEN': cookies['XSRF-TOKEN'],
-        }),
-      ].join(' | '),
-  );
-  const base = {
-    'Content-Type': 'application/json',
-    Cookie: `JWT=${cookies.JWT}; XSRF-TOKEN=${cookies['XSRF-TOKEN']}`,
-    'X-XSRF-TOKEN': cookies['XSRF-TOKEN'],
-  };
-  const origin = process.env.REMARK_PUBLIC_URL || 'http://localhost:8081';
-  for (const [label, extra] of [
-    ['origin', { Origin: origin }],
-    ['origin+referer', { Origin: origin, Referer: `${origin}/` }],
-    ['x-jwt', { 'X-JWT': cookies.JWT }],
-  ]) {
-    const r = await fetch(`${remark}/api/v1/comment`, {
-      method: 'POST',
-      headers: { ...base, ...extra },
-      body: JSON.stringify({
-        text: `${text} (${label})`,
-        locator: { site, url: pageUrl },
-      }),
-    });
-    console.error(
-      `debug: post ${label}=${r.status} ${(await r.text()).slice(0, 100)}`,
-    );
-  }
-  console.error(
-    `debug: refused headers=${JSON.stringify(Object.fromEntries(post.headers))}`,
-  );
   console.error(
     `comment refused: ${post.status} ${(await post.text()).slice(0, 200)}`,
   );
