@@ -70,10 +70,12 @@ docker/restore.sh /srv/backups/muffelblog-20261104T100000Z.tar.gz
 `backup.sh` asks Remark42 for its official export and packs it together with
 `.env`. The file contains your **secrets**: it is created readable by you only,
 keep it that way and copy it to another machine; a backup on the same disk is not
-one. `restore.sh` puts the comments back (Remark42 replaces the comments of the
-site with those of the backup); the old `.env` inside the file is not applied
-automatically. CI runs the whole cycle on every change: write a comment, back up,
-delete the comment, restore, see it on the page again.
+one. `restore.sh` imports the comments into an **empty** Remark42, as after a lost
+disk. Remark42 refuses comment ids it already knows, also deleted ones, so
+importing into a running site does not bring a deleted comment back. The old
+`.env` inside the file is not applied automatically. CI runs this cycle on every
+change: write a comment, back up, delete it, wipe the Remark42 data, restore, see
+the comment on the page again.
 
 Remark42 also writes its own daily export into `var/backup` inside its volume.
 That is the same kind of file, but on the same disk.

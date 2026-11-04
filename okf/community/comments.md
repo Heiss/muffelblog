@@ -91,7 +91,11 @@ sources:
   and `docker/restore.sh` use that API from inside the builder container
   (`apps/builder/src/remark-admin*.ts`). The CI flow `docker/moderation-flow.sh`
   writes a comment, checks the administrator mail, backs up, deletes the comment
-  (it leaves the page), restores it (it returns).
+  (it leaves the page), wipes the Remark42 data and restores the backup (the
+  comment returns).
+* **[E]** Restore only works into an empty Remark42: `BoltDB.Create` rejects ids
+  that exist, also soft-deleted ones (Remark42 keeps a deleted comment as a shell
+  in `last/1000`). Found in CI, confirmed in the Remark42 source.
 * **[E]** Rate limit and client address: Remark42 keys its limits on `X-Real-IP`.
   Our Caddy overwrites it with `{client_ip}` (checked with an echo server: a
   spoofed `X-Real-IP` and `X-Forwarded-For` are replaced), and `TRUSTED_PROXY`

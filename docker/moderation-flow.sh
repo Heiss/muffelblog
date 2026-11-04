@@ -2,10 +2,11 @@
 # End to end: new comment mails the administrator, backup, moderation (delete) removes
 # the comment from the page, restore brings it back. Needs the running demo stack
 # with a short check interval (see comment-flow.sh).
-# Usage: docker/moderation-flow.sh [site-url] [mail-url]
+# Usage: docker/moderation-flow.sh [site-url] [mail-url] [comments-url]
 set -eu
 SITE="${1:-http://localhost:8080}"
 MAIL="${2:-http://localhost:8025}"
+COMMENTS="${3:-http://localhost:8081}"
 PAGE="/p/backups-zurueckspielen/"
 MARK="Moderation-Test-$(date +%s)"
 cd "$(dirname "$0")/.."
@@ -61,6 +62,12 @@ fi
 echo "ok    a blocked reader cannot comment"
 docker/moderate.sh unblock "$uid"
 
-# 5. Restore.
+# 5. Restore. Remark42 refuses comment ids it already knows (also deleted ones), so
+# a restore is for a lost database: wipe the Remark42 data first, as after a disk
+# failure, then import the backup into the empty instance.
+docker compose stop remark42
+docker compose run --rm --no-deps --entrypoint sh remark42 -c 'rm -f /srv/var/muffelblog.db'
+docker compose start remark42
+wait_for "Remark42 is up again" "curl -sf '$COMMENTS/api/v1/config?site=muffelblog' >/dev/null"
 docker/restore.sh "$file"
 wait_for "the restored comment is back on the page" "curl -s '$SITE$PAGE' | grep -q '$MARK'"
