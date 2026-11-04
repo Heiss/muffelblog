@@ -1,3 +1,4 @@
+import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { createAdminClient, formatComment } from './remark-admin.ts';
 
@@ -90,6 +91,19 @@ describe('createAdminClient', () => {
     expect(calls[0]?.init.method).toBe('POST');
     expect(calls[0]?.url.pathname).toBe('/api/v1/admin/import');
     expect(calls[1]?.url.pathname).toBe('/api/v1/admin/wait');
+  });
+
+  it('sends a gzip backup unpacked, because the Remark42 importer reads plain JSON', async () => {
+    const plain = '{"version":1,"users":[],"posts":[]}\n';
+    const { calls, doFetch } = fake({});
+    await client(doFetch).importAll(new Uint8Array(gzipSync(plain)));
+    expect(await new Response(calls[0]?.init.body).text()).toBe(plain);
+  });
+
+  it('sends a backup that is not gzip as it is', async () => {
+    const { calls, doFetch } = fake({});
+    await client(doFetch).importAll(new Uint8Array([123, 125]));
+    expect(await new Response(calls[0]?.init.body).text()).toBe('{}');
   });
 
   it('stops with a clear message when Remark42 refuses, and never prints the password', async () => {

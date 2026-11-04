@@ -1,3 +1,5 @@
+import { gunzipSync } from 'node:zlib';
+
 /** The administrator API of Remark42 (basic auth) for moderation, backup and restore. */
 export interface AdminOptions {
   /** Internal address of Remark42 (`REMARK_INTERNAL_URL`). */
@@ -110,7 +112,11 @@ export function createAdminClient(options: AdminOptions) {
       return new Uint8Array(await res.arrayBuffer());
     },
     async importAll(data: Uint8Array<ArrayBuffer>): Promise<void> {
-      await call('POST', endpoint('/api/v1/admin/import'), data);
+      // The export is gzip, but the importer of Remark42 reads plain JSON and fails
+      // on the gzip header (it still answers 202, the error only shows in its log).
+      const gzip = data[0] === 0x1f && data[1] === 0x8b;
+      const body = gzip ? new Uint8Array(gunzipSync(data)) : data;
+      await call('POST', endpoint('/api/v1/admin/import'), body);
       await call('GET', endpoint('/api/v1/admin/wait'));
     },
   };
