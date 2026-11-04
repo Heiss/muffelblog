@@ -31,6 +31,10 @@ services:
       MUFFEL_FEED_EXCERPT_CHARS: ${MUFFEL_FEED_EXCERPT_CHARS:-}
       MUFFEL_RSS_ITEMS: ${MUFFEL_RSS_ITEMS:-}
       MUFFEL_RELEASES_KEPT: ${MUFFEL_RELEASES_KEPT:-}
+      MUFFEL_CHECK_INTERVAL_SECONDS: ${MUFFEL_CHECK_INTERVAL_SECONDS:-}
+      MUFFEL_DEBOUNCE_CHECKS: ${MUFFEL_DEBOUNCE_CHECKS:-}
+      MUFFEL_ALERT_WEBHOOK: ${MUFFEL_ALERT_WEBHOOK:-}
+      MUFFEL_ALERT_FORMAT: ${MUFFEL_ALERT_FORMAT:-}
     volumes:
       - releases:/data/releases
       - cache:/data/cache
@@ -41,7 +45,7 @@ services:
     restart: unless-stopped
     depends_on:
       builder:
-        condition: service_completed_successfully
+        condition: service_healthy
     environment:
       SITE_ADDRESS: ':80'
       COMMENTS_ADDRESS: ':8081'

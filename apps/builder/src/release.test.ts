@@ -13,6 +13,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   pruneReleases,
+  removeIncomplete,
   releaseId,
   runRelease,
   swapCurrent,
@@ -187,5 +188,30 @@ describe('runRelease', () => {
     }
     const left = (await readdir(root)).filter((n) => n !== 'current');
     expect(left).toHaveLength(2);
+  });
+});
+
+describe('removeIncomplete', () => {
+  it('removes folders without build.json, which a stopped build leaves behind', async () => {
+    const root = await tmp();
+    await mkdir(path.join(root, 'good'));
+    await writeFile(path.join(root, 'good', 'build.json'), '{}');
+    await mkdir(path.join(root, 'half'));
+    await writeFile(path.join(root, 'half', 'index.html'), 'x');
+    await writeFile(path.join(root, 'notes.txt'), 'x');
+    await swapCurrent(root, 'good');
+    await removeIncomplete(root);
+    expect((await readdir(root)).sort()).toEqual([
+      'current',
+      'good',
+      'notes.txt',
+    ]);
+  });
+
+  it('works if the folder does not exist yet', async () => {
+    const root = await tmp();
+    await expect(
+      removeIncomplete(path.join(root, 'none')),
+    ).resolves.toBeUndefined();
   });
 });

@@ -52,6 +52,7 @@ export {
   buildMemoEntries,
   createFixtureMemosSource,
   createHttpMemosSource,
+  memosFingerprint,
 } from './memos.ts';
 export type {
   BuildMemosOptions,
