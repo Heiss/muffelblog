@@ -4,6 +4,8 @@ Static blog with a Memos microblog. The specification is an OKF bundle in
 [`okf/`](okf/index.md). Development is in English
 ([language rules](okf/ops/language.md)).
 
+**Documentation:** https://heiss.github.io/muffelblog/ (setup, guides, production, reference; source in `apps/docs`)
+
 ## Preview
 
 Status with demo content (IT, photography, timber construction; the images are placeholders). Nextcloud integration, operations and comments are

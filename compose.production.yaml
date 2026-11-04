@@ -16,8 +16,13 @@ services:
       - ${MUFFEL_RELEASES_DIR:?set MUFFEL_RELEASES_DIR to a folder on the host, for example /srv/muffelblog/releases}:/data/releases
 
   web:
-    # Not started. `--profile own-caddy` brings it back.
+    # Not started. `--profile own-caddy` brings it back, for a router that cannot
+    # serve files itself (Traefik): it then serves the same host folder.
     profiles: [own-caddy]
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${MUFFEL_RELEASES_DIR:?set MUFFEL_RELEASES_DIR to a folder on the host, for example /srv/muffelblog/releases}:/srv/releases:ro
+      - caddy-data:/data
 
   remark42:
     ports:

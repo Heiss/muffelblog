@@ -68,6 +68,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Build the documentation site
+        run: pnpm --filter @muffelblog/docs build
 
   e2e:
     name: E2E tests
