@@ -1,5 +1,8 @@
 # Update log
 
+## 2026-11-04
+* **Update**: W02 done: Nextcloud sync with rclone over the public share, fingerprint change detection, checked download, empty list refused; contract test against a real Nextcloud in CI. Scope decision: Nextcloud, Memos, scheduler and comment copy move into 26.11.0; docs site (Starlight, English, github.io) with production setup (override and own-Caddy example) is added.
+
 ## 2026-11-03
 * **Update**: Release workflow added: tag `YY.M.MICRO` runs the full CI, then publishes the builder image to GHCR (O10 decided: GHCR) and creates the GitHub release; dry run by hand.
 * **Update**: W13 widget part done: Remark42 comments on posts and memos from the own comments host, CSP extended by exactly that origin, `COMMENTS_URL`; static copy follows with the scheduler.

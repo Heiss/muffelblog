@@ -18,8 +18,14 @@ services:
     # One build per start; the scheduler for Nextcloud and Memos follows later.
     restart: 'no'
     environment:
-      MUFFEL_FIXTURES: ${MUFFEL_FIXTURES:-demo}
+      # Dash without colon: only an unset variable gives the demo; `MUFFEL_FIXTURES=` switches it off.
+      MUFFEL_FIXTURES: ${MUFFEL_FIXTURES-demo}
       SITE_URL: ${SITE_URL:-http://localhost:8080}
+      # Real sources (instead of the demo set): see .env.example
+      NEXTCLOUD_URL: ${NEXTCLOUD_URL:-}
+      NEXTCLOUD_SHARE_TOKEN: ${NEXTCLOUD_SHARE_TOKEN:-}
+      NEXTCLOUD_SHARE_PASSWORD: ${NEXTCLOUD_SHARE_PASSWORD:-}
+      MEMOS_URL: ${MEMOS_URL:-}
       COMMENTS_URL: ${COMMENTS_URL:-http://localhost:8081}
       MUFFEL_FEED_PAGE_SIZE: ${MUFFEL_FEED_PAGE_SIZE:-}
       MUFFEL_FEED_EXCERPT_CHARS: ${MUFFEL_FEED_EXCERPT_CHARS:-}
@@ -27,6 +33,8 @@ services:
       MUFFEL_RELEASES_KEPT: ${MUFFEL_RELEASES_KEPT:-}
     volumes:
       - releases:/data/releases
+      - cache:/data/cache
+      - state:/data/state
 
   web:
     image: caddy:2.11-alpine
@@ -80,5 +88,7 @@ services:
 
 volumes:
   releases:
+  cache:
+  state:
   caddy-data:
   remark42-var:

@@ -26,6 +26,8 @@ COPY --from=site-build /repo/apps/site/dist/ /
 # The builder: builds the site into a new release folder and switches the link
 # `current`. Run with `docker build --target builder .`
 FROM deps AS builder
+# rclone fetches the Nextcloud share (WebDAV); pinned like every other image.
+COPY --from=rclone/rclone:1.75.2 /usr/local/bin/rclone /usr/local/bin/rclone
 ENV REPO_DIR=/repo \
     RELEASES_DIR=/data/releases
 WORKDIR /repo/apps/builder

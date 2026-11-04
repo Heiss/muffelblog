@@ -181,13 +181,15 @@ Applies to every work package in addition to its own criteria:
   checking the unverified facts (O25).
 * Scope: fetching the public share through WebDAV with token and password into
   the cache, change detection.
+* Done 2026-11-03, see [Nextcloud source](/content/nextcloud-source.md). The
+  contract test runs in CI (not possible in the development session).
 * DoD:
-  * [ ] The sync is tested with mocks, a contract test against a real Nextcloud
+  * [x] The sync is tested with mocks, a contract test against a real Nextcloud
     test instance exists.
-  * [ ] The password comes only from a secret.
-  * [ ] Without a change no build is triggered.
-  * [ ] If fetching fails, the cache stays unchanged.
-  * [ ] The behavior of `getlastmodified` is documented.
+  * [x] The password comes only from a secret.
+  * [x] Without a change no build is triggered (the sync reports `changed: false`; the scheduler that acts on it is W12).
+  * [x] If fetching fails, the cache stays unchanged.
+  * [x] The behavior of `getlastmodified` is documented.
 
 ## W03 - Rendering, sanitizing, article images
 
