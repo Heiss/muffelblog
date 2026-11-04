@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-04
+* **Update**: Example Nextcloud folder `examples/nextcloud-folder/` (English): first post with image, glossary entry, legal notice and privacy policy as templates with marked placeholders; a test keeps it loadable without warnings and the legal pages free of real data.
 * **Update**: W15 sending webmentions: off by default (`MUFFEL_WEBMENTIONS_SEND`), own module with address checks, endpoint discovery, state with baseline at the first start, retries, host memory, alert for given-up pairs; `docker/webmentions.sh`; guide in the docs; O11 and O12 decided.
 * **Update**: W23 UI language: `MUFFEL_LANG` (`en` default, `de`), catalogs per language with a shared type, texts of the core per language, German build for a small E2E suite; new policy [Defaults stay inside](/ops/defaults.md) (webmention sending off by default); restore only works into an empty Remark42 (documented).
 * **Update**: Moderation (administrator by email, mail on new comments, `docker/moderate.sh`), `TRUSTED_PROXY` and `X-Real-IP` handling, backup and restore (`docker/backup.sh`, `docker/restore.sh`), all with CI flows; docs updated.
