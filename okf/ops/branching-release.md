@@ -51,6 +51,20 @@ generated: { by: claude-code/web, at: 2026-11-02T13:40:00Z }
   user sets the package to public (package settings on GitHub), or logs in with
   a token that has `read:packages`.
 
+# Documentation site (2026-11-04)
+
+* **[E]** `apps/docs` is an Astro Starlight site in English (decided with the
+  user), published to GitHub Pages by `.github/workflows/docs.yml` on every
+  change on `main`; the CI builds it on every pull request. Address
+  `https://heiss.github.io/muffelblog/` (`site` and `base` in
+  `astro.config.mjs`). **One-time step by the owner**: Settings, Pages, Source:
+  GitHub Actions.
+* **[E]** Unit tests keep it honest: the Content Security Policy shown in the proxy
+  examples equals the one in `docker/Caddyfile`, every setting of the code is in
+  the configuration reference, internal links resolve, the named Compose files exist.
+* **[U]** The nginx and Traefik examples were written from the documentation of
+  those programs and not run against real installations.
+
 # Proposals
 
 * **[V]** Branch names: `feature/wNN-<short name>`.

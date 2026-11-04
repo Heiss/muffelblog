@@ -87,6 +87,14 @@ describe('compose.production.yaml (own reverse proxy)', () => {
     expect(mount).toMatch(/^\$\{MUFFEL_RELEASES_DIR:\?/);
   });
 
+  it('serves the same host folder when our web server is switched on', async () => {
+    const { web } = await services('compose.production.yaml');
+    const mount = (web?.volumes ?? []).find((v) =>
+      v.endsWith(':/srv/releases:ro'),
+    );
+    expect(mount).toMatch(/^\$\{MUFFEL_RELEASES_DIR:\?/);
+  });
+
   it('does not start our web server or the mail sink by default', async () => {
     const all = await services('compose.production.yaml');
     expect(all.web?.profiles?.length).toBeGreaterThan(0);
