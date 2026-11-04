@@ -19,6 +19,10 @@ wait_for() { # description, shell test that must succeed
     if [ $i -ge 60 ]; then
       echo "FAIL  $1"
       echo "--- mails in Mailpit:"; curl -s "$MAIL/api/v1/messages?limit=10" | head -c 1500; echo
+      echo "--- builder state:"
+      docker compose exec -T builder sh -c 'cat /data/state/scheduler.json /data/state/status.json; ls /data/releases' || true
+      echo "--- Remark42 last/1000:"
+      docker compose exec -T builder sh -c 'wget -qO- "http://remark42:8080/api/v1/last/1000?site=muffelblog" | head -c 700' || true; echo
       docker compose logs --no-color --tail 15 builder remark42
       exit 1
     fi
