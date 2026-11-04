@@ -26,6 +26,7 @@ MUFFEL_RELEASES_DIR=/srv/muffelblog/releases
 SITE_URL=https://blog.example.org
 COMMENTS_URL=https://comments.example.org
 MAIL_FROM=blog@example.org
+REMARK_ADMIN_EMAIL=you@example.org          # the comment administrator, see Comments
 SMTP_HOST=smtp.example.org
 SMTP_PORT=465
 SMTP_USERNAME=blog@example.org

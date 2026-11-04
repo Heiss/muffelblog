@@ -93,6 +93,8 @@ describe('documentation matches the code', () => {
       'MUFFEL_ALERT_FORMAT',
       'MUFFEL_RELEASES_DIR',
       'REMARK_PORT',
+      'REMARK_ADMIN_EMAIL',
+      'TRUSTED_PROXY',
     ]) {
       expect(page, name).toContain(`\`${name}\``);
     }

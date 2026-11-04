@@ -117,6 +117,7 @@ jobs:
           SITE_ADDRESS: blog.example.org
           COMMENTS_ADDRESS: comments.example.org
           MAIL_FROM: blog@example.org
+          REMARK_ADMIN_EMAIL: admin@example.org
           SMTP_HOST: smtp.example.org
           SMTP_PORT: '465'
           SMTP_USERNAME: user
