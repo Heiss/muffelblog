@@ -140,3 +140,4 @@ export type {
 } from './webmention-receive.ts';
 export { buildFileTree } from './file-tree.ts';
 export type { TreeFile, TreeFolder } from './file-tree.ts';
+export { hasExtras, isHttp, isPlainOrigin, tryUrl } from './url-check.ts';

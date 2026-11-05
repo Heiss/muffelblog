@@ -1,3 +1,4 @@
+import { isHttp, tryUrl } from '@muffelblog/core';
 import type { AlertEvent } from './scheduler.ts';
 
 export interface AlertConfig {
@@ -12,13 +13,10 @@ export function alertConfig(
 ): AlertConfig | undefined {
   const raw = env.MUFFEL_ALERT_WEBHOOK?.trim();
   if (!raw) return undefined;
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
+  const url = tryUrl(raw);
+  if (url === null)
     throw new Error(`MUFFEL_ALERT_WEBHOOK is not an address: ${raw}`);
-  }
-  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+  if (!isHttp(url)) {
     throw new Error(
       `MUFFEL_ALERT_WEBHOOK must start with http:// or https://: ${raw}`,
     );
