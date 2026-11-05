@@ -6,3 +6,6 @@ playwright-report
 test-results
 okf
 AGENTS.md
+coverage/
+reports/
+.stryker-tmp/

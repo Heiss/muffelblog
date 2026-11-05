@@ -9,3 +9,8 @@ test-results/
 .env.*
 !.env.example
 .release-staging/
+
+# Test reports (coverage, mutation)
+coverage/
+reports/
+.stryker-tmp/

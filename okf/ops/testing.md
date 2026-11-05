@@ -124,3 +124,14 @@ only: free of what the tests see.
 * **Semantic conflicts:** two PRs that are green at the same time can together
   produce an error in `main`. The branch protection option "branch must be up to
   date" prevents that, but costs re-basing with many Renovate PRs (O33).
+
+# Code quality gates (W18, decided by the owner 2026-11-05: strict)
+
+* **[E]** ESLint blocks in every CI run: cyclomatic complexity at most 10,
+  cognitive complexity (sonarjs) at most 10, nesting at most 4, functions at
+  most 50 lines (blank lines and comments not counted; test files, E2E and
+  contract tests are free of the length rule). All 91 places that broke these
+  limits were rebuilt into smaller functions, none was exempted; factories now
+  hold their state in a small object and call module functions.
+* **[E]** The builder's entry point `cli.ts` is a thin shell; its parts live in
+  `wiring.ts`.

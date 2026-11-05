@@ -85,69 +85,88 @@ const json = (res, status, value) => {
   res.end(JSON.stringify(value));
 };
 
+function mentionsFeed(url) {
+  const since = Number(url.searchParams.get('since_id') ?? 0);
+  const perPage = Math.min(
+    Number(url.searchParams.get('per-page') ?? 20),
+    1000,
+  );
+  const page = Number(url.searchParams.get('page') ?? 0);
+  const list = mentions.filter((m) => m.id > since);
+  if (url.searchParams.get('sort-dir') !== 'up') list.reverse();
+  return {
+    type: 'feed',
+    name: 'Webmentions',
+    children: list.slice(page * perPage, (page + 1) * perPage).map(asJf2),
+  };
+}
+
+const deletedList = () =>
+  [...deleted].reverse().map((d) => ({
+    'wm-id': d.id,
+    'wm-source': d.source,
+    'wm-target': d.target,
+    'wm-deleted': d.deleted,
+  }));
+
+// The endpoint the blog announces: /<domain>/webmention
+async function receive(req, res) {
+  const form = new URLSearchParams(await readBody(req));
+  const source = form.get('source') ?? '';
+  const target = form.get('target') ?? '';
+  if (!isHttp(source) || !isHttp(target))
+    return json(res, 400, { error: 'source and target must be http(s)' });
+  const m = add(source, target);
+  res.setHeader('Location', `/api/status/${m.id}`);
+  return json(res, 201, { status: 'queued' });
+}
+
+async function addForTest(req, res) {
+  const body = JSON.parse(await readBody(req));
+  if (!isHttp(body.source) || !isHttp(body.target))
+    return json(res, 400, { error: 'source and target must be http(s)' });
+  return json(
+    res,
+    201,
+    add(body.source, body.target, body.property, body.author),
+  );
+}
+
+async function deleteForTest(req, res) {
+  const body = JSON.parse(await readBody(req));
+  const i = mentions.findIndex((m) => m.id === body.id);
+  if (i < 0) return json(res, 404, { error: 'unknown id' });
+  const [m] = mentions.splice(i, 1);
+  deleted.push({ ...m, deleted: new Date().toISOString() });
+  console.log(`mention ${m.id} deleted`);
+  return json(res, 200, { deleted: m.id });
+}
+
+/** The API answers with the token only, like webmention.io. */
+const withToken = (answer) => (req, res, url) =>
+  authorized(req, url)
+    ? json(res, 200, answer(url))
+    : json(res, 401, { error: 'forbidden' });
+
+const ROUTES = {
+  'GET /api/mentions.jf2': withToken(mentionsFeed),
+  'GET /api/deleted': withToken(deletedList),
+  'POST /_standin/mention': addForTest,
+  'POST /_standin/delete': deleteForTest,
+};
+
+function route(req, url) {
+  if (req.method === 'POST' && /^\/[^/]+\/webmention$/.test(url.pathname))
+    return receive;
+  return ROUTES[`${req.method} ${url.pathname}`];
+}
+
 createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://standin');
+  const handler = route(req, url);
+  if (!handler) return json(res, 404, { error: 'not found' });
   try {
-    // The endpoint the blog announces: /<domain>/webmention
-    if (req.method === 'POST' && /^\/[^/]+\/webmention$/.test(url.pathname)) {
-      const form = new URLSearchParams(await readBody(req));
-      const source = form.get('source') ?? '';
-      const target = form.get('target') ?? '';
-      if (!isHttp(source) || !isHttp(target))
-        return json(res, 400, { error: 'source and target must be http(s)' });
-      const m = add(source, target);
-      res.setHeader('Location', `/api/status/${m.id}`);
-      return json(res, 201, { status: 'queued' });
-    }
-    if (req.method === 'GET' && url.pathname === '/api/mentions.jf2') {
-      if (!authorized(req, url)) return json(res, 401, { error: 'forbidden' });
-      const since = Number(url.searchParams.get('since_id') ?? 0);
-      const perPage = Math.min(
-        Number(url.searchParams.get('per-page') ?? 20),
-        1000,
-      );
-      const page = Number(url.searchParams.get('page') ?? 0);
-      const list = mentions.filter((m) => m.id > since);
-      if (url.searchParams.get('sort-dir') !== 'up') list.reverse();
-      return json(res, 200, {
-        type: 'feed',
-        name: 'Webmentions',
-        children: list.slice(page * perPage, (page + 1) * perPage).map(asJf2),
-      });
-    }
-    if (req.method === 'GET' && url.pathname === '/api/deleted') {
-      if (!authorized(req, url)) return json(res, 401, { error: 'forbidden' });
-      return json(
-        res,
-        200,
-        [...deleted].reverse().map((d) => ({
-          'wm-id': d.id,
-          'wm-source': d.source,
-          'wm-target': d.target,
-          'wm-deleted': d.deleted,
-        })),
-      );
-    }
-    if (req.method === 'POST' && url.pathname === '/_standin/mention') {
-      const body = JSON.parse(await readBody(req));
-      if (!isHttp(body.source) || !isHttp(body.target))
-        return json(res, 400, { error: 'source and target must be http(s)' });
-      return json(
-        res,
-        201,
-        add(body.source, body.target, body.property, body.author),
-      );
-    }
-    if (req.method === 'POST' && url.pathname === '/_standin/delete') {
-      const body = JSON.parse(await readBody(req));
-      const i = mentions.findIndex((m) => m.id === body.id);
-      if (i < 0) return json(res, 404, { error: 'unknown id' });
-      const [m] = mentions.splice(i, 1);
-      deleted.push({ ...m, deleted: new Date().toISOString() });
-      console.log(`mention ${m.id} deleted`);
-      return json(res, 200, { deleted: m.id });
-    }
-    return json(res, 404, { error: 'not found' });
+    return await handler(req, res, url);
   } catch (error) {
     return json(res, 400, { error: String(error) });
   }
