@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-05
+* **Update**: Supported versions (O8): `supported-versions.json` (Memos 26.11.0 and 26.10.0, Nextcloud 35.0.2 and 34.0.5), contract tests as a matrix of both lines, Renovate raises the current line, docs page reference/versions with a sync test.
 * **Update**: Glossary field `term:` (title may be a question, letter view sorts by the term) and comments on terms (O38).
 * **Update**: Decisions of the owner on the open points: W14 before the release with a webmention.io stand-in; pinned versions with parallel contract tests (current and previous) and Renovate; per-page social preview images; view counter from the Caddy log (public, on by default, `MUFFEL_STATS`); glossary field `term:` and comments on terms; favicon accepted; O27 reading confirmed; repo public; Renovate details after the release.
 * **Update**: OKF aligned before the release: [Open points](/open-points.md) split into open decisions of the owner (with proposals), owner tasks for the go-live, settled points and unverified facts; `docker.md` (builder not root, scheduler in 26.11.0), overview (license, setup, webmention state), W14 state, favicon in URLs and SEO.
