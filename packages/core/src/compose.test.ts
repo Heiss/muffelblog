@@ -174,6 +174,15 @@ describe('Remark42 hardening and moderation', () => {
       expect(builder.indexOf('USER node')).toBeLessThan(builder.indexOf('CMD'));
     });
 
+    it('installs the HEIC converter as root, before the user is set', async () => {
+      const text = await dockerfile();
+      const builder = text.slice(text.indexOf('AS builder'));
+      const install = builder.indexOf('libheif-examples');
+      expect(install).toBeGreaterThan(-1);
+      expect(install).toBeLessThan(builder.indexOf('USER node'));
+      expect(builder).toMatch(/rm -rf \/var\/lib\/apt\/lists/);
+    });
+
     it('does not set a user in the stages that only build', async () => {
       const text = await dockerfile();
       const before = text.slice(0, text.indexOf('AS builder'));

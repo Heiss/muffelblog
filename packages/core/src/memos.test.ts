@@ -1,4 +1,6 @@
+import { readFile } from 'node:fs/promises';
 import sharp from 'sharp';
+import { createHeifConverter } from './heic.ts';
 import { describe, expect, it, vi } from 'vitest';
 import {
   MemosError,
@@ -689,5 +691,82 @@ describe('buildMemoEntries: attachments', () => {
     const store = new Map<string, Buffer>();
     await buildMemoEntries(source, store);
     expect(store.size).toBe(1);
+  });
+});
+
+describe('buildMemoEntries: HEIC photos', () => {
+  const heic = () =>
+    readFile(new URL('../fixtures/heic/sample.heic', import.meta.url));
+  const jpegOut = () =>
+    sharp({
+      create: { width: 96, height: 64, channels: 3, background: '#3366aa' },
+    })
+      .jpeg()
+      .toBuffer();
+
+  it('turns a HEIC photo into an image when a converter is given', async () => {
+    const source = fakeSource(
+      [rawMemo('h', { attachments: [attachmentRaw('i', 'foto.heic')] })],
+      { 'attachments/i': await heic() },
+    );
+    const store = new Map<string, Buffer>();
+    const seen: number[] = [];
+    const { memos, warnings } = await buildMemoEntries(source, store, {
+      convertHeic: async (data) => {
+        seen.push(data.length);
+        return jpegOut();
+      },
+    });
+    expect(warnings).toEqual([]);
+    expect(memos[0]?.html).toMatch(
+      /<img [^>]*src="\/media\/[0-9a-f]{16}-96\.webp"/,
+    );
+    expect(seen).toHaveLength(1);
+    expect(store.size).toBeGreaterThan(0);
+  });
+
+  it('skips the photo with a warning when the conversion fails, without the message of the tool', async () => {
+    const source = fakeSource(
+      [rawMemo('h', { attachments: [attachmentRaw('i', 'foto.heic')] })],
+      { 'attachments/i': await heic() },
+    );
+    const { memos, warnings } = await buildMemoEntries(source, new Map(), {
+      convertHeic: async () => {
+        throw new Error('heif-convert: /tmp/heic-x/in.heic broken');
+      },
+    });
+    expect(memos[0]?.html).not.toContain('<img');
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatch(/foto\.heic.*not a readable image/);
+    expect(warnings[0]).not.toContain('/tmp/');
+  });
+
+  it('does not run the tool on a file that is no HEIC photo, whatever its name says', async () => {
+    const source = fakeSource(
+      [rawMemo('h', { attachments: [attachmentRaw('i', 'foto.heic')] })],
+      { 'attachments/i': Buffer.from('<html>not a photo</html>') },
+    );
+    let ran = false;
+    const { memos, warnings } = await buildMemoEntries(source, new Map(), {
+      convertHeic: createHeifConverter({
+        run: async () => {
+          ran = true;
+        },
+      }),
+    });
+    expect(ran).toBe(false);
+    expect(memos[0]?.html).not.toContain('<img');
+    expect(warnings).toHaveLength(1);
+  });
+
+  it('keeps skipping HEIC with a hint when there is no converter', async () => {
+    const source = fakeSource(
+      [rawMemo('h', { attachments: [attachmentRaw('i', 'foto.heic')] })],
+      {},
+    );
+    const { warnings } = await buildMemoEntries(source, new Map());
+    expect(source.fetched).toEqual([]);
+    expect(warnings[0]).toMatch(/HEIC/);
+    expect(warnings[0]).toMatch(/JPEG/);
   });
 });

@@ -113,3 +113,5 @@ export type {
   SourceEntry,
   WebmentionState,
 } from './webmention-send.ts';
+export { createHeifConverter, heifAvailable, isHeic } from './heic.ts';
+export type { HeicConverter, HeicRunner } from './heic.ts';

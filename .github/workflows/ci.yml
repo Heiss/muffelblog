@@ -137,6 +137,8 @@ jobs:
         run: |
           test "$(docker compose exec -T builder id -u)" = 1000
           docker compose exec -T builder sh -c 'touch /data/state/.w /data/releases/.w /data/cache/.w && rm /data/state/.w /data/releases/.w /data/cache/.w'
+      - name: HEIC photos can be converted in the builder image
+        run: docker compose exec -T builder node src/heic-check.ts
       - name: Smoke test
         run: docker/smoke.sh
       - name: A comment reaches the page through the scheduler

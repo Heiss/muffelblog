@@ -92,8 +92,9 @@ sources:
 * **[U]** The behavior of attachments that are stored externally
   (`externalLink`) on the file route is not proven. The builder does not load
   them.
-* HEIC photos (iPhone) are not processed, the image library does not decode
-  them (O36).
+* **[E]** HEIC photos (iPhone) are converted to JPEG with `heif-convert`
+  (builder image), then processed like any image (O36). Without the program
+  they are skipped with a note.
 
 # Deleting and downgrading
 
