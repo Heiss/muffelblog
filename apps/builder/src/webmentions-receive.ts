@@ -90,76 +90,115 @@ export function recoverFromComments(
   return state;
 }
 
+/** GETs JSON from webmention.io with the token; errors never name the token. */
+async function getJson(
+  options: ReceiveOptions,
+  pathname: string,
+  params: Record<string, string>,
+): Promise<unknown> {
+  const url = new URL(`${options.apiUrl.replace(/\/+$/, '')}${pathname}`);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  let res: Response;
+  try {
+    res = await (options.fetch ?? globalThis.fetch)(url.href, {
+      // The token goes in the header, so it never lands in a log of a proxy.
+      headers: {
+        Authorization: `Bearer ${options.token}`,
+        Accept: 'application/json',
+      },
+      redirect: 'error',
+      signal: AbortSignal.timeout(options.timeoutMs),
+    });
+  } catch (error) {
+    throw new Error(
+      `webmention.io is unreachable (${error instanceof Error ? error.message : String(error)})`,
+      { cause: error },
+    );
+  }
+  if (!res.ok)
+    throw new Error(`webmention.io answered ${res.status} for ${pathname}`);
+  const text = await res.text();
+  if (text.length > options.maxBytes)
+    throw new Error(
+      `webmention.io answered with too much data for ${pathname}`,
+    );
+  return JSON.parse(text) as unknown;
+}
+
+async function fetchMentions(
+  options: ReceiveOptions,
+  sinceId: number,
+): Promise<ReceivedMention[]> {
+  const all: ReceivedMention[] = [];
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const params: Record<string, string> = {
+      token: options.token,
+      'per-page': String(PER_PAGE),
+      page: String(page),
+      'sort-dir': 'up',
+    };
+    if (sinceId > 0) params.since_id = String(sinceId);
+    const list = parseMentions(
+      await getJson(options, '/api/mentions.jf2', params),
+    );
+    all.push(...list);
+    if (list.length < PER_PAGE) break;
+  }
+  return all;
+}
+
+/** The saved state, or the one rebuilt from the comments of Remark42. */
+async function startState(
+  options: ReceiveOptions,
+  stateFile: string,
+): Promise<ReceiveState> {
+  const saved = await loadReceiveState(stateFile);
+  if (saved) return saved;
+  const state = recoverFromComments(await options.admin.list(1000));
+  options.log(
+    `webmentions received: no state yet, ${Object.keys(state.posted).length} existing mention comment(s) found in Remark42`,
+  );
+  return state;
+}
+
+/** Posts the new mentions and removes the deleted ones; saves after each step. */
+async function apply(
+  options: ReceiveOptions,
+  state: ReceiveState,
+  plan: ReturnType<typeof planReceive>,
+  save: () => Promise<void>,
+): Promise<void> {
+  for (const item of plan.post) {
+    const commentId = await options.admin.postComment(
+      mentionText(item.mention, options.lang),
+      item.page,
+    );
+    state.posted[item.key] = {
+      commentId,
+      page: item.page,
+      wmId: item.mention.id,
+    };
+    options.log(`webmention received: ${item.mention.source} -> ${item.page}`);
+    await save();
+  }
+  for (const item of plan.remove) {
+    await options.admin.deleteComment(item.commentId, item.page);
+    delete state.posted[item.key];
+    options.log(`webmention removed: ${item.key}`);
+    await save();
+  }
+}
+
 /** Reads received mentions from webmention.io and writes them into Remark42 as comments. */
 export function createReceiveRunner(options: ReceiveOptions) {
   const stateFile = path.join(options.stateDir, 'webmentions-received.json');
-  const doFetch = options.fetch ?? globalThis.fetch;
-  const api = options.apiUrl.replace(/\/+$/, '');
-
-  async function getJson(
-    pathname: string,
-    params: Record<string, string>,
-  ): Promise<unknown> {
-    const url = new URL(`${api}${pathname}`);
-    for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-    let res: Response;
-    try {
-      res = await doFetch(url.href, {
-        // The token goes in the header, so it never lands in a log of a proxy.
-        headers: {
-          Authorization: `Bearer ${options.token}`,
-          Accept: 'application/json',
-        },
-        redirect: 'error',
-        signal: AbortSignal.timeout(options.timeoutMs),
-      });
-    } catch (error) {
-      throw new Error(
-        `webmention.io is unreachable (${error instanceof Error ? error.message : String(error)})`,
-        { cause: error },
-      );
-    }
-    if (!res.ok)
-      throw new Error(`webmention.io answered ${res.status} for ${pathname}`);
-    const text = await res.text();
-    if (text.length > options.maxBytes)
-      throw new Error(
-        `webmention.io answered with too much data for ${pathname}`,
-      );
-    return JSON.parse(text) as unknown;
-  }
-
-  async function fetchMentions(sinceId: number): Promise<ReceivedMention[]> {
-    const all: ReceivedMention[] = [];
-    for (let page = 0; page < MAX_PAGES; page++) {
-      const params: Record<string, string> = {
-        token: options.token,
-        'per-page': String(PER_PAGE),
-        page: String(page),
-        'sort-dir': 'up',
-      };
-      if (sinceId > 0) params.since_id = String(sinceId);
-      const list = parseMentions(await getJson('/api/mentions.jf2', params));
-      all.push(...list);
-      if (list.length < PER_PAGE) break;
-    }
-    return all;
-  }
-
   return {
     /** One run: read, post, remove, save. A failure is thrown to the caller, who logs it. */
     async run(): Promise<{ posted: number; removed: number }> {
-      let state = await loadReceiveState(stateFile);
-      if (!state) {
-        state = recoverFromComments(await options.admin.list(1000));
-        const known = Object.keys(state.posted).length;
-        options.log(
-          `webmentions received: no state yet, ${known} existing mention comment(s) found in Remark42`,
-        );
-      }
-      const mentions = await fetchMentions(state.sinceId);
+      const state = await startState(options, stateFile);
+      const mentions = await fetchMentions(options, state.sinceId);
       const deleted = parseDeleted(
-        await getJson('/api/deleted', {
+        await getJson(options, '/api/deleted', {
           token: options.token,
           'per-page': String(PER_PAGE),
         }),
@@ -167,34 +206,10 @@ export function createReceiveRunner(options: ReceiveOptions) {
       const plan = planReceive(state, mentions, deleted, options.siteUrl);
       const save = () =>
         writeAtomic(stateFile, JSON.stringify(state, null, 2) + '\n');
-      let posted = 0;
-      for (const item of plan.post) {
-        const commentId = await options.admin.postComment(
-          mentionText(item.mention, options.lang),
-          item.page,
-        );
-        state.posted[item.key] = {
-          commentId,
-          page: item.page,
-          wmId: item.mention.id,
-        };
-        posted++;
-        options.log(
-          `webmention received: ${item.mention.source} -> ${item.page}`,
-        );
-        await save();
-      }
-      let removed = 0;
-      for (const item of plan.remove) {
-        await options.admin.deleteComment(item.commentId, item.page);
-        delete state.posted[item.key];
-        removed++;
-        options.log(`webmention removed: ${item.key}`);
-        await save();
-      }
+      await apply(options, state, plan, save);
       state.sinceId = plan.sinceId;
       await save();
-      return { posted, removed };
+      return { posted: plan.post.length, removed: plan.remove.length };
     },
   };
 }
