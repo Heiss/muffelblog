@@ -196,8 +196,10 @@ http:
 ```
 
 Set `COMMENTS_URL=https://comments.example.org` in `.env` so the policy names the
-right origin. The two ports are published on all interfaces by `compose.yaml`;
-block them from outside in your firewall.
+right origin. The two ports are published on `127.0.0.1` only (`MUFFEL_BIND`), so
+only a proxy on the same machine reaches them. If your Traefik runs in a
+container, point it at the address of the host that the container can reach, and
+set `MUFFEL_BIND` to that address, never to `0.0.0.0` without a firewall.
 
 ## Client addresses and the rate limit
 

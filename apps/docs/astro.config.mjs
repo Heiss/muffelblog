@@ -51,6 +51,7 @@ export default defineConfig({
             { slug: 'production/own-proxy' },
             { slug: 'production/own-caddy' },
             { slug: 'production/operations' },
+            { slug: 'production/runbook' },
           ],
         },
         {

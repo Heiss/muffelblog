@@ -90,6 +90,13 @@ Decided by the owner on 2026-11-04 (W15). Sending is **off by default**
 * **[E]** First activation: the current state is stored as "already sent"
   without sending anything. Only new and changed entries are sent afterwards.
   A command sends the existing entries on purpose.
+* **[E]** Change of the site address (the origin of `SITE_URL`): the state holds
+  the origin it was made under. On a change every entry would look new and
+  every link would be reported again, so the sender behaves like at the first
+  start: it stores the entries under the new address without sending, and
+  forgets the pairs of the old address (also failed ones). Decided on 2026-11-05
+  as a consequence of "no flood"; a state from before the origin was stored is
+  accepted without a reset.
 * **[E]** Limits, all adjustable by variable: 10 s per request, 1 MB read per
   response, at most 10 targets per entry, one request per second, at most 3
   redirects (each one checked again). A failed pair is tried up to 3 times over

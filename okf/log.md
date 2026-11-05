@@ -1,5 +1,8 @@
 # Update log
 
+## 2026-11-05
+* **Update**: Hardening and runbook (W16): security review recorded, ports of the demo listen on `127.0.0.1` by default (`MUFFEL_BIND`), the webmention sender resets quietly when the domain changes, runbook for disruptions in the docs, three `[U]` points settled.
+
 ## 2026-11-04
 * **Update**: Tutorial on the documentation site (4 chapters, English): prepare Nextcloud and Memos, set up and publish with `compose.yaml` + `compose.production.yaml` and an own reverse proxy, comments and moderation, webmentions. Decisions of the owner: real setup with domain, 4 larger chapters, legal text templates stay in the example folder (the tutorial links to GitHub), webmention.rocks as the receiver for the outgoing test. The steps inside Nextcloud, Memos, mail provider and webmention.rocks are marked as not checked against a live instance (webmention.rocks could not be reached from the build environment). A test keeps scripts, files and variables of the tutorial in line with the code.
 * **Update**: Example Nextcloud folder `examples/nextcloud-folder/` (English): first post with image, glossary entry, legal notice and privacy policy as templates with marked placeholders; a test keeps it loadable without warnings and the legal pages free of real data.
