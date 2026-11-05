@@ -115,3 +115,5 @@ export type {
 } from './webmention-send.ts';
 export { createHeifConverter, heifAvailable, isHeic } from './heic.ts';
 export type { HeicConverter, HeicRunner } from './heic.ts';
+export { buildFileTree } from './file-tree.ts';
+export type { TreeFile, TreeFolder } from './file-tree.ts';

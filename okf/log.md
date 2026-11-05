@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-05
+* **Update**: File tree `/files/` (owner's wish): published files in the folders of the Nextcloud folder, without drafts, see [URLs and SEO](/frontend/urls-seo.md).
 * **Update**: Social preview images (O17): one PNG per post, memo and term at build time (`satori`, `sharp`), `og:image` only with `SITE_URL`.
 * **Update**: Statistics (O19, changed by the owner): no own counter; optional Matomo through `MATOMO_URL` and `MATOMO_SITE_ID`, without cookies, off by default; the CSP names exactly that address.
 * **Update**: Supported versions (O8): `supported-versions.json` (Memos 26.11.0 and 26.10.0, Nextcloud 35.0.2 and 34.0.5), contract tests as a matrix of both lines, Renovate raises the current line, docs page reference/versions with a sync test.
