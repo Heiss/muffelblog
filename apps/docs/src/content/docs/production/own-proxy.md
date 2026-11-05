@@ -78,7 +78,7 @@ blog.example.org {
 		Referrer-Policy strict-origin-when-cross-origin
 		-Server
 	}
-	@buildjson path /build.json /health.json
+	@buildjson path /build.json /health.json /entries.json
 	header @buildjson Cache-Control "no-cache"
 	@hashed path /_astro/*
 	header @hashed Cache-Control "public, max-age=31536000, immutable"
@@ -121,7 +121,7 @@ server {
     location / {
         try_files $uri $uri/index.html =404;
     }
-    location ~ ^/(build|health)\.json$ {
+    location ~ ^/(build|health|entries)\.json$ {
         add_header Cache-Control "no-cache" always;
         # add_header in a location replaces the ones above: repeat them here
         add_header Content-Security-Policy "default-src 'none'" always;

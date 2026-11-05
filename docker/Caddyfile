@@ -37,7 +37,7 @@ http://:2020 {
 	encode zstd gzip
 
 	# The build signal and the health file are always revalidated, hashed files never.
-	@buildjson path /build.json /health.json
+	@buildjson path /build.json /health.json /entries.json
 	header @buildjson Cache-Control "no-cache"
 	@hashed path /_astro/*
 	header @hashed Cache-Control "public, max-age=31536000, immutable"

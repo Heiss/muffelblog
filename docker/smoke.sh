@@ -18,6 +18,15 @@ until [ "$(status "$SITE/build.json")" = "200" ] || [ $i -ge 60 ]; do i=$((i+1))
 
 check "site answers"                 200 "$(status "$SITE/")"
 check "build.json"                   200 "$(status "$SITE/build.json")"
+# The banner polls build.json and entries.json with revalidation: a conditional
+# request must be answered with 304.
+for f in build.json entries.json; do
+  etag="$(curl -sI --max-time 10 "$SITE/$f" | tr -d '\r' | sed -n 's/^[Ee][Tt]ag: //p')"
+  if [ -z "$etag" ]; then echo "FAIL  $f has no ETag"; fail=1; else
+    check "$f answers 304 to a conditional request" 304 "$(status -H "If-None-Match: $etag" "$SITE/$f")"
+  fi
+done
+check "entries.json"                 200 "$(status "$SITE/entries.json")"
 # health.json is written at every check, give the first check a moment.
 i=0
 until [ "$(status "$SITE/health.json")" = "200" ] || [ $i -ge 30 ]; do i=$((i+1)); sleep 2; done

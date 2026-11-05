@@ -62,6 +62,8 @@ describe('message catalogs', () => {
       expect(m.feed.pageTitle('Foo', 3)).toContain('Foo');
       expect(m.tags.heading('x')).toContain('x');
       expect(m.embed.frameTitle('Video')).toContain('Video');
+      expect(m.live.many(7)).toContain('7');
+      expect(m.live.more(20)).toContain('20+');
     }
   });
 });

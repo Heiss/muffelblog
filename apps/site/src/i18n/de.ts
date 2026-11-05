@@ -70,6 +70,11 @@ export const de: Messages = {
     pageTitle: (title: string, page: number) => `${title}, Seite ${page}`,
     loadFailed: 'Nachladen fehlgeschlagen. ',
   },
+  live: {
+    one: '1 neuer Eintrag',
+    many: (count: number) => `${count} neue Einträge`,
+    more: (count: number) => `${count}+ neue Einträge`,
+  },
   embed: {
     frameTitle: (label: string) => `${label}: eingebetteter Inhalt`,
   },

@@ -20,6 +20,7 @@ description: All pages of the site and what they show.
 | `/robots.txt`                                                                                | Allows crawling; names the sitemap when `SITE_URL` is set                                 |
 | `/404.html`                                                                                  | Page for unknown addresses                                                                |
 | `/build.json`                                                                                | `{"id": ..., "builtAt": ...}` of the release that is online                               |
+| `/entries.json`                                                                              | The newest 20 entries (id, kind, date, tag addresses) for the banner "N new entries"      |
 | `/health.json`                                                                               | State of the builder for monitoring, see [Operations](/muffelblog/production/operations/) |
 
 The addresses are English and do not depend on the interface language.

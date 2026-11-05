@@ -389,16 +389,18 @@ Applies to every work package in addition to its own criteria:
 
 * Branch: `feature/w07-build-json`
 * Depends on: W05, W06
-* Decisions: number of entries in `build.json`, polling interval, design of the
-  banner.
+* Decisions **[E]** (owner chose the counter on 2026-11-05; details in
+  [Live update](/frontend/live-update.md)): the list of the newest 20 entries is
+  its own file `entries.json`, polling every 60 seconds while the tab is
+  visible, a sticky button in the style of the filter pills.
 * DoD:
-  * [ ] `build.json` is written as the last file of a build.
-  * [ ] Conditional requests answer with 304.
-  * [ ] The banner counts only entries that are newer than the newest loaded
+  * [x] `build.json` is written as the last file of a build.
+  * [x] Conditional requests answer with 304.
+  * [x] The banner counts only entries that are newer than the newest loaded
     one.
-  * [ ] A click scrolls up and shows the new entries.
-  * [ ] The banner does not appear if only comments change.
-  * [ ] Polling happens only while the tab is visible.
+  * [x] A click scrolls up and shows the new entries.
+  * [x] The banner does not appear if only comments change.
+  * [x] Polling happens only while the tab is visible.
 
 ## W08 - Search (Pagefind)
 

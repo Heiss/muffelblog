@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-05
+* **Update**: W07 banner "N new entries": `entries.json` (newest 20 entries, built with the site), polling of `build.json` every 60 s while the tab is visible, count by series and tag, click shows the top; E2E tests with a controlled clock.
 * **Update**: Hardening and runbook (W16): security review recorded, ports of the demo listen on `127.0.0.1` by default (`MUFFEL_BIND`), the webmention sender resets quietly when the domain changes, runbook for disruptions in the docs, three `[U]` points settled.
 
 ## 2026-11-04
