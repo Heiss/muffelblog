@@ -15,6 +15,7 @@ git clone https://github.com/Heiss/muffelblog.git
 cd muffelblog
 docker/init-env.sh
 sudo mkdir -p /srv/muffelblog/releases
+sudo chown 1000:1000 /srv/muffelblog/releases   # the builder runs as uid 1000, not root
 ```
 
 `docker/init-env.sh` creates `.env` with fresh random secrets for Remark42

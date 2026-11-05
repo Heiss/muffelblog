@@ -154,4 +154,30 @@ describe('Remark42 hardening and moderation', () => {
       expect(remark42?.environment?.ADMIN_SHARED_EMAIL, file).toMatch(/:\?/);
     }
   });
+
+  describe('the Dockerfile', () => {
+    const dockerfile = () =>
+      readFile(path.join(path.dirname(file), 'Dockerfile'), 'utf8');
+
+    it('runs the builder as the user node and hands the data folders to it', async () => {
+      const text = await dockerfile();
+      const builder = text.slice(text.indexOf('AS builder'));
+      expect(builder).toMatch(/^USER node$/m);
+      expect(builder).toMatch(/chown -R node:node \/data/);
+      expect(builder).toMatch(
+        /mkdir -p \/data\/releases \/data\/cache \/data\/state/,
+      );
+      // the user is set after the folders are made, and before the command
+      expect(builder.indexOf('USER node')).toBeGreaterThan(
+        builder.indexOf('chown -R node:node'),
+      );
+      expect(builder.indexOf('USER node')).toBeLessThan(builder.indexOf('CMD'));
+    });
+
+    it('does not set a user in the stages that only build', async () => {
+      const text = await dockerfile();
+      const before = text.slice(0, text.indexOf('AS builder'));
+      expect(before).not.toMatch(/^USER /m);
+    });
+  });
 });

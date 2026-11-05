@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-05
+* **Update**: The builder runs as the user `node` (uid 1000) instead of root (decided by the owner): data folders owned by it, a start check with repair instructions for old volumes, the host folder of the own-proxy setup needs `chown 1000:1000`; CI checks the user and the write access.
 * **Update**: MIT license (`LICENSE`, holder "Muffelblog contributors", decided by the owner); favicon (SVG, a white M on blue) and touch icon, chosen by Claude and open to the owner's review.
 * **Update**: Hardening and runbook (W16): security review recorded, ports of the demo listen on `127.0.0.1` by default (`MUFFEL_BIND`), the webmention sender resets quietly when the domain changes, runbook for disruptions in the docs, three `[U]` points settled.
 

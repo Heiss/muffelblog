@@ -30,5 +30,13 @@ FROM deps AS builder
 COPY --from=rclone/rclone:1.75.2 /usr/local/bin/rclone /usr/local/bin/rclone
 ENV REPO_DIR=/repo \
     RELEASES_DIR=/data/releases
+# Not root: the builder fetches content from outside and runs a build. The user
+# `node` (uid 1000) of the base image owns what the builder writes: the data
+# folders (a new Docker volume takes over this owner from the image) and the
+# places where Astro and Vite write while they build. Everything else in /repo
+# stays owned by root and read-only for the builder.
+RUN mkdir -p /data/releases /data/cache /data/state \
+ && chown -R node:node /data /repo/apps /repo/packages
+USER node
 WORKDIR /repo/apps/builder
 CMD ["pnpm", "start"]
