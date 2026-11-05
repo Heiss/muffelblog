@@ -60,13 +60,11 @@ export function siteSteps(
   return [
     async () => {
       await rm(staging, { recursive: true, force: true });
-      await run(
-        'pnpm',
-        ['exec', 'astro', 'build', '--outDir', staging],
-        site,
-        env,
-      );
-      await run('pnpm', ['exec', 'pagefind', '--site', staging], site, env);
+      // The binaries directly: the image has no pnpm at run time.
+      const bin = (name: string) =>
+        path.join(site, 'node_modules', '.bin', name);
+      await run(bin('astro'), ['build', '--outDir', staging], site, env);
+      await run(bin('pagefind'), ['--site', staging], site, env);
     },
     async (dir) => {
       await cp(staging, dir, { recursive: true });
