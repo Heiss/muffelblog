@@ -61,7 +61,7 @@ listed with their result, so those references keep working. Cleaned up on
 | O33 | Branch must be up to date | Active in the branch protection; PRs are merged one after another. |
 | O35 | Themes | Ten themes, default Solarized Light. |
 | O36 | HEIC photos | Converted with libheif in the builder image ([Media](/content/media.md)). |
-| O37 | Code quality, mutation tests | Postponed to W18, after the release (roadmap). |
+| O37 | Code quality, mutation tests | Decided by the owner 2026-11-05, before the release: strict complexity limits, coverage gate, Stryker from 80 %, security gates ([Test strategy](/ops/testing.md)). |
 | O38 | Glossary details | Done 2026-11-05: optional field `term:` (title may be a question, letter view sorts by the term), comments on terms, umlauts under the base letter (collator `de`). |
 | O39 | Languages | Development in English, `MUFFEL_LANG` with default `en`, feeds and search follow the build language. |
 

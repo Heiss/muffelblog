@@ -233,8 +233,9 @@ jobs:
   # Required check for main. Always runs, so GitHub does not block the merge
   # because of a check that was never reported, and decides itself whether
   # skipped jobs are fine.
-  # Mutation tests (W18): incremental on pull requests (the result of the last
-  # run is restored from the cache), complete on main and on a release tag.
+  # Mutation tests (W18): incremental on pull requests and on main (the result
+  # of the last run is restored from the cache), complete on a release tag and
+  # every night (mutation.yml).
   # A mutation score below 80 % fails the job (stryker.config.json).
   mutation:
     name: Mutation tests
@@ -258,10 +259,10 @@ jobs:
             stryker-${{ github.ref }}-
             stryker-refs/heads/main-
       - name: Incremental run
-        if: github.event_name == 'pull_request'
+        if: github.ref_type != 'tag'
         run: pnpm test:mutation
-      - name: Complete run
-        if: github.event_name != 'pull_request'
+      - name: Complete run (release tag)
+        if: github.ref_type == 'tag'
         run: pnpm test:mutation --force
 
   gate:

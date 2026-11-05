@@ -141,3 +141,14 @@ only: free of what the tests see.
   `src/scripts/*-logic.ts`). Not counted: the thin entry points (`cli.ts`,
   `*-cli.ts`, `heic-check.ts`), which the compose job runs. Level at the
   introduction: 94.4 % lines, 86.9 % branches.
+* **[E]** Mutation tests with Stryker (`stryker.config.json`,
+  `pnpm test:mutation`) over the same code as the coverage; a mutation score
+  below 80 % blocks. Incremental on every pull request and on `main` (the
+  result of the last run, `reports/stryker-incremental.json`, comes from the
+  CI cache); complete every night (`.github/workflows/mutation.yml`) and on a
+  release tag (the release workflow runs the CI). A complete run takes about
+  40 minutes on 4 cores. Level at the introduction: SCORE_PLACEHOLDER.
+* **[E]** Surviving mutants that no input can reach (checks behind `isIP` in
+  `webmention-net.ts`) were removed from the code instead of being tested; a
+  raw `<input>` in Markdown was found this way and is removed again
+  (`render.ts`, only the box of a task list item stays).
