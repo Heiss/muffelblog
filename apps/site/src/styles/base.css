@@ -534,6 +534,8 @@ article > ul.tags {
 .graph-svg .node:focus-visible circle {
   stroke: var(--fg);
   stroke-width: 3;
+}
+
 /* File tree (/files/): folders as <details>, works without JavaScript. */
 .file-tree {
   list-style: none;
