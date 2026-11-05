@@ -147,7 +147,8 @@ only: free of what the tests see.
   result of the last run, `reports/stryker-incremental.json`, comes from the
   CI cache); complete every night (`.github/workflows/mutation.yml`) and on a
   release tag (the release workflow runs the CI). A complete run takes about
-  40 minutes on 4 cores. Level at the introduction: SCORE_PLACEHOLDER.
+  17 minutes on 4 cores. Level at the introduction: 83.1 % (first run 72.4 %,
+  raised with exact tests before the release).
 * **[E]** Surviving mutants that no input can reach (checks behind `isIP` in
   `webmention-net.ts`) were removed from the code instead of being tested; a
   raw `<input>` in Markdown was found this way and is removed again

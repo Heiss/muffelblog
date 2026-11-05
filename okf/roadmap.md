@@ -580,17 +580,17 @@ Applies to every work package in addition to its own criteria:
 * Depends on: W05 (enough code to measure); deliberately not at the start
 * Occasion: the user wants static analysis (code quality, complexity) and later
   mutation tests with more than 80 %, so the code fits the TDD tests.
-* Decisions (open, O37): tools, thresholds for complexity, whether the analysis
+* Decided 2026-11-05 (O37, before the release, see [Test strategy](/ops/testing.md)); formerly open: tools, thresholds for complexity, whether the analysis
   blocks the CI or only reports, scope and run time of the mutation tests (all
   packages or only `packages/core`), when to introduce the 80 % threshold.
 * DoD (draft, **[V]**):
-  * [ ] Complexity limits are set in the lint configuration and the CI checks
+  * [x] Complexity limits are set in the lint configuration and the CI checks
     them.
-  * [ ] A report on code quality exists, existing findings are fixed or accepted
+  * [x] A report on code quality exists, existing findings are fixed or accepted
     knowingly.
-  * [ ] Mutation tests run for the chosen packages, the mutation score is at
+  * [x] Mutation tests run for the chosen packages, the mutation score is at
     least 80 %, surviving mutants are assessed.
-  * [ ] Run time and CI costs are measured (see O34), the run does not block pull
+  * [x] Run time and CI costs are measured (see O34), the run does not block pull
     requests for an unnecessarily long time.
 
 ## W19 - Glossary
