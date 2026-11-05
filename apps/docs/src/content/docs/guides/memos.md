@@ -25,7 +25,7 @@ MEMOS_URL=https://memos.example.org
 ```
 
 The tested Memos versions are listed in [Supported versions](/muffelblog/reference/versions/); its API changes between versions, and the
-contract test in CI runs against that version.
+contract tests in CI run against those versions.
 
 ## How memos appear
 
