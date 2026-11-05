@@ -537,3 +537,79 @@ describe('guards', () => {
     ).rejects.toThrow(/SITE_URL/);
   });
 });
+
+describe('change of the site address', () => {
+  const OTHER = 'https://new.example';
+
+  it('stores the entries under the new address without sending, like a first start', async () => {
+    const old = entry('/p/a/', 'h1', ['https://other.example/x']);
+    const before = await baselined([old]);
+    expect(before.origin).toBe(SITE);
+
+    const moved = {
+      source: `${OTHER}/p/a/`,
+      hash: 'h1',
+      links: ['https://other.example/x'],
+    };
+    const net = fakeNet();
+    const r = await runWebmentionSend(
+      before,
+      [moved],
+      deps(net, { siteUrl: OTHER }),
+    );
+    expect(net.calls).toEqual([]);
+    expect(r.state.origin).toBe(OTHER);
+    expect(Object.keys(r.state.entries)).toEqual([`${OTHER}/p/a/`]);
+    expect(r.report.baselined).toBe(1);
+
+    // afterwards the new address works as usual
+    const net2 = fakeNet({
+      'https://other.example/y': withEndpoint('https://other.example/wm'),
+    });
+    const next = await runWebmentionSend(
+      r.state,
+      [
+        moved,
+        {
+          source: `${OTHER}/p/b/`,
+          hash: 'h2',
+          links: ['https://other.example/y'],
+        },
+      ],
+      deps(net2, { siteUrl: OTHER }),
+    );
+    expect(net2.calls.filter((c) => c.method === 'POST')).toHaveLength(1);
+    expect(next.report.sent).toBe(1);
+  });
+
+  it('forgets failed pairs of the old address instead of trying them again', async () => {
+    const old = entry('/p/a/', 'h1', ['https://h.example/1']);
+    const before = await baselined([]);
+    const failing = fakeNet(
+      { 'https://h.example/1': withEndpoint('https://h.example/wm') },
+      () => ({ status: 500 }),
+    );
+    const failed = await runWebmentionSend(before, [old], deps(failing));
+    expect(Object.values(failed.state.pairs)[0]?.status).toBe('failed');
+
+    const net = fakeNet();
+    const r = await runWebmentionSend(
+      failed.state,
+      [],
+      deps(net, { siteUrl: OTHER }),
+    );
+    expect(net.calls).toEqual([]);
+    expect(r.state.pairs).toEqual({});
+  });
+
+  it('accepts a state from before the address was stored without a reset', async () => {
+    const e = entry('/p/a/', 'h1', ['https://other.example/x']);
+    const before = await baselined([e]);
+    delete (before as { origin?: string }).origin;
+    const net = fakeNet();
+    const r = await runWebmentionSend(before, [e], deps(net));
+    expect(net.calls).toEqual([]);
+    expect(r.state.origin).toBe(SITE);
+    expect(r.state.entries[`${SITE}/p/a/`]?.hash).toBe('h1');
+  });
+});
