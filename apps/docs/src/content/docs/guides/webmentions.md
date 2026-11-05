@@ -102,7 +102,7 @@ Then write a post or memo with a link to `http://localhost:9000/hello`. After
 the next build the receiver prints:
 
 ```text
-webmention received: source=https://blog.example/p/my-post/ target=http://localhost:9000/hello
+webmention received: source="https://blog.example/p/my-post/" target="http://localhost:9000/hello"
 ```
 
 Remove `MUFFEL_WEBMENTIONS_ALLOW_PRIVATE` afterwards.

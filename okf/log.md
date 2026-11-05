@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-05
+* **Fix**: The complete CodeQL scan (main, release) found three older findings that the diff scan of the pull requests did not show: a slow regular expression on the `Link` header of foreign servers (`parseLinkHeader`, now a linear scan; a hostile header took 24 s before) and log lines with line breaks from requests in the two test servers under `docker/`.
 * **Fix**: The release workflow grants its CI call `security-events: write` (CodeQL); without it the run on the tag would fail at its start. A unit test compares the rights of `ci.yml` and `release.yml`.
 * **Update**: Mutation tests (W18, O37): Stryker over core, builder and site logic, 80 % blocks; incremental on pull requests and `main`, complete nightly and on a tag; score 83.1 %; a raw `<input>` in Markdown is removed again, see [Test strategy](/ops/testing.md).
 * **Update**: Coverage gate (W18): unit tests must cover at least 90 % of the lines and 85 % of the branches, CI blocks below, see [Test strategy](/ops/testing.md).
