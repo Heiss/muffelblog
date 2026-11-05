@@ -37,6 +37,33 @@ describe('createAdminClient', () => {
     );
   });
 
+  it('writes a comment as the administrator into the topic of the page', async () => {
+    const { calls, doFetch } = fake({ id: 'new-1' }, 201);
+    const id = await client(doFetch).postComment(
+      'Mention from Ada',
+      'https://b.example/p/x/',
+    );
+    expect(id).toBe('new-1');
+    const call = calls[0] as { url: URL; init: RequestInit };
+    expect(call.init.method).toBe('POST');
+    expect(call.url.pathname).toBe('/api/v1/comment');
+    expect(call.url.searchParams.get('site')).toBe('muffelblog');
+    const body = JSON.parse(
+      await new Response(call.init.body as BodyInit).text(),
+    ) as unknown;
+    expect(body).toEqual({
+      text: 'Mention from Ada',
+      locator: { site: 'muffelblog', url: 'https://b.example/p/x/' },
+    });
+  });
+
+  it('refuses an answer without the id of the new comment', async () => {
+    const { doFetch } = fake({}, 201);
+    await expect(
+      client(doFetch).postComment('x', 'https://b.example/p/x/'),
+    ).rejects.toThrow(/id/);
+  });
+
   it('lists the latest comments', async () => {
     const { calls, doFetch } = fake([
       {

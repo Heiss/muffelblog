@@ -15,7 +15,6 @@ listed with their result, so those references keep working. Cleaned up on
 
 | ID | Topic | Decision of the owner |
 |---|---|---|
-| O3, O11, O32 | Receiving webmentions (W14) | Before the release, and testable without a domain: production uses webmention.io, tests and the demo use a stand-in that copies the webmention.io API. |
 | O8 | Supported versions | Pinned versions, never "latest". The supported versions are listed in the docs. Contract tests run in parallel for the current and the previous version (Memos and Nextcloud); Renovate opens a PR when a new version appears, the contract test shows whether it works. |
 | O17 | Social preview images | Generated per page at build time (posts, memos, terms); developed and checked with the demo set. |
 | O19 | Statistics | View counter per post, memo and term: visitors per day from the access log of our Caddy (only a hash with a daily changing salt, never the address; bots filtered), baked into the HTML at every build, shown publicly on the page. On by default, `MUFFEL_STATS=0` switches it off. GoAccess as an extra container is described in the docs only. |
@@ -33,6 +32,7 @@ listed with their result, so those references keep working. Cleaned up on
 |---|---|---|
 | O1 | Block series for the filter | Three series (mixed, memos, posts), blocks of 20 (W05). |
 | O2 | Date format and time zone | Plain date = 12:00 Berlin time, time without zone = Berlin local time. |
+| O3, O32 | Receiving webmentions (W14) | Built 2026-11-05 with the stand-in of webmention.io; state recovery from the comments of the administrator ([Webmentions](/community/webmentions.md)). A read test against the live webmention.io does not run in CI (external service). |
 | O4 | Remark42 display | Mentions in the timeline: W14 (see A). Widget sorting and the display of `admin` are unchecked, see D. |
 | O5 | Foreign content in Markdown | Only from allowlists (images: Wikimedia, GitHub; embeds: youtube-nocookie after a click). |
 | O6 | Attachments | PDF, audio, video mirrored with size limit and signature check. |
@@ -43,7 +43,7 @@ listed with their result, so those references keep working. Cleaned up on
 | O34 | Visibility of the repo | Public. |
 | O9 | Reverse proxy, Remark42 host | The operator's reverse proxy forwards to our Caddy on `127.0.0.1:8080/8081`; Remark42 on a host of its own (2026-11-05, see [Docker](/architecture/docker.md)). |
 | O10 | Image build | GitHub Actions, images only on a CalVer tag, registry GHCR. |
-| O11 | Webmentions sender | Own module; `h-entry`/`h-card` exist. `rel=me` and IndieAuth belong to W14 (see A). |
+| O11 | Webmentions sender and microformats | Own module; `h-entry`/`h-card` exist; `rel=me` from `MUFFEL_REL_ME` (W14). |
 | O12 | Sending from memos | Posts, memos and terms send. Off by default. |
 | O13 | Tag rules | Lowercase, nested Memos tags stay one tag, tag pages (W05). Inline `#tags` in articles: postponed ("later", [Frontmatter](/content/frontmatter.md)). |
 | O14 | Memo date | `createTime`; title from date and time. |

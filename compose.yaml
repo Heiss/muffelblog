@@ -62,6 +62,15 @@ services:
       MUFFEL_WEBMENTIONS_ENDPOINT_DAYS: ${MUFFEL_WEBMENTIONS_ENDPOINT_DAYS:-}
       MUFFEL_ALERT_WEBHOOK: ${MUFFEL_ALERT_WEBHOOK:-}
       MUFFEL_ALERT_FORMAT: ${MUFFEL_ALERT_FORMAT:-}
+      # Receiving webmentions through webmention.io: off by default. Needs the
+      # token of webmention.io and the administrator login of Remark42 (the
+      # mentions become comments of the administrator). See the docs.
+      MUFFEL_WEBMENTIONS_RECEIVE: ${MUFFEL_WEBMENTIONS_RECEIVE:-}
+      WEBMENTION_IO_URL: ${WEBMENTION_IO_URL:-}
+      WEBMENTION_IO_TOKEN: ${WEBMENTION_IO_TOKEN:-}
+      REMARK_ADMIN_PASSWD: ${REMARK_ADMIN_PASSWD}
+      # Profiles of the owner as rel=me links (login at webmention.io).
+      MUFFEL_REL_ME: ${MUFFEL_REL_ME:-}
     depends_on:
       - remark42
     volumes:

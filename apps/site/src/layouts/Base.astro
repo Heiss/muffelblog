@@ -16,6 +16,7 @@ import { SITE_NAME, pageTitle } from '@muffelblog/core';
 import { canonicalUrl, siteUrl } from '../lib/feed';
 import { messages } from '../i18n/messages';
 import { getContent } from '../lib/articles';
+import { relMeLinks, webmentionEndpoint } from '../lib/indieweb';
 import { DEFAULT_LIGHT, THEMES } from '../lib/themes';
 
 interface Props {
@@ -30,6 +31,8 @@ interface Props {
 const { title, description, noindex, ogType = 'website' } = Astro.props;
 const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
 const { articles } = await getContent();
+const webmention = webmentionEndpoint();
+const relMe = relMeLinks();
 const legalPages = articles
   .filter((a) => a.type === 'page')
   .sort((a, b) => a.title.localeCompare(b.title, messages.lang));
@@ -59,6 +62,10 @@ const legalPages = articles
     <meta property="og:locale" content={messages.locale.replace('-', '_')} />
     {description && <meta property="og:description" content={description} />}
     {canonical && <meta property="og:url" content={canonical} />}
+    {webmention && <link rel="webmention" href={webmention} />}
+    {relMe.map((href) => (
+      <link rel="me" href={href} />
+    ))}
     <meta name="twitter:card" content="summary" />
     {noindex && <meta name="robots" content="noindex, follow" />}
     <!-- Sets data-theme before the first paint, so it is blocking and from the own domain. -->

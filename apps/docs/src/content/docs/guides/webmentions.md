@@ -1,11 +1,13 @@
 ---
 title: Webmentions
-description: Tell other sites that you linked to them. Off by default, how it works, how to switch it on and how to test it.
+description: Send webmentions to the sites you link to and receive mentions of your posts through webmention.io. Both off by default.
 ---
 
 A [webmention](https://www.w3.org/TR/webmention/) is a small message from one
 site to another: "my page _source_ links to your page _target_". Muffelblog can
-**send** them. Receiving mentions is not built yet.
+**send** them, and it can **receive** them through
+[webmention.io](https://webmention.io): a received mention appears as a comment
+under the post. Both are off by default.
 
 :::caution[Off by default]
 A fresh instance does not talk to the outside world. Sending webmentions makes
@@ -104,3 +106,79 @@ webmention received: source=https://blog.example/p/my-post/ target=http://localh
 ```
 
 Remove `MUFFEL_WEBMENTIONS_ALLOW_PRIVATE` afterwards.
+
+## Receive mentions
+
+Other sites send their mentions to [webmention.io](https://webmention.io), a
+free service that keeps them for you. The builder asks it at every check and
+writes each new mention into the comments of the page, as a comment of the
+administrator:
+
+```text
+Reply from Ada Lovelace: https://ada.example/notes/1
+```
+
+The kind (mention, reply, like, repost, bookmark, RSVP) and the author come
+from webmention.io; the time is the time the builder wrote it (Remark42 does not
+allow another one). No text and no picture of the other site are taken over.
+
+:::caution[Off by default]
+With receiving on, the builder contacts webmention.io every few minutes, and
+every page announces webmention.io as its endpoint. Mention it in your privacy
+policy.
+:::
+
+### Set it up
+
+1. Put links to your profiles on the blog, so webmention.io can confirm that the
+   site is yours (IndieAuth with `rel=me`), for example your GitHub profile or
+   your mail address:
+
+   ```sh
+   MUFFEL_REL_ME=https://github.com/you,mailto:you@example.org
+   ```
+
+   `docker compose up -d`, wait for the next build.
+
+2. Sign in at webmention.io with the address of your blog and copy your **API
+   token** from the settings there.
+3. In `.env`:
+
+   ```sh
+   MUFFEL_WEBMENTIONS_RECEIVE=1
+   WEBMENTION_IO_TOKEN=the-token-from-webmention.io
+   ```
+
+   `docker compose up -d`. Every page now announces
+   `https://webmention.io/<your host>/webmention`.
+
+The builder uses the administrator login of Remark42 (`REMARK_ADMIN_PASSWD`) to
+write the comments; it needs `SITE_URL` and the comments (`COMMENTS_URL`).
+
+- **Only posts, memos and terms** get mentions; a mention of another page is
+  ignored.
+- **Never twice:** the builder remembers what it posted
+  (`state/webmentions-received.json`). If that file is lost, it reads the
+  existing comments of the administrator from Remark42 first.
+- **Deleted mentions:** when webmention.io removes a mention (the other site
+  removed the link, or you deleted it there), the comment is deleted as well.
+- **webmention.io down:** existing mentions stay; the next check tries again.
+
+Steps 1 and 2 happen on webmention.io and are described from its
+documentation; they were not checked against the live service.
+
+### Try it without a domain
+
+The demo (`docker/init-env.sh --demo`) runs a stand-in of webmention.io
+(`docker/webmention-io-standin.mjs`) on `http://localhost:8090`, with receiving
+switched on. Send it a mention of a demo post:
+
+```sh
+curl -X POST -H 'Content-Type: application/json' \
+  -d '{"source":"https://example.org/my-post","target":"http://localhost:8080/p/<slug>/","property":"in-reply-to","author":"Me"}' \
+  http://localhost:8090/_standin/mention
+```
+
+Within a few checks the comment is under the post. `docker/webmention-receive-flow.sh`
+does the whole round, including the deletion; CI runs it. The stand-in does
+not check that the source really links to the target, as webmention.io does.

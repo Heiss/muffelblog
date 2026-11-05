@@ -4,6 +4,8 @@ import {
   createRemarkSource,
   toTree,
 } from '@muffelblog/core';
+import { createAdminClient } from '../src/remark-admin.ts';
+import { recoverFromComments } from '../src/webmentions-receive.ts';
 
 // Contract test against a real Remark42 (CI job "Contract tests"). It runs only
 // if REMARK42_CONTRACT_URL is set. Comments are written with the admin login
@@ -76,3 +78,46 @@ describe.skipIf(!URL_)('Remark42 public API', () => {
     expect(after).not.toBe(before);
   });
 });
+
+describe.skipIf(!URL_)(
+  'Remark42 administrator API for received webmentions',
+  () => {
+    it('writes a comment as the administrator, finds it again after a lost state, and deletes it', async () => {
+      await waitUntilUp();
+      const admin = createAdminClient({
+        baseUrl: URL_ as string,
+        site: SITE,
+        password: PASSWORD,
+      });
+      const page = 'https://blog.example/p/erwaehnt/';
+      const source = 'https://ada.example/a_(b)';
+      let id = '';
+      for (let attempt = 0; attempt < 10 && !id; attempt += 1) {
+        try {
+          id = await admin.postComment(
+            'Reply from Ada: [https://ada.example/a_%28b%29](https://ada.example/a_%28b%29)',
+            page,
+          );
+        } catch (error) {
+          if (!String(error).includes('429')) throw error;
+          await new Promise((r) => setTimeout(r, 1500));
+        }
+      }
+      expect(id).not.toBe('');
+
+      // The recovery reads the rendered text and the user of the list.
+      const recovered = recoverFromComments(await admin.list(100));
+      expect(recovered.posted[`${source} -> ${page}`]?.commentId).toBe(id);
+
+      await admin.deleteComment(id, page);
+      const source2 = createRemarkSource({
+        baseUrl: URL_ as string,
+        site: SITE,
+      });
+      const left = (await source2.find(page)).comments.filter(
+        (c) => c.id === id && !c.delete,
+      );
+      expect(left).toEqual([]);
+    });
+  },
+);
