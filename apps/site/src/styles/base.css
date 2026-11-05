@@ -479,7 +479,7 @@ article > ul.tags {
 .links {
   margin-top: 2rem;
 }
-.link-list .kind {
+.link-list .link-kind {
   color: var(--dim);
   font-size: 0.875rem;
 }

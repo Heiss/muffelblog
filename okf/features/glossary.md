@@ -67,7 +67,30 @@ generated: { by: claude-code/web, at: 2026-11-03T12:30:00Z }
 * **[V]** Search finds terms through Pagefind, with a filter by kind. RSS and the
   sitemap contain terms.
 
-# Proposal: linking and graph
+# Linking and graph (built 2026-11-05, W20 and W21)
+
+Decisions of the owner (2026-11-05): a link graph like Obsidian's digital
+garden, with external domains; one node per domain; posts, terms **and memos**
+as nodes; a local graph under every page and the overall view `/graph/`.
+
+* **[E]** Relative links to `.md` files resolve to the page of the published
+  file (relative to the file, `%20` and decomposed umlauts handled); unknown or
+  unpublished targets become text with a warning (`render.ts`, `resolveLink`).
+* **[E]** The graph is built from the finished HTML (`link-graph.ts`): nodes are
+  posts, terms (named by `term:` or the title), memos and `domain:<host>` (host
+  without `www.`, no public-suffix logic); edges directed, without duplicates or
+  self links, only to existing pages. `/graph.json` holds nodes and edges.
+* **[E]** Every post, term and memo shows "Links of this page" (links to, linked
+  from) as HTML lists, the access without JavaScript; a domain is text, never a
+  link. Below it a local SVG graph of the neighbors; `/graph/` draws all nodes
+  and lists every page with its links.
+* **[E]** Drawing: own force layout (repulsion, springs, gravity, deterministic)
+  in vanilla TS, SVG, no library, no foreign request; page nodes are links,
+  domain nodes are focusable (`tabindex=0`) with a label.
+* **[U]** No size limit for `graph.json` and no zoom or pan; with many hundred
+  nodes the overall view gets dense.
+
+# Earlier proposal: linking and graph
 
 * **[V]** A Markdown link to a file in the folder (a relative path, for example
   `file.md` or `../folder/file.md` as the target) is resolved at build time

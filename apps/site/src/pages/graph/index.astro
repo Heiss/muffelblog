@@ -36,7 +36,7 @@ const pages = graph.nodes
         {pages.map(({ node, to }) => (
           <li>
             <a href={node.id}>{node.title}</a>
-            <span class="kind"> {t.kinds[node.kind]}</span>:
+            <span class="link-kind"> {t.kinds[node.kind]}</span>:
             {to.map((n, i) => (
               <>
                 {i > 0 && ', '}

@@ -628,13 +628,14 @@ Applies to every work package in addition to its own criteria:
   warning on dead links, edge list, lists "links to" and "linked from" on article
   and term pages.
 * DoD (draft, **[V]**):
-  * [ ] A link with a relative file path as its target leads to the page of the
+  * [x] A link with a relative file path as its target leads to the page of the
     target, also with `%20` and decomposed umlauts in the path.
-  * [ ] Links to unpublished or unknown files become text with a warning, never a
+  * [x] Links to unpublished or unknown files become text with a warning, never a
     link.
-  * [ ] Backlinks appear as an HTML list, without self-references and
+  * [x] Backlinks appear as an HTML list, without self-references and
     duplicates.
-  * [ ] Memos appear neither as a source nor as a target.
+  * [x] ~~Memos appear neither as a source nor as a target.~~ Changed by the owner
+    (2026-11-05): memos are nodes like posts and terms.
 
 ## W21 - Knowledge graph
 
@@ -642,10 +643,10 @@ Applies to every work package in addition to its own criteria:
 * Depends on: W20
 * Decisions: threshold for the size of `graph.json`, layout, keyboard operation.
 * DoD (draft, **[V]**):
-  * [ ] The build writes `graph.json` only with published nodes.
-  * [ ] A local graph per page and an overall view `/graph/`, drawn without a
+  * [x] The build writes `graph.json` only with published nodes.
+  * [x] A local graph per page and an overall view `/graph/`, drawn without a
     foreign library and without a request to third parties.
-  * [ ] Every node is reachable by keyboard, the backlink lists remain the access
+  * [x] Every node is reachable by keyboard, the backlink lists remain the access
     without JavaScript.
 
 ## W22 - English as development language

@@ -64,6 +64,18 @@ _Alle_, marked as terms), never under _Lang_. `/glossary/` lists all terms by
 first letter; umlauts count under their base letter, digits under `#`. A term and
 a post may share a slug, because the addresses are separate.
 
+### Links between your files
+
+Link to another file of the folder with its path, as Obsidian writes it with
+"Use Wikilinks" off: `[Cache](glossar/cache.md)` or `[Post](../other-post.md)`.
+The link leads to the page of that file. A link to a file that is not published
+(no `publish: true`) or does not exist becomes plain text, and the build warns;
+its name never appears on the site.
+
+Every post, term and memo shows **Links of this page**: what it links to
+(external websites as one entry per domain) and what links to it, with a small
+graph of these neighbors. `/graph/` shows all of them.
+
 ### Static pages: `type: page`
 
 Address `/<slug>/`, for example `impressum` or `datenschutz`. Pages need no date,

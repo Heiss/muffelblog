@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-05
+* **Update**: W20 and W21: links between files of the folder lead to their pages, "Links of this page" with backlinks, link graph with posts, terms, memos and one node per external domain, local graph per page and `/graph/`; demo content links its posts and terms.
 * **Update**: Statistics (O19, changed by the owner): no own counter; optional Matomo through `MATOMO_URL` and `MATOMO_SITE_ID`, without cookies, off by default; the CSP names exactly that address.
 * **Update**: Supported versions (O8): `supported-versions.json` (Memos 26.11.0 and 26.10.0, Nextcloud 35.0.2 and 34.0.5), contract tests as a matrix of both lines, Renovate raises the current line, docs page reference/versions with a sync test.
 * **Update**: Glossary field `term:` (title may be a question, letter view sorts by the term) and comments on terms (O38).

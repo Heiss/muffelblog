@@ -28,7 +28,9 @@ test.describe('Links between files (W20)', () => {
       section.getByRole('heading', { name: ui.graph.linkedFrom }),
     ).toBeVisible();
     await expect(
-      section.getByRole('link', { name: 'Rendering-Demo' }),
+      section.locator('ul.link-list').getByRole('link', {
+        name: 'Rendering-Demo',
+      }),
     ).toHaveAttribute('href', '/p/rendering-demo/');
   });
 

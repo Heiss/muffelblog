@@ -29,7 +29,7 @@ const t = messages.graph;
             ) : (
               <li>
                 <a href={n.id}>{n.title}</a>
-                <span class="kind"> {t.kinds[n.kind]}</span>
+                <span class="link-kind"> {t.kinds[n.kind]}</span>
               </li>
             ),
           )}
@@ -43,7 +43,7 @@ const t = messages.graph;
           {from.map((n) => (
             <li>
               <a href={n.id}>{n.title}</a>
-              <span class="kind"> {t.kinds[n.kind as 'post']}</span>
+              <span class="link-kind"> {t.kinds[n.kind as 'post']}</span>
             </li>
           ))}
         </ul>
