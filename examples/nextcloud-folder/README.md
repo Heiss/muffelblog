@@ -1,7 +1,8 @@
 # Example Nextcloud folder
 
-A small, complete folder for the blog. It is the starting point of the
-tutorial in the documentation ("From Nextcloud to the first comment").
+A small, complete folder for the blog. It is the starting point of
+[Connect Nextcloud](https://heiss.github.io/muffelblog/guides/nextcloud/) in the
+documentation.
 
 | File                     | What it is                                       |
 | ------------------------ | ------------------------------------------------ |

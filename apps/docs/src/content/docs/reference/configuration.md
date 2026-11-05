@@ -72,7 +72,7 @@ a message that names the variable; nothing is silently ignored.
 | `MUFFEL_DEBOUNCE_CHECKS`              | 1       | 0 to 10        | Equal checks a change must survive before it is built                                                                       |
 | `MUFFEL_WEBMENTIONS_SEND`             | `0`     | `0`, `1`       | Send webmentions for new, changed and removed entries. Needs `SITE_URL`. See [Webmentions](/muffelblog/guides/webmentions/) |
 | `MUFFEL_WEBMENTIONS_BLOCK`            |         | host names     | Comma separated hosts that are never asked (subdomains included)                                                            |
-| `MUFFEL_WEBMENTIONS_ALLOW_PRIVATE`    | `0`     | `0`, `1`       | Allow local and private addresses as targets. **Only for tests and the tutorial**                                           |
+| `MUFFEL_WEBMENTIONS_ALLOW_PRIVATE`    | `0`     | `0`, `1`       | Allow local and private addresses as targets. **Only for tests and the local receiver**                                     |
 | `MUFFEL_WEBMENTIONS_TIMEOUT_MS`       | 10000   | 1000 to 60000  | Time limit per request to a foreign server                                                                                  |
 | `MUFFEL_WEBMENTIONS_MAX_KB`           | 1024    | 16 to 10240    | Largest part of a foreign response that is read                                                                             |
 | `MUFFEL_WEBMENTIONS_MAX_TARGETS`      | 10      | 1 to 100       | Links of one entry that are reported                                                                                        |

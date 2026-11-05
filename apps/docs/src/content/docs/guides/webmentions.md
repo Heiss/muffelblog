@@ -79,7 +79,7 @@ shows every pair with time, status (`sent`, `failed`, `given-up`,
 
 ## Test it without a real receiver
 
-The tutorial uses a tiny local receiver, so you can see the message that goes
+The project has a tiny local receiver, so you can see the message that goes
 out. Public webmention receivers need a public address, local ones are refused
 by the address check, so for this test you lift that check **temporarily**:
 

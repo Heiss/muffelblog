@@ -109,7 +109,7 @@ Decided by the owner on 2026-11-04 (W15). Sending is **off by default**
   private, link-local, carrier-grade NAT, metadata addresses, IPv4-mapped
   IPv6), and the connection uses exactly the checked address (no DNS
   rebinding). `MUFFEL_WEBMENTIONS_ALLOW_PRIVATE=1` lifts the address check and
-  exists only for tests and the tutorial (local receiver).
+  exists only for tests and the local receiver (`docker/webmention-receiver.mjs`).
 * **[E]** Visibility: one log line per sent pair, the file `state/webmentions.json`
   (pairs with time, status, attempts) and counters in `state/status.json`. A
   pair that was given up also goes to the alert webhook
