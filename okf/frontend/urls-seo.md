@@ -32,6 +32,16 @@ concise form the user asked for. The user confirmed `/p/<slug>/` and
 `/m/<uid>/`. All URLs are English and independent of the UI language (see
 [Languages](/ops/language.md)).
 
+# File tree (decided by the owner 2026-11-05)
+
+* **[E]** `/files/` shows the published posts, terms and static pages in the
+  folder structure of the Nextcloud folder, each file linked to its page, as a
+  further way to find posts. Only published files appear, so drafts and their
+  names stay hidden; folders without a published file do not appear. Folders
+  are `<details>` (open), so it works without JavaScript. Link in the main
+  navigation. Memos are no files and are not in it. `files` is a reserved page
+  slug.
+
 # SEO rules
 
 * **[E]** Every post and every memo has a page of its own for linking and for

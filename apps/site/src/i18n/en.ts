@@ -11,7 +11,15 @@ export const en = {
     home: 'Home',
     tags: 'Tags',
     glossary: 'Glossary',
+    files: 'Files',
     search: 'Search',
+  },
+  files: {
+    title: 'Files',
+    intro:
+      'All published posts, terms and pages, in the folders where they are written.',
+    none: 'No files yet.',
+    count: (count: number) => (count === 1 ? '1 file' : `${count} files`),
   },
   search: {
     title: 'Search',

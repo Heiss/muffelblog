@@ -131,3 +131,5 @@ export type {
   ReceiveState,
   ReceivedMention,
 } from './webmention-receive.ts';
+export { buildFileTree } from './file-tree.ts';
+export type { TreeFile, TreeFolder } from './file-tree.ts';

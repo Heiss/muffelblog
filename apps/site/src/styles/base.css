@@ -474,3 +474,25 @@ article > ul.tags {
   color: var(--dim);
   font-style: italic;
 }
+
+/* File tree (/files/): folders as <details>, works without JavaScript. */
+.file-tree {
+  list-style: none;
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+}
+main > .file-tree {
+  padding-left: 0;
+}
+.file-tree .folder > details > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.file-tree .count {
+  color: var(--dim);
+  font-weight: 400;
+  font-size: 0.9em;
+}
+.file-tree .file {
+  padding: 0.1rem 0;
+}
