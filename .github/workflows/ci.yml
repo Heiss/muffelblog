@@ -161,18 +161,33 @@ jobs:
           docker compose logs --no-color --tail 25 remark42 mailpit web
       - run: docker compose down --volumes
 
+  # The supported versions (supported-versions.json) for the contract matrix.
+  versions:
+    name: Supported versions
+    runs-on: ubuntu-latest
+    outputs:
+      json: ${{ steps.read.outputs.json }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: read
+        run: echo "json=$(jq -c . supported-versions.json)" >> "$GITHUB_OUTPUT"
+
   contract:
-    name: Contract tests
-    needs: changes
+    name: Contract tests (${{ matrix.line }} versions)
+    needs: [changes, versions]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        line: [current, previous]
     services:
       memos:
-        image: neosmemo/memos:26.11.0
+        image: neosmemo/memos:${{ fromJSON(needs.versions.outputs.json).memos[matrix.line] }}
         ports:
           - 5230:5230
       nextcloud:
-        image: nextcloud:35-apache
+        image: nextcloud:${{ fromJSON(needs.versions.outputs.json).nextcloud[matrix.line] }}
         ports:
           - 8081:80
         env:
@@ -218,13 +233,14 @@ jobs:
   # skipped jobs are fine.
   gate:
     name: CI Gate
-    needs: [changes, check, e2e, docker, compose, contract]
+    needs: [changes, versions, check, e2e, docker, compose, contract]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Evaluate the result
         env:
           CHANGES: ${{ needs.changes.result }}
+          VERSIONS: ${{ needs.versions.result }}
           CODE: ${{ needs.changes.outputs.code }}
           CHECK: ${{ needs.check.result }}
           E2E: ${{ needs.e2e.result }}
@@ -237,7 +253,7 @@ jobs:
             exit 1
           fi
           if [ "$CODE" = "true" ]; then
-            for result in "$CHECK" "$E2E" "$DOCKER" "$COMPOSE" "$CONTRACT"; do
+            for result in "$VERSIONS" "$CHECK" "$E2E" "$DOCKER" "$COMPOSE" "$CONTRACT"; do
               if [ "$result" != "success" ]; then
                 echo "A required job was not successful: $result"
                 exit 1

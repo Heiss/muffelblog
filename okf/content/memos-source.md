@@ -40,6 +40,13 @@ sources:
   parent tag `a` is therefore discarded if the same entry has a tag `a/...`. If
   one wrote `#a` and `#a/b` explicitly, `a` is lost.
 
+# Supported versions (decided by the owner 2026-11-05, O8)
+
+* **[E]** Pinned versions, never "latest". `supported-versions.json` names a
+  current and a previous version of Memos and Nextcloud; CI runs the contract
+  tests against both in parallel; Renovate raises the current one, the previous
+  one follows by hand in the same pull request. Docs: reference/versions.
+
 # API (proven from the source code, version 26.11.0)
 
 * The REST paths have been called `/api/...` since 26.10.0 (before that
