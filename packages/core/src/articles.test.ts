@@ -170,6 +170,38 @@ describe('parseArticle type', () => {
     expect(r.kind === 'article' && r.warnings).toEqual([]);
   });
 
+  it('reads the term of a glossary entry, so the title may be a question', () => {
+    const r = parse(
+      'a.md',
+      base('type: glossary\nterm: Holacracy\n').replace(
+        'title: Begriff',
+        'title: Was ist Holacracy?',
+      ),
+    );
+    expect(r.kind === 'article' && r.article.term).toBe('Holacracy');
+    expect(r.kind === 'article' && r.article.title).toBe('Was ist Holacracy?');
+    expect(r.kind === 'article' && r.warnings).toEqual([]);
+  });
+
+  it('has no term without the field', () => {
+    const r = parse('a.md', base('type: glossary\n'));
+    expect(r.kind === 'article' && r.article.term).toBeUndefined();
+  });
+
+  it('ignores a term outside the glossary and warns', () => {
+    const r = parse('a.md', base('term: X\n'));
+    expect(r.kind === 'article' && r.article.term).toBeUndefined();
+    expect(r.kind === 'article' && r.warnings.join()).toMatch(/term/);
+  });
+
+  it('ignores an empty or non-text term and warns', () => {
+    for (const value of ["''", '[a, b]']) {
+      const r = parse('a.md', base(`type: glossary\nterm: ${value}\n`));
+      expect(r.kind === 'article' && r.article.term, value).toBeUndefined();
+      expect(r.kind === 'article' && r.warnings.join(), value).toMatch(/term/);
+    }
+  });
+
   it('treats an unknown type as a post and warns', () => {
     const r = parse('a.md', base('type: wiki\n'));
     expect(r.kind === 'article' && r.article.type).toBe('post');

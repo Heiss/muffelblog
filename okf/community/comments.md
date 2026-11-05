@@ -23,7 +23,7 @@ sources:
 # Decisions
 
 * **[E]** Remark42 as the self-hosted solution, no GitHub dependency.
-* **[E]** Comments on posts and memos. No comments on the Memos instance
+* **[E]** Comments on posts, memos and glossary terms (terms since 2026-11-05, O38). No comments on the Memos instance
   itself.
 * **[E]** Login only by email, no anonymous commenting, no social logins.
 * **[E]** The widget is active and loads from the own server. In addition

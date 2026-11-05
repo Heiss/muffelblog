@@ -27,7 +27,7 @@ const title = messages.glossary.title;
       <ul>
         {g.items.map((term) => (
           <li>
-            <a href={`/g/${term.slug}/`}>{term.title}</a>
+            <a href={`/g/${term.slug}/`}>{term.term ?? term.title}</a>
             {term.description && (
               <span class="excerpt"> {term.description}</span>
             )}
