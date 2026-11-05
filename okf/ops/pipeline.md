@@ -70,8 +70,9 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 * Number of memos: about 2 per month, build time hardly matters.
 * **[V]** For comments, not all pages are queried individually on every run,
   only the changed ones (for example through the latest comments since the last
-  run). **[U]** `GET /api/v1/last/{limit}?site&since` exists according to the
-  API documentation. Its suitability has not been checked.
+  run). **[E]** In the end the scheduler fingerprints `GET /api/v1/last/1000?site`
+  (one request, see [Comments](/community/comments.md)); the `since` variant was
+  not needed.
 
 # Open
 

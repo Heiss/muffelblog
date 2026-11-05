@@ -70,5 +70,6 @@ test build in the repo sets `MUFFEL_FEED_PAGE_SIZE=4`.
 * **[U]** Image widths and the size limit for images (`media.ts`), the polling
   interval and time limits of later packages are not converted. New numeric
   values should get a variable with their work package.
-* **[U]** Whether the Docker services pass the variables through is settled only
-  with W11/W12.
+* **[E]** The Docker services pass the variables through: `compose.yaml` lists
+  them for the builder, `compose.test.ts` and the Compose job in CI (smoke,
+  comment, moderation and webmention flows) check the wiring (settled with W12).

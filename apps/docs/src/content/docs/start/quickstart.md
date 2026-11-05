@@ -30,6 +30,9 @@ GitHub Container Registry package is private until you make it public).
 The first start takes a few minutes: the builder builds the site, then Caddy
 starts.
 
+The ports listen on `127.0.0.1` only, so the demo is not reachable from other
+machines. To open it on a trusted network, set `MUFFEL_BIND=0.0.0.0` in `.env`.
+
 ## 3. Look around
 
 | What                                       | Where                 |

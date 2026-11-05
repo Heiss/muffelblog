@@ -37,6 +37,13 @@ absolute. **Decide it early**: comments and RSS identifiers depend on the addres
 Remark42 can move comments to a new address, but webmentions (planned) cannot be
 moved.
 
+## HTTPS and HSTS
+
+Once HTTPS works, consider `Strict-Transport-Security` at your proxy (the examples
+leave it out because the same configuration also serves plain HTTP in the demo).
+Start with a short `max-age`, for example `300`, and raise it later: browsers
+remember the header, and it cannot be undone from the server.
+
 ## What every setup must do
 
 1. Serve the files of `current/` for the blog host.

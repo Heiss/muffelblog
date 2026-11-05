@@ -1,5 +1,8 @@
 # Update log
 
+## 2026-11-05
+* **Update**: Hardening and runbook (W16): security review recorded, ports of the demo listen on `127.0.0.1` by default (`MUFFEL_BIND`), the webmention sender resets quietly when the domain changes, runbook for disruptions in the docs, three `[U]` points settled.
+
 ## 2026-11-04
 * **Update**: Guide for AI agents: the page `start/agent-install` with a short prompt and `agent.md` (served at `/muffelblog/agent.md`) with the rules (secrets stay out of the chat, `.env` is never read back, explicit yes before anything with effect outside), the pages to fetch and the steps with the questions to ask. A docs test keeps its pages, scripts, Compose files and variables in line with the repository.
 * **Update**: `/health.json`: the builder writes a public copy of the status (state, lastCheck, lastSuccess, checkIntervalSeconds, failingSince, generatedAt; no error text) into the release that is online at every check, for external monitoring; a static file cannot answer 503, so the monitor reads the content and the age of `lastCheck` (example with `jq` in the operations guide). The Caddyfile and the proxy examples revalidate it; the smoke test checks it.

@@ -44,6 +44,7 @@ okf_version: "0.2"
 # Security
 
 * [Sanitizing foreign content](/security/sanitization.md) - sanitizing, SSRF protection, secrets
+* [Security review](/security/review.md) - what was checked for the first release, findings and open points
 
 # Operations
 
