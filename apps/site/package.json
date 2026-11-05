@@ -23,6 +23,7 @@
     "sharp": "^0.35.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@emnapi/core": "^1.11.3",
     "@emnapi/runtime": "^1.11.3",
     "@types/node": "^26.6.6",
