@@ -475,6 +475,67 @@ article > ul.tags {
   font-style: italic;
 }
 
+/* Links of a page and the link graph (W20, W21). */
+.links {
+  margin-top: 2rem;
+}
+.link-list .link-kind {
+  color: var(--dim);
+  font-size: 0.875rem;
+}
+.graph {
+  margin: 1rem 0;
+}
+.graph figcaption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.graph-svg {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  display: block;
+}
+.graph-local .graph-svg {
+  max-width: 420px;
+}
+.graph-svg .edge {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.graph-svg .node circle {
+  fill: var(--ac);
+}
+.graph-svg .node-glossary circle {
+  fill: var(--panel);
+  stroke: var(--ac);
+  stroke-width: 2;
+}
+.graph-svg .node-memo circle {
+  fill: var(--dim);
+}
+.graph-svg .node-domain circle {
+  fill: none;
+  stroke: var(--dim);
+  stroke-width: 1.5;
+}
+.graph-svg .node-center circle {
+  stroke: var(--fg);
+  stroke-width: 2;
+}
+.graph-svg text {
+  fill: var(--fg);
+  font-size: 12px;
+  font-family: var(--font-meta);
+}
+.graph-svg .node:focus-visible circle {
+  stroke: var(--fg);
+  stroke-width: 3;
+}
+
 /* File tree (/files/): folders as <details>, works without JavaScript. */
 .file-tree {
   list-style: none;

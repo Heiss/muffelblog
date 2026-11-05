@@ -9,6 +9,7 @@ export const de: Messages = {
     home: 'Start',
     tags: 'Tags',
     glossary: 'Glossar',
+    graph: 'Graph',
     files: 'Dateien',
     search: 'Suche',
   },
@@ -18,6 +19,23 @@ export const de: Messages = {
       'Alle veröffentlichten Beiträge, Begriffe und Seiten, in den Ordnern, in denen sie geschrieben sind.',
     none: 'Noch keine Dateien.',
     count: (count: number) => (count === 1 ? '1 Datei' : `${count} Dateien`),
+  },
+  graph: {
+    title: 'Graph',
+    intro:
+      'Wie Beiträge, Begriffe und Memos untereinander und auf andere Websites verlinken. Jede andere Website ist ein Punkt.',
+    linksTo: 'Verlinkt auf',
+    linkedFrom: 'Verlinkt von',
+    local: 'Links dieser Seite',
+    needsJs:
+      'Die Zeichnung braucht JavaScript; die Listen der Links funktionieren ohne.',
+    empty: 'Noch keine Links.',
+    kinds: {
+      post: 'Beitrag',
+      glossary: 'Begriff',
+      memo: 'Memo',
+      domain: 'Website',
+    },
   },
   search: {
     title: 'Suche',

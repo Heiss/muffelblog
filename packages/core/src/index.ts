@@ -115,6 +115,13 @@ export type {
 } from './webmention-send.ts';
 export { createHeifConverter, heifAvailable, isHeic } from './heic.ts';
 export type { HeicConverter, HeicRunner } from './heic.ts';
+export { buildGraph, extractLinks, linksOf } from './link-graph.ts';
+export type {
+  GraphEdge,
+  GraphNode,
+  GraphNodeKind,
+  LinkGraph,
+} from './link-graph.ts';
 export {
   emptyReceiveState,
   mentionKey,

@@ -390,3 +390,58 @@ describe('Strict mode (remoteContent: none), for example for memos', () => {
     expect(html).toContain('src="/media/abc-960.webp"');
   });
 });
+
+describe('Links to other files of the folder (W20)', () => {
+  const pages: Record<string, string> = {
+    'glossar/cache.md': '/g/cache/',
+    'hallo welt.md': '/p/hallo-welt/',
+    'ordner/größe.md': '/p/groesse/',
+  };
+  const withLinks = (articlePath = 'beitrag.md') => ({
+    ...optionen(articlePath),
+    resolveLink: (p: string) => pages[p],
+  });
+
+  it('turns a relative path to a published file into the address of its page', async () => {
+    const { html, warnings } = await render(
+      '[Cache](glossar/cache.md) und [Hallo](hallo%20welt.md#teil)',
+      withLinks(),
+    );
+    expect(html).toContain('<a href="/g/cache/">Cache</a>');
+    expect(html).toContain('<a href="/p/hallo-welt/#teil">Hallo</a>');
+    expect(warnings).toEqual([]);
+  });
+
+  it('resolves paths relative to the article, and decomposed umlauts', async () => {
+    const { html } = await render(
+      '[Größe](../ordner/größe.md)',
+      withLinks('glossar/x.md'),
+    );
+    expect(html).toContain('<a href="/p/groesse/">Größe</a>');
+  });
+
+  it('makes a link to an unknown or unpublished file plain text, with a warning', async () => {
+    const { html, warnings } = await render(
+      'Siehe [Entwurf](entwurf.md) bitte.',
+      withLinks(),
+    );
+    expect(html).toContain('Siehe Entwurf bitte.');
+    expect(html).not.toContain('entwurf.md');
+    expect(warnings.join()).toMatch(/entwurf\.md/);
+  });
+
+  it('leaves external links, anchors and other files alone', async () => {
+    const { html } = await render(
+      '[a](https://example.org/x.md) [b](#oben) [c](datei.pdf)',
+      withLinks(),
+    );
+    expect(html).toContain('href="https://example.org/x.md"');
+    expect(html).toContain('href="#oben"');
+    expect(html).toContain('href="datei.pdf"');
+  });
+
+  it('does nothing without a resolver (memos)', async () => {
+    const { html } = await render('[a](b.md)');
+    expect(html).toContain('href="b.md"');
+  });
+});

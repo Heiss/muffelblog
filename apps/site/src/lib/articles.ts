@@ -39,11 +39,24 @@ async function build(): Promise<Content> {
     store: media,
   });
 
+  // Links between files of the folder lead to the pages of published files (W20).
+  const pageOf = new Map(
+    articles.map((a) => [
+      a.path.normalize('NFC'),
+      a.type === 'glossary'
+        ? `/g/${a.slug}/`
+        : a.type === 'page'
+          ? `/${a.slug}/`
+          : `/p/${a.slug}/`,
+    ]),
+  );
+
   const rendered: RenderedArticle[] = [];
   for (const article of articles) {
     const result = await renderMarkdown(article.body, {
       articlePath: article.path,
       resolveImage: resolver.resolve,
+      resolveLink: (p) => pageOf.get(p),
       lang: getSettings().lang,
     });
     warnings.push(...result.warnings);

@@ -15,3 +15,5 @@ Gerade im Innenausbau kommt es auf die richtige Holzfeuchte an. Konstruktionsvol
 ![Querschnitt mit stehenden Jahrringen](bilder/jahrringe.jpg)
 
 Auch die Lage der Jahrringe spielt eine Rolle. Bretter mit stehenden Jahrringen verziehen sich weniger als solche mit liegenden. Wer genau arbeitet, schaut sich das Hirnholz vor dem Kauf an.
+
+Im Glossar: [Holzfeuchte](glossar/holzfeuchte.md), [Konstruktionsvollholz](glossar/konstruktionsvollholz-kvh.md). Grundlagen bei [Wikipedia](https://de.wikipedia.org/wiki/Holzfeuchte).

@@ -20,6 +20,7 @@ export const RESERVED_PAGE_SLUGS: ReadonlySet<string> = new Set([
   'memos',
   'terms',
   'glossary',
+  'graph',
   'files',
   'search',
   'media',

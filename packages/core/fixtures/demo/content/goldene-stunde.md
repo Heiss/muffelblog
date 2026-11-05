@@ -16,3 +16,5 @@ Zwei Richtungen lohnen sich besonders:
 ![Warmes Licht tief über dem Horizont](bilder/goldene-stunde.jpg)
 
 Die Zeit ist kurz. Wer vorher weiß, wo er steht, verschwendet sie nicht mit der Suche nach dem Motiv.
+
+Wie Blende, Zeit und ISO zusammenspielen: [Belichtungsdreieck](belichtungsdreieck.md). Und der [Weißabgleich](glossar/weissabgleich.md) entscheidet über die Wärme des Bildes.

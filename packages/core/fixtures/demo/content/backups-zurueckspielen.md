@@ -24,3 +24,5 @@ restic -r /mnt/backup restore latest --target /tmp/restore
 ```
 
 Danach ein paar Stichproben vergleichen. Erst dann ist das Backup eines.
+
+Siehe auch: [Backup](glossar/backup.md), [Idempotenz](glossar/idempotenz.md) und die Dokumentation von [restic](https://restic.readthedocs.io/).

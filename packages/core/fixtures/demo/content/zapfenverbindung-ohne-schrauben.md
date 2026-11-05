@@ -13,3 +13,5 @@ Gesichert wird die Verbindung meist mit einem Holznagel, der quer durch beide Te
 ![Skizze eines Zapfens im Zapfenloch](bilder/zapfenverbindung.jpg)
 
 Die Verbindung ist alt, in Fachwerkhäusern findet man sie überall. Ihr Vorteil: Sie braucht kein Metall, das rosten könnte, und lässt sich bei Bedarf wieder lösen. Der Nachteil ist der Aufwand. Passgenaues Arbeiten dauert.
+
+Im Glossar: [Zapfenverbindung](glossar/zapfenverbindung.md) und [Abbund](glossar/abbund.md). Warum das Holz trocken sein muss: [Holzfeuchte](holzfeuchte-warum-holz-arbeitet.md).

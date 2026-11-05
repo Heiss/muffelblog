@@ -43,6 +43,12 @@ export interface RenderOptions {
   remoteContent?: 'allowlist' | 'none';
   /** Language of the generated texts (placeholders). Default: `en`. */
   lang?: Language;
+  /**
+   * Resolves a link to another Markdown file of the folder (path relative to
+   * the content folder, NFC) to the address of its page; `undefined` for an
+   * unknown or unpublished file. Without it, relative links stay as they are.
+   */
+  resolveLink?: (rootRelativePath: string) => string | undefined;
 }
 
 export interface RenderResult {
@@ -175,6 +181,7 @@ function rehypeContent(options: RenderOptions, warnings: string[]) {
     const images: Array<[Element, Element | Root]> = [];
     const frames: Array<[Element, Element | Root]> = [];
     const inputs: Array<[Element, Element | Root]> = [];
+    const fileLinks: Array<[Element, Element | Root]> = [];
 
     visit(tree, 'element', (node, _index, parent) => {
       if (!parent) return;
@@ -193,8 +200,37 @@ function rehypeContent(options: RenderOptions, warnings: string[]) {
             ...node.properties,
             rel: ['noopener', 'noreferrer'],
           };
+        else if (
+          options.resolveLink &&
+          !/^[a-z][a-z0-9+.-]*:/i.test(href) &&
+          /\.md(#.*)?$/i.test(href)
+        )
+          fileLinks.push([node, parent as Element | Root]);
       }
     });
+
+    // Links to other files of the folder lead to their pages (W20). A link to
+    // an unknown or unpublished file becomes its text: its name must not leak.
+    for (const [node, parent] of fileLinks) {
+      const href = String(node.properties?.href ?? '');
+      const hash = href.indexOf('#');
+      const file = hash >= 0 ? href.slice(0, hash) : href;
+      const fragment = hash >= 0 ? href.slice(hash) : '';
+      const paths = candidatesFor(options.articlePath, file);
+      const target = paths.ok
+        ? paths.candidates
+            .map((c) => options.resolveLink?.(c.normalize('NFC')))
+            .find((url) => url !== undefined)
+        : undefined;
+      if (target) {
+        node.properties = { href: `${target}${fragment}` };
+      } else {
+        warnings.push(
+          `${options.articlePath}: link to "${file}" leads to no published file and is shown as text`,
+        );
+        replaceNode(parent, node, node.children);
+      }
+    }
 
     // Colors code with a known language through classes (`hljs-*`). This runs
     // after sanitizing, so the classes come only from the coloring, never from

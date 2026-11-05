@@ -1,0 +1,60 @@
+---
+import { linksOf } from '@muffelblog/core';
+import { messages } from '../i18n/messages';
+import { getGraph } from '../lib/graph';
+
+interface Props {
+  /** Address of the page, for example `/p/hello/`. */
+  url: string;
+}
+
+// The lists are the access without JavaScript (screen readers, search
+// engines); the drawing below only shows the same links.
+const { url } = Astro.props;
+const graph = await getGraph();
+const { to, from } = linksOf(graph, url);
+const t = messages.graph;
+---
+
+{(to.length > 0 || from.length > 0) && (
+  <section class="links" aria-label={t.local} data-pagefind-ignore>
+    <h2>{t.local}</h2>
+    {to.length > 0 && (
+      <>
+        <h3>{t.linksTo}</h3>
+        <ul class="link-list">
+          {to.map((n) =>
+            n.kind === 'domain' ? (
+              <li class="link-domain">{n.title}</li>
+            ) : (
+              <li>
+                <a href={n.id}>{n.title}</a>
+                <span class="link-kind"> {t.kinds[n.kind]}</span>
+              </li>
+            ),
+          )}
+        </ul>
+      </>
+    )}
+    {from.length > 0 && (
+      <>
+        <h3>{t.linkedFrom}</h3>
+        <ul class="link-list">
+          {from.map((n) => (
+            <li>
+              <a href={n.id}>{n.title}</a>
+              <span class="link-kind"> {t.kinds[n.kind as 'post']}</span>
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+    <figure class="graph graph-local" data-graph data-graph-node={url} hidden>
+      <figcaption>{t.local}</figcaption>
+    </figure>
+  </section>
+)}
+
+<script>
+  import '../scripts/graph';
+</script>
