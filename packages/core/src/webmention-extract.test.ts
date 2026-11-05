@@ -217,3 +217,30 @@ describe('findEndpoint', () => {
     ).toBeNull();
   });
 });
+
+describe('parseLinkHeader: scanning', () => {
+  it('reads several links, quoted and plain rel values', () => {
+    expect(
+      parseLinkHeader(
+        '<https://a.example/wm>; rel="webmention other", <b>; rel=WebMention, <c>; type=x',
+      ),
+    ).toEqual([
+      { url: 'https://a.example/wm', rel: ['webmention', 'other'] },
+      { url: 'b', rel: ['webmention'] },
+    ]);
+  });
+
+  it('stops at a link without its closing bracket', () => {
+    expect(parseLinkHeader('<a>; rel=webmention, <b; rel=webmention')).toEqual([
+      { url: 'a', rel: ['webmention'] },
+    ]);
+    expect(parseLinkHeader('no link at all')).toEqual([]);
+  });
+
+  it('stays fast on a hostile header', () => {
+    const started = performance.now();
+    expect(parseLinkHeader(`<${'<='.repeat(100_000)}`)).toEqual([]);
+    expect(parseLinkHeader('<'.repeat(100_000))).toEqual([]);
+    expect(performance.now() - started).toBeLessThan(500);
+  });
+});

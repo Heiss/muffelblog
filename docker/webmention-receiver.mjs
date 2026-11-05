@@ -6,6 +6,9 @@ import { createServer } from 'node:http';
 
 const port = Number(process.argv[2] || 9000);
 
+/** A value from a request for the log: no line breaks. */
+const forLog = (value) => String(value).replace(/[\r\n\t\v\f]/g, ' ');
+
 const server = createServer((req, res) => {
   if (req.method === 'POST' && req.url === '/webmention') {
     let body = '';
@@ -14,7 +17,9 @@ const server = createServer((req, res) => {
       const form = new URLSearchParams(body);
       const source = form.get('source') ?? '';
       const target = form.get('target') ?? '';
-      console.log(`webmention received: source=${source} target=${target}`);
+      console.log(
+        `webmention received: source=${forLog(source)} target=${forLog(target)}`,
+      );
       res.statusCode = 202;
       res.end('accepted');
       try {
@@ -27,7 +32,7 @@ const server = createServer((req, res) => {
         );
       } catch (error) {
         console.log(
-          `  source not fetched: ${error instanceof Error ? error.message : error}`,
+          `  source not fetched: ${forLog(error instanceof Error ? error.message : error)}`,
         );
       }
     });

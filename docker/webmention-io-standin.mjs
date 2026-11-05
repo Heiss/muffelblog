@@ -32,6 +32,9 @@ const isHttp = (value) => {
   }
 };
 
+/** A value from a request for the log: no line breaks. */
+const forLog = (value) => String(value).replace(/[\r\n\t\v\f]/g, ' ');
+
 function add(source, target, property = 'mention-of', author) {
   const m = {
     id: nextId++,
@@ -42,7 +45,7 @@ function add(source, target, property = 'mention-of', author) {
     received: new Date().toISOString(),
   };
   mentions.push(m);
-  console.log(`mention ${m.id}: ${source} -> ${target}`);
+  console.log(`mention ${m.id}: ${forLog(source)} -> ${forLog(target)}`);
   return m;
 }
 

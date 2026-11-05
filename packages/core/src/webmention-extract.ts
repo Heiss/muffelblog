@@ -93,18 +93,24 @@ export interface HeaderLink {
 /** Reads an HTTP `Link` header (RFC 8288), as far as webmention needs it. */
 export function parseLinkHeader(header: string): HeaderLink[] {
   const out: HeaderLink[] = [];
-  const pattern = /<([^>]*)>([^<]*)/g;
-  let match: RegExpExecArray | null;
-  while ((match = pattern.exec(header)) !== null) {
-    const rel = /;\s*rel\s*=\s*(?:"([^"]*)"|([^\s;,]+))/i.exec(match[2] ?? '');
-    if (!rel) continue;
-    out.push({
-      url: match[1] as string,
-      rel: ((rel[1] ?? rel[2]) as string)
-        .toLowerCase()
-        .split(/\s+/)
-        .filter(Boolean),
-    });
+  // A scan with indexOf, not a regular expression: a header from a foreign
+  // server must not be able to make the search slow (`<<<<...`).
+  let start = header.indexOf('<');
+  while (start !== -1) {
+    const close = header.indexOf('>', start + 1);
+    if (close === -1) break;
+    const next = header.indexOf('<', close + 1);
+    const params = header.slice(close + 1, next === -1 ? undefined : next);
+    const rel = /;\s*rel\s*=\s*(?:"([^"]*)"|([^\s;,]+))/i.exec(params);
+    if (rel)
+      out.push({
+        url: header.slice(start + 1, close),
+        rel: ((rel[1] ?? rel[2]) as string)
+          .toLowerCase()
+          .split(/\s+/)
+          .filter(Boolean),
+      });
+    start = next;
   }
   return out;
 }
