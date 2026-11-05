@@ -17,16 +17,20 @@ const bytes = (...values: Array<number | string>): Buffer =>
 
 describe('allowedFileFor', () => {
   it('allows PDF, audio and video by extension, regardless of case', () => {
-    expect(allowedFileFor('Bericht.PDF')?.kind).toBe('pdf');
-    expect(allowedFileFor('lied.mp3')?.kind).toBe('audio');
-    expect(allowedFileFor('lied.m4a')?.kind).toBe('audio');
-    expect(allowedFileFor('lied.ogg')?.kind).toBe('audio');
-    expect(allowedFileFor('lied.opus')?.kind).toBe('audio');
-    expect(allowedFileFor('lied.wav')?.kind).toBe('audio');
-    expect(allowedFileFor('lied.flac')?.kind).toBe('audio');
-    expect(allowedFileFor('film.mp4')?.kind).toBe('video');
-    expect(allowedFileFor('film.webm')?.kind).toBe('video');
-    expect(allowedFileFor('film.mov')?.kind).toBe('video');
+    const expected: Record<string, string> = {
+      'Bericht.PDF': 'pdf',
+      'lied.mp3': 'audio',
+      'lied.m4a': 'audio',
+      'lied.ogg': 'audio',
+      'lied.opus': 'audio',
+      'lied.wav': 'audio',
+      'lied.flac': 'audio',
+      'film.mp4': 'video',
+      'film.webm': 'video',
+      'film.mov': 'video',
+    };
+    for (const [name, kind] of Object.entries(expected))
+      expect(allowedFileFor(name)?.kind, name).toBe(kind);
   });
 
   it('rejects everything else', () => {

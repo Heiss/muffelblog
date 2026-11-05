@@ -54,38 +54,42 @@ function httpUrl(value: unknown): string | undefined {
   }
 }
 
+function authorName(author: unknown): string | undefined {
+  if (!isObject(author) || typeof author.name !== 'string') return undefined;
+  const name = author.name.trim();
+  return name === '' ? undefined : name.slice(0, 100);
+}
+
+/** One entry of the feed, or null when it is broken or private. */
+function toMention(child: unknown): ReceivedMention | null {
+  if (!isObject(child) || child['wm-private'] === true) return null;
+  const id = child['wm-id'];
+  const source = httpUrl(child['wm-source']);
+  const target = httpUrl(child['wm-target']);
+  if (typeof id !== 'number' || !Number.isInteger(id) || !source || !target)
+    return null;
+  const property =
+    typeof child['wm-property'] === 'string'
+      ? child['wm-property']
+      : 'mention-of';
+  const name = authorName(child.author);
+  return {
+    id,
+    source,
+    target,
+    property,
+    ...(name ? { authorName: name } : {}),
+  };
+}
+
 /** Reads a jf2 feed of `/api/mentions.jf2`. Broken entries are skipped. */
 export function parseMentions(json: unknown): ReceivedMention[] {
   if (!isObject(json) || !Array.isArray(json.children)) {
     throw new Error('webmention.io did not answer with a feed (jf2)');
   }
-  const out: ReceivedMention[] = [];
-  for (const child of json.children) {
-    if (!isObject(child)) continue;
-    const id = child['wm-id'];
-    const source = httpUrl(child['wm-source']);
-    const target = httpUrl(child['wm-target']);
-    if (typeof id !== 'number' || !Number.isInteger(id) || !source || !target)
-      continue;
-    if (child['wm-private'] === true) continue;
-    const property =
-      typeof child['wm-property'] === 'string'
-        ? child['wm-property']
-        : 'mention-of';
-    const author = isObject(child.author) ? child.author : undefined;
-    const name =
-      typeof author?.name === 'string' && author.name.trim() !== ''
-        ? author.name.trim().slice(0, 100)
-        : undefined;
-    out.push({
-      id,
-      source,
-      target,
-      property,
-      ...(name ? { authorName: name } : {}),
-    });
-  }
-  return out;
+  return json.children
+    .map(toMention)
+    .filter((m): m is ReceivedMention => m !== null);
 }
 
 /** Reads the list of `/api/deleted`. */
