@@ -35,6 +35,12 @@ export function builderDirs(env: Env = process.env) {
   };
 }
 
+/** The folders the builder writes to; the checkout (`repoRoot`) is not one of them. */
+export function writableDirs(dirs: ReturnType<typeof builderDirs>) {
+  const { releasesDir, cacheDir, stateDir } = dirs;
+  return { releasesDir, cacheDir, stateDir };
+}
+
 export const releaseOnline = (releasesDir: string) => (): Promise<boolean> =>
   stat(path.join(releasesDir, 'current', 'build.json')).then(
     () => true,

@@ -19,6 +19,7 @@ import {
   alerter,
   buildEnv,
   builderDirs,
+  writableDirs,
   polledSources,
   receiver,
   releaseOnline,
@@ -178,7 +179,7 @@ async function setUp() {
   const nextcloud = nextcloudConfig();
   const dirs = builderDirs();
   // The builder runs as a normal user: say it plainly if a folder is not writable.
-  await assertWritable(dirs);
+  await assertWritable(writableDirs(dirs));
   // What a stopped build left behind is not a release.
   await removeIncomplete(dirs.releasesDir);
   const remote = nextcloud ? createRcloneRemote(nextcloud) : undefined;
