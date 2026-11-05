@@ -54,5 +54,7 @@ are lost.
 
 # Open
 
-Social preview images (O17, tags are done), favicon (O16), the legal text of
-imprint and privacy policy itself (O15, to be written by the user in Nextcloud).
+Social preview images (O17, tags are done; after 26.11.0 proposed), review of
+the favicon by the owner (O16: SVG, a white M on blue, plus a touch icon), the
+legal text of imprint and privacy policy itself (O15, written by the owner in
+Nextcloud).
