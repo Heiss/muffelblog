@@ -17,36 +17,38 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   already loaded. Back-dated entries appear only on the next load.
 * **[V]** The client polls only while the tab is visible.
 
-# Content of build.json
+# Implemented (W07, decided by the owner on 2026-11-05)
 
-**[V]**
+The owner chose the counter "N new entries" as in this roadmap. The details were
+settled while building it.
 
-```json
-{
-  "build": "<build id>",
-  "entries": [
-    { "id": "post:<slug>", "date": "<ISO 8601>" },
-    { "id": "memo:<uid>",  "date": "<ISO 8601>" }
-  ]
-}
-```
-
-`entries` holds the newest N entries (proposal: 20), so the client can compute
-the number of new entries without reloading the page. If more than N are new,
-the banner shows "N+ new entries". The build id changes on every build, even if
-only comments or mentions changed. The client therefore compares the entry
-ids, not only the build id.
-
-# Polling
-
-* **[V]** `cache: 'no-cache'` with ETag: the server mostly answers with 304.
-* **[V]** Interval 60 seconds while the tab is visible, the scheduler runs
-  every 3 minutes (see [Pipeline](/ops/pipeline.md)). The user had named "3
-  minutes" for the intervals. The 60 seconds for the client are a proposal.
-* **[V]** On a click on the banner, the new entries are fetched from the first
-  block of the feed (`/`) and inserted at the top, then the page scrolls up.
-* **[V]** If the build id changes during polling but there are no new entries,
-  the banner stays off.
+* **[E]** Two small files, both revalidated at every request (`Cache-Control:
+  no-cache`): `build.json` (`{"id", "builtAt"}`, written by the builder as the
+  last file) says that a new build is online; `entries.json` (written by the site
+  build) lists the newest 20 entries: `id`, `kind`, `date` and the tag addresses,
+  newest first, no titles and no texts. The proposal to put the list into
+  `build.json` was not followed, so the builder stays independent of the site
+  content.
+* **[E]** The client reads `build.json` once at the start (the baseline) and then
+  every 60 seconds, only while the tab is visible and again as soon as it becomes
+  visible. Only when the build id changed it reads `entries.json` once.
+* **[E]** New means: newer than the newest entry in the list, not in the list
+  yet, of the kind of the series (post, memo, term) and, on a tag page, with that
+  tag. A build without such entries (a comment changed) shows nothing. If the
+  whole window of 20 is new, the banner says "20+".
+* **[E]** The banner exists only on the first block of a series and of a tag page;
+  later blocks and articles do not poll.
+* **[E]** A click hides the banner, fetches the first block of the page, replaces
+  the list with it and scrolls to the top.
+* **[E]** If a build changes between the page being made and the first look at
+  `build.json` (a few seconds), the entries of that build count at the next
+  build. Accepted.
+* **[E]** The banner is a sticky button in the style of the filter pills, in the
+  colours of the theme; its text is in the UI language. axe finds no violations
+  with the banner shown.
+* **[U]** Not tested: very long open tabs after several builds (the assets of an
+  earlier release stay for `MUFFEL_RELEASES_KEPT` builds), and the feel of the
+  banner on a phone.
 
 # Risks
 

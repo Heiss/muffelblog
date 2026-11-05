@@ -134,9 +134,11 @@ describe('documentation matches the code', () => {
     }
   });
 
-  it('tells every proxy to revalidate /health.json like /build.json, as the Caddyfile does', async () => {
+  it('tells every proxy to revalidate /health.json and /entries.json like /build.json, as the Caddyfile does', async () => {
     const caddyfile = await read('docker', 'Caddyfile');
-    expect(caddyfile).toMatch(/@buildjson path \/build\.json \/health\.json/);
+    expect(caddyfile).toMatch(
+      /@buildjson path \/build\.json \/health\.json \/entries\.json/,
+    );
     const page = await read(
       'apps',
       'docs',
@@ -146,8 +148,10 @@ describe('documentation matches the code', () => {
       'production',
       'own-proxy.md',
     );
-    expect(page).toMatch(/@buildjson path \/build\.json \/health\.json/); // Caddy
-    expect(page).toContain('location ~ ^/(build|health)\\.json$'); // nginx
+    expect(page).toMatch(
+      /@buildjson path \/build\.json \/health\.json \/entries\.json/,
+    ); // Caddy
+    expect(page).toContain('location ~ ^/(build|health|entries)\\.json$'); // nginx
     const overview = await read(
       'apps',
       'docs',
@@ -158,6 +162,7 @@ describe('documentation matches the code', () => {
       'overview.md',
     );
     expect(overview).toContain('/health.json');
+    expect(overview).toContain('/entries.json');
   });
 
   it('names Compose files that exist', async () => {

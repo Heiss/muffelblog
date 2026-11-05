@@ -74,6 +74,11 @@ export const en = {
     pageTitle: (title: string, page: number) => `${title}, page ${page}`,
     loadFailed: 'Loading more failed. ',
   },
+  live: {
+    one: '1 new entry',
+    many: (count: number) => `${count} new entries`,
+    more: (count: number) => `${count}+ new entries`,
+  },
   embed: {
     frameTitle: (label: string) => `${label}: embedded content`,
   },

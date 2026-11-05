@@ -143,6 +143,31 @@ h1 {
   color: var(--bg);
 }
 
+/* The banner "N new entries": stays at the top while the page is scrolled */
+.live-banner {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 10;
+  margin: 0 0 0.75rem;
+}
+
+.live-banner[hidden] {
+  display: none;
+}
+
+.live-banner button {
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border: 1px solid var(--fg);
+  border-radius: var(--pill);
+  background: var(--fg);
+  color: var(--bg);
+  font-family: var(--font-meta);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* Entries in the feed */
 .entry {
   margin: 0 0 1rem;

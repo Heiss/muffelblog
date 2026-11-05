@@ -1,5 +1,6 @@
 import { messages } from '../i18n/messages';
 import { blockPath, freshIds, parseFilter, seriesPath } from './feed-logic';
+import { startLive } from './live';
 import type { Filter } from './feed-logic';
 
 const FILTER_KEY = 'muffel:filter';
@@ -188,6 +189,27 @@ function start(
     }
   }
 
+  // Shows the first block of a page at the top, for the banner "N new entries".
+  async function showTop(path: string): Promise<void> {
+    generation += 1;
+    loading = false;
+    observer.unobserve(sentinel);
+    status.hidden = true;
+    try {
+      const block = await fetchBlock(path);
+      list.replaceChildren(
+        ...block.entries.map((el) => document.importNode(el, true)),
+      );
+      next = block.next;
+      loaded = [];
+      document.title = block.title;
+      window.scrollTo(0, 0);
+      observe();
+    } catch {
+      location.assign(path);
+    }
+  }
+
   filterNav?.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
@@ -249,6 +271,9 @@ function start(
   }
 
   activate();
+
+  const banner = feed.querySelector<HTMLElement>('[data-live-banner]');
+  if (banner) startLive({ list, banner, showTop });
 
   void (async () => {
     // On `/` a stored filter wins. Series that were opened explicitly do not.

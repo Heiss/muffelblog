@@ -36,6 +36,9 @@ const filters = [
 <Base title={pageTitle} noindex={page.page > 1}>
   <h1>{heading}</h1>
   <div data-feed data-series={series}>
+    <div class="live-banner" data-live-banner role="status" hidden>
+      <button type="button"></button>
+    </div>
     {series && (
       <nav aria-label={messages.filter.label} class="filter" data-filter>
         {filters.map((f) => (
