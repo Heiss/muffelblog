@@ -34,112 +34,167 @@ function el<T extends HTMLElement>(host: HTMLElement, name: string): T {
   return found;
 }
 
-async function start(host: HTMLElement): Promise<void> {
-  const input = el<HTMLInputElement>(host, 'input');
-  const kindBox = el(host, 'kind');
-  const tagSelect = el<HTMLSelectElement>(host, 'tag');
-  const summary = el(host, 'summary');
-  const results = el(host, 'results');
-  const error = el(host, 'error');
-  const texts = {
-    none: host.dataset.summaryNone ?? '',
-    one: host.dataset.summaryOne ?? '',
-    many: host.dataset.summaryMany ?? '',
-  };
-  const allLabel = host.dataset.labelAll ?? '';
+/** The elements and texts of the search page. */
+interface SearchUi {
+  host: HTMLElement;
+  input: HTMLInputElement;
+  kindBox: HTMLElement;
+  tagSelect: HTMLSelectElement;
+  summary: HTMLElement;
+  results: HTMLElement;
+  texts: { none: string; one: string; many: string };
+  allLabel: string;
+}
 
-  let pagefind: Pagefind;
+function searchUi(host: HTMLElement): SearchUi {
+  return {
+    host,
+    input: el<HTMLInputElement>(host, 'input'),
+    kindBox: el(host, 'kind'),
+    tagSelect: el<HTMLSelectElement>(host, 'tag'),
+    summary: el(host, 'summary'),
+    results: el(host, 'results'),
+    texts: {
+      none: host.dataset.summaryNone ?? '',
+      one: host.dataset.summaryOne ?? '',
+      many: host.dataset.summaryMany ?? '',
+    },
+    allLabel: host.dataset.labelAll ?? '',
+  };
+}
+
+async function loadPagefind(): Promise<Pagefind | null> {
   try {
-    pagefind = (await import(/* @vite-ignore */ PAGEFIND_URL)) as Pagefind;
+    const pagefind = (await import(
+      /* @vite-ignore */ PAGEFIND_URL
+    )) as Pagefind;
     await pagefind.options({ baseUrl: '/' });
     // Without this call searches do not report filter counts.
     await pagefind.filters();
+    return pagefind;
   } catch {
+    return null;
+  }
+}
+
+/** The kind buttons; a click chooses the kind and searches again. */
+function kindButtons(
+  ui: SearchUi,
+  counts: Record<string, number>,
+  chosen: string,
+  choose: (kind: string) => void,
+): HTMLButtonElement[] {
+  const order: string[] = JSON.parse(ui.host.dataset.kindOrder ?? '[]');
+  const kinds = order.filter((k) => (counts[k] ?? 0) > 0);
+  return [['', ui.allLabel], ...kinds.map((k) => [k, k])].map(
+    ([value, label]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = label as string;
+      b.setAttribute('aria-pressed', String(value === chosen));
+      b.addEventListener('click', () => choose(value as string));
+      return b;
+    },
+  );
+}
+
+/** The tag list, keeping the chosen tag when it still occurs. */
+function fillTags(ui: SearchUi, tagCounts: Record<string, number>): void {
+  const tags = Object.keys(tagCounts).sort();
+  const chosen = ui.tagSelect.value;
+  ui.tagSelect.replaceChildren(new Option(ui.allLabel, ''));
+  for (const tag of tags) ui.tagSelect.append(new Option(tag, tag));
+  ui.tagSelect.value = tags.includes(chosen) ? chosen : '';
+  ui.tagSelect.hidden = tags.length === 0;
+}
+
+function excerptElement(excerpt: string): HTMLParagraphElement {
+  const p = document.createElement('p');
+  for (const part of excerptParts(excerpt)) {
+    if (!part.mark) {
+      p.append(part.text);
+      continue;
+    }
+    const m = document.createElement('mark');
+    m.textContent = part.text;
+    p.append(m);
+  }
+  return p;
+}
+
+function resultList(
+  shown: { url: string; meta: { title?: string }; excerpt: string }[],
+): HTMLUListElement {
+  const list = document.createElement('ul');
+  for (const item of shown) {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = item.url;
+    a.textContent = item.meta.title ?? item.url;
+    li.append(a, excerptElement(item.excerpt));
+    list.append(li);
+  }
+  return list;
+}
+
+function clear(ui: SearchUi): void {
+  ui.summary.textContent = '';
+  ui.kindBox.replaceChildren();
+  ui.tagSelect.hidden = true;
+}
+
+/** Searches as the visitor types; an older search never overwrites a newer one. */
+function searcher(ui: SearchUi, pagefind: Pagefind) {
+  let kind = '';
+  let run = 0;
+  const render = async (): Promise<void> => {
+    const term = ui.input.value.trim();
+    const mine = ++run;
+    ui.results.replaceChildren();
+    if (term === '') return clear(ui);
+    const response = await pagefind.search(term, {
+      filters: searchFilters(kind, ui.tagSelect.value),
+    });
+    // Unfiltered numbers for the buttons, so they do not vanish when chosen.
+    const base = await pagefind.search(term);
+    if (mine !== run) return;
+    ui.kindBox.replaceChildren(
+      ...kindButtons(ui, base.filters.kind ?? {}, kind, (value) => {
+        kind = value;
+        void render();
+      }),
+    );
+    fillTags(ui, base.filters.tag ?? {});
+    ui.summary.textContent = summaryText(
+      ui.texts,
+      response.results.length,
+      term,
+    );
+    const shown = await Promise.all(
+      response.results.slice(0, MAX_RESULTS).map((r) => r.data()),
+    );
+    if (mine === run) ui.results.replaceChildren(resultList(shown));
+  };
+  return render;
+}
+
+async function start(host: HTMLElement): Promise<void> {
+  const ui = searchUi(host);
+  const pagefind = await loadPagefind();
+  if (pagefind === null) {
+    const error = el(host, 'error');
     error.textContent = host.dataset.unavailable ?? '';
     error.hidden = false;
     host.hidden = false;
     return;
   }
-
-  let kind = '';
-  let run = 0;
-
-  async function render(): Promise<void> {
-    const term = input.value.trim();
-    const mine = ++run;
-    results.replaceChildren();
-    if (term === '') {
-      summary.textContent = '';
-      kindBox.replaceChildren();
-      tagSelect.hidden = true;
-      return;
-    }
-    const response = await pagefind.search(term, {
-      filters: searchFilters(kind, tagSelect.value),
-    });
-    // Unfiltered numbers for the buttons, so they do not vanish when chosen.
-    const base = await pagefind.search(term);
-    if (mine !== run) return;
-
-    const order: string[] = JSON.parse(host.dataset.kindOrder ?? '[]');
-    const counts = base.filters.kind ?? {};
-    const kinds = order.filter((k) => (counts[k] ?? 0) > 0).map((k) => [k]);
-    kindBox.replaceChildren(
-      ...[['', allLabel] as const, ...kinds.map(([k]) => [k, k] as const)].map(
-        ([value, label]) => {
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.textContent = label;
-          b.setAttribute('aria-pressed', String(value === kind));
-          b.addEventListener('click', () => {
-            kind = value;
-            void render();
-          });
-          return b;
-        },
-      ),
-    );
-
-    const tags = Object.keys(base.filters.tag ?? {}).sort();
-    const chosen = tagSelect.value;
-    tagSelect.replaceChildren(new Option(allLabel, ''));
-    for (const tag of tags) tagSelect.append(new Option(tag, tag));
-    tagSelect.value = tags.includes(chosen) ? chosen : '';
-    tagSelect.hidden = tags.length === 0;
-
-    summary.textContent = summaryText(texts, response.results.length, term);
-    const shown = await Promise.all(
-      response.results.slice(0, MAX_RESULTS).map((r) => r.data()),
-    );
-    if (mine !== run) return;
-    const list = document.createElement('ul');
-    for (const item of shown) {
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = item.url;
-      a.textContent = item.meta.title ?? item.url;
-      const p = document.createElement('p');
-      for (const part of excerptParts(item.excerpt)) {
-        if (part.mark) {
-          const m = document.createElement('mark');
-          m.textContent = part.text;
-          p.append(m);
-        } else {
-          p.append(part.text);
-        }
-      }
-      li.append(a, p);
-      list.append(li);
-    }
-    results.replaceChildren(list);
-  }
-
+  const render = searcher(ui, pagefind);
   let timer: ReturnType<typeof setTimeout> | undefined;
-  input.addEventListener('input', () => {
+  ui.input.addEventListener('input', () => {
     clearTimeout(timer);
     timer = setTimeout(() => void render(), 120);
   });
-  tagSelect.addEventListener('change', () => void render());
+  ui.tagSelect.addEventListener('change', () => void render());
   host.hidden = false;
 }
 

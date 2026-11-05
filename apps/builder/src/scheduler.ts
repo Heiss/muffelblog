@@ -57,6 +57,129 @@ export type TickResult =
 const message = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 
+/** What the scheduler remembers between two checks. */
+interface SchedulerState {
+  loaded: boolean;
+  builtMarker?: string;
+  pending?: { marker: string; seen: number };
+  lastSuccess: Status['lastSuccess'];
+  failingSince?: string;
+  lastError: Status['lastError'];
+}
+
+async function fail(
+  s: SchedulerState,
+  deps: SchedulerDeps,
+  error: unknown,
+  at: string,
+): Promise<void> {
+  const text = message(error);
+  const first = s.failingSince === undefined;
+  s.failingSince ??= at;
+  s.lastError = { message: text, at, since: s.failingSince };
+  await deps.writeStatus({
+    state: 'failing',
+    lastCheck: at,
+    lastSuccess: s.lastSuccess,
+    lastError: s.lastError,
+  });
+  if (first) await deps.alert({ kind: 'failed', message: text, at });
+}
+
+async function ok(
+  s: SchedulerState,
+  deps: SchedulerDeps,
+  at: string,
+): Promise<void> {
+  if (s.failingSince !== undefined) {
+    s.failingSince = undefined;
+    s.lastError = undefined;
+    await deps.alert({
+      kind: 'recovered',
+      message: 'The sources and the build work again',
+      at,
+    });
+  }
+  await deps.writeStatus({
+    state: 'ok',
+    lastCheck: at,
+    lastSuccess: s.lastSuccess,
+  });
+}
+
+/** One line per source: what the content looks like now. */
+async function currentMarker(deps: SchedulerDeps): Promise<string> {
+  const markers = await Promise.all(
+    deps.sources.map(async (src) => `${src.name}=${await src.poll()}`),
+  );
+  return markers.join('\n');
+}
+
+/**
+ * True while a change has not stayed the same for the configured number of
+ * checks. Nothing online yet: never wait, build at once.
+ */
+function stillWaiting(
+  s: SchedulerState,
+  deps: SchedulerDeps,
+  marker: string,
+  online: boolean,
+): boolean {
+  if (!online) return false;
+  if (s.pending?.marker === marker) s.pending.seen += 1;
+  else s.pending = { marker, seen: 0 };
+  return s.pending.seen < deps.debounceChecks;
+}
+
+async function build(
+  s: SchedulerState,
+  deps: SchedulerDeps,
+  marker: string,
+  at: string,
+): Promise<TickResult> {
+  try {
+    const id = await deps.build();
+    s.builtMarker = marker;
+    s.pending = undefined;
+    s.lastSuccess = { id, at };
+    await deps.saveState({ builtMarker: marker });
+  } catch (error) {
+    await fail(s, deps, error, at);
+    return 'failed';
+  }
+  await ok(s, deps, at);
+  return 'built';
+}
+
+async function tick(
+  s: SchedulerState,
+  deps: SchedulerDeps,
+): Promise<TickResult> {
+  const at = deps.now().toISOString();
+  if (!s.loaded) {
+    s.builtMarker = (await deps.loadState()).builtMarker;
+    s.loaded = true;
+  }
+  let marker: string;
+  try {
+    marker = await currentMarker(deps);
+  } catch (error) {
+    await fail(s, deps, error, at);
+    return 'poll-failed';
+  }
+  const online = await deps.hasRelease();
+  if (online && marker === s.builtMarker) {
+    s.pending = undefined;
+    await ok(s, deps, at);
+    return 'idle';
+  }
+  if (stillWaiting(s, deps, marker, online)) {
+    await ok(s, deps, at);
+    return 'waiting';
+  }
+  return build(s, deps, marker, at);
+}
+
 /**
  * One check of all sources per `tick()`. A change is built only after it stayed
  * the same for `debounceChecks` further checks, so half-synchronized files are
@@ -64,89 +187,10 @@ const message = (error: unknown): string =>
  * good release online; a failure is reported once and its end once.
  */
 export function createScheduler(deps: SchedulerDeps) {
-  let loaded = false;
-  let builtMarker: string | undefined;
-  let pending: { marker: string; seen: number } | undefined;
-  let lastSuccess: Status['lastSuccess'];
-  let failingSince: string | undefined;
-  let lastError: Status['lastError'];
-
-  async function fail(error: unknown, at: string): Promise<void> {
-    const text = message(error);
-    const first = failingSince === undefined;
-    failingSince ??= at;
-    lastError = { message: text, at, since: failingSince };
-    await deps.writeStatus({
-      state: 'failing',
-      lastCheck: at,
-      lastSuccess,
-      lastError,
-    });
-    if (first) await deps.alert({ kind: 'failed', message: text, at });
-  }
-
-  async function ok(at: string): Promise<void> {
-    if (failingSince !== undefined) {
-      failingSince = undefined;
-      lastError = undefined;
-      await deps.alert({
-        kind: 'recovered',
-        message: 'The sources and the build work again',
-        at,
-      });
-    }
-    await deps.writeStatus({ state: 'ok', lastCheck: at, lastSuccess });
-  }
-
-  return {
-    async tick(): Promise<TickResult> {
-      const at = deps.now().toISOString();
-      if (!loaded) {
-        builtMarker = (await deps.loadState()).builtMarker;
-        loaded = true;
-      }
-
-      let marker: string;
-      try {
-        const markers = await Promise.all(
-          deps.sources.map(async (s) => `${s.name}=${await s.poll()}`),
-        );
-        marker = markers.join('\n');
-      } catch (error) {
-        await fail(error, at);
-        return 'poll-failed';
-      }
-
-      const online = await deps.hasRelease();
-      if (online && marker === builtMarker) {
-        pending = undefined;
-        await ok(at);
-        return 'idle';
-      }
-
-      // Nothing online yet: build at once. Otherwise wait until the content
-      // stayed the same for the configured number of checks.
-      if (online) {
-        if (pending?.marker === marker) pending.seen += 1;
-        else pending = { marker, seen: 0 };
-        if (pending.seen < deps.debounceChecks) {
-          await ok(at);
-          return 'waiting';
-        }
-      }
-
-      try {
-        const id = await deps.build();
-        builtMarker = marker;
-        pending = undefined;
-        lastSuccess = { id, at };
-        await deps.saveState({ builtMarker: marker });
-      } catch (error) {
-        await fail(error, at);
-        return 'failed';
-      }
-      await ok(at);
-      return 'built';
-    },
+  const state: SchedulerState = {
+    loaded: false,
+    lastSuccess: undefined,
+    lastError: undefined,
   };
+  return { tick: () => tick(state, deps) };
 }

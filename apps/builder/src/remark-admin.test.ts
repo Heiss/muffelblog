@@ -180,3 +180,17 @@ describe('formatComment', () => {
     expect(line.length).toBeLessThan(300);
   });
 });
+
+describe('formatComment and foreign markup', () => {
+  it('never prints a tag, also not one that was written as entities', () => {
+    const line = formatComment({
+      id: 'x',
+      text: '<p>&lt;script&gt;alert(1)&lt;/script&gt; and <b>bold</b></p>',
+      user: { name: 'Eve', id: 'e' },
+      time: '2026-11-05T10:00:00Z',
+      locator: { url: 'https://b.example/p/x/' },
+    });
+    expect(line).not.toMatch(/[<>]/);
+    expect(line).toContain('and bold');
+  });
+});

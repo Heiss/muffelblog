@@ -103,21 +103,27 @@ function checkPath(pathValue: string): string | null {
   return null;
 }
 
-/** Turns the image address of an article into paths relative to the content folder. */
-function candidatesFor(articlePath: string, src: string): PathResult {
+/** The decoded relative path of an address, or the reason it is refused. */
+function relativeSource(src: string): { rel: string } | { reason: string } {
   let rel: string;
   try {
     rel = decodeURIComponent(src);
   } catch {
-    return { ok: false, reason: 'invalid path encoding' };
+    return { reason: 'invalid path encoding' };
   }
   if (rel.includes('\0') || rel.includes('\\'))
-    return { ok: false, reason: 'invalid path' };
-  if (rel.startsWith('/'))
-    return { ok: false, reason: 'absolute paths are not allowed' };
+    return { reason: 'invalid path' };
+  if (rel.startsWith('/')) return { reason: 'absolute paths are not allowed' };
   if (rel.includes('?') || rel.includes('#'))
-    return { ok: false, reason: 'parameters in the path are not allowed' };
+    return { reason: 'parameters in the path are not allowed' };
+  return { rel };
+}
 
+/** Turns the image address of an article into paths relative to the content folder. */
+function candidatesFor(articlePath: string, src: string): PathResult {
+  const decoded = relativeSource(src);
+  if ('reason' in decoded) return { ok: false, reason: decoded.reason };
+  const rel = decoded.rel;
   const base = path.posix.dirname(articlePath);
   const relativeToArticle = path.posix.normalize(path.posix.join(base, rel));
   const error = checkPath(relativeToArticle);
@@ -125,11 +131,15 @@ function candidatesFor(articlePath: string, src: string): PathResult {
 
   const candidates = [relativeToArticle];
   // Obsidian can also write paths starting at the folder root.
-  if (base !== '.' && !rel.startsWith('./') && !rel.startsWith('../')) {
-    const fromRoot = path.posix.normalize(rel);
-    if (checkPath(fromRoot) === null && fromRoot !== relativeToArticle)
-      candidates.push(fromRoot);
-  }
+  const fromRoot = path.posix.normalize(rel);
+  const relativeMarker = rel.startsWith('./') || rel.startsWith('../');
+  if (
+    base !== '.' &&
+    !relativeMarker &&
+    checkPath(fromRoot) === null &&
+    fromRoot !== relativeToArticle
+  )
+    candidates.push(fromRoot);
   return { ok: true, candidates };
 }
 
@@ -175,200 +185,257 @@ const UI: Record<
   },
 };
 
+type Found = Array<[Element, Element | Root]>;
+
+/** What the content steps need: the options, the warnings, the texts. */
+interface Content {
+  options: RenderOptions;
+  warnings: string[];
+  ui: (typeof UI)[Language];
+}
+
+const warnOf = (c: Content, text: string) =>
+  c.warnings.push(`${c.options.articlePath}: ${text}`);
+
+const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
+
+/** True for a link to another Markdown file of the folder (W20). */
+const isFileLink = (c: Content, href: string) =>
+  c.options.resolveLink !== undefined &&
+  !SCHEME.test(href) &&
+  /\.md(#.*)?$/i.test(href);
+
+/** Headings one level down, external links without referrer, file links collected. */
+function markLink(
+  c: Content,
+  node: Element,
+  parent: Element | Root,
+  files: Found,
+) {
+  const href = String(node.properties?.href ?? '');
+  if (/^https?:\/\//i.test(href))
+    node.properties = { ...node.properties, rel: ['noopener', 'noreferrer'] };
+  else if (isFileLink(c, href)) files.push([node, parent]);
+}
+
+/** Collects the elements the later steps change; shifts headings on the way. */
+function collect(c: Content, tree: Root) {
+  const found = {
+    images: [] as Found,
+    frames: [] as Found,
+    inputs: [] as Found,
+    files: [] as Found,
+  };
+  const buckets: Record<string, Found> = {
+    img: found.images,
+    iframe: found.frames,
+    input: found.inputs,
+  };
+  visit(tree, 'element', (node, _index, parent) => {
+    if (!parent) return;
+    const p = parent as Element | Root;
+    const bucket = buckets[node.tagName];
+    if (bucket) bucket.push([node, p]);
+    else if (/^h[1-6]$/.test(node.tagName))
+      node.tagName = `h${Math.min(6, Number(node.tagName.slice(1)) + 1)}`;
+    else if (node.tagName === 'a') markLink(c, node, p, found.files);
+  });
+  return found;
+}
+
+/**
+ * Links to other files of the folder lead to their pages (W20). A link to an
+ * unknown or unpublished file becomes its text: its name must not leak.
+ */
+function resolveFileLink(c: Content, node: Element, parent: Element | Root) {
+  const href = String(node.properties?.href ?? '');
+  const hash = href.indexOf('#');
+  const file = hash >= 0 ? href.slice(0, hash) : href;
+  const fragment = hash >= 0 ? href.slice(hash) : '';
+  const paths = candidatesFor(c.options.articlePath, file);
+  const target = paths.ok
+    ? paths.candidates
+        .map((p) => c.options.resolveLink?.(p.normalize('NFC')))
+        .find((url) => url !== undefined)
+    : undefined;
+  if (target) {
+    node.properties = { href: `${target}${fragment}` };
+    return;
+  }
+  warnOf(
+    c,
+    `link to "${file}" leads to no published file and is shown as text`,
+  );
+  replaceNode(parent, node, node.children);
+}
+
+/**
+ * Colors code with a known language through classes (`hljs-*`). This runs
+ * after sanitizing, so the classes come only from the coloring, never from
+ * the text. Without a language nothing is guessed.
+ */
+function highlightCode(tree: Root) {
+  visit(tree, 'element', (node, _index, parent) => {
+    if (node.tagName !== 'code' || (parent as Element)?.tagName !== 'pre')
+      return;
+    const classes = Array.isArray(node.properties?.className)
+      ? node.properties.className.map(String)
+      : [];
+    const language = classes
+      .find((cl) => cl.startsWith('language-'))
+      ?.slice('language-'.length);
+    if (!language || !lowlight.registered(language)) return;
+    const source = node.children
+      .map((child) => (child.type === 'text' ? child.value : ''))
+      .join('');
+    node.children = lowlight.highlight(language, source)
+      .children as ElementContent[];
+    node.properties = { ...node.properties, className: [...classes, 'hljs'] };
+  });
+}
+
+/** An allowed embed becomes a placeholder that loads only after a click. */
+function replaceFrame(c: Content, node: Element, parent: Element | Root) {
+  const source = String(node.properties?.src ?? '');
+  const match =
+    source === '' || c.options.remoteContent === 'none'
+      ? null
+      : matchEmbed(source);
+  if (match === null) {
+    warnOf(
+      c,
+      `embed ${source === '' ? 'without an address' : hostOf(source)} is not allowed and is removed`,
+    );
+    replaceNode(parent, node, []);
+    return;
+  }
+  const { ui } = c;
+  replaceNode(parent, node, [
+    element(
+      'div',
+      {
+        className: ['embed'],
+        dataEmbedSrc: match.src,
+        dataEmbedLabel: match.label,
+      },
+      [
+        element('p', {}, [text(ui.embedNotice(match.label))]),
+        element('button', { type: 'button', className: ['embed-start'] }, [
+          text(ui.embedLoad),
+        ]),
+        element('p', {}, [
+          element(
+            'a',
+            { href: match.openUrl, rel: ['noopener', 'noreferrer'] },
+            [text(ui.embedOpen(match.label))],
+          ),
+        ]),
+      ],
+    ),
+  ]);
+}
+
+/** A remote image stays only from the allowlist (and never in the strict mode). */
+function remoteImage(
+  c: Content,
+  node: Element,
+  parent: Element | Root,
+  source: string,
+  alt: string,
+) {
+  if (c.options.remoteContent === 'none' || !isAllowedImageUrl(source)) {
+    warnOf(c, `image from ${hostOf(source)} is not allowed and is removed`);
+    replaceNode(parent, node, imageAsText(alt));
+    return;
+  }
+  node.properties = {
+    src: source,
+    alt,
+    loading: 'lazy',
+    decoding: 'async',
+    referrerPolicy: 'no-referrer',
+  };
+}
+
+async function resolveCandidates(
+  c: Content,
+  candidates: string[],
+): Promise<ImageResolveResult> {
+  let resolved: ImageResolveResult = {
+    ok: false,
+    code: 'not-found',
+    reason: 'not found',
+  };
+  for (const candidate of candidates) {
+    resolved = await c.options.resolveImage(candidate);
+    if (resolved.ok || resolved.code !== 'not-found') break;
+  }
+  return resolved;
+}
+
+/** A local image becomes its variants, or a visible note when it is missing. */
+async function localImage(
+  c: Content,
+  node: Element,
+  parent: Element | Root,
+  source: string,
+  alt: string,
+) {
+  const paths = candidatesFor(c.options.articlePath, source);
+  if (!paths.ok) {
+    warnOf(c, `image "${source}" is removed (${paths.reason})`);
+    replaceNode(parent, node, imageAsText(alt));
+    return;
+  }
+  const resolved = await resolveCandidates(c, paths.candidates);
+  if (!resolved.ok) {
+    warnOf(c, `image "${source}" is missing or unusable (${resolved.reason})`);
+    replaceNode(parent, node, [
+      element('span', { className: ['image-missing'] }, [
+        text(c.ui.imageMissing(alt)),
+      ]),
+    ]);
+    return;
+  }
+  const image = resolved.image;
+  node.properties = {
+    src: image.src,
+    srcSet: image.srcset,
+    sizes: IMAGE_SIZES,
+    width: image.width,
+    height: image.height,
+    alt,
+    loading: 'lazy',
+    decoding: 'async',
+  };
+}
+
+async function replaceImage(c: Content, node: Element, parent: Element | Root) {
+  const source = String(node.properties?.src ?? '');
+  const alt = String(node.properties?.alt ?? '');
+  if (source === '') {
+    warnOf(c, 'image without a valid address is removed');
+    replaceNode(parent, node, imageAsText(alt));
+  } else if (SCHEME.test(source) || source.startsWith('//'))
+    remoteImage(c, node, parent, source, alt);
+  else await localImage(c, node, parent, source, alt);
+}
+
 function rehypeContent(options: RenderOptions, warnings: string[]) {
-  const ui = UI[options.lang ?? DEFAULT_LANG];
+  const c: Content = {
+    options,
+    warnings,
+    ui: UI[options.lang ?? DEFAULT_LANG],
+  };
   return async (tree: Root): Promise<void> => {
-    const images: Array<[Element, Element | Root]> = [];
-    const frames: Array<[Element, Element | Root]> = [];
-    const inputs: Array<[Element, Element | Root]> = [];
-    const fileLinks: Array<[Element, Element | Root]> = [];
-
-    visit(tree, 'element', (node, _index, parent) => {
-      if (!parent) return;
-      if (node.tagName === 'img') images.push([node, parent as Element | Root]);
-      else if (node.tagName === 'iframe')
-        frames.push([node, parent as Element | Root]);
-      else if (node.tagName === 'input')
-        inputs.push([node, parent as Element | Root]);
-      else if (/^h[1-6]$/.test(node.tagName)) {
-        const level = Math.min(6, Number(node.tagName.slice(1)) + 1);
-        node.tagName = `h${level}`;
-      } else if (node.tagName === 'a') {
-        const href = String(node.properties?.href ?? '');
-        if (/^https?:\/\//i.test(href))
-          node.properties = {
-            ...node.properties,
-            rel: ['noopener', 'noreferrer'],
-          };
-        else if (
-          options.resolveLink &&
-          !/^[a-z][a-z0-9+.-]*:/i.test(href) &&
-          /\.md(#.*)?$/i.test(href)
-        )
-          fileLinks.push([node, parent as Element | Root]);
-      }
-    });
-
-    // Links to other files of the folder lead to their pages (W20). A link to
-    // an unknown or unpublished file becomes its text: its name must not leak.
-    for (const [node, parent] of fileLinks) {
-      const href = String(node.properties?.href ?? '');
-      const hash = href.indexOf('#');
-      const file = hash >= 0 ? href.slice(0, hash) : href;
-      const fragment = hash >= 0 ? href.slice(hash) : '';
-      const paths = candidatesFor(options.articlePath, file);
-      const target = paths.ok
-        ? paths.candidates
-            .map((c) => options.resolveLink?.(c.normalize('NFC')))
-            .find((url) => url !== undefined)
-        : undefined;
-      if (target) {
-        node.properties = { href: `${target}${fragment}` };
-      } else {
-        warnings.push(
-          `${options.articlePath}: link to "${file}" leads to no published file and is shown as text`,
-        );
-        replaceNode(parent, node, node.children);
-      }
-    }
-
-    // Colors code with a known language through classes (`hljs-*`). This runs
-    // after sanitizing, so the classes come only from the coloring, never from
-    // the text. Without a language nothing is guessed.
-    visit(tree, 'element', (node, _index, parent) => {
-      if (node.tagName !== 'code' || (parent as Element)?.tagName !== 'pre')
-        return;
-      const classes = Array.isArray(node.properties?.className)
-        ? node.properties.className.map(String)
-        : [];
-      const language = classes
-        .find((c) => c.startsWith('language-'))
-        ?.slice('language-'.length);
-      if (!language || !lowlight.registered(language)) return;
-      const source = node.children
-        .map((child) => (child.type === 'text' ? child.value : ''))
-        .join('');
-      const result = lowlight.highlight(language, source);
-      node.children = result.children as ElementContent[];
-      node.properties = {
-        ...node.properties,
-        className: [...classes, 'hljs'],
-      };
-    });
-
-    for (const [node, parent] of inputs) {
+    const found = collect(c, tree);
+    for (const [node, parent] of found.files) resolveFileLink(c, node, parent);
+    highlightCode(tree);
+    for (const [node, parent] of found.inputs)
       if (node.properties?.type !== 'checkbox') replaceNode(parent, node, []);
-    }
-
-    for (const [node, parent] of frames) {
-      const source = String(node.properties?.src ?? '');
-      const match =
-        source === '' || options.remoteContent === 'none'
-          ? null
-          : matchEmbed(source);
-      if (match === null) {
-        warnings.push(
-          `${options.articlePath}: embed ${source === '' ? 'without an address' : hostOf(source)} is not allowed and is removed`,
-        );
-        replaceNode(parent, node, []);
-        continue;
-      }
-      const placeholder = element(
-        'div',
-        {
-          className: ['embed'],
-          dataEmbedSrc: match.src,
-          dataEmbedLabel: match.label,
-        },
-        [
-          element('p', {}, [text(ui.embedNotice(match.label))]),
-          element('button', { type: 'button', className: ['embed-start'] }, [
-            text(ui.embedLoad),
-          ]),
-          element('p', {}, [
-            element(
-              'a',
-              { href: match.openUrl, rel: ['noopener', 'noreferrer'] },
-              [text(ui.embedOpen(match.label))],
-            ),
-          ]),
-        ],
-      );
-      replaceNode(parent, node, [placeholder]);
-    }
-
-    for (const [node, parent] of images) {
-      const source = String(node.properties?.src ?? '');
-      const alt = String(node.properties?.alt ?? '');
-
-      if (source === '') {
-        warnings.push(
-          `${options.articlePath}: image without a valid address is removed`,
-        );
-        replaceNode(parent, node, imageAsText(alt));
-        continue;
-      }
-
-      if (/^[a-z][a-z0-9+.-]*:/i.test(source) || source.startsWith('//')) {
-        if (options.remoteContent === 'none' || !isAllowedImageUrl(source)) {
-          warnings.push(
-            `${options.articlePath}: image from ${hostOf(source)} is not allowed and is removed`,
-          );
-          replaceNode(parent, node, imageAsText(alt));
-          continue;
-        }
-        node.properties = {
-          src: source,
-          alt,
-          loading: 'lazy',
-          decoding: 'async',
-          referrerPolicy: 'no-referrer',
-        };
-        continue;
-      }
-
-      const paths = candidatesFor(options.articlePath, source);
-      if (!paths.ok) {
-        warnings.push(
-          `${options.articlePath}: image "${source}" is removed (${paths.reason})`,
-        );
-        replaceNode(parent, node, imageAsText(alt));
-        continue;
-      }
-
-      let resolved: ImageResolveResult = {
-        ok: false,
-        code: 'not-found',
-        reason: 'not found',
-      };
-      for (const candidate of paths.candidates) {
-        resolved = await options.resolveImage(candidate);
-        if (resolved.ok || resolved.code !== 'not-found') break;
-      }
-
-      if (resolved.ok) {
-        const image = resolved.image;
-        node.properties = {
-          src: image.src,
-          srcSet: image.srcset,
-          sizes: IMAGE_SIZES,
-          width: image.width,
-          height: image.height,
-          alt,
-          loading: 'lazy',
-          decoding: 'async',
-        };
-      } else {
-        warnings.push(
-          `${options.articlePath}: image "${source}" is missing or unusable (${resolved.reason})`,
-        );
-        replaceNode(parent, node, [
-          element('span', { className: ['image-missing'] }, [
-            text(ui.imageMissing(alt)),
-          ]),
-        ]);
-      }
-    }
+    for (const [node, parent] of found.frames) replaceFrame(c, node, parent);
+    for (const [node, parent] of found.images)
+      await replaceImage(c, node, parent);
   };
 }
 

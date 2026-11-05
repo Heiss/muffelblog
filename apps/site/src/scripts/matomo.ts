@@ -1,6 +1,6 @@
 // Statistics with the operator's own Matomo, only when the build set it up
 // (MATOMO_URL, MATOMO_SITE_ID). A module from the own host, no inline script.
-import { matomoCommands } from '../lib/matomo';
+import { matomoCommands } from '../lib/matomo-commands';
 
 const el = document.querySelector<HTMLElement>('[data-matomo]');
 const base = el?.dataset.url;

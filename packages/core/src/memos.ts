@@ -1,7 +1,7 @@
 import { DEFAULT_SETTINGS } from './config.ts';
 import type { Language } from './config.ts';
 import { createHash } from 'node:crypto';
-import { readFile, stat } from 'node:fs/promises';
+import { open, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
@@ -91,6 +91,21 @@ function parseAttachment(value: unknown): MemoAttachmentRaw | null {
   return attachment;
 }
 
+const textOr = (value: unknown, fallback = ''): string =>
+  typeof value === 'string' ? value : fallback;
+
+const stringsOf = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((t): t is string => typeof t === 'string')
+    : [];
+
+const attachmentsOf = (value: unknown): MemoAttachmentRaw[] =>
+  Array.isArray(value)
+    ? value
+        .map(parseAttachment)
+        .filter((a): a is MemoAttachmentRaw => a !== null)
+    : [];
+
 /** Checks one entry of the Memos response. Returns null if it is unusable. */
 function parseMemo(value: unknown): MemoRaw | null {
   if (!isObject(value)) return null;
@@ -100,20 +115,13 @@ function parseMemo(value: unknown): MemoRaw | null {
   const memo: MemoRaw = {
     name: value.name,
     content: value.content,
-    visibility: typeof value.visibility === 'string' ? value.visibility : '',
-    createTime: typeof value.createTime === 'string' ? value.createTime : '',
-    tags: Array.isArray(value.tags)
-      ? value.tags.filter((t): t is string => typeof t === 'string')
-      : [],
-    attachments: Array.isArray(value.attachments)
-      ? value.attachments
-          .map(parseAttachment)
-          .filter((a): a is MemoAttachmentRaw => a !== null)
-      : [],
+    visibility: textOr(value.visibility),
+    createTime: textOr(value.createTime),
+    tags: stringsOf(value.tags),
+    attachments: attachmentsOf(value.attachments),
   };
   if (typeof value.state === 'string') memo.state = value.state;
-  if (typeof value.parent === 'string' && value.parent !== '')
-    memo.parent = value.parent;
+  if (textOr(value.parent) !== '') memo.parent = value.parent as string;
   return memo;
 }
 
@@ -150,30 +158,31 @@ export interface HttpMemosOptions {
   timeoutMs?: number;
 }
 
-/**
- * Reads public memos through the REST interface (`/api/memos`) without login.
- * This requires the access mode of the instance to be PUBLIC.
- * Redirects are never followed.
- */
-export function createHttpMemosSource(options: HttpMemosOptions): MemosSource {
+/** The connection to one Memos instance. */
+interface MemosConnection {
+  root: string;
+  request: (url: string) => Promise<Response>;
+  pageSize: number;
+  maxPages: number;
+}
+
+function memosRoot(baseUrl: string): string {
   let base: URL;
   try {
-    base = new URL(options.baseUrl);
+    base = new URL(baseUrl);
   } catch {
-    throw new MemosError(`Invalid Memos address: ${options.baseUrl}`);
+    throw new MemosError(`Invalid Memos address: ${baseUrl}`);
   }
   if (base.protocol !== 'http:' && base.protocol !== 'https:') {
     throw new MemosError(
-      `The Memos address must start with http or https: ${options.baseUrl}`,
+      `The Memos address must start with http or https: ${baseUrl}`,
     );
   }
-  const root = `${base.origin}${base.pathname.replace(/\/+$/, '')}`;
-  const doFetch = options.fetch ?? globalThis.fetch;
-  const pageSize = options.pageSize ?? 100;
-  const maxPages = options.maxPages ?? 1000;
-  const timeoutMs = options.timeoutMs ?? DEFAULT_SETTINGS.memosTimeoutMs;
+  return `${base.origin}${base.pathname.replace(/\/+$/, '')}`;
+}
 
-  async function request(url: string): Promise<Response> {
+function memosRequest(doFetch: typeof fetch, timeoutMs: number) {
+  return async (url: string): Promise<Response> => {
     try {
       return await doFetch(url, {
         redirect: 'manual',
@@ -184,124 +193,192 @@ export function createHttpMemosSource(options: HttpMemosOptions): MemosSource {
       const cause = error instanceof Error ? error.message : String(error);
       throw new MemosError(`Memos is unreachable (${cause})`);
     }
-  }
-
-  return {
-    async listPublicMemos() {
-      const memos: MemoRaw[] = [];
-      const warnings: string[] = [];
-      const seen = new Set<string>();
-      let token = '';
-      for (let pageIndex = 0; pageIndex < maxPages; pageIndex += 1) {
-        const url = new URL(`${root}/api/memos`);
-        url.searchParams.set('page_size', String(pageSize));
-        url.searchParams.set('filter', 'visibility == "PUBLIC"');
-        url.searchParams.set('order_by', 'create_time desc');
-        if (token !== '') url.searchParams.set('page_token', token);
-
-        const response = await request(url.toString());
-        if (response.status === 401 || response.status === 403) {
-          throw new MemosError(
-            'The Memos instance requires a login. The access mode of the instance must be PUBLIC.',
-          );
-        }
-        if (response.status >= 300 && response.status < 400) {
-          throw new MemosError(
-            `Memos redirects (HTTP ${response.status}), redirects are not followed`,
-          );
-        }
-        if (!response.ok)
-          throw new MemosError(`Memos responds with HTTP ${response.status}`);
-
-        let json: unknown;
-        try {
-          json = await response.json();
-        } catch {
-          throw new MemosError(
-            'The response of the Memos instance is not valid JSON',
-          );
-        }
-        const result = parsePage(json);
-        memos.push(...result.memos);
-        warnings.push(...result.warnings);
-
-        if (result.next === '') return { memos, warnings };
-        if (seen.has(result.next))
-          throw new MemosError('Memos returns a repeated page token');
-        seen.add(result.next);
-        token = result.next;
-      }
-      throw new MemosError(`Memos returns more than ${maxPages} pages`);
-    },
-
-    async fetchAttachment(attachment, maxBytes) {
-      const match = ATTACHMENT_NAME.exec(attachment.name);
-      if (match === null || attachment.filename === '') {
-        return {
-          ok: false,
-          code: 'invalid',
-          reason: `invalid attachment "${attachment.name}"`,
-        };
-      }
-      const url = `${root}/file/attachments/${match[1]}/${encodeURIComponent(attachment.filename)}`;
-      const response = await request(url);
-
-      if (response.status >= 300 && response.status < 400) {
-        return {
-          ok: false,
-          code: 'redirect',
-          reason: 'Memos redirects, redirects are not followed',
-        };
-      }
-      if (response.status === 404)
-        return { ok: false, code: 'not-found', reason: 'File not found' };
-      if (response.status === 401 || response.status === 403) {
-        throw new MemosError(
-          `Access to the attachment was denied (HTTP ${response.status}), check the access mode`,
-        );
-      }
-      if (!response.ok)
-        throw new MemosError(
-          `Memos responds to the attachment with HTTP ${response.status}`,
-        );
-
-      const length = Number(response.headers.get('content-length'));
-      if (Number.isFinite(length) && length > maxBytes) {
-        await response.body?.cancel();
-        return {
-          ok: false,
-          code: 'too-large',
-          reason: `larger than ${maxBytes} bytes`,
-        };
-      }
-
-      const chunks: Buffer[] = [];
-      let total = 0;
-      if (response.body) {
-        const reader = response.body.getReader();
-        try {
-          for (;;) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            total += value.byteLength;
-            if (total > maxBytes) {
-              await reader.cancel();
-              return {
-                ok: false,
-                code: 'too-large',
-                reason: `larger than ${maxBytes} bytes`,
-              };
-            }
-            chunks.push(Buffer.from(value));
-          }
-        } catch (error) {
-          const cause = error instanceof Error ? error.message : String(error);
-          throw new MemosError(`The attachment could not be read (${cause})`);
-        }
-      }
-      return { ok: true, data: Buffer.concat(chunks) };
-    },
   };
+}
+
+function listUrl(conn: MemosConnection, token: string): string {
+  const url = new URL(`${conn.root}/api/memos`);
+  url.searchParams.set('page_size', String(conn.pageSize));
+  url.searchParams.set('filter', 'visibility == "PUBLIC"');
+  url.searchParams.set('order_by', 'create_time desc');
+  if (token !== '') url.searchParams.set('page_token', token);
+  return url.toString();
+}
+
+/** Throws for a login wall, a redirect or another error answer of the list. */
+function checkListResponse(response: Response): void {
+  if (response.status === 401 || response.status === 403) {
+    throw new MemosError(
+      'The Memos instance requires a login. The access mode of the instance must be PUBLIC.',
+    );
+  }
+  if (response.status >= 300 && response.status < 400) {
+    throw new MemosError(
+      `Memos redirects (HTTP ${response.status}), redirects are not followed`,
+    );
+  }
+  if (!response.ok)
+    throw new MemosError(`Memos responds with HTTP ${response.status}`);
+}
+
+async function readJson(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    throw new MemosError(
+      'The response of the Memos instance is not valid JSON',
+    );
+  }
+}
+
+async function listPublicMemos(
+  conn: MemosConnection,
+): Promise<{ memos: MemoRaw[]; warnings: string[] }> {
+  const memos: MemoRaw[] = [];
+  const warnings: string[] = [];
+  const seen = new Set<string>();
+  let token = '';
+  for (let pageIndex = 0; pageIndex < conn.maxPages; pageIndex += 1) {
+    const response = await conn.request(listUrl(conn, token));
+    checkListResponse(response);
+    const result = parsePage(await readJson(response));
+    memos.push(...result.memos);
+    warnings.push(...result.warnings);
+    if (result.next === '') return { memos, warnings };
+    if (seen.has(result.next))
+      throw new MemosError('Memos returns a repeated page token');
+    seen.add(result.next);
+    token = result.next;
+  }
+  throw new MemosError(`Memos returns more than ${conn.maxPages} pages`);
+}
+
+type AttachmentResult = Awaited<ReturnType<MemosSource['fetchAttachment']>>;
+
+const tooLarge = (maxBytes: number): AttachmentResult => ({
+  ok: false,
+  code: 'too-large',
+  reason: `larger than ${maxBytes} bytes`,
+});
+
+/** A result for an answer that carries no file, or undefined to read the body. */
+function attachmentStatus(response: Response): AttachmentResult | undefined {
+  if (response.status >= 300 && response.status < 400) {
+    return {
+      ok: false,
+      code: 'redirect',
+      reason: 'Memos redirects, redirects are not followed',
+    };
+  }
+  if (response.status === 404)
+    return { ok: false, code: 'not-found', reason: 'File not found' };
+  if (response.status === 401 || response.status === 403) {
+    throw new MemosError(
+      `Access to the attachment was denied (HTTP ${response.status}), check the access mode`,
+    );
+  }
+  if (!response.ok)
+    throw new MemosError(
+      `Memos responds to the attachment with HTTP ${response.status}`,
+    );
+  return undefined;
+}
+
+/** Reads a body up to `maxBytes`; null when it is larger. */
+async function readLimited(
+  body: ReadableStream<Uint8Array> | null,
+  maxBytes: number,
+): Promise<Buffer | null> {
+  const chunks: Buffer[] = [];
+  let total = 0;
+  if (!body) return Buffer.alloc(0);
+  const reader = body.getReader();
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return Buffer.concat(chunks);
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(Buffer.from(value));
+    }
+  } catch (error) {
+    const cause = error instanceof Error ? error.message : String(error);
+    throw new MemosError(`The attachment could not be read (${cause})`);
+  }
+}
+
+async function fetchAttachment(
+  conn: MemosConnection,
+  attachment: MemoAttachmentRaw,
+  maxBytes: number,
+): Promise<AttachmentResult> {
+  const match = ATTACHMENT_NAME.exec(attachment.name);
+  if (match === null || attachment.filename === '') {
+    return {
+      ok: false,
+      code: 'invalid',
+      reason: `invalid attachment "${attachment.name}"`,
+    };
+  }
+  const response = await conn.request(
+    `${conn.root}/file/attachments/${match[1]}/${encodeURIComponent(attachment.filename)}`,
+  );
+  const status = attachmentStatus(response);
+  if (status) return status;
+  const length = Number(response.headers.get('content-length'));
+  if (Number.isFinite(length) && length > maxBytes) {
+    await response.body?.cancel();
+    return tooLarge(maxBytes);
+  }
+  const data = await readLimited(response.body, maxBytes);
+  return data === null ? tooLarge(maxBytes) : { ok: true, data };
+}
+
+/**
+ * Reads public memos through the REST interface (`/api/memos`) without login.
+ * This requires the access mode of the instance to be PUBLIC.
+ * Redirects are never followed.
+ */
+export function createHttpMemosSource(options: HttpMemosOptions): MemosSource {
+  const conn: MemosConnection = {
+    root: memosRoot(options.baseUrl),
+    request: memosRequest(
+      options.fetch ?? globalThis.fetch,
+      options.timeoutMs ?? DEFAULT_SETTINGS.memosTimeoutMs,
+    ),
+    pageSize: options.pageSize ?? 100,
+    maxPages: options.maxPages ?? 1000,
+  };
+  return {
+    listPublicMemos: () => listPublicMemos(conn),
+    fetchAttachment: (attachment, maxBytes) =>
+      fetchAttachment(conn, attachment, maxBytes),
+  };
+}
+
+/** Reads a file of the sample set; the size is checked on the opened file. */
+async function readFixtureFile(
+  file: string,
+  maxBytes: number,
+): Promise<AttachmentResult> {
+  let handle;
+  try {
+    handle = await open(file, 'r');
+  } catch {
+    return { ok: false, code: 'not-found', reason: 'File not found' };
+  }
+  try {
+    if ((await handle.stat()).size > maxBytes)
+      return { ok: false, code: 'too-large', reason: 'too large' };
+    return { ok: true, data: await handle.readFile() };
+  } catch {
+    return { ok: false, code: 'not-found', reason: 'File not found' };
+  } finally {
+    await handle.close();
+  }
 }
 
 /**
@@ -343,13 +420,7 @@ export function createFixtureMemosSource(folder: string): MemosSource {
         match[1] ?? '',
         attachment.filename,
       );
-      try {
-        if ((await stat(file)).size > maxBytes)
-          return { ok: false, code: 'too-large', reason: 'too large' };
-        return { ok: true, data: await readFile(file) };
-      } catch {
-        return { ok: false, code: 'not-found', reason: 'File not found' };
-      }
+      return readFixtureFile(file, maxBytes);
     },
   };
 }
@@ -443,6 +514,186 @@ function contentId(data: Buffer): string {
   return createHash('sha256').update(data).digest('hex').slice(0, 16);
 }
 
+/** What building the memo entries needs, shared by the helpers below. */
+interface MemoBuild {
+  source: MemosSource;
+  store: Map<string, Buffer>;
+  maxBytes: number;
+  descriptionMax: number;
+  prefix: string;
+  lang: Language;
+  convertHeic?: HeicConverter;
+}
+
+/** Uid and date of a memo that is shown, or null (with a warning where useful). */
+function memoIdentity(
+  raw: MemoRaw,
+  warnings: string[],
+): { uid: string; createdAt: Date } | null {
+  const uid = MEMO_NAME.exec(raw.name)?.[1];
+  if (uid === undefined) {
+    warnings.push(`${raw.name}: invalid identifier, skipped`);
+    return null;
+  }
+  const warn = (text: string) => warnings.push(`memos/${uid}: ${text}`);
+  if (raw.parent) return null;
+  if (raw.visibility !== 'PUBLIC') {
+    warn(`not public (${raw.visibility || 'unknown'}), skipped`);
+    return null;
+  }
+  if (raw.state !== undefined && raw.state !== 'NORMAL') return null;
+  const createdAt = new Date(raw.createTime);
+  if (raw.createTime === '' || Number.isNaN(createdAt.getTime())) {
+    warn(`invalid createTime "${raw.createTime}", skipped`);
+    return null;
+  }
+  return { uid, createdAt };
+}
+
+/**
+ * Tags of a memo, normalized. Memos itself creates the parent tag "a" for
+ * "#a/b". A nested tag stays a single tag here, so such parent tags are dropped.
+ */
+function memoTags(raw: string[] | undefined): string[] {
+  const all: string[] = [];
+  for (const tag of raw ?? []) {
+    const normal = normalizeTag(tag);
+    if (normal !== null && !all.includes(normal)) all.push(normal);
+  }
+  return all.filter((tag) => !all.some((other) => other.startsWith(`${tag}/`)));
+}
+
+function extensionOf(filename: string): string {
+  return filename.split(/[\\/]/).pop()?.split('.').pop()?.toLowerCase() ?? '';
+}
+
+/** An image attachment as WebP variants in the store and an <img>; null if unreadable. */
+async function imageHtml(
+  build: MemoBuild,
+  attachment: MemoAttachmentRaw,
+  data: Buffer,
+  heic: boolean,
+): Promise<string | null> {
+  try {
+    const source =
+      heic && build.convertHeic ? await build.convertHeic(data) : data;
+    const image = await processImage(source);
+    for (const v of image.variants) build.store.set(v.file, v.data);
+    const resolved = toResolvedImage(image, build.prefix);
+    return (
+      `<img src="${escapeHtml(resolved.src)}" srcset="${escapeHtml(resolved.srcset)}" sizes="(min-width: 760px) 720px, 100vw" ` +
+      `width="${resolved.width}" height="${resolved.height}" alt="${escapeHtml(altTextFromFilename(attachment.filename))}" ` +
+      `loading="lazy" decoding="async">`
+    );
+  } catch {
+    return null;
+  }
+}
+
+/** A PDF, audio or video attachment in the store, as a player or a link. */
+function fileHtml(
+  build: MemoBuild,
+  attachment: MemoAttachmentRaw,
+  data: Buffer,
+  kind: string,
+): string {
+  const storedName = `${contentId(data)}-${safeFileName(attachment.filename)}`;
+  build.store.set(storedName, data);
+  const address = escapeHtml(`${build.prefix}${storedName}`);
+  const link = `<a href="${address}" rel="noopener">${escapeHtml(attachment.filename)}</a>`;
+  if (kind === 'audio')
+    return `<audio controls preload="none" src="${address}">${link}</audio>`;
+  if (kind === 'video')
+    return `<video controls preload="none" playsinline src="${address}">${link}</video>`;
+  return `<p class="attachment">${link} (PDF, ${formatSize(data.length, build.lang)})</p>`;
+}
+
+/** The kind of an attachment by its name, or a reason why it is skipped. */
+function attachmentKind(
+  build: MemoBuild,
+  attachment: MemoAttachmentRaw,
+):
+  | { image: boolean; heic: boolean; rule: ReturnType<typeof allowedFileFor> }
+  | string {
+  if (attachment.externalLink) return 'is external and is not loaded';
+  const ext = extensionOf(attachment.filename);
+  const heic = ext === 'heic' || ext === 'heif';
+  const image =
+    IMAGE_EXTENSIONS.has(ext) || (heic && build.convertHeic !== undefined);
+  const rule = allowedFileFor(attachment.filename);
+  if (image || rule !== null) return { image, heic, rule };
+  const hint = heic
+    ? ' (HEIC photos need the converter heif-convert, which is not available: please upload as JPEG)'
+    : '';
+  return `has a file type that is not allowed and is skipped${hint}`;
+}
+
+/** The HTML of one attachment, or null with a warning. */
+async function attachmentHtml(
+  build: MemoBuild,
+  attachment: MemoAttachmentRaw,
+  warn: (text: string) => void,
+): Promise<string | null> {
+  const skip = (why: string) => {
+    warn(`attachment "${attachment.filename}" ${why}`);
+    return null;
+  };
+  const kind = attachmentKind(build, attachment);
+  if (typeof kind === 'string') return skip(kind);
+  const fetched = await build.source.fetchAttachment(
+    attachment,
+    build.maxBytes,
+  );
+  if (!fetched.ok) return skip(`is skipped (${fetched.reason})`);
+  if (kind.image) {
+    const html = await imageHtml(build, attachment, fetched.data, kind.heic);
+    return html ?? skip('is not a readable image and is skipped');
+  }
+  if (kind.rule === null || !sniffMatches(kind.rule.sniff, fetched.data))
+    return skip('does not match its extension and is skipped');
+  return fileHtml(build, attachment, fetched.data, kind.rule.kind);
+}
+
+/** The page data of one memo, or null when it is not shown. */
+async function buildEntry(
+  build: MemoBuild,
+  raw: MemoRaw,
+  warnings: string[],
+): Promise<MemoEntry | null> {
+  const id = memoIdentity(raw, warnings);
+  if (!id) return null;
+  const warn = (text: string) => warnings.push(`memos/${id.uid}: ${text}`);
+  const rendered = await renderMarkdown(raw.content, {
+    articlePath: `memos/${id.uid}.md`,
+    remoteContent: 'none',
+    lang: build.lang,
+    resolveImage: async () => ({
+      ok: false,
+      code: 'unsupported',
+      reason: 'Memos embed images through attachments',
+    }),
+  });
+  warnings.push(...rendered.warnings);
+  const attachments: string[] = [];
+  for (const attachment of raw.attachments ?? []) {
+    const html = await attachmentHtml(build, attachment, warn);
+    if (html !== null) attachments.push(html);
+  }
+  const media =
+    attachments.length > 0
+      ? `<div class="memo-attachments">${attachments.join('')}</div>`
+      : '';
+  return {
+    uid: id.uid,
+    path: `memos/${id.uid}`,
+    title: memoTitle(id.createdAt, build.lang),
+    description: makeDescription(raw.content, build.descriptionMax),
+    date: id.createdAt,
+    tags: memoTags(raw.tags),
+    html: rendered.html + media,
+  };
+}
+
 /**
  * Builds the page data of all public memos. Attachments are mirrored to the
  * own domain (images as WebP without EXIF; PDF, audio and video only with a
@@ -454,161 +705,23 @@ export async function buildMemoEntries(
   store: Map<string, Buffer>,
   options: BuildMemosOptions = {},
 ): Promise<{ memos: MemoEntry[]; warnings: string[] }> {
-  const maxBytes = options.maxFileBytes ?? DEFAULT_SETTINGS.memosMaxFileBytes;
-  const descriptionMax =
-    options.descriptionChars ?? DEFAULT_SETTINGS.memosDescriptionChars;
-  const prefix = options.urlPrefix ?? '/media/';
-  const lang = options.lang ?? DEFAULT_SETTINGS.lang;
+  const build: MemoBuild = {
+    source,
+    store,
+    maxBytes: options.maxFileBytes ?? DEFAULT_SETTINGS.memosMaxFileBytes,
+    descriptionMax:
+      options.descriptionChars ?? DEFAULT_SETTINGS.memosDescriptionChars,
+    prefix: options.urlPrefix ?? '/media/',
+    lang: options.lang ?? DEFAULT_SETTINGS.lang,
+    convertHeic: options.convertHeic,
+  };
   const list = await source.listPublicMemos();
   const warnings = [...list.warnings];
   const entries: MemoEntry[] = [];
-
   for (const raw of list.memos) {
-    const match = MEMO_NAME.exec(raw.name);
-    const uid = match?.[1];
-    const warn = (meldung: string) =>
-      warnings.push(`memos/${uid ?? raw.name}: ${meldung}`);
-    if (uid === undefined) {
-      warnings.push(`${raw.name}: invalid identifier, skipped`);
-      continue;
-    }
-    if (raw.parent) continue;
-    if (raw.visibility !== 'PUBLIC') {
-      warn(`not public (${raw.visibility || 'unknown'}), skipped`);
-      continue;
-    }
-    if (raw.state !== undefined && raw.state !== 'NORMAL') continue;
-    const createdAt = new Date(raw.createTime);
-    if (raw.createTime === '' || Number.isNaN(createdAt.getTime())) {
-      warn(`invalid createTime "${raw.createTime}", skipped`);
-      continue;
-    }
-
-    const allTags: string[] = [];
-    for (const tag of raw.tags ?? []) {
-      const normal = normalizeTag(tag);
-      if (normal !== null && !allTags.includes(normal)) allTags.push(normal);
-    }
-    // Memos itself creates the parent tag "a" for "#a/b". A nested tag stays a
-    // single tag here, so such parent tags are dropped.
-    const tags = allTags.filter(
-      (tag) => !allTags.some((other) => other.startsWith(`${tag}/`)),
-    );
-
-    const rendered = await renderMarkdown(raw.content, {
-      articlePath: `memos/${uid}.md`,
-      remoteContent: 'none',
-      lang,
-      resolveImage: async () => ({
-        ok: false,
-        code: 'unsupported',
-        reason: 'Memos embed images through attachments',
-      }),
-    });
-    for (const w of rendered.warnings) warnings.push(w);
-
-    const attachments: string[] = [];
-    for (const attachment of raw.attachments ?? []) {
-      if (attachment.externalLink) {
-        warn(
-          `attachment "${attachment.filename}" is external and is not loaded`,
-        );
-        continue;
-      }
-      const ext =
-        attachment.filename
-          .split(/[\\/]/)
-          .pop()
-          ?.split('.')
-          .pop()
-          ?.toLowerCase() ?? '';
-      const heicName = ext === 'heic' || ext === 'heif';
-      const isImage =
-        IMAGE_EXTENSIONS.has(ext) ||
-        (heicName && options.convertHeic !== undefined);
-      const fileRule = allowedFileFor(attachment.filename);
-      if (!isImage && fileRule === null) {
-        const hint = heicName
-          ? ' (HEIC photos need the converter heif-convert, which is not available: please upload as JPEG)'
-          : '';
-        warn(
-          `attachment "${attachment.filename}" has a file type that is not allowed and is skipped${hint}`,
-        );
-        continue;
-      }
-
-      const fetched = await source.fetchAttachment(attachment, maxBytes);
-      if (!fetched.ok) {
-        warn(
-          `attachment "${attachment.filename}" is skipped (${fetched.reason})`,
-        );
-        continue;
-      }
-      const data = fetched.data;
-
-      if (isImage) {
-        try {
-          const source =
-            heicName && options.convertHeic
-              ? await options.convertHeic(data)
-              : data;
-          const image = await processImage(source);
-          for (const v of image.variants) store.set(v.file, v.data);
-          const resolved = toResolvedImage(image, prefix);
-          attachments.push(
-            `<img src="${escapeHtml(resolved.src)}" srcset="${escapeHtml(resolved.srcset)}" sizes="(min-width: 760px) 720px, 100vw" ` +
-              `width="${resolved.width}" height="${resolved.height}" alt="${escapeHtml(altTextFromFilename(attachment.filename))}" ` +
-              `loading="lazy" decoding="async">`,
-          );
-        } catch {
-          warn(
-            `attachment "${attachment.filename}" is not a readable image and is skipped`,
-          );
-        }
-        continue;
-      }
-
-      if (fileRule === null || !sniffMatches(fileRule.sniff, data)) {
-        warn(
-          `attachment "${attachment.filename}" does not match its extension and is skipped`,
-        );
-        continue;
-      }
-      const storedName = `${contentId(data)}-${safeFileName(attachment.filename)}`;
-      store.set(storedName, data);
-      const address = escapeHtml(`${prefix}${storedName}`);
-      const name = escapeHtml(attachment.filename);
-      const link = `<a href="${address}" rel="noopener">${name}</a>`;
-      if (fileRule.kind === 'audio') {
-        attachments.push(
-          `<audio controls preload="none" src="${address}">${link}</audio>`,
-        );
-      } else if (fileRule.kind === 'video') {
-        attachments.push(
-          `<video controls preload="none" playsinline src="${address}">${link}</video>`,
-        );
-      } else {
-        attachments.push(
-          `<p class="attachment">${link} (PDF, ${formatSize(data.length, lang)})</p>`,
-        );
-      }
-    }
-
-    const media =
-      attachments.length > 0
-        ? `<div class="memo-attachments">${attachments.join('')}</div>`
-        : '';
-    entries.push({
-      uid,
-      path: `memos/${uid}`,
-      title: memoTitle(createdAt, lang),
-      description: makeDescription(raw.content, descriptionMax),
-      date: createdAt,
-      tags,
-      html: rendered.html + media,
-    });
+    const entry = await buildEntry(build, raw, warnings);
+    if (entry) entries.push(entry);
   }
-
   entries.sort(
     (a, b) => b.date.getTime() - a.date.getTime() || (a.uid < b.uid ? -1 : 1),
   );

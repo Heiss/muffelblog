@@ -6,6 +6,7 @@ import {
   runWebmentionSend,
   safeFetch,
   type SendDeps,
+  type SendReport,
   type Settings,
   type SourceEntry,
   type WebmentionState,
@@ -15,6 +16,31 @@ import { writeAtomic } from './serve.ts';
 
 /** The kinds of pages that send: posts, memos and terms. */
 const ENTRY_FOLDERS = ['p', 'm', 'g'] as const;
+
+const ENOENT = (error: unknown) =>
+  (error as NodeJS.ErrnoException).code === 'ENOENT';
+
+/** The page folders of one kind in a release, sorted; none when the folder is missing. */
+async function pageFolders(dir: string): Promise<string[]> {
+  try {
+    return (await readdir(dir, { withFileTypes: true }))
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name)
+      .sort();
+  } catch (error) {
+    if (ENOENT(error)) return [];
+    throw error;
+  }
+}
+
+async function readPage(file: string): Promise<string | null> {
+  try {
+    return await readFile(file, 'utf8');
+  } catch (error) {
+    if (ENOENT(error)) return null;
+    throw error;
+  }
+}
 
 /**
  * Reads the entries from a built release: exactly the pages that a receiver
@@ -27,29 +53,11 @@ export async function scanRelease(
   const origin = new URL(siteUrl).origin;
   const entries: SourceEntry[] = [];
   for (const folder of ENTRY_FOLDERS) {
-    let names: string[];
-    try {
-      names = (
-        await readdir(path.join(releaseDir, folder), { withFileTypes: true })
-      )
-        .filter((e) => e.isDirectory())
-        .map((e) => e.name)
-        .sort();
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') continue;
-      throw error;
-    }
-    for (const name of names) {
-      let html: string;
-      try {
-        html = await readFile(
-          path.join(releaseDir, folder, name, 'index.html'),
-          'utf8',
-        );
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') continue;
-        throw error;
-      }
+    for (const name of await pageFolders(path.join(releaseDir, folder))) {
+      const html = await readPage(
+        path.join(releaseDir, folder, name, 'index.html'),
+      );
+      if (html === null) continue;
       const source = `${origin}/${folder}/${name}/`;
       const entry = extractEntry(html, source);
       if (entry) entries.push({ source, hash: entry.hash, links: entry.links });
@@ -113,17 +121,8 @@ export async function loadState(
   return emptyWebmentionState();
 }
 
-/**
- * Runs the sender after a build, one run at a time, in the background of the
- * builder. A failure is logged and never stops the builder or a build.
- */
-export function createWebmentionRunner(options: RunnerOptions) {
-  const stateFile = path.join(options.stateDir, 'webmentions.json');
+function sendDeps(options: RunnerOptions, stateFile: string): SendDeps {
   const { settings } = options;
-  let running: Promise<void> | undefined;
-  let again = false;
-  let sendExisting = false;
-
   const netFetch: SendDeps['fetch'] = (url, init) =>
     safeFetch(url, init, {
       timeoutMs: settings.webmentionsTimeoutMs,
@@ -131,59 +130,97 @@ export function createWebmentionRunner(options: RunnerOptions) {
       maxRedirects: 3,
       allowPrivate: settings.webmentionsAllowPrivate,
     });
+  return {
+    fetch: options.deps?.fetch ?? netFetch,
+    sleep:
+      options.deps?.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms))),
+    now: options.deps?.now ?? (() => new Date()),
+    log: (line) => options.log(line),
+    settings,
+    siteUrl: options.siteUrl,
+    save: (state) =>
+      writeAtomic(stateFile, JSON.stringify(state, null, 2) + '\n'),
+  };
+}
+
+/** One log line about the run: the first start, or what went out. */
+function logRun(
+  options: RunnerOptions,
+  report: SendReport,
+  firstStart: boolean,
+): void {
+  if (firstStart) {
+    options.log(
+      `webmentions: first start, ${report.baselined} existing entries are stored as already sent (nothing is sent)`,
+    );
+    return;
+  }
+  const total =
+    report.sent + report.failed + report.givenUp.length + report.noEndpoint;
+  if (total === 0) return;
+  options.log(
+    `webmentions: ${report.sent} sent, ${report.failed} failed (will be tried again), ${report.givenUp.length} given up, ${report.noEndpoint} without endpoint`,
+  );
+}
+
+/** Pairs that were given up go to the alert webhook, at most ten lines. */
+async function alertGivenUp(
+  options: RunnerOptions,
+  report: SendReport,
+  at: Date,
+): Promise<void> {
+  if (report.givenUp.length === 0) return;
+  const lines = report.givenUp
+    .slice(0, 10)
+    .map((g) => `${g.source} -> ${g.target}: ${g.error}`);
+  await options.alert({
+    kind: 'webmention',
+    message: `${report.givenUp.length} webmention(s) given up:\n${lines.join('\n')}`,
+    at: at.toISOString(),
+  });
+}
+
+/** One run of the sender over the release that is online. */
+async function runOnce(
+  options: RunnerOptions,
+  stateFile: string,
+  sendExisting: boolean,
+): Promise<void> {
+  const deps = sendDeps(options, stateFile);
+  const state = await loadState(stateFile, options.log);
+  const entries = await scanRelease(
+    path.join(options.releasesDir, 'current'),
+    options.siteUrl,
+  );
+  const firstStart = !state.initialized && !sendExisting;
+  const { state: next, report } = await runWebmentionSend(
+    state,
+    entries,
+    deps,
+    {
+      sendExisting,
+    },
+  );
+  logRun(options, report, firstStart);
+  await writeAtomic(stateFile, JSON.stringify(next, null, 2) + '\n');
+  await options.onSummary(summarize(next, deps.now()));
+  await alertGivenUp(options, report, deps.now());
+}
+
+/**
+ * Runs the sender after a build, one run at a time, in the background of the
+ * builder. A failure is logged and never stops the builder or a build.
+ */
+export function createWebmentionRunner(options: RunnerOptions) {
+  const stateFile = path.join(options.stateDir, 'webmentions.json');
+  let running: Promise<void> | undefined;
+  let again = false;
+  let sendExisting = false;
 
   async function once(): Promise<void> {
-    const deps: SendDeps = {
-      fetch: options.deps?.fetch ?? netFetch,
-      sleep:
-        options.deps?.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms))),
-      now: options.deps?.now ?? (() => new Date()),
-      log: (line) => options.log(line),
-      settings,
-      siteUrl: options.siteUrl,
-      save: (state) =>
-        writeAtomic(stateFile, JSON.stringify(state, null, 2) + '\n'),
-    };
-    const state = await loadState(stateFile, options.log);
-    const entries = await scanRelease(
-      path.join(options.releasesDir, 'current'),
-      options.siteUrl,
-    );
-    const wasInitialized = state.initialized;
     const onPurpose = sendExisting;
     sendExisting = false;
-    const { state: next, report } = await runWebmentionSend(
-      state,
-      entries,
-      deps,
-      {
-        sendExisting: onPurpose,
-      },
-    );
-    if (!wasInitialized && !onPurpose) {
-      options.log(
-        `webmentions: first start, ${report.baselined} existing entries are stored as already sent (nothing is sent)`,
-      );
-    } else if (
-      report.sent + report.failed + report.givenUp.length + report.noEndpoint >
-      0
-    ) {
-      options.log(
-        `webmentions: ${report.sent} sent, ${report.failed} failed (will be tried again), ${report.givenUp.length} given up, ${report.noEndpoint} without endpoint`,
-      );
-    }
-    await writeAtomic(stateFile, JSON.stringify(next, null, 2) + '\n');
-    await options.onSummary(summarize(next, deps.now()));
-    if (report.givenUp.length > 0) {
-      const lines = report.givenUp
-        .slice(0, 10)
-        .map((g) => `${g.source} -> ${g.target}: ${g.error}`);
-      await options.alert({
-        kind: 'webmention',
-        message: `${report.givenUp.length} webmention(s) given up:\n${lines.join('\n')}`,
-        at: deps.now().toISOString(),
-      });
-    }
+    await runOnce(options, stateFile, onPurpose);
   }
 
   async function loop(): Promise<void> {
