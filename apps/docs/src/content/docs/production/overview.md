@@ -45,7 +45,7 @@ moved.
    - `Content-Security-Policy`, exactly as in the example for your proxy
    - `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`
 3. Cache `/_astro/*` for a long time (the files carry a hash in their name) and
-   serve `/build.json` with `Cache-Control: no-cache`.
+   serve `/build.json` and `/health.json` with `Cache-Control: no-cache`.
 4. Answer unknown pages with `404.html` and status 404.
 5. Forward the comments host to Remark42 and **refuse requests that carry
    `Authorization: Basic ...`**. That header is the administrator login; it must

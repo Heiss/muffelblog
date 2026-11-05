@@ -134,6 +134,32 @@ describe('documentation matches the code', () => {
     }
   });
 
+  it('tells every proxy to revalidate /health.json like /build.json, as the Caddyfile does', async () => {
+    const caddyfile = await read('docker', 'Caddyfile');
+    expect(caddyfile).toMatch(/@buildjson path \/build\.json \/health\.json/);
+    const page = await read(
+      'apps',
+      'docs',
+      'src',
+      'content',
+      'docs',
+      'production',
+      'own-proxy.md',
+    );
+    expect(page).toMatch(/@buildjson path \/build\.json \/health\.json/); // Caddy
+    expect(page).toContain('location ~ ^/(build|health)\\.json$'); // nginx
+    const overview = await read(
+      'apps',
+      'docs',
+      'src',
+      'content',
+      'docs',
+      'production',
+      'overview.md',
+    );
+    expect(overview).toContain('/health.json');
+  });
+
   it('names Compose files that exist', async () => {
     for (const name of [
       'compose.yaml',
