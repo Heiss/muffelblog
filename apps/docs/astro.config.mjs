@@ -38,6 +38,7 @@ export default defineConfig({
             { slug: 'guides/memos' },
             { slug: 'guides/comments' },
             { slug: 'guides/webmentions' },
+            { slug: 'guides/statistics' },
           ],
         },
         {
