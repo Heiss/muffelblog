@@ -36,51 +36,85 @@ function domainOf(url: URL): string {
   return url.hostname.toLowerCase().replace(/^www\./, '');
 }
 
+function siteOf(siteUrl?: string): URL | undefined {
+  try {
+    return siteUrl ? new URL(siteUrl) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** A link as a path of the own site, a foreign domain, or nothing. */
+function classify(
+  href: string,
+  site: URL | undefined,
+): { path: string } | { domain: string } | null {
+  if (href.startsWith('/') && !href.startsWith('//')) return { path: href };
+  let url: URL;
+  try {
+    url = new URL(href);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+  if (site && url.origin === site.origin) return { path: url.pathname };
+  return { domain: domainOf(url) };
+}
+
 /** Pages of the own site and external domains a piece of HTML links to, in order, without duplicates. */
 export function extractLinks(
   html: string,
   siteUrl?: string,
 ): { pages: string[]; domains: string[] } {
-  let site: URL | undefined;
-  try {
-    site = siteUrl ? new URL(siteUrl) : undefined;
-  } catch {
-    site = undefined;
-  }
+  const site = siteOf(siteUrl);
   const pages = new Set<string>();
   const domains = new Set<string>();
   for (const href of hrefs(html)) {
-    let path: string | undefined;
-    if (href.startsWith('/') && !href.startsWith('//')) {
-      path = href;
-    } else {
-      let url: URL;
-      try {
-        url = new URL(href);
-      } catch {
-        continue;
-      }
-      if (url.protocol !== 'http:' && url.protocol !== 'https:') continue;
-      if (site && url.origin === site.origin) path = url.pathname;
-      else {
-        domains.add(domainOf(url));
-        continue;
-      }
+    const link = classify(href, site);
+    if (link === null) continue;
+    if ('domain' in link) {
+      domains.add(link.domain);
+      continue;
     }
-    const m = path.match(PAGE_PATH);
+    const m = link.path.match(PAGE_PATH);
     if (m) pages.add(`/${m[1]}/${m[2]}/`);
   }
   return { pages: [...pages], domains: [...domains] };
 }
 
+type GraphEntry = {
+  url: string;
+  title: string;
+  kind: 'post' | 'glossary' | 'memo';
+  html: string;
+};
+
+/** Collects edges without self links and duplicates, and the domain nodes. */
+function edgeCollector() {
+  const edges: GraphEdge[] = [];
+  const seen = new Set<string>();
+  const domains = new Map<string, GraphNode>();
+  return {
+    edges,
+    domains,
+    add(from: string, to: string) {
+      const key = `${from} ${to}`;
+      if (from === to || seen.has(key)) return;
+      seen.add(key);
+      edges.push({ from, to });
+    },
+    domain(name: string): string {
+      const id = `domain:${name}`;
+      if (!domains.has(id))
+        domains.set(id, { id, kind: 'domain', title: name });
+      return id;
+    },
+  };
+}
+
 /** The graph of all entries. Edges to pages that do not exist (unpublished) never arise. */
 export function buildGraph(
-  entries: readonly {
-    url: string;
-    title: string;
-    kind: 'post' | 'glossary' | 'memo';
-    html: string;
-  }[],
+  entries: readonly GraphEntry[],
   siteUrl?: string,
 ): LinkGraph {
   const nodes: GraphNode[] = entries.map((e) => ({
@@ -89,26 +123,14 @@ export function buildGraph(
     title: e.title,
   }));
   const known = new Set(nodes.map((n) => n.id));
-  const domainNodes = new Map<string, GraphNode>();
-  const edges: GraphEdge[] = [];
-  const seen = new Set<string>();
-  const add = (from: string, to: string) => {
-    const key = `${from} ${to}`;
-    if (from === to || seen.has(key)) return;
-    seen.add(key);
-    edges.push({ from, to });
-  };
+  const c = edgeCollector();
   for (const e of entries) {
     const links = extractLinks(e.html, siteUrl);
-    for (const page of links.pages) if (known.has(page)) add(e.url, page);
-    for (const domain of links.domains) {
-      const id = `domain:${domain}`;
-      if (!domainNodes.has(id))
-        domainNodes.set(id, { id, kind: 'domain', title: domain });
-      add(e.url, id);
-    }
+    for (const page of links.pages.filter((p) => known.has(p)))
+      c.add(e.url, page);
+    for (const domain of links.domains) c.add(e.url, c.domain(domain));
   }
-  return { nodes: [...nodes, ...domainNodes.values()], edges };
+  return { nodes: [...nodes, ...c.domains.values()], edges: c.edges };
 }
 
 /** What a node links to and what links to it (backlinks). */

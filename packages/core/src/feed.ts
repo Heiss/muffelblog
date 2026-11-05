@@ -104,21 +104,23 @@ export interface TagGroup {
 /** Groups by the URL form of the tag. The order of the entries is kept. */
 export function groupByTag(feed: FeedItem[]): TagGroup[] {
   const gruppen = new Map<string, { names: Set<string>; items: FeedItem[] }>();
+  const groupOf = (slug: string) => {
+    const existing = gruppen.get(slug);
+    if (existing) return existing;
+    const created = { names: new Set<string>(), items: [] as FeedItem[] };
+    gruppen.set(slug, created);
+    return created;
+  };
   for (const eintrag of feed) {
     const gesehen = new Set<string>();
     for (const tag of eintrag.tags) {
       const slug = tagSlug(tag);
       if (!slug) continue;
-      let gruppe = gruppen.get(slug);
-      if (!gruppe) {
-        gruppe = { names: new Set(), items: [] };
-        gruppen.set(slug, gruppe);
-      }
+      const gruppe = groupOf(slug);
       gruppe.names.add(tag);
-      if (!gesehen.has(slug)) {
-        gesehen.add(slug);
-        gruppe.items.push(eintrag);
-      }
+      // An entry appears once per group, even with two spellings of the tag.
+      if (!gesehen.has(slug)) gruppe.items.push(eintrag);
+      gesehen.add(slug);
     }
   }
   return [...gruppen.entries()]
