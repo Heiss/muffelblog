@@ -32,8 +32,8 @@ const isHttp = (value) => {
   }
 };
 
-/** A value from a request for the log: no line breaks. */
-const forLog = (value) => String(value).replace(/[\r\n\t\v\f]/g, ' ');
+/** A value from a request for the log, quoted: line breaks are escaped. */
+const forLog = (value) => JSON.stringify(String(value));
 
 function add(source, target, property = 'mention-of', author) {
   const m = {

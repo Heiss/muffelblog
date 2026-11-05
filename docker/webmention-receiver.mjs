@@ -6,8 +6,8 @@ import { createServer } from 'node:http';
 
 const port = Number(process.argv[2] || 9000);
 
-/** A value from a request for the log: no line breaks. */
-const forLog = (value) => String(value).replace(/[\r\n\t\v\f]/g, ' ');
+/** A value from a request for the log, quoted: line breaks are escaped. */
+const forLog = (value) => JSON.stringify(String(value));
 
 const server = createServer((req, res) => {
   if (req.method === 'POST' && req.url === '/webmention') {
