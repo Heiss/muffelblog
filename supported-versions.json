@@ -1,0 +1,11 @@
+{
+  "$comment": "Supported versions of the sources. CI runs the contract tests against both lines; Renovate raises `current`. When it does, set `previous` to the old `current` in the same pull request. The docs (reference/versions) must list the same versions.",
+  "memos": {
+    "current": "26.11.0",
+    "previous": "26.10.0"
+  },
+  "nextcloud": {
+    "current": "35.0.2-apache",
+    "previous": "34.0.5-apache"
+  }
+}

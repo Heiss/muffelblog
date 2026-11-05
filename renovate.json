@@ -12,5 +12,26 @@
       "matchPackageNames": ["typescript"],
       "allowedVersions": "<7"
     }
+  ],
+  "customManagers": [
+    {
+      "description": "Supported versions of the sources (supported-versions.json): Renovate raises `current`; set `previous` to the old `current` in the same PR.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^supported-versions\\.json$/"],
+      "matchStrings": [
+        "\"memos\":\\s*\\{\\s*\"current\":\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "neosmemo/memos",
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^supported-versions\\.json$/"],
+      "matchStrings": [
+        "\"nextcloud\":\\s*\\{\\s*\"current\":\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "nextcloud",
+      "datasourceTemplate": "docker"
+    }
   ]
 }

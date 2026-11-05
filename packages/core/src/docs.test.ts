@@ -179,6 +179,31 @@ describe('documentation matches the code', () => {
     }
   });
 
+  it('lists the supported versions of supported-versions.json, which CI tests', async () => {
+    const versions = JSON.parse(
+      await read('supported-versions.json'),
+    ) as Record<string, { current: string; previous: string }>;
+    const page = await read(
+      'apps',
+      'docs',
+      'src',
+      'content',
+      'docs',
+      'reference',
+      'versions.md',
+    );
+    const ci = await read('.github', 'workflows', 'ci.yml');
+    for (const [name, line] of Object.entries(versions)) {
+      if (name.startsWith('$')) continue;
+      expect(page, `${name} current`).toContain(`\`${line.current}\``);
+      expect(page, `${name} previous`).toContain(`\`${line.previous}\``);
+      expect(ci, name).toContain(
+        `fromJSON(needs.versions.outputs.json).${name}[matrix.line]`,
+      );
+    }
+    expect(ci).toMatch(/line: \[current, previous\]/);
+  });
+
   describe('getting started', () => {
     const page = () =>
       read(
