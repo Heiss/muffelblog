@@ -1,11 +1,17 @@
 # Muffelblog: static blog, built by the builder, served by Caddy.
 #
-#   docker compose up --build        build the images here and start
-#   docker compose up                use the published images (MUFFEL_VERSION)
+#   docker/init-env.sh     creates .env with random secrets; fill in the rest
+#   docker compose up -d   starts the blog
 #
-# The default is the demo set. The site is on http://localhost:8080, the
-# comments server on :8081 and the mail sink (Mailpit) on http://localhost:8025.
-# Settings come from the environment or an `.env` file, see `.env.example`.
+# This file is the production setup behind YOUR reverse proxy. Our Caddy serves
+# plain HTTP on 127.0.0.1: the blog on port 8080, the comments on port 8081.
+# Your proxy adds HTTPS and forwards the two host names to these ports.
+# Settings come from `.env`, see `.env.example` and the docs:
+# https://heiss.github.io/muffelblog/start/getting-started/
+#
+# Local demo with sample content and a mail sink: `docker/init-env.sh --demo`
+# (it sets COMPOSE_FILE=compose.yaml:compose.demo.yaml in .env).
+# Your proxy serves the files itself: compose.host-folder.yaml.
 
 name: muffelblog
 
@@ -24,15 +30,15 @@ services:
       timeout: 3s
       retries: 120
     environment:
-      # Dash without colon: only an unset variable gives the demo; `MUFFEL_FIXTURES=` switches it off.
-      MUFFEL_FIXTURES: ${MUFFEL_FIXTURES-demo}
-      SITE_URL: ${SITE_URL:-http://localhost:8080}
-      # Real sources (instead of the demo set): see .env.example
+      # Sample content instead of real sources (the demo sets it to `demo`).
+      MUFFEL_FIXTURES: ${MUFFEL_FIXTURES:-}
+      SITE_URL: ${SITE_URL:?set SITE_URL in .env, the public address of the blog}
+      # The sources: the builder stops at its start with a message if they are missing.
       NEXTCLOUD_URL: ${NEXTCLOUD_URL:-}
       NEXTCLOUD_SHARE_TOKEN: ${NEXTCLOUD_SHARE_TOKEN:-}
       NEXTCLOUD_SHARE_PASSWORD: ${NEXTCLOUD_SHARE_PASSWORD:-}
       MEMOS_URL: ${MEMOS_URL:-}
-      COMMENTS_URL: ${COMMENTS_URL:-http://localhost:8081}
+      COMMENTS_URL: ${COMMENTS_URL:?set COMMENTS_URL in .env, the public address of the comments}
       # How the builder reaches Remark42 inside the network (static copy of the comments).
       REMARK_INTERNAL_URL: http://remark42:8080
       # Language of the user interface: en (default) or de. One language per build.
@@ -70,11 +76,12 @@ services:
       builder:
         condition: service_healthy
     environment:
-      # A host name here makes Caddy fetch a certificate itself (see compose.domain.yaml).
-      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
-      COMMENTS_ADDRESS: ${COMMENTS_ADDRESS:-:8081}
+      COMMENTS_URL: ${COMMENTS_URL}
+      # Senders whose X-Forwarded-For is believed: your reverse proxy.
+      MUFFEL_TRUSTED_PROXIES: ${MUFFEL_TRUSTED_PROXIES:-private_ranges}
     ports:
-      # Inside only by default (127.0.0.1). MUFFEL_BIND=0.0.0.0 opens them to the network.
+      # Your reverse proxy forwards to these. Inside only by default (127.0.0.1);
+      # set MUFFEL_BIND to an address of this host if your proxy runs elsewhere.
       - '${MUFFEL_BIND:-127.0.0.1}:${MUFFEL_PORT:-8080}:80'
       - '${MUFFEL_BIND:-127.0.0.1}:${MUFFEL_COMMENTS_PORT:-8081}:8081'
     volumes:
@@ -100,38 +107,31 @@ services:
     image: umputun/remark42:v1.18.0
     restart: unless-stopped
     environment:
-      REMARK_URL: ${COMMENTS_URL:-http://localhost:8081}
+      REMARK_URL: ${COMMENTS_URL}
       SITE: muffelblog
       # The blog may embed the widget (frame-ancestors).
-      ALLOWED_HOSTS: "'self',${SITE_URL:-http://localhost:8080}"
+      ALLOWED_HOSTS: "'self',${SITE_URL}"
       SECRET: ${REMARK_SECRET:?set REMARK_SECRET in .env, see .env.example}
       ADMIN_PASSWD: ${REMARK_ADMIN_PASSWD:?set REMARK_ADMIN_PASSWD in .env, see .env.example}
-      # Behind our Caddy (or your proxy on this host) the peer is a Docker address.
+      # Behind our Caddy the peer is a Docker address.
       # Forwarding headers are believed only from there, so nobody can choose
       # their own address to get around the rate limit.
       TRUSTED_PROXY: ${TRUSTED_PROXY:-172.16.0.0/12}
       # Whoever logs in with this address by email is the administrator: they can
       # delete comments and block users in the Remark42 interface.
-      ADMIN_SHARED_EMAIL: ${REMARK_ADMIN_EMAIL:-admin@localhost}
+      ADMIN_SHARED_EMAIL: ${REMARK_ADMIN_EMAIL:?set REMARK_ADMIN_EMAIL in .env, the address of the comment administrator}
       # Every new comment is mailed to the administrator.
       NOTIFY_ADMINS: email
-      NOTIFY_EMAIL_FROM: ${MAIL_FROM:-blog@localhost}
+      NOTIFY_EMAIL_FROM: ${MAIL_FROM:?set MAIL_FROM in .env, the sender of the login mails}
       AUTH_EMAIL_ENABLE: 'true'
-      AUTH_EMAIL_FROM: ${MAIL_FROM:-blog@localhost}
-      SMTP_HOST: ${SMTP_HOST:-mailpit}
-      SMTP_PORT: ${SMTP_PORT:-1025}
+      AUTH_EMAIL_FROM: ${MAIL_FROM}
+      SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST in .env, the mail server of the login mails}
+      SMTP_PORT: ${SMTP_PORT:?set SMTP_PORT in .env}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      SMTP_TLS: ${SMTP_TLS:-false}
+      SMTP_TLS: ${SMTP_TLS:-true}
     volumes:
       - remark42-var:/srv/var
-
-  # Local mail sink: login mails of Remark42 land here, none leave the machine.
-  mailpit:
-    image: axllent/mailpit:v1.33
-    restart: unless-stopped
-    ports:
-      - '127.0.0.1:${MUFFEL_MAIL_PORT:-8025}:8025'
 
 volumes:
   releases:

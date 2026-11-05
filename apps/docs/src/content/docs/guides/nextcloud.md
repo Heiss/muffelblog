@@ -19,6 +19,11 @@ public link with a password**. It never gets your account password.
 3. The link looks like `https://cloud.example.org/s/AbC123xyz...`. The part after
    `/s/` is the **token**.
 
+**Check:** open the link in a private browser window and enter the password. What
+you see is exactly what the builder reads. The steps inside Nextcloud are
+described from its documentation and were not checked against a live instance;
+the labels differ between versions.
+
 :::caution[The password is mandatory]
 A share link gives access to the **whole folder**, including drafts, files
 without `publish: true` and `.obsidian/`. The password is the only protection.
@@ -30,7 +35,6 @@ The builder refuses to start without one.
 In `.env`:
 
 ```sh
-MUFFEL_FIXTURES=                       # empty, switches the demo off
 NEXTCLOUD_URL=https://cloud.example.org
 NEXTCLOUD_SHARE_TOKEN=AbC123xyz
 NEXTCLOUD_SHARE_PASSWORD=the-share-password
@@ -40,7 +44,7 @@ MEMOS_URL=https://memos.example.org    # required as well, see the Memos guide
 Instead of `NEXTCLOUD_SHARE_PASSWORD` you can set `NEXTCLOUD_SHARE_PASSWORD_FILE`
 to the path of a file (a Docker secret). Setting both stops the builder.
 
-Then `docker compose up -d`. If `MUFFEL_FIXTURES` is not empty while
+Then `docker compose up -d`. If `MUFFEL_FIXTURES` (the demo) is set while
 `NEXTCLOUD_URL` is set, the builder stops, so sample data can never replace real
 content by accident.
 

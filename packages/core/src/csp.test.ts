@@ -70,4 +70,20 @@ describe('Caddyfile and client addresses', () => {
     expect(text).toMatch(/header_up X-Real-IP \{client_ip\}/);
     expect(text).toMatch(/header_up -Authorization/);
   });
+
+  it('takes the client address from the reverse proxy in front, read from the right', async () => {
+    const text = await readFile(caddyfile, 'utf8');
+    expect(text).toMatch(
+      /trusted_proxies static \{\$MUFFEL_TRUSTED_PROXIES:private_ranges\}/,
+    );
+    // Without strict mode Caddy takes the leftmost address, which the visitor writes.
+    expect(text).toMatch(/^\s*trusted_proxies_strict$/m);
+  });
+
+  it('serves plain HTTP on fixed ports; HTTPS is the job of the reverse proxy', async () => {
+    const text = await readFile(caddyfile, 'utf8');
+    expect(text).toMatch(/^:80 \{$/m);
+    expect(text).toMatch(/^:8081 \{$/m);
+    expect(text).not.toContain('SITE_ADDRESS');
+  });
 });

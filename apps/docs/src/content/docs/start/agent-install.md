@@ -25,10 +25,11 @@ configuration or delete anything.
 
 ## What the agent does, and what it asks
 
-1. Asks which setup you want: the **demo** on your machine, a **real blog behind
-   your own reverse proxy**, or a **real blog with our Caddy and a domain**.
-2. Sends you to [Prepare the sources](/muffelblog/tutorial/1-prepare/) for the
-   Nextcloud folder and the memo, which only you can do, and waits.
+1. Asks which setup you want: the **demo** on your machine, or a **real blog
+   behind your reverse proxy**.
+2. Sends you to [Connect Nextcloud](/muffelblog/guides/nextcloud/) and
+   [Connect Memos](/muffelblog/guides/memos/) for the shared folder and the
+   memo, which only you can do, and waits.
 3. Asks for the addresses, the mail settings and the language of the interface.
 4. Downloads the project, creates `.env` (with its own random secrets) and writes
    all values **except two passwords**, which you type into `.env` yourself.
@@ -45,6 +46,6 @@ configuration or delete anything.
   mail password go into `.env` by your hand.
 - The agent should not print or read your secrets. It checks only that the lines
   are filled in. If your agent does not keep to that, do the `.env` step yourself
-  and follow the [Tutorial](/muffelblog/tutorial/2-publish/).
+  and follow [Getting started](/muffelblog/start/getting-started/).
 - The steps inside Nextcloud, Memos and your mail provider are described from
   their documentation and were not checked against a live instance.

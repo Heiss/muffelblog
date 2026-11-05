@@ -1,12 +1,16 @@
 # Caddy: static delivery of the current release, reverse proxy to Remark42.
-# SITE_ADDRESS is `:80` locally (plain HTTP). With a domain it is the host name
-# and Caddy fetches the certificate itself.
+# Plain HTTP behind the reverse proxy of the operator, which adds HTTPS.
 {
 	admin off
+	servers {
+		# The visitor's address comes from the X-Forwarded-For of the reverse
+		# proxy, read from the right, so a visitor cannot choose it.
+		trusted_proxies static {$MUFFEL_TRUSTED_PROXIES:private_ranges}
+		trusted_proxies_strict
+	}
 }
 
-# Health check of Docker. Plain HTTP on a port that is not published, so it works
-# with a host name as SITE_ADDRESS too (no redirect to HTTPS).
+# Health check of Docker, on a port that is not published.
 http://:2020 {
 	respond /healthz 200
 }
@@ -31,7 +35,7 @@ http://:2020 {
 	}
 }
 
-{$SITE_ADDRESS::80} {
+:80 {
 	import security
 	root * /srv/releases/current
 	encode zstd gzip
@@ -52,7 +56,7 @@ http://:2020 {
 
 # Remark42 for the public, on a host of its own. Basic auth from outside is
 # refused: the admin API is reachable only inside the Docker network.
-{$COMMENTS_ADDRESS::8081} {
+:8081 {
 	# Remark42 brings its own scripts and styles, so the strict policy of the
 	# site does not apply here.
 	import hardening

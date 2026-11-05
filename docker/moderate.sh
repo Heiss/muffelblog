@@ -6,7 +6,7 @@
 #   docker/moderate.sh unblock <user-id>
 # Uses the administrator login (REMARK_ADMIN_PASSWD from .env) inside the builder
 # container, so the password never travels over the network. For other Compose
-# files set COMPOSE_FILE, for example COMPOSE_FILE=compose.yaml:compose.production.yaml
+# files set COMPOSE_FILE in .env, for example COMPOSE_FILE=compose.yaml:compose.host-folder.yaml
 set -eu
 cd "$(dirname "$0")/.."
 PASSWORD="$(sed -n 's/^REMARK_ADMIN_PASSWD=//p' .env)"

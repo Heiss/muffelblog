@@ -69,65 +69,112 @@ describe('compose.yaml', () => {
 });
 
 describe('compose.yaml ports', () => {
-  it('publishes only the web server and the mail UI, and the mail UI only on this machine', async () => {
+  it('publishes only our web server, and only on this machine by default', async () => {
     const all = await services();
     const published = Object.entries(all).filter(([, s]) => s.ports?.length);
-    expect(published.map(([n]) => n).sort()).toEqual(['mailpit', 'web']);
-    for (const port of all.mailpit?.ports ?? [])
-      expect(port).toMatch(/^127\.0\.0\.1:/);
+    expect(published.map(([n]) => n)).toEqual(['web']);
+    for (const port of all.web?.ports ?? [])
+      expect(port).toMatch(/^\$\{MUFFEL_BIND:-127\.0\.0\.1\}:/);
   });
 });
 
-describe('compose.production.yaml (own reverse proxy)', () => {
+describe('compose.yaml is the production setup', () => {
+  it('requires the public addresses and the mail server, so a mistake shows at once', async () => {
+    const { builder, remark42 } = await services();
+    expect(builder?.environment?.SITE_URL).toMatch(/:\?/);
+    expect(builder?.environment?.COMMENTS_URL).toMatch(/:\?/);
+    for (const name of [
+      'SMTP_HOST',
+      'SMTP_PORT',
+      'NOTIFY_EMAIL_FROM',
+      'ADMIN_SHARED_EMAIL',
+    ]) {
+      expect(remark42?.environment?.[name], name).toMatch(/:\?/);
+    }
+  });
+
+  it('has no demo content and no mail sink', async () => {
+    const all = await services();
+    expect(all.mailpit).toBeUndefined();
+    expect(all.builder?.environment?.MUFFEL_FIXTURES).toBe(
+      '${MUFFEL_FIXTURES:-}',
+    );
+    expect(JSON.stringify(all)).not.toContain('localhost');
+  });
+
+  it('gives our web server the comments origin for its Content Security Policy', async () => {
+    const { web } = await services();
+    expect(web?.environment?.COMMENTS_URL).toBe('${COMMENTS_URL}');
+    expect(web?.environment?.MUFFEL_TRUSTED_PROXIES).toMatch(/private_ranges/);
+  });
+});
+
+describe('compose.demo.yaml (local demo)', () => {
+  it('adds the mail sink, published on this machine only', async () => {
+    const { mailpit } = await services('compose.demo.yaml');
+    expect(mailpit?.ports?.length).toBeGreaterThan(0);
+    for (const port of mailpit?.ports ?? [])
+      expect(port).toMatch(/^'?127\.0\.0\.1:/);
+  });
+
+  it('is chosen by init-env.sh --demo together with the local addresses', async () => {
+    const script = await readFile(
+      path.join(path.dirname(file), 'docker', 'init-env.sh'),
+      'utf8',
+    );
+    expect(script).toContain('COMPOSE_FILE=compose.yaml:compose.demo.yaml');
+    for (const name of [
+      'SITE_URL',
+      'COMMENTS_URL',
+      'MAIL_FROM',
+      'REMARK_ADMIN_EMAIL',
+      'SMTP_HOST',
+      'SMTP_PORT',
+    ]) {
+      expect(script, name).toContain(`s|^${name}=.*|${name}=`);
+    }
+  });
+
+  it('every variable that init-env.sh fills in is a line of .env.example', async () => {
+    const example = await readFile(
+      path.join(path.dirname(file), '.env.example'),
+      'utf8',
+    );
+    for (const name of [
+      'REMARK_SECRET',
+      'REMARK_ADMIN_PASSWD',
+      'SITE_URL',
+      'COMMENTS_URL',
+      'MAIL_FROM',
+      'REMARK_ADMIN_EMAIL',
+      'SMTP_HOST',
+      'SMTP_PORT',
+      'SMTP_TLS',
+    ]) {
+      expect(example, name).toMatch(new RegExp(`^${name}=`, 'm'));
+    }
+  });
+});
+
+describe('compose.host-folder.yaml (your proxy serves the files)', () => {
   it('shares the releases with the host and requires the folder', async () => {
-    const { builder } = await services('compose.production.yaml');
+    const { builder } = await services('compose.host-folder.yaml');
     const mount = (builder?.volumes ?? []).find((v) =>
       v.endsWith(':/data/releases'),
     );
     expect(mount).toMatch(/^\$\{MUFFEL_RELEASES_DIR:\?/);
   });
 
-  it('serves the same host folder when our web server is switched on', async () => {
-    const { web } = await services('compose.production.yaml');
-    const mount = (web?.volumes ?? []).find((v) =>
-      v.endsWith(':/srv/releases:ro'),
-    );
-    expect(mount).toMatch(/^\$\{MUFFEL_RELEASES_DIR:\?/);
-  });
-
-  it('does not start our web server or the mail sink by default', async () => {
-    const all = await services('compose.production.yaml');
-    expect(all.web?.profiles?.length).toBeGreaterThan(0);
-    expect(all.mailpit?.profiles?.length).toBeGreaterThan(0);
+  it('does not start our web server', async () => {
+    const { web } = await services('compose.host-folder.yaml');
+    expect(web?.profiles?.length).toBeGreaterThan(0);
   });
 
   it('opens Remark42 for the host only, never to the network', async () => {
-    const { remark42 } = await services('compose.production.yaml');
+    const { remark42 } = await services('compose.host-folder.yaml');
     expect(remark42?.ports?.length).toBeGreaterThan(0);
     for (const port of remark42?.ports ?? [])
       expect(port).toMatch(/^127\.0\.0\.1:/);
-  });
-
-  it('requires a real mail server, because there is no mail sink', async () => {
-    const { remark42 } = await services('compose.production.yaml');
-    for (const name of [
-      'SMTP_HOST',
-      'SMTP_PORT',
-      'SMTP_USERNAME',
-      'SMTP_PASSWORD',
-      'AUTH_EMAIL_FROM',
-    ]) {
-      expect(remark42?.environment?.[name], name).toMatch(/:\?/);
-    }
-  });
-});
-
-describe('compose.domain.yaml (our Caddy with a domain)', () => {
-  it('requires both host names and publishes 80 and 443 instead of the local ports', async () => {
-    const { web } = await services('compose.domain.yaml');
-    expect(web?.environment?.SITE_ADDRESS).toMatch(/:\?/);
-    expect(web?.environment?.COMMENTS_ADDRESS).toMatch(/:\?/);
-    expect(web?.ports).toEqual(['80:80', '443:443', '443:443/udp']);
   });
 });
 
@@ -148,11 +195,9 @@ describe('Remark42 hardening and moderation', () => {
     expect(remark42?.environment?.NOTIFY_EMAIL_FROM).toMatch(/MAIL_FROM/);
   });
 
-  it('requires the administrator email in production, where a guessable default would be a risk', async () => {
-    for (const file of ['compose.production.yaml', 'compose.domain.yaml']) {
-      const { remark42 } = await services(file);
-      expect(remark42?.environment?.ADMIN_SHARED_EMAIL, file).toMatch(/:\?/);
-    }
+  it('requires the administrator email, where a guessable default would be a risk', async () => {
+    const { remark42 } = await services();
+    expect(remark42?.environment?.ADMIN_SHARED_EMAIL).toMatch(/:\?/);
   });
 
   describe('the Dockerfile', () => {

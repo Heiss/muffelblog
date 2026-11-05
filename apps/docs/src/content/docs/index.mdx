@@ -5,11 +5,11 @@ template: splash
 hero:
   tagline: Write in Obsidian, post short notes in Memos, get a fast static site with search, RSS, a glossary and comments. Everything runs on your own server.
   actions:
-    - text: Try it in five minutes
-      link: /muffelblog/start/quickstart/
+    - text: Getting started
+      link: /muffelblog/start/getting-started/
       icon: right-arrow
-    - text: Tutorial from Nextcloud to the first comment
-      link: /muffelblog/tutorial/1-prepare/
+    - text: Try the demo locally
+      link: /muffelblog/start/quickstart/
       variant: minimal
     - text: What is it?
       link: /muffelblog/start/what-is-it/
@@ -36,8 +36,8 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
     the page, so they read without JavaScript.
   </Card>
   <Card title="One command" icon="seti:docker">
-    `docker compose up` starts it with demo content. Production variants for
-    your own reverse proxy or with a domain are included.
+    `docker compose up -d` behind your reverse proxy, configured in one `.env`
+    file. A local demo with sample content is one command too.
   </Card>
   <Card title="Safe by default" icon="approve-check">
     Content is sanitized, a failed build never replaces the last good version,

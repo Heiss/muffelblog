@@ -11,8 +11,8 @@ docker compose logs --tail 50 builder
 docker compose exec builder cat /data/state/status.json
 ```
 
-With your own files, set them first, for example
-`export COMPOSE_FILE=compose.yaml:compose.production.yaml`. Whatever fails, the
+Compose reads the files to use from `COMPOSE_FILE` in `.env`, if you set it
+there. Whatever fails, the
 **last good version stays online**; the visitors do not see a disruption of a
 source or of the builder.
 
@@ -23,7 +23,7 @@ source or of the builder.
 | Nextcloud: the share is empty, or a login or download error | Open the share link in a private window. A wrong password or token, a deleted share, or a Nextcloud that is down. Fix the value in `.env` and `docker compose up -d`.                                             |
 | Memos: "requires a login"                                   | The instance does not allow anonymous reading of public memos. Change that in Memos.                                                                                                                              |
 | Memos or Remark42 unreachable or time out                   | Check that the address in `MEMOS_URL` (or `REMARK_INTERNAL_URL`) works **from the builder container**: `docker compose exec builder node -e "fetch(process.argv[1]).then(r => console.log(r.status))" <address>`. |
-| Remark42: HTTP 429                                          | Rate limit. The builder waits and retries by itself; if it lasts, a proxy in front of Remark42 does not set `X-Real-IP` ([own proxy](/muffelblog/production/own-proxy/)).                                         |
+| Remark42: HTTP 429                                          | Rate limit. The builder waits and retries by itself; if it lasts, the visitor address does not arrive ([visitor addresses](/muffelblog/production/reverse-proxy/#visitor-addresses)).                             |
 
 A failure is reported once when it begins and once when it is over (log, status
 file and, if you set one, `MUFFEL_ALERT_WEBHOOK`). The builder checks again
@@ -118,8 +118,8 @@ a backup is `docker/backup.sh`, restoring is for an **empty** Remark42
 `SITE_URL` is part of the address of every comment: Remark42 keys comments by the
 address of the page. Plan it before you switch.
 
-1. Change `SITE_URL`, `COMMENTS_URL` (and `SITE_ADDRESS`, `COMMENTS_ADDRESS`
-   with our Caddy) in `.env`, update your proxy and DNS, `docker compose up -d`.
+1. Change `SITE_URL` and `COMMENTS_URL` in `.env`, update your proxy and DNS,
+   `docker compose up -d`.
 2. Comments of the old address do not show on the new pages. Remark42 has an
    administrator function to move comments to new addresses; the project does not
    wrap it and has not tested it. Read the Remark42 documentation before you try

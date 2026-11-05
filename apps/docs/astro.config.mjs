@@ -25,17 +25,9 @@ export default defineConfig({
           label: 'Start',
           items: [
             { slug: 'start/what-is-it' },
+            { slug: 'start/getting-started' },
             { slug: 'start/quickstart' },
             { slug: 'start/agent-install' },
-          ],
-        },
-        {
-          label: 'Tutorial',
-          items: [
-            { slug: 'tutorial/1-prepare' },
-            { slug: 'tutorial/2-publish' },
-            { slug: 'tutorial/3-comments' },
-            { slug: 'tutorial/4-webmentions' },
           ],
         },
         {
@@ -49,13 +41,12 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Production',
+          label: 'Operations',
           items: [
-            { slug: 'production/overview' },
-            { slug: 'production/own-proxy' },
-            { slug: 'production/own-caddy' },
+            { slug: 'production/reverse-proxy' },
             { slug: 'production/operations' },
             { slug: 'production/runbook' },
+            { slug: 'production/host-folder' },
           ],
         },
         {

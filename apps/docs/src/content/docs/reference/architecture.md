@@ -10,7 +10,7 @@ description: The services, the volumes and how a release is built and switched.
 | `builder`  | built from the repository (`target: builder`) | Checks the sources, builds the site, keeps the releases                             |
 | `web`      | Caddy 2.11                                    | Serves `releases/current`, sets the headers, forwards the comments host to Remark42 |
 | `remark42` | `umputun/remark42` (pinned)                   | Comments, login by email                                                            |
-| `mailpit`  | `axllent/mailpit` (pinned)                    | Local mail sink; not used in production                                             |
+| `mailpit`  | `axllent/mailpit` (pinned)                    | Local mail sink of the demo only (`compose.demo.yaml`)                              |
 
 Nextcloud and Memos are yours and run elsewhere.
 
@@ -18,7 +18,7 @@ Nextcloud and Memos are yours and run elsewhere.
 
 | Volume         | Written by | Content                                                                                       |
 | -------------- | ---------- | --------------------------------------------------------------------------------------------- |
-| `releases`     | builder    | `releases/<id>/` and the link `current` (a host folder in production)                         |
+| `releases`     | builder    | `releases/<id>/` and the link `current` (a host folder with `compose.host-folder.yaml`)       |
 | `cache`        | builder    | The last downloaded copies of the Nextcloud folder                                            |
 | `state`        | builder    | What was built last (`scheduler.json`), the status (`status.json`), the Nextcloud fingerprint |
 | `remark42-var` | Remark42   | The comments                                                                                  |

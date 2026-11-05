@@ -106,7 +106,7 @@ Needs Docker with Compose. The stack serves the demo set (no Nextcloud, no
 Memos needed).
 
 ```sh
-docker/init-env.sh              # creates .env with random secrets
+docker/init-env.sh --demo       # .env with random secrets, local addresses and the demo
 docker compose up --build       # builds the images here and starts everything
 ```
 
@@ -131,12 +131,17 @@ settings are in `.env.example`.
 
 ### Production
 
-Two ready-made overrides: `compose.production.yaml` for **your own reverse
-proxy** with a shared mount (the builder writes the releases into a folder on the
-host, your proxy serves `current/`), and `compose.domain.yaml` for **our Caddy
-with a domain** and automatic HTTPS. Both need a real mail server instead of
-Mailpit. Details, proxy examples and the Content Security Policy are in the
-documentation.
+`compose.yaml` is the production setup behind your reverse proxy:
+
+```sh
+docker/init-env.sh              # .env with random secrets; fill in the required values
+docker compose up -d
+```
+
+Your proxy adds HTTPS and forwards the blog host to `127.0.0.1:8080` and the
+comments host to `127.0.0.1:8081`. Steps, the required variables and proxy
+snippets: [Getting started](https://heiss.github.io/muffelblog/start/getting-started/).
+If your proxy must serve the files itself, see `compose.host-folder.yaml`.
 
 ### Releases
 

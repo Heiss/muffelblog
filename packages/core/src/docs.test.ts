@@ -43,7 +43,7 @@ describe('documentation matches the code', () => {
       'content',
       'docs',
       'production',
-      'own-proxy.md',
+      'host-folder.md',
     );
     // plain block, Caddy, nginx
     expect(page.split(csp as string).length - 1).toBeGreaterThanOrEqual(3);
@@ -57,7 +57,7 @@ describe('documentation matches the code', () => {
       'content',
       'docs',
       'production',
-      'own-proxy.md',
+      'host-folder.md',
     );
     expect(page).toMatch(/header_up X-Real-IP \{client_ip\}/); // Caddy
     expect(page).toMatch(/proxy_set_header X-Real-IP \$remote_addr;/); // nginx
@@ -146,30 +146,19 @@ describe('documentation matches the code', () => {
       'content',
       'docs',
       'production',
-      'own-proxy.md',
+      'host-folder.md',
     );
     expect(page).toMatch(
       /@buildjson path \/build\.json \/health\.json \/entries\.json/,
     ); // Caddy
     expect(page).toContain('location ~ ^/(build|health|entries)\\.json$'); // nginx
-    const overview = await read(
-      'apps',
-      'docs',
-      'src',
-      'content',
-      'docs',
-      'production',
-      'overview.md',
-    );
-    expect(overview).toContain('/health.json');
-    expect(overview).toContain('/entries.json');
   });
 
   it('names Compose files that exist', async () => {
     for (const name of [
       'compose.yaml',
-      'compose.production.yaml',
-      'compose.domain.yaml',
+      'compose.demo.yaml',
+      'compose.host-folder.yaml',
       'docker/init-env.sh',
     ]) {
       await expect(
@@ -180,7 +169,7 @@ describe('documentation matches the code', () => {
     const pages = (
       await Promise.all((await docFiles()).map((f) => readFile(f, 'utf8')))
     ).join('\n');
-    for (const name of pages.match(/compose(\.[a-z]+)?\.yaml/g) ?? []) {
+    for (const name of pages.match(/compose(\.[a-z-]+)?\.yaml/g) ?? []) {
       await expect(
         readFile(path.join(root, name), 'utf8'),
         name,
@@ -188,76 +177,115 @@ describe('documentation matches the code', () => {
     }
   });
 
-  describe('the tutorial', () => {
-    const tutorial = async () =>
-      (
-        await Promise.all(
-          (await docFiles())
-            .filter((f) => f.includes(`${path.sep}tutorial${path.sep}`))
-            .map((f) => readFile(f, 'utf8')),
-        )
-      ).join('\n');
+  describe('getting started', () => {
+    const page = () =>
+      read(
+        'apps',
+        'docs',
+        'src',
+        'content',
+        'docs',
+        'start',
+        'getting-started.md',
+      );
+    const required = async () => {
+      const compose = await read('compose.yaml');
+      return new Set(
+        [...compose.matchAll(/\$\{([A-Z_]+):\?/g)].map((m) => m[1] as string),
+      );
+    };
 
-    it('has the four chapters in the sidebar', async () => {
+    it('is the first step after the introduction in the sidebar', async () => {
       const config = await read('apps', 'docs', 'astro.config.mjs');
-      for (const slug of [
-        'tutorial/1-prepare',
-        'tutorial/2-publish',
-        'tutorial/3-comments',
-        'tutorial/4-webmentions',
-      ]) {
-        expect(config, slug).toContain(`slug: '${slug}'`);
-      }
-    });
-
-    it('only names scripts of the repository that exist and are executable', async () => {
-      const names = new Set(
-        (await tutorial()).match(/docker\/[a-z-]+\.(?:sh|mjs)/g) ?? [],
+      expect(config.indexOf("slug: 'start/getting-started'")).toBeLessThan(
+        config.indexOf("slug: 'start/quickstart'"),
       );
-      expect(names.size).toBeGreaterThan(3);
-      for (const name of names) {
-        const info = await stat(path.join(root, name));
-        expect(info.isFile(), name).toBe(true);
-        if (name.endsWith('.sh')) {
-          expect(info.mode & 0o111, `${name} is executable`).not.toBe(0);
-        }
-      }
     });
 
-    it('only names files of the example folder that exist', async () => {
-      const text = await tutorial();
-      for (const name of [
-        'hello-world.md',
-        'pages/legal.md',
-        'pages/privacy.md',
-        'README.md',
-      ]) {
-        expect(text, name).toContain(name.split('/').pop() as string);
-        await stat(path.join(root, 'examples', 'nextcloud-folder', name));
-      }
+    it('explains every variable that compose.yaml requires, and the sources', async () => {
+      const text = await page();
+      const names = await required();
+      expect(names.size).toBeGreaterThan(6);
+      for (const name of [...names, 'NEXTCLOUD_URL', 'MEMOS_URL'])
+        expect(text, name).toContain(`\`${name}\``);
     });
 
-    it('only sets variables that the project knows', async () => {
-      const text = await tutorial();
-      const known = [
-        await read('.env.example'),
-        await read('compose.yaml'),
-        await read('compose.production.yaml'),
-        SETTING_SPECS.map((s) => s.env).join('\n'),
-      ].join('\n');
-      const set = new Set(
-        [...text.matchAll(/^([A-Z][A-Z0-9_]{3,})=/gm)].map((m) => m[1]),
+    it('lists the same required variables in the configuration reference', async () => {
+      const config = await read(
+        'apps',
+        'docs',
+        'src',
+        'content',
+        'docs',
+        'reference',
+        'configuration.md',
       );
-      expect(set.size).toBeGreaterThan(10);
-      for (const name of set) {
-        // the switch of sending is a flag, not a numeric setting
-        if (name === 'MUFFEL_WEBMENTIONS_SEND') {
-          expect(known, name).toContain('MUFFEL_WEBMENTIONS_SEND');
-          continue;
-        }
-        expect(known, name).toContain(name);
-      }
+      const section = config.slice(
+        config.indexOf('## Required'),
+        config.indexOf('\n## ', config.indexOf('## Required') + 1),
+      );
+      for (const name of await required())
+        expect(section, name).toContain(`\`${name}\``);
     });
+
+    it('forwards to the ports that compose.yaml publishes', async () => {
+      const text = await page();
+      const compose = await read('compose.yaml');
+      expect(compose).toContain('${MUFFEL_PORT:-8080}:80');
+      expect(compose).toContain('${MUFFEL_COMMENTS_PORT:-8081}:8081');
+      expect(text).toContain('127.0.0.1:8080');
+      expect(text).toContain('127.0.0.1:8081');
+    });
+
+    it('only names files of the example folder that exist (Nextcloud guide)', async () => {
+      const guide = await read(
+        'apps',
+        'docs',
+        'src',
+        'content',
+        'docs',
+        'guides',
+        'nextcloud.md',
+      );
+      expect(guide).toContain('examples/nextcloud-folder');
+      await stat(
+        path.join(root, 'examples', 'nextcloud-folder', 'hello-world.md'),
+      );
+    });
+  });
+
+  it('only names scripts of the repository that exist and are executable', async () => {
+    const text = (
+      await Promise.all((await docFiles()).map((f) => readFile(f, 'utf8')))
+    ).join('\n');
+    const names = new Set(text.match(/docker\/[a-z-]+\.(?:sh|mjs)/g) ?? []);
+    expect(names.size).toBeGreaterThan(3);
+    for (const name of names) {
+      const info = await stat(path.join(root, name));
+      expect(info.isFile(), name).toBe(true);
+      if (name.endsWith('.sh')) {
+        expect(info.mode & 0o111, `${name} is executable`).not.toBe(0);
+      }
+    }
+  });
+
+  it('only sets variables in examples that the project knows', async () => {
+    const text = (
+      await Promise.all((await docFiles()).map((f) => readFile(f, 'utf8')))
+    ).join('\n');
+    const known = [
+      await read('.env.example'),
+      await read('compose.yaml'),
+      await read('compose.host-folder.yaml'),
+      await read('compose.demo.yaml'),
+      SETTING_SPECS.map((s) => s.env).join('\n'),
+      'MUFFEL_WEBMENTIONS_SEND COMPOSE_FILE',
+    ].join('\n');
+    const set = new Set(
+      [...text.matchAll(/^([A-Z][A-Z0-9_]{3,})=/gm)].map((m) => m[1] as string),
+    );
+    expect(set.size).toBeGreaterThan(5);
+    for (const name of set) expect(known, name).toContain(name);
   });
 
   describe('the guide for AI agents (agent.md)', () => {
@@ -283,14 +311,14 @@ describe('documentation matches the code', () => {
       for (const name of text.match(/docker\/[a-z-]+\.(?:sh|mjs)/g) ?? []) {
         await stat(path.join(root, name));
       }
-      for (const name of text.match(/compose(?:\.[a-z]+)?\.yaml/g) ?? []) {
+      for (const name of text.match(/compose(?:\.[a-z-]+)?\.yaml/g) ?? []) {
         await stat(path.join(root, name));
       }
       const known = [
         await read('.env.example'),
         await read('compose.yaml'),
-        await read('compose.production.yaml'),
-        await read('compose.domain.yaml'),
+        await read('compose.host-folder.yaml'),
+        await read('compose.demo.yaml'),
         SETTING_SPECS.map((s) => s.env).join('\n'),
         'MUFFEL_WEBMENTIONS_SEND MUFFEL_LANG MUFFEL_FIXTURES',
       ].join('\n');
