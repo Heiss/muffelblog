@@ -1,0 +1,22 @@
+---
+import { buildFileTree } from '@muffelblog/core';
+import FileFolder from '../../components/FileFolder.astro';
+import { messages } from '../../i18n/messages';
+import Base from '../../layouts/Base.astro';
+import { getContent } from '../../lib/articles';
+
+// The published files as they lie in the Nextcloud folder. Drafts never appear.
+const { articles } = await getContent();
+const tree = buildFileTree(articles);
+const title = messages.files.title;
+---
+
+<Base {title}>
+  <h1>{title}</h1>
+  <p>{messages.files.intro}</p>
+  {tree.count === 0 ? (
+    <p>{messages.files.none}</p>
+  ) : (
+    <FileFolder folder={tree} />
+  )}
+</Base>

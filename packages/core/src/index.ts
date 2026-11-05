@@ -122,3 +122,5 @@ export type {
   GraphNodeKind,
   LinkGraph,
 } from './link-graph.ts';
+export { buildFileTree } from './file-tree.ts';
+export type { TreeFile, TreeFolder } from './file-tree.ts';

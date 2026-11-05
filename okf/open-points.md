@@ -17,7 +17,6 @@ listed with their result, so those references keep working. Cleaned up on
 |---|---|---|
 | O3, O11, O32 | Receiving webmentions (W14) | Before the release, and testable without a domain: production uses webmention.io, tests and the demo use a stand-in that copies the webmention.io API. |
 | O8 | Supported versions | Pinned versions, never "latest". The supported versions are listed in the docs. Contract tests run in parallel for the current and the previous version (Memos and Nextcloud); Renovate opens a PR when a new version appears, the contract test shows whether it works. |
-| O17 | Social preview images | Generated per page at build time (posts, memos, terms); developed and checked with the demo set. |
 
 # B. Open: tasks of the owner for the go-live (W17)
 
@@ -46,6 +45,7 @@ listed with their result, so those references keep working. Cleaned up on
 | O12 | Sending from memos | Posts, memos and terms send. Off by default. |
 | O13 | Tag rules | Lowercase, nested Memos tags stay one tag, tag pages (W05). Inline `#tags` in articles: postponed ("later", [Frontmatter](/content/frontmatter.md)). |
 | O14 | Memo date | `createTime`; title from date and time. |
+| O17 | Social preview images | Done 2026-11-05: one generated image per post, memo and term ([URLs and SEO](/frontend/urls-seo.md)). |
 | O18 | Backup, alerting | `docker/backup.sh`, `docker/restore.sh`, alert webhook `MUFFEL_ALERT_WEBHOOK` (W12, W16). |
 | O19 | Statistics | Decided by the owner 2026-11-05: no counter of our own (a static site would need a service of its own); optional Matomo of the operator through `MATOMO_URL` and `MATOMO_SITE_ID`, without cookies, off by default. |
 | O20 | Feed and RSS | Excerpt at most 200 characters; RSS with full text, 50 entries (`MUFFEL_RSS_ITEMS`, W09). |

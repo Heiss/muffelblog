@@ -1,0 +1,32 @@
+---
+import type { TreeFolder } from '@muffelblog/core';
+import { messages } from '../i18n/messages';
+
+interface Props {
+  folder: TreeFolder;
+}
+
+const { folder } = Astro.props;
+---
+
+<ul class="file-tree">
+  {folder.folders.map((sub) => (
+    <li class="folder">
+      <details open>
+        <summary>
+          {sub.name}/{' '}
+          <span class="count">{messages.files.count(sub.count)}</span>
+        </summary>
+        <Astro.self folder={sub} />
+      </details>
+    </li>
+  ))}
+  {folder.files.map((file) => (
+    <li class="file">
+      <a href={file.url}>{file.name}</a>
+      {file.title !== file.name.replace(/\.md$/i, '') && (
+        <span class="excerpt"> {file.title}</span>
+      )}
+    </li>
+  ))}
+</ul>

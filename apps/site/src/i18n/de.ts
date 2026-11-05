@@ -10,7 +10,15 @@ export const de: Messages = {
     tags: 'Tags',
     glossary: 'Glossar',
     graph: 'Graph',
+    files: 'Dateien',
     search: 'Suche',
+  },
+  files: {
+    title: 'Dateien',
+    intro:
+      'Alle veröffentlichten Beiträge, Begriffe und Seiten, in den Ordnern, in denen sie geschrieben sind.',
+    none: 'Noch keine Dateien.',
+    count: (count: number) => (count === 1 ? '1 Datei' : `${count} Dateien`),
   },
   graph: {
     title: 'Graph',
@@ -72,6 +80,12 @@ export const de: Messages = {
     long: 'Lang',
     short: 'Kurz',
     terms: 'Begriffe',
+  },
+  og: {
+    post: 'Beitrag',
+    memo: 'Memo',
+    term: 'Begriff',
+    alt: (title: string) => `Vorschaubild: ${title}`,
   },
   glossary: {
     title: 'Glossar',

@@ -12,7 +12,15 @@ export const en = {
     tags: 'Tags',
     glossary: 'Glossary',
     graph: 'Graph',
+    files: 'Files',
     search: 'Search',
+  },
+  files: {
+    title: 'Files',
+    intro:
+      'All published posts, terms and pages, in the folders where they are written.',
+    none: 'No files yet.',
+    count: (count: number) => (count === 1 ? '1 file' : `${count} files`),
   },
   graph: {
     title: 'Graph',
@@ -76,6 +84,12 @@ export const en = {
     long: 'Long',
     short: 'Short',
     terms: 'Terms',
+  },
+  og: {
+    post: 'Post',
+    memo: 'Memo',
+    term: 'Term',
+    alt: (title: string) => `Preview image: ${title}`,
   },
   glossary: {
     title: 'Glossary',

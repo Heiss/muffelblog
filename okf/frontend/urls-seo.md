@@ -32,6 +32,16 @@ concise form the user asked for. The user confirmed `/p/<slug>/` and
 `/m/<uid>/`. All URLs are English and independent of the UI language (see
 [Languages](/ops/language.md)).
 
+# File tree (decided by the owner 2026-11-05)
+
+* **[E]** `/files/` shows the published posts, terms and static pages in the
+  folder structure of the Nextcloud folder, each file linked to its page, as a
+  further way to find posts. Only published files appear, so drafts and their
+  names stay hidden; folders without a published file do not appear. Folders
+  are `<details>` (open), so it works without JavaScript. Link in the main
+  navigation. Memos are no files and are not in it. `files` is a reserved page
+  slug.
+
 # SEO rules
 
 * **[E]** Every post and every memo has a page of its own for linking and for
@@ -52,9 +62,16 @@ and the first mention. For Remark42 the API documentation describes
 `POST /api/v1/admin/remap` for moving comments. Webmentions at the old domain
 are lost.
 
+# Social preview images (O17, decided by the owner 2026-11-05)
+
+* **[E]** Every post, memo and term gets a preview image `/og/<p|m|g>/<id>.png`
+  (1200 x 630), made at build time with `satori` (text as paths, the own font
+  Source Sans 3) and `sharp`: kind, title, excerpt, site name, date, in the
+  colors of Solarized Light. `og:image` (with type, size and alt text) and
+  `twitter:card summary_large_image` only with `SITE_URL`, because the address
+  must be absolute. Developed with the demo set.
+
 # Open
 
-Social preview images (O17, tags are done; after 26.11.0 proposed), review of
-the favicon by the owner (O16: SVG, a white M on blue, plus a touch icon), the
-legal text of imprint and privacy policy itself (O15, written by the owner in
+The legal text of imprint and privacy policy itself (O15, written by the owner in
 Nextcloud).
