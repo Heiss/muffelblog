@@ -1,16 +1,42 @@
 # Muffelblog
 
-Static blog with a Memos microblog. The specification is an OKF bundle in
-[`okf/`](okf/index.md). Development is in English
-([language rules](okf/ops/language.md)).
+A personal blog that publishes from **Nextcloud** (long posts and glossary terms
+as Markdown, Obsidian works well) and **Memos** (short notes). A permanent
+builder turns both into a fast static site with search, RSS, a glossary, themes
+and self-hosted comments (Remark42, login by email). It runs with Docker Compose
+on your own server.
 
-**Documentation:** https://heiss.github.io/muffelblog/ (setup, guides, production, reference; source in `apps/docs`)
+**Documentation:** https://heiss.github.io/muffelblog/ (quickstart, tutorial,
+guides, production, reference; source in `apps/docs`). You can also let an AI
+agent do the installation with you: see
+[Install with an AI agent](https://heiss.github.io/muffelblog/start/agent-install/).
+
+The specification is an OKF bundle in [`okf/`](okf/index.md). Development is in
+English ([language rules](okf/ops/language.md)); the language of the site is a
+setting (`MUFFEL_LANG`, `en` by default or `de`).
+
+## What it does
+
+- **Content:** posts, memos and glossary terms in one feed with filters, tags,
+  endless scroll that also works without JavaScript, full-text search in the
+  browser (Pagefind), RSS with full text, sitemap, microformats.
+- **Comments:** Remark42 with login by email, notification mails, moderation on
+  the command line, backup and restore; the comments are also part of the page.
+- **Operation:** the builder checks the sources (default every 3 minutes), builds
+  only after a change, switches releases atomically, keeps the last good version
+  online when something fails, and reports through a log, a status file
+  and an optional webhook.
+- **Webmentions:** sending, off by default. Receiving is planned.
+- **Safe by default:** sanitized content, a strict Content Security Policy, no
+  foreign requests from the browser, ports on `127.0.0.1`, nothing leaves the
+  instance unless you switch it on.
 
 ## Preview
 
-Status with demo content (IT, photography, timber construction; the images are placeholders). Nextcloud integration, operations and comments are
-still missing (see the [roadmap](okf/roadmap.md)). There are ten color schemes,
-the default is Solarized Light.
+With demo content (IT, photography, timber construction; the images are
+placeholders), built with the German interface (`MUFFEL_LANG=de`) because the
+demo content is German. There are ten color schemes, the default is Solarized
+Light.
 
 | Feed, Solarized Light                          | Feed, Dracula                                   |
 | ---------------------------------------------- | ----------------------------------------------- |
@@ -29,12 +55,15 @@ regenerated with `pnpm screenshots` (needs a browser, see below).
 
 ## Structure
 
-| Path            | Content                                     |
-| --------------- | ------------------------------------------- |
-| `apps/site`     | Astro site                                  |
-| `apps/builder`  | Scheduler, sync and mention jobs (scaffold) |
-| `packages/core` | Shared code of site and builder             |
-| `okf/`          | Specification, roadmap, decisions           |
+| Path            | Content                                           |
+| --------------- | ------------------------------------------------- |
+| `apps/site`     | Astro site                                        |
+| `apps/builder`  | Scheduler, Nextcloud sync, releases, webmentions  |
+| `apps/docs`     | Documentation site (Starlight, GitHub Pages)      |
+| `packages/core` | Shared code of site and builder                   |
+| `examples/`     | Example Nextcloud folder for the tutorial         |
+| `docker/`       | Caddyfile and scripts (moderation, backup, tests) |
+| `okf/`          | Specification, roadmap, decisions                 |
 
 ## Requirements
 
@@ -81,11 +110,14 @@ docker/init-env.sh              # creates .env with random secrets
 docker compose up --build       # builds the images here and starts everything
 ```
 
-| What                                                     | Where                 |
-| -------------------------------------------------------- | --------------------- |
-| Site                                                     | http://localhost:8080 |
-| Comments server (Remark42, not yet wired into the pages) | http://localhost:8081 |
-| Mail sink (Mailpit)                                      | http://localhost:8025 |
+| What                       | Where                 |
+| -------------------------- | --------------------- |
+| Site                       | http://localhost:8080 |
+| Comments server (Remark42) | http://localhost:8081 |
+| Mail sink (Mailpit)        | http://localhost:8025 |
+
+The ports listen on `127.0.0.1` only. `MUFFEL_BIND=0.0.0.0` in `.env` opens them
+to the network.
 
 The `builder` builds the site into a new release folder and switches the link
 `current` atomically. It keeps running: every `MUFFEL_CHECK_INTERVAL_SECONDS`
