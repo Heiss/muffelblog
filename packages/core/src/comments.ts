@@ -30,24 +30,31 @@ function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
-function toComment(raw: unknown): RemarkComment | string {
-  if (!isObject(raw)) return 'not an object';
-  const { id, pid, text, user, time, locator } = raw;
+/** Why a raw comment is unusable, or null when it is fine. */
+function commentProblem(raw: Record<string, unknown>): string | null {
+  const { id, text, user, time } = raw;
   if (typeof id !== 'string' || id === '') return 'no id';
   if (typeof text !== 'string') return `comment ${id}: no text`;
   if (!isObject(user) || typeof user.name !== 'string')
     return `comment ${id}: no author`;
-  if (typeof time !== 'string' || Number.isNaN(Date.parse(time))) {
+  if (typeof time !== 'string' || Number.isNaN(Date.parse(time)))
     return `comment ${id}: invalid time`;
-  }
+  return null;
+}
+
+function toComment(raw: unknown): RemarkComment | string {
+  if (!isObject(raw)) return 'not an object';
+  const problem = commentProblem(raw);
+  if (problem !== null) return problem;
+  const { pid, locator } = raw;
   const url =
     isObject(locator) && typeof locator.url === 'string' ? locator.url : '';
   return {
-    id,
+    id: raw.id as string,
     ...(typeof pid === 'string' && pid !== '' ? { pid } : {}),
-    text,
-    user: { name: user.name },
-    time,
+    text: raw.text as string,
+    user: { name: (raw.user as { name: string }).name },
+    time: raw.time as string,
     ...(raw.delete === true ? { delete: true } : {}),
     locator: { url },
   };
@@ -93,85 +100,115 @@ async function renderComment(html: string): Promise<string> {
   return out;
 }
 
+const byTime = (a: RemarkComment, b: RemarkComment): number =>
+  Date.parse(a.time) - Date.parse(b.time) ||
+  (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+
+type ParentOf = (c: RemarkComment) => string | undefined;
+
+/** The members of the loop the parent chain of `start` runs into, if any. */
+function loopFrom(
+  start: RemarkComment,
+  byId: Map<string, RemarkComment>,
+  parentOf: ParentOf,
+): string[] {
+  const order = new Map<string, number>();
+  let cur: string | undefined = start.id;
+  while (cur !== undefined && !order.has(cur)) {
+    order.set(cur, order.size);
+    const node = byId.get(cur);
+    cur = node ? parentOf(node) : undefined;
+  }
+  return cur === undefined ? [] : [...order.keys()].slice(order.get(cur) ?? 0);
+}
+
+/**
+ * Members of a loop of parents (A answers B, B answers A): the oldest member
+ * of each loop becomes a root, so nothing is lost and nothing loops forever.
+ */
+function loopRootsOf(
+  comments: readonly RemarkComment[],
+  byId: Map<string, RemarkComment>,
+  parentOf: ParentOf,
+): Set<string> {
+  const inLoop = new Set(comments.flatMap((c) => loopFrom(c, byId, parentOf)));
+  const roots = new Set<string>();
+  const handled = new Set<string>();
+  for (const c of comments.filter((x) => inLoop.has(x.id)).sort(byTime)) {
+    if (handled.has(c.id)) continue;
+    roots.add(c.id);
+    let cur: string | undefined = c.id;
+    while (cur !== undefined && !handled.has(cur)) {
+      handled.add(cur);
+      const node = byId.get(cur);
+      cur = node ? parentOf(node) : undefined;
+    }
+  }
+  return roots;
+}
+
+interface Tree {
+  roots: RemarkComment[];
+  children: Map<string, RemarkComment[]>;
+}
+
+function splitTree(
+  comments: readonly RemarkComment[],
+  parentOf: ParentOf,
+  loopRoots: Set<string>,
+): Tree {
+  const tree: Tree = { roots: [], children: new Map() };
+  for (const c of [...comments].sort(byTime)) {
+    const parent = parentOf(c);
+    if (parent === undefined || loopRoots.has(c.id)) {
+      tree.roots.push(c);
+      continue;
+    }
+    const list = tree.children.get(parent) ?? [];
+    list.push(c);
+    tree.children.set(parent, list);
+  }
+  return tree;
+}
+
+async function buildNode(
+  tree: Tree,
+  c: RemarkComment,
+  path: Set<string>,
+): Promise<CommentNode | undefined> {
+  const replies: CommentNode[] = [];
+  const next = new Set(path).add(c.id);
+  for (const r of tree.children.get(c.id) ?? []) {
+    if (next.has(r.id)) continue;
+    const node = await buildNode(tree, r, next);
+    if (node) replies.push(node);
+  }
+  if (c.delete && replies.length === 0) return undefined;
+  return {
+    id: c.id,
+    author: c.user.name,
+    time: new Date(c.time).toISOString(),
+    html: c.delete ? '' : await renderComment(c.text),
+    deleted: c.delete === true,
+    replies,
+  };
+}
+
 /** Builds the tree: oldest first, replies below their parent. Nothing is lost, loops are broken. */
 export async function toTree(
   comments: readonly RemarkComment[],
 ): Promise<CommentNode[]> {
   const byId = new Map(comments.map((c) => [c.id, c]));
-  const byTime = (a: RemarkComment, b: RemarkComment): number =>
-    Date.parse(a.time) - Date.parse(b.time) ||
-    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-
-  const parentOf = (c: RemarkComment): string | undefined =>
+  const parentOf: ParentOf = (c) =>
     c.pid && byId.has(c.pid) ? c.pid : undefined;
-
-  // Members of a loop of parents (A answers B, B answers A): the oldest member
-  // of each loop becomes a root, so nothing is lost and nothing loops forever.
-  const inLoop = new Set<string>();
-  for (const start of comments) {
-    const order = new Map<string, number>();
-    let cur: string | undefined = start.id;
-    while (cur !== undefined && !order.has(cur)) {
-      order.set(cur, order.size);
-      const node: RemarkComment | undefined = byId.get(cur);
-      cur = node ? parentOf(node) : undefined;
-    }
-    if (cur !== undefined) {
-      const from = order.get(cur) ?? 0;
-      [...order.keys()].slice(from).forEach((id) => inLoop.add(id));
-    }
-  }
-  const loopRoots = new Set<string>();
-  const handled = new Set<string>();
-  for (const c of [...comments].filter((x) => inLoop.has(x.id)).sort(byTime)) {
-    if (handled.has(c.id)) continue;
-    loopRoots.add(c.id);
-    let cur: string | undefined = c.id;
-    while (cur !== undefined && !handled.has(cur)) {
-      handled.add(cur);
-      const node: RemarkComment | undefined = byId.get(cur);
-      cur = node ? parentOf(node) : undefined;
-    }
-  }
-
-  const children = new Map<string, RemarkComment[]>();
-  const roots: RemarkComment[] = [];
-  for (const c of [...comments].sort(byTime)) {
-    const parent = parentOf(c);
-    if (parent === undefined || loopRoots.has(c.id)) {
-      roots.push(c);
-    } else {
-      const list = children.get(parent) ?? [];
-      list.push(c);
-      children.set(parent, list);
-    }
-  }
-
-  const build = async (
-    c: RemarkComment,
-    path: Set<string>,
-  ): Promise<CommentNode | undefined> => {
-    const replies: CommentNode[] = [];
-    const next = new Set(path).add(c.id);
-    for (const r of children.get(c.id) ?? []) {
-      if (next.has(r.id)) continue;
-      const node = await build(r, next);
-      if (node) replies.push(node);
-    }
-    if (c.delete && replies.length === 0) return undefined;
-    return {
-      id: c.id,
-      author: c.user.name,
-      time: new Date(c.time).toISOString(),
-      html: c.delete ? '' : await renderComment(c.text),
-      deleted: c.delete === true,
-      replies,
-    };
-  };
-
+  const tree = splitTree(
+    comments,
+    parentOf,
+    loopRootsOf(comments, byId, parentOf),
+  );
   const result: CommentNode[] = [];
-  for (const root of roots) {
-    const node = await build(root, new Set());
+  for (const root of tree.roots) {
+    const node = await buildNode(tree, root, new Set());
     if (node) result.push(node);
   }
   return result;

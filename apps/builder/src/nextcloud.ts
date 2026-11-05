@@ -9,6 +9,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import path from 'node:path';
+import { hasExtras, isHttp, tryUrl } from '@muffelblog/core';
 import { pruneReleases, releaseId, swapCurrent } from './release.ts';
 
 export interface NextcloudConfig {
@@ -18,6 +19,60 @@ export interface NextcloudConfig {
   token: string;
   /** Password of the share (a secret, never logged). */
   password: string;
+}
+
+function nextcloudUrl(rawUrl: string): string {
+  const url = tryUrl(rawUrl);
+  if (url === null)
+    throw new Error(`NEXTCLOUD_URL is not an address: ${rawUrl}`);
+  if (!isHttp(url) || hasExtras(url)) {
+    throw new Error(
+      `NEXTCLOUD_URL must be like https://cloud.example.org (no login, query or fragment): ${rawUrl}`,
+    );
+  }
+  return url.href.replace(/\/+$/, '');
+}
+
+function shareToken(env: Record<string, string | undefined>): string {
+  const token = env.NEXTCLOUD_SHARE_TOKEN?.trim() ?? '';
+  if (!/^[A-Za-z0-9]{3,64}$/.test(token)) {
+    throw new Error(
+      'NEXTCLOUD_SHARE_TOKEN is missing or not a share token (letters and digits only)',
+    );
+  }
+  return token;
+}
+
+function readPasswordFile(file: string): string {
+  try {
+    return readFileSync(file, 'utf8').replace(/\r?\n$/, '');
+  } catch (error) {
+    throw new Error(
+      `NEXTCLOUD_SHARE_PASSWORD_FILE could not be read: ${file}`,
+      {
+        cause: error,
+      },
+    );
+  }
+}
+
+function sharePassword(env: Record<string, string | undefined>): string {
+  const direct = env.NEXTCLOUD_SHARE_PASSWORD ?? '';
+  const file = env.NEXTCLOUD_SHARE_PASSWORD_FILE?.trim();
+  if (direct !== '' && file) {
+    throw new Error(
+      'Set either NEXTCLOUD_SHARE_PASSWORD or NEXTCLOUD_SHARE_PASSWORD_FILE, not both',
+    );
+  }
+  const password = file ? readPasswordFile(file) : direct;
+  if (password === '') {
+    // The share link gives access to the whole folder, the password is the
+    // only protection (see okf/content/nextcloud-source.md).
+    throw new Error(
+      'NEXTCLOUD_SHARE_PASSWORD (or NEXTCLOUD_SHARE_PASSWORD_FILE) is required',
+    );
+  }
+  return password;
 }
 
 /**
@@ -31,61 +86,10 @@ export function nextcloudConfig(
 ): NextcloudConfig | undefined {
   const rawUrl = env.NEXTCLOUD_URL?.trim();
   if (!rawUrl) return undefined;
-
-  let url: URL;
-  try {
-    url = new URL(rawUrl);
-  } catch {
-    throw new Error(`NEXTCLOUD_URL is not an address: ${rawUrl}`);
-  }
-  if (
-    (url.protocol !== 'https:' && url.protocol !== 'http:') ||
-    url.username !== '' ||
-    url.password !== '' ||
-    url.search !== '' ||
-    url.hash !== ''
-  ) {
-    throw new Error(
-      `NEXTCLOUD_URL must be like https://cloud.example.org (no login, query or fragment): ${rawUrl}`,
-    );
-  }
-
-  const token = env.NEXTCLOUD_SHARE_TOKEN?.trim() ?? '';
-  if (!/^[A-Za-z0-9]{3,64}$/.test(token)) {
-    throw new Error(
-      'NEXTCLOUD_SHARE_TOKEN is missing or not a share token (letters and digits only)',
-    );
-  }
-
-  let password = env.NEXTCLOUD_SHARE_PASSWORD ?? '';
-  const file = env.NEXTCLOUD_SHARE_PASSWORD_FILE?.trim();
-  if (password !== '' && file) {
-    throw new Error(
-      'Set either NEXTCLOUD_SHARE_PASSWORD or NEXTCLOUD_SHARE_PASSWORD_FILE, not both',
-    );
-  }
-  if (file) {
-    try {
-      password = readFileSync(file, 'utf8').replace(/\r?\n$/, '');
-    } catch (error) {
-      throw new Error(
-        `NEXTCLOUD_SHARE_PASSWORD_FILE could not be read: ${file}`,
-        { cause: error },
-      );
-    }
-  }
-  if (password === '') {
-    // The share link gives access to the whole folder, the password is the
-    // only protection (see okf/content/nextcloud-source.md).
-    throw new Error(
-      'NEXTCLOUD_SHARE_PASSWORD (or NEXTCLOUD_SHARE_PASSWORD_FILE) is required',
-    );
-  }
-
   return {
-    url: url.href.replace(/\/+$/, ''),
-    token,
-    password,
+    url: nextcloudUrl(rawUrl),
+    token: shareToken(env),
+    password: sharePassword(env),
   };
 }
 

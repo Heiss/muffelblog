@@ -165,7 +165,7 @@ jobs:
         if: failure()
         run: |
           echo '--- builder status'; docker compose exec -T builder cat /data/state/status.json || true
-          docker compose logs --no-color --tail 25 remark42 mailpit web webmention-io
+          docker compose logs --no-color --tail 40 builder remark42 mailpit web webmention-io
       - run: docker compose down --volumes
 
   # The supported versions (supported-versions.json) for the contract matrix.

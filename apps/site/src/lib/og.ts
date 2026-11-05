@@ -65,20 +65,71 @@ const el = (
   children?: unknown,
 ): Node => ({ type, props: { style, children } });
 
-/** Renders the card as a PNG of 1200 x 630 pixels. */
-export async function renderOgCard(card: OgCard): Promise<Buffer> {
-  const title = shorten(card.title, 110);
-  const excerpt = card.excerpt ? shorten(card.excerpt, 160) : '';
+const MARGIN = { x: 72, y: 56 };
+const BAR = 24;
+
+function titleBlock(title: string, excerpt: string): Node {
+  return el('div', { display: 'flex', flexDirection: 'column' }, [
+    el(
+      'div',
+      {
+        display: 'flex',
+        fontSize: title.length > 60 ? 54 : 68,
+        fontWeight: 700,
+        lineHeight: 1.15,
+      },
+      title,
+    ),
+    ...(excerpt
+      ? [
+          el(
+            'div',
+            {
+              display: 'flex',
+              marginTop: 24,
+              fontSize: 30,
+              color: COLORS.muted,
+              lineHeight: 1.35,
+            },
+            excerpt,
+          ),
+        ]
+      : []),
+  ]);
+}
+
+function footer(card: OgCard): Node {
+  return el(
+    'div',
+    {
+      display: 'flex',
+      justifyContent: 'space-between',
+      fontSize: 28,
+      color: COLORS.muted,
+    },
+    [
+      el(
+        'div',
+        { display: 'flex', fontWeight: 700, color: COLORS.text },
+        card.siteName,
+      ),
+      el('div', { display: 'flex' }, card.date),
+    ],
+  );
+}
+
+/** The card: a colored bar on the left, kind, title with excerpt, site and date. */
+function cardTree(card: OgCard): Node {
   const content = el(
     'div',
     {
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
-      // Without box-sizing in satori: the size here excludes the padding.
-      width: OG_WIDTH - 24 - 2 * 72,
-      height: OG_HEIGHT - 2 * 56,
-      margin: '56px 72px',
+      // Without box-sizing in satori: the size here excludes the margin.
+      width: OG_WIDTH - BAR - 2 * MARGIN.x,
+      height: OG_HEIGHT - 2 * MARGIN.y,
+      margin: `${MARGIN.y}px ${MARGIN.x}px`,
     },
     [
       el(
@@ -91,53 +142,14 @@ export async function renderOgCard(card: OgCard): Promise<Buffer> {
         },
         card.kindLabel,
       ),
-      el('div', { display: 'flex', flexDirection: 'column' }, [
-        el(
-          'div',
-          {
-            display: 'flex',
-            fontSize: title.length > 60 ? 54 : 68,
-            fontWeight: 700,
-            lineHeight: 1.15,
-          },
-          title,
-        ),
-        ...(excerpt
-          ? [
-              el(
-                'div',
-                {
-                  display: 'flex',
-                  marginTop: 24,
-                  fontSize: 30,
-                  color: COLORS.muted,
-                  lineHeight: 1.35,
-                },
-                excerpt,
-              ),
-            ]
-          : []),
-      ]),
-      el(
-        'div',
-        {
-          display: 'flex',
-          justifyContent: 'space-between',
-          fontSize: 28,
-          color: COLORS.muted,
-        },
-        [
-          el(
-            'div',
-            { display: 'flex', fontWeight: 700, color: COLORS.text },
-            card.siteName,
-          ),
-          el('div', { display: 'flex' }, card.date),
-        ],
+      titleBlock(
+        shorten(card.title, 110),
+        card.excerpt ? shorten(card.excerpt, 160) : '',
       ),
+      footer(card),
     ],
   );
-  const tree = el(
+  return el(
     'div',
     {
       display: 'flex',
@@ -150,14 +162,18 @@ export async function renderOgCard(card: OgCard): Promise<Buffer> {
     [
       el('div', {
         display: 'flex',
-        width: 24,
+        width: BAR,
         height: OG_HEIGHT,
         backgroundColor: COLORS.accent,
       }),
       content,
     ],
   );
-  const svg = await satori(tree as never, {
+}
+
+/** Renders the card as a PNG of 1200 x 630 pixels. */
+export async function renderOgCard(card: OgCard): Promise<Buffer> {
+  const svg = await satori(cardTree(card) as never, {
     width: OG_WIDTH,
     height: OG_HEIGHT,
     fonts: await loadFonts(),

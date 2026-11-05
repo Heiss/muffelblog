@@ -49,35 +49,27 @@ function startsWith(data: Buffer, text: string, offset = 0): boolean {
   );
 }
 
+const hasBytes = (data: Buffer, bytes: number[]) =>
+  bytes.every((b, i) => data[i] === b);
+
+/** MP3: an ID3 tag or an MPEG frame sync at the start. */
+const isMp3 = (data: Buffer) =>
+  startsWith(data, 'ID3') ||
+  (data.length >= 2 && data[0] === 0xff && ((data[1] ?? 0) & 0xe0) === 0xe0);
+
+const SIGNATURES: Record<Sniff, (data: Buffer) => boolean> = {
+  pdf: (d) => startsWith(d, '%PDF-'),
+  mp3: isMp3,
+  ogg: (d) => startsWith(d, 'OggS'),
+  wav: (d) => startsWith(d, 'RIFF') && startsWith(d, 'WAVE', 8),
+  flac: (d) => startsWith(d, 'fLaC'),
+  mp4: (d) => startsWith(d, 'ftyp', 4),
+  webm: (d) => hasBytes(d, [0x1a, 0x45, 0xdf, 0xa3]),
+};
+
 /** Does the start of the data match the expected file signature? */
 export function sniffMatches(kind: Sniff, data: Buffer): boolean {
-  switch (kind) {
-    case 'pdf':
-      return startsWith(data, '%PDF-');
-    case 'mp3':
-      return (
-        startsWith(data, 'ID3') ||
-        (data.length >= 2 &&
-          data[0] === 0xff &&
-          ((data[1] ?? 0) & 0xe0) === 0xe0)
-      );
-    case 'ogg':
-      return startsWith(data, 'OggS');
-    case 'wav':
-      return startsWith(data, 'RIFF') && startsWith(data, 'WAVE', 8);
-    case 'flac':
-      return startsWith(data, 'fLaC');
-    case 'mp4':
-      return startsWith(data, 'ftyp', 4);
-    case 'webm':
-      return (
-        data.length >= 4 &&
-        data[0] === 0x1a &&
-        data[1] === 0x45 &&
-        data[2] === 0xdf &&
-        data[3] === 0xa3
-      );
-  }
+  return SIGNATURES[kind](data);
 }
 
 /** Content type of a served media file, by extension. Null for anything unknown. */

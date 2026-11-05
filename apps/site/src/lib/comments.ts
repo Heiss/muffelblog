@@ -1,3 +1,5 @@
+import { isPlainOrigin, tryUrl } from '@muffelblog/core';
+
 export interface CommentsConfig {
   /** Origin of the Remark42 server as the visitor's browser reaches it. */
   host: string;
@@ -16,20 +18,9 @@ export function commentsConfig(
   const raw = env.COMMENTS_URL?.trim();
   if (!raw) return undefined;
 
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new Error(`COMMENTS_URL is not an address: ${raw}`);
-  }
-  const plainOrigin =
-    (url.protocol === 'https:' || url.protocol === 'http:') &&
-    url.username === '' &&
-    url.password === '' &&
-    (url.pathname === '/' || url.pathname === '') &&
-    url.search === '' &&
-    url.hash === '';
-  if (!plainOrigin) {
+  const url = tryUrl(raw);
+  if (url === null) throw new Error(`COMMENTS_URL is not an address: ${raw}`);
+  if (!isPlainOrigin(url)) {
     throw new Error(
       `COMMENTS_URL must be an origin like https://comments.example.org (no path, query or login): ${raw}`,
     );

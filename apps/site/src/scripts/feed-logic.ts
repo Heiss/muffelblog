@@ -28,20 +28,25 @@ const BLOCK =
  * before anything is loaded.
  */
 export function blockPath(raw: string, origin: string): string | null {
+  const url = sameOriginUrl(raw, origin);
+  if (url === null) return null;
+  // Only unchanged paths: `/../x/` would otherwise be silently rewritten.
+  const expected = raw.startsWith('/') ? raw : raw.slice(origin.length);
+  if (url.pathname !== expected) return null;
+  return BLOCK.test(url.pathname) ? url.pathname : null;
+}
+
+/** The address on the own origin without query or fragment, or null. */
+function sameOriginUrl(raw: string, origin: string): URL | null {
   if (raw === '' || raw.startsWith('//')) return null;
+  if (raw.includes('?') || raw.includes('#')) return null;
   let url: URL;
   try {
     url = new URL(raw, origin);
   } catch {
     return null;
   }
-  if (url.origin !== origin || url.search !== '' || url.hash !== '')
-    return null;
-  if (raw.includes('?') || raw.includes('#')) return null;
-  // Only unchanged paths: `/../x/` would otherwise be silently rewritten.
-  const expected = raw.startsWith('/') ? raw : raw.slice(origin.length);
-  if (url.pathname !== expected) return null;
-  return BLOCK.test(url.pathname) ? url.pathname : null;
+  return url.origin === origin ? url : null;
 }
 
 /** Identifiers that are not in the list yet, without duplicates, in order. */
