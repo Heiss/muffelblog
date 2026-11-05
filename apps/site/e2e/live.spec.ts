@@ -113,6 +113,7 @@ test.describe('Banner "N new entries"', () => {
     state.id = 'build-2';
     await page.clock.fastForward(61_000);
     await expect.poll(() => state.lists).toBe(1);
+    await page.waitForTimeout(300); // time to count before the negative check
     await expect(page.locator('[data-live-banner]')).toBeHidden();
   });
 
@@ -123,7 +124,8 @@ test.describe('Banner "N new entries"', () => {
     await page.clock.runFor(1000);
     await page.clock.fastForward(61_000);
     await page.clock.fastForward(61_000);
-    expect(state.builds).toBeGreaterThanOrEqual(3);
+    // The requests of the timers arrive a moment after the clock has moved.
+    await expect.poll(() => state.builds).toBeGreaterThanOrEqual(3);
     expect(state.lists).toBe(0);
   });
 
@@ -138,6 +140,7 @@ test.describe('Banner "N new entries"', () => {
     state.extra = [newEntry('post:p')];
     await page.clock.fastForward(61_000);
     await expect.poll(() => state.lists).toBe(1);
+    await page.waitForTimeout(300); // time to count before the negative check
     await expect(page.locator('[data-live-banner]')).toBeHidden();
 
     state.id = 'build-3';
@@ -155,6 +158,7 @@ test.describe('Banner "N new entries"', () => {
     state.extra = [newEntry('post:other', 'post', ['other'])];
     await page.clock.fastForward(61_000);
     await expect.poll(() => state.lists).toBe(1);
+    await page.waitForTimeout(300); // time to count before the negative check
     await expect(page.locator('[data-live-banner]')).toBeHidden();
     state.id = 'build-3';
     state.extra = [newEntry('post:t', 'post', ['tooling'])];
@@ -171,6 +175,8 @@ test.describe('Banner "N new entries"', () => {
       await page.goto(url);
       await page.clock.fastForward(121_000);
     }
+    // Real time for a request that would still be on its way.
+    await page.waitForTimeout(300);
     expect(state.builds).toBe(0);
   });
 
@@ -189,6 +195,7 @@ test.describe('Banner "N new entries"', () => {
       });
     });
     await page.clock.fastForward(181_000);
+    await page.waitForTimeout(300);
     expect(state.builds).toBe(before);
     await page.evaluate(() => {
       Object.defineProperty(document, 'visibilityState', {
