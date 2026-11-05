@@ -51,8 +51,8 @@ function isPublicIPv4(parts: number[]): boolean {
 
 /** Replaces a trailing dotted IPv4 part (`::ffff:1.2.3.4`) by two groups. */
 function expandDottedTail(text: string): string {
-  const dotted = /\d+\.\d+\.\d+\.\d+$/.exec(text)?.[0];
-  if (dotted === undefined) return text;
+  const dotted = text.slice(text.lastIndexOf(':') + 1);
+  if (!dotted.includes('.')) return text;
   const [a, b, c, d] = ipv4Parts(dotted) as [number, number, number, number];
   const hi = (a << 8) | b;
   const lo = (c << 8) | d;
