@@ -1,7 +1,31 @@
-export interface MatomoConfig {
-  /** Address of the Matomo instance, ending with `/`. */
-  base: string;
-  siteId: string;
+import { hasExtras, isHttp, tryUrl } from '@muffelblog/core';
+import type { MatomoConfig } from './matomo-commands';
+
+export { matomoCommands, type MatomoConfig } from './matomo-commands';
+
+/** An address the Content Security Policy can name exactly: an origin, or a path ending with `/`. */
+function csPolicySafe(url: URL, raw: string): boolean {
+  if (!isHttp(url) || hasExtras(url)) return false;
+  if (raw.includes('?') || raw.includes('#')) return false;
+  return url.pathname === '/' || raw.endsWith('/');
+}
+
+function requireBoth(raw: string, siteId: string): void {
+  if (raw === '')
+    throw new Error('MATOMO_SITE_ID is set, but MATOMO_URL is not');
+  if (siteId === '')
+    throw new Error('MATOMO_URL is set, but MATOMO_SITE_ID is not');
+}
+
+function matomoUrl(raw: string): URL {
+  const url = tryUrl(raw);
+  if (url === null) throw new Error(`MATOMO_URL is not an address: ${raw}`);
+  if (!csPolicySafe(url, raw)) {
+    throw new Error(
+      `MATOMO_URL must be like https://stats.example.org or https://example.org/matomo/ (a path ends with /, no query or login): ${raw}`,
+    );
+  }
+  return url;
 }
 
 /**
@@ -16,47 +40,12 @@ export function matomoConfig(
   const raw = env.MATOMO_URL?.trim() ?? '';
   const siteId = env.MATOMO_SITE_ID?.trim() ?? '';
   if (raw === '' && siteId === '') return undefined;
-  if (raw === '')
-    throw new Error('MATOMO_SITE_ID is set, but MATOMO_URL is not');
-  if (siteId === '')
-    throw new Error('MATOMO_URL is set, but MATOMO_SITE_ID is not');
-
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new Error(`MATOMO_URL is not an address: ${raw}`);
-  }
-  const hasPath = url.pathname !== '/';
-  const valid =
-    (url.protocol === 'https:' || url.protocol === 'http:') &&
-    url.username === '' &&
-    url.password === '' &&
-    url.search === '' &&
-    url.hash === '' &&
-    !raw.includes('?') &&
-    !raw.includes('#') &&
-    (!hasPath || raw.endsWith('/'));
-  if (!valid) {
-    throw new Error(
-      `MATOMO_URL must be like https://stats.example.org or https://example.org/matomo/ (a path ends with /, no query or login): ${raw}`,
-    );
-  }
+  requireBoth(raw, siteId);
+  const url = matomoUrl(raw);
   if (!/^[1-9][0-9]{0,8}$/.test(siteId)) {
     throw new Error(
       `MATOMO_SITE_ID must be a positive whole number: ${siteId}`,
     );
   }
   return { base: url.href.endsWith('/') ? url.href : `${url.href}/`, siteId };
-}
-
-/** The tracker commands, without cookies (decided by the owner). */
-export function matomoCommands(config: MatomoConfig): unknown[][] {
-  return [
-    ['disableCookies'],
-    ['setTrackerUrl', `${config.base}matomo.php`],
-    ['setSiteId', config.siteId],
-    ['trackPageView'],
-    ['enableLinkTracking'],
-  ];
 }

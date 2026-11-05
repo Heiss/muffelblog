@@ -16,40 +16,36 @@ export interface LiveList {
 
 const KINDS = new Set(['post', 'memo', 'glossary']);
 
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+
+const isDateText = (v: unknown): v is string =>
+  typeof v === 'string' && !Number.isNaN(Date.parse(v));
+
+const isTextList = (v: unknown): v is string[] =>
+  Array.isArray(v) && v.every((t) => typeof t === 'string');
+
+/** One entry of the list, or null when it is not what the site writes. */
+function toEntry(raw: unknown): LiveEntry | null {
+  if (!isRecord(raw)) return null;
+  const { id, kind, date, tags } = raw;
+  if (typeof id !== 'string' || typeof kind !== 'string' || !KINDS.has(kind))
+    return null;
+  if (!isDateText(date) || !isTextList(tags)) return null;
+  return { id, kind: kind as LiveEntry['kind'], date, tags };
+}
+
 /** Reads `/entries.json`. Anything that is not what the site writes gives null. */
 export function parseLive(value: unknown): LiveList | null {
-  if (typeof value !== 'object' || value === null || Array.isArray(value))
+  if (!isRecord(value)) return null;
+  const { limit, entries } = value;
+  if (typeof limit !== 'number' || !Number.isInteger(limit) || limit < 1)
     return null;
-  const { limit, entries } = value as { limit?: unknown; entries?: unknown };
-  if (
-    typeof limit !== 'number' ||
-    !Number.isInteger(limit) ||
-    limit < 1 ||
-    !Array.isArray(entries)
-  )
-    return null;
-  const out: LiveEntry[] = [];
-  for (const raw of entries) {
-    if (typeof raw !== 'object' || raw === null) return null;
-    const { id, kind, date, tags } = raw as Record<string, unknown>;
-    if (
-      typeof id !== 'string' ||
-      typeof kind !== 'string' ||
-      !KINDS.has(kind) ||
-      typeof date !== 'string' ||
-      Number.isNaN(Date.parse(date)) ||
-      !Array.isArray(tags) ||
-      !tags.every((t) => typeof t === 'string')
-    )
-      return null;
-    out.push({
-      id,
-      kind: kind as LiveEntry['kind'],
-      date,
-      tags: tags as string[],
-    });
-  }
-  return { limit, entries: out };
+  if (!Array.isArray(entries)) return null;
+  const out = entries.map(toEntry);
+  return out.every((e): e is LiveEntry => e !== null)
+    ? { limit, entries: out }
+    : null;
 }
 
 export interface Scope {
