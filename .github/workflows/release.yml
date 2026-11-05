@@ -15,6 +15,11 @@ jobs:
   ci:
     name: CI on the tagged commit
     uses: ./.github/workflows/ci.yml
+    # A called workflow gets no more rights than this: CodeQL uploads its
+    # results to code scanning and needs security-events.
+    permissions:
+      contents: read
+      security-events: write
 
   images:
     name: Images
