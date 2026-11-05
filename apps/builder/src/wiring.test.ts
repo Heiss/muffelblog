@@ -15,6 +15,7 @@ import {
   requireSiteUrl,
   single,
   statusWriter,
+  writableDirs,
 } from './wiring.ts';
 
 let dir: string;
@@ -220,5 +221,16 @@ describe('single', () => {
     await second;
     expect(calls).toBe(2);
     expect(lines).toEqual(['task: run failed: down']);
+  });
+});
+
+describe('writableDirs', () => {
+  it('names the data folders, never the checkout of the code', () => {
+    const dirs = builderDirs({ REPO_DIR: '/repo' });
+    expect(writableDirs(dirs)).toEqual({
+      releasesDir: '/data/releases',
+      cacheDir: '/data/cache',
+      stateDir: '/data/state',
+    });
   });
 });
