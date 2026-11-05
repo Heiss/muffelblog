@@ -59,6 +59,14 @@ The colour scheme and the filter you choose are stored in your browser
 website in a post, this blog can tell that website about the link by sending it
 the address of the post and the address of the link.
 
+## Statistics
+
+[DELETE this section if you do not set MATOMO_URL.] This blog counts visits
+with Matomo, run by [PLACEHOLDER: who runs it] at [PLACEHOLDER: address]. Your
+browser sends the address of the page, the referring page, your browser and
+screen data and your IP address [CHECK: anonymized in your Matomo settings?] to
+that server. No cookies are set.
+
 ## Your rights
 
 [CHECK: the rights you owe to visitors in your country, for example access,

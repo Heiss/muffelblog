@@ -28,7 +28,7 @@ http://:2020 {
 	header {
 		# No foreign sources. The hosts below are the allowlists of
 		# packages/core/src/policy.ts (a unit test keeps both in sync).
-		Content-Security-Policy "default-src 'none'; script-src 'self' 'wasm-unsafe-eval' {$COMMENTS_URL:http://localhost:8081}; style-src 'self'; font-src 'self'; img-src 'self' https://upload.wikimedia.org https://raw.githubusercontent.com https://user-images.githubusercontent.com; frame-src https://www.youtube-nocookie.com {$COMMENTS_URL:http://localhost:8081}; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'none'; script-src 'self' 'wasm-unsafe-eval' {$COMMENTS_URL:http://localhost:8081} {$MATOMO_URL}; style-src 'self'; font-src 'self'; img-src 'self' https://upload.wikimedia.org https://raw.githubusercontent.com https://user-images.githubusercontent.com {$MATOMO_URL}; frame-src https://www.youtube-nocookie.com {$COMMENTS_URL:http://localhost:8081}; connect-src 'self' {$MATOMO_URL}; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
 		-Server

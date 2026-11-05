@@ -36,6 +36,14 @@ describe('Content Security Policy of the Caddyfile', () => {
 
   // The origin of the comments server comes from the environment.
   const COMMENTS = '{$COMMENTS_URL:http://localhost:8081}';
+  // The operator's own Matomo, empty when it is not set (MATOMO_URL).
+  const MATOMO = '{$MATOMO_URL}';
+
+  it('names Matomo only through MATOMO_URL, for scripts, requests and the tracking image', async () => {
+    const p = await policy();
+    expect(p.get('connect-src')?.sort()).toEqual(["'self'", MATOMO].sort());
+    expect(p.get('img-src')).toContain(MATOMO);
+  });
 
   it('lets frames load from exactly the embed hosts and the comments server', async () => {
     const frame = (await policy()).get('frame-src') ?? [];
@@ -50,7 +58,7 @@ describe('Content Security Policy of the Caddyfile', () => {
   it('allows scripts only from the own host, the comments server and WebAssembly (search)', async () => {
     const script = (await policy()).get('script-src') ?? [];
     expect(script.sort()).toEqual(
-      ["'self'", "'wasm-unsafe-eval'", COMMENTS].sort(),
+      ["'self'", "'wasm-unsafe-eval'", COMMENTS, MATOMO].sort(),
     );
   });
 
