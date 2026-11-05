@@ -24,6 +24,56 @@ docker compose exec builder cat /data/state/status.json
 began. The log (`docker compose logs builder`) shows every build. The file
 `build.json` on the site carries the id and time of the release that is online.
 
+## Monitoring from outside
+
+The same information is public at `https://blog.example.org/health.json`, so an
+uptime monitor or an automation can read it without access to the server:
+
+```json
+{
+  "state": "ok",
+  "generatedAt": "2026-11-04T10:03:05.000Z",
+  "lastCheck": "2026-11-04T10:03:00.000Z",
+  "lastSuccess": { "id": "20261104T100000Z", "at": "2026-11-04T10:00:00.000Z" },
+  "checkIntervalSeconds": 180
+}
+```
+
+| Field                  | Meaning                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `state`                | `ok`, or `failing` when the last check or build failed                       |
+| `lastCheck`            | When the builder last looked at its sources                                  |
+| `lastSuccess`          | The release that is online (id) and when it was built                        |
+| `failingSince`         | Only while failing: since when                                               |
+| `checkIntervalSeconds` | How often the builder checks, so a monitor can tell when the data is too old |
+| `generatedAt`          | When the file was written                                                    |
+
+The builder rewrites the file at **every check**, inside the release that is
+online. It contains **no error text** (that can hold internal addresses); read
+the reason from `state/status.json` or the log.
+
+:::caution[A static file cannot say "dead"]
+The file is served like any other page, so the HTTP status is `200` also when
+`state` is `failing`, and when the builder has stopped the file just stays as it
+was. A monitor therefore has to look at the content: `state` **and** the age of
+`lastCheck`. A check that works in cron, Healthchecks-style scripts or most
+automation tools (needs `jq`):
+
+```sh
+curl -fsS https://blog.example.org/health.json | jq -e '
+  .state == "ok" and
+  ((now - (.lastCheck | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601)) < (.checkIntervalSeconds * 3))'
+```
+
+It exits with `0` when all is well and `1` otherwise. The factor 3 leaves room
+for a build that takes a few minutes. Before the first release is online the
+file does not exist (`404`).
+:::
+
+To be **told** instead of asking, use the alert webhook below: it sends a message
+when a failure begins and when it is over, and you can build automations on it.
+`/health.json` is for polling, the webhook is for pushing.
+
 ## Failure reports
 
 Whatever fails (Nextcloud, Memos or Remark42 unreachable, a failed build), the

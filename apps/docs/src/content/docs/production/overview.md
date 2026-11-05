@@ -37,6 +37,13 @@ absolute. **Decide it early**: comments and RSS identifiers depend on the addres
 Remark42 can move comments to a new address, but webmentions (planned) cannot be
 moved.
 
+## HTTPS and HSTS
+
+Once HTTPS works, consider `Strict-Transport-Security` at your proxy (the examples
+leave it out because the same configuration also serves plain HTTP in the demo).
+Start with a short `max-age`, for example `300`, and raise it later: browsers
+remember the header, and it cannot be undone from the server.
+
 ## What every setup must do
 
 1. Serve the files of `current/` for the blog host.
@@ -45,7 +52,7 @@ moved.
    - `Content-Security-Policy`, exactly as in the example for your proxy
    - `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`
 3. Cache `/_astro/*` for a long time (the files carry a hash in their name) and
-   serve `/build.json` with `Cache-Control: no-cache`.
+   serve `/build.json` and `/health.json` with `Cache-Control: no-cache`.
 4. Answer unknown pages with `404.html` and status 404.
 5. Forward the comments host to Remark42 and **refuse requests that carry
    `Authorization: Basic ...`**. That header is the administrator login; it must

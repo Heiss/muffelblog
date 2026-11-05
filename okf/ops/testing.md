@@ -14,6 +14,11 @@ generated: { by: claude-code/web, at: 2026-11-02T14:40:00Z }
   mention sync. External services are replaced by mocks and sample responses.
 * **[E]** Unit tests with Vitest.
 * **[E]** E2E tests with Playwright, in the browser against the built site.
+* **[E]** Accessibility: `e2e/a11y.spec.ts` runs axe (WCAG 2.1 A and AA) on the
+  main page types and on the feed in every theme, and a self-test with broken
+  HTML proves that the check finds problems. Automated checks find only a part of
+  the problems; a look with a screen reader and the keyboard is still open
+  (2026-11-05).
 * **[E]** Contract tests against real test instances (Nextcloud, Memos,
   Remark42, mail sink as containers).
 * **[E]** The whole suite runs on every pull request, so no error reaches

@@ -253,9 +253,10 @@ Applies to every work package in addition to its own criteria:
     images).
   * [x] SVG, HTML, files that are too large and files whose content does not
     match the extension are rejected; redirects are not followed.
-  * [ ] Internal IP targets are rejected. The base address is configuration of
-    the operator and redirects are blocked; a general SSRF protection for
-    foreign URLs follows with the mention avatars (W14).
+  * [x] Redirects are blocked. Internal IP targets are **not** rejected, on
+    purpose: the base address is configuration of the operator and is often on a
+    private network. The general protection for foreign URLs is `safeFetch` (W15),
+    see [Security review](/security/review.md).
   * [x] A fetch error does not make existing memos disappear: the build stops,
     the last good version stays online.
   * [x] Test with sample responses in the shape of the API (fixtures and imitated
@@ -540,14 +541,20 @@ Applies to every work package in addition to its own criteria:
 * Depends on: W12, W13, W14, W15
 * Decisions: backup target and rhythm, alert channel (O18), statistics (O19).
 * DoD:
-  * [ ] Backup and restore of Remark42 and state are tested.
-  * [ ] Security review (secrets, SSRF, sanitizing, headers) without open
-    findings.
-  * [ ] Runbook for disruptions (source not reachable, build broken, domain
-    change).
-  * [ ] All `[U]` points in the bundle are checked or accepted knowingly.
-  * [ ] The tag workflow runs the full suite again and publishes no images if
-    it is red.
+  * [x] Backup and restore of Remark42 are tested (`docker/moderation-flow.sh`;
+    restore works into an empty Remark42). The state is rebuilt from the sources.
+  * [~] Security review (secrets, SSRF, sanitizing, headers): done, see
+    [Security review](/security/review.md). Two findings were fixed; the builder
+    still runs as `root` and HSTS is left to the operator (open, with reasons).
+  * [x] Runbook for disruptions (source not reachable, build broken, roll back,
+    disk full, mail, domain change, leaked secret): `production/runbook` in the
+    docs.
+  * [~] `[U]` points: three were checked and settled (variables in Compose,
+    WebDAV of public shares, the `last` endpoint of Remark42); the others stay
+    `[U]` knowingly because they need a real domain, a real mail provider or a
+    browser (listed in the open points).
+  * [x] The tag workflow runs the full suite again (`needs: ci`) and publishes no
+    images if it is red.
 
 ## W17 - Go-live
 

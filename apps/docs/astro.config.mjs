@@ -23,7 +23,11 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Start',
-          items: [{ slug: 'start/what-is-it' }, { slug: 'start/quickstart' }],
+          items: [
+            { slug: 'start/what-is-it' },
+            { slug: 'start/quickstart' },
+            { slug: 'start/agent-install' },
+          ],
         },
         {
           label: 'Tutorial',
@@ -51,6 +55,7 @@ export default defineConfig({
             { slug: 'production/own-proxy' },
             { slug: 'production/own-caddy' },
             { slug: 'production/operations' },
+            { slug: 'production/runbook' },
           ],
         },
         {

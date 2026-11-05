@@ -25,6 +25,8 @@ export interface PairState {
 
 export interface WebmentionState {
   version: 1;
+  /** Origin of `SITE_URL` the entries were stored under. A change resets the state quietly. */
+  origin?: string;
   /** False until the first run has stored the existing entries as already sent. */
   initialized: boolean;
   /** What is known about the hosts of the targets. */
@@ -125,6 +127,19 @@ export async function runWebmentionSend(
     );
   }
   const state: WebmentionState = structuredClone(previous);
+  const origin = new URL(deps.siteUrl).origin;
+  if (state.origin !== undefined && state.origin !== origin) {
+    // The domain changed: every entry has a new address, so all of them would
+    // look new and every link would be reported again. Treat it like a first
+    // start instead: store the entries, send nothing, forget the old pairs.
+    deps.log(
+      `webmentions: the site address changed from ${state.origin} to ${origin}, the entries are stored under the new address without sending`,
+    );
+    state.initialized = false;
+    state.entries = {};
+    state.pairs = {};
+  }
+  state.origin = origin;
   const report: SendReport = {
     baselined: 0,
     sent: 0,

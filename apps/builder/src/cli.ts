@@ -21,6 +21,7 @@ import type { Step } from './release.ts';
 import { createScheduler } from './scheduler.ts';
 import type { AlertEvent, Source, Status } from './scheduler.ts';
 import { fileStore, sourcesFrom } from './serve.ts';
+import { writeHealth } from './health.ts';
 import { createWebmentionRunner } from './webmentions.ts';
 import type { WebmentionSummary } from './scheduler.ts';
 
@@ -147,13 +148,27 @@ async function main(): Promise<void> {
   // addresses), and the builder stops at the start if it is missing.
   let webmentionSummary: WebmentionSummary | undefined;
   let lastStatus: Status | undefined;
-  const writeStatus = (status: Status) => {
+  const writeStatus = async (status: Status) => {
     lastStatus = status;
-    return store.writeStatus(
+    await store.writeStatus(
       webmentionSummary
         ? { ...status, webmentions: webmentionSummary }
         : status,
     );
+    // The public copy (/health.json) goes into the release that is online. A
+    // problem with it is logged and never stops a check.
+    try {
+      await writeHealth(
+        releasesDir,
+        status,
+        settings.checkIntervalSeconds,
+        new Date(),
+      );
+    } catch (error) {
+      log(
+        `health.json not written: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   };
   const sendAlertEvent = async (event: AlertEvent) => {
     log(`${event.kind}: ${event.message}`);

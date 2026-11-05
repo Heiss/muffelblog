@@ -78,7 +78,7 @@ blog.example.org {
 		Referrer-Policy strict-origin-when-cross-origin
 		-Server
 	}
-	@buildjson path /build.json
+	@buildjson path /build.json /health.json
 	header @buildjson Cache-Control "no-cache"
 	@hashed path /_astro/*
 	header @hashed Cache-Control "public, max-age=31536000, immutable"
@@ -121,7 +121,7 @@ server {
     location / {
         try_files $uri $uri/index.html =404;
     }
-    location = /build.json {
+    location ~ ^/(build|health)\.json$ {
         add_header Cache-Control "no-cache" always;
         # add_header in a location replaces the ones above: repeat them here
         add_header Content-Security-Policy "default-src 'none'" always;
@@ -196,8 +196,10 @@ http:
 ```
 
 Set `COMMENTS_URL=https://comments.example.org` in `.env` so the policy names the
-right origin. The two ports are published on all interfaces by `compose.yaml`;
-block them from outside in your firewall.
+right origin. The two ports are published on `127.0.0.1` only (`MUFFEL_BIND`), so
+only a proxy on the same machine reaches them. If your Traefik runs in a
+container, point it at the address of the host that the container can reach, and
+set `MUFFEL_BIND` to that address, never to `0.0.0.0` without a firewall.
 
 ## Client addresses and the rate limit
 

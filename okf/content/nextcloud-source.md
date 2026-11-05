@@ -55,9 +55,10 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 
 * **[V]** Sync with `rclone` (WebDAV) into the `cache` area, polling every 3
   minutes.
-* **[U]** Public shares are reachable through WebDAV at `/public.php/webdav/`.
-  The user name is the share token, the password is the share password. This
-  must be checked against the Nextcloud version before implementation.
+* **[E]** Public shares are reachable through WebDAV at `/public.php/webdav/`.
+  The user name is the share token, the password is the share password (checked
+  by the contract test against a real Nextcloud 35; rclone needs the vendor
+  `other` for this address, `nextcloud` is rejected).
 * **[V]** Change detection through the file list with size and modification
   date or ETag, so a build happens only on a real change.
 
