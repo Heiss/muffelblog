@@ -34,7 +34,9 @@ describe('documentation matches the code', () => {
       ?.replaceAll(
         '{$COMMENTS_URL:http://localhost:8081}',
         'https://comments.example.org',
-      );
+      )
+      // Matomo is optional; the examples show the policy without it.
+      .replaceAll(' {$MATOMO_URL}', '');
     expect(csp).toBeTruthy();
     const page = await read(
       'apps',

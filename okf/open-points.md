@@ -17,7 +17,6 @@ listed with their result, so those references keep working. Cleaned up on
 |---|---|---|
 | O3, O11, O32 | Receiving webmentions (W14) | Before the release, and testable without a domain: production uses webmention.io, tests and the demo use a stand-in that copies the webmention.io API. |
 | O8 | Supported versions | Pinned versions, never "latest". The supported versions are listed in the docs. Contract tests run in parallel for the current and the previous version (Memos and Nextcloud); Renovate opens a PR when a new version appears, the contract test shows whether it works. |
-| O19 | Statistics | View counter per post, memo and term: visitors per day from the access log of our Caddy (only a hash with a daily changing salt, never the address; bots filtered), baked into the HTML at every build, shown publicly on the page. On by default, `MUFFEL_STATS=0` switches it off. GoAccess as an extra container is described in the docs only. |
 
 # B. Open: tasks of the owner for the go-live (W17)
 
@@ -48,6 +47,7 @@ listed with their result, so those references keep working. Cleaned up on
 | O14 | Memo date | `createTime`; title from date and time. |
 | O17 | Social preview images | Done 2026-11-05: one generated image per post, memo and term ([URLs and SEO](/frontend/urls-seo.md)). |
 | O18 | Backup, alerting | `docker/backup.sh`, `docker/restore.sh`, alert webhook `MUFFEL_ALERT_WEBHOOK` (W12, W16). |
+| O19 | Statistics | Decided by the owner 2026-11-05: no counter of our own (a static site would need a service of its own); optional Matomo of the operator through `MATOMO_URL` and `MATOMO_SITE_ID`, without cookies, off by default. |
 | O20 | Feed and RSS | Excerpt at most 200 characters; RSS with full text, 50 entries (`MUFFEL_RSS_ITEMS`, W09). |
 | O21 | Withdrawn articles | Gone (404); a removed entry or link is reported once more through webmention (W15). |
 | O22 | Moderation | Administrator by email, mail on every comment, command line tools. No anti-spam beyond the email login (owner: not wanted for now). |

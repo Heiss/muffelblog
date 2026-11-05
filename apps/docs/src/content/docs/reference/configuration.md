@@ -48,6 +48,13 @@ a message that names the variable; nothing is silently ignored.
 | `MUFFEL_MAIL_PORT`                    | 8025             | Port of the mail sink Mailpit (demo only, `compose.demo.yaml`)                                                           |
 | `COMPOSE_FILE`                        | `compose.yaml`   | Compose files to use, separated by `:`. `docker/init-env.sh --demo` sets `compose.yaml:compose.demo.yaml`                |
 
+## Statistics
+
+| Variable         | Default | Meaning                                                                                                      |
+| ---------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+| `MATOMO_URL`     | empty   | Address of your Matomo (origin, or a path ending with `/`). See [Statistics](/muffelblog/guides/statistics/) |
+| `MATOMO_SITE_ID` | empty   | Id of the site in Matomo. Only together with `MATOMO_URL`                                                    |
+
 ## Content, advanced
 
 | Variable                        | Default | Meaning                                                                                                                                                                          |

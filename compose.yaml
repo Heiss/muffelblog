@@ -62,6 +62,9 @@ services:
       MUFFEL_WEBMENTIONS_ENDPOINT_DAYS: ${MUFFEL_WEBMENTIONS_ENDPOINT_DAYS:-}
       MUFFEL_ALERT_WEBHOOK: ${MUFFEL_ALERT_WEBHOOK:-}
       MUFFEL_ALERT_FORMAT: ${MUFFEL_ALERT_FORMAT:-}
+      # Statistics with your own Matomo (optional, without cookies).
+      MATOMO_URL: ${MATOMO_URL:-}
+      MATOMO_SITE_ID: ${MATOMO_SITE_ID:-}
     depends_on:
       - remark42
     volumes:
@@ -77,6 +80,8 @@ services:
         condition: service_healthy
     environment:
       COMMENTS_URL: ${COMMENTS_URL}
+      # Your Matomo, named in the Content Security Policy (empty: none).
+      MATOMO_URL: ${MATOMO_URL:-}
       # Senders whose X-Forwarded-For is believed: your reverse proxy.
       MUFFEL_TRUSTED_PROXIES: ${MUFFEL_TRUSTED_PROXIES:-private_ranges}
     ports:
