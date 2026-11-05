@@ -50,6 +50,30 @@ function excludeArgs(): string[] {
   return EXCLUDES.flatMap((pattern) => ['--exclude', pattern]);
 }
 
+/** Checks the answer of `rclone lsjson`. */
+export function parseListing(out: string): RemoteFile[] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(out);
+  } catch {
+    throw new Error('Unexpected answer of rclone lsjson (not JSON)');
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error('Unexpected answer of rclone lsjson (not a list)');
+  }
+  return parsed.map((entry: unknown) => {
+    const e = entry as Record<string, unknown>;
+    if (
+      typeof e.Path !== 'string' ||
+      typeof e.Size !== 'number' ||
+      typeof e.ModTime !== 'string'
+    ) {
+      throw new Error('Unexpected entry in the answer of rclone lsjson');
+    }
+    return { path: e.Path, size: e.Size, modTime: e.ModTime };
+  });
+}
+
 /** The public share of a Nextcloud as a `Remote`, through rclone (WebDAV). */
 export function createRcloneRemote(
   config: NextcloudConfig,
@@ -57,54 +81,27 @@ export function createRcloneRemote(
 ): Remote {
   let env: Record<string, string> | undefined;
   async function connection(): Promise<Record<string, string>> {
-    if (!env) {
-      // rclone wants its own "obscured" form of the password; stdin keeps it
-      // out of the process list.
-      const obscured = (
-        await exec(['obscure', '-'], { stdin: config.password })
-      ).trim();
-      env = rcloneEnv(config, obscured);
-    }
+    // rclone wants its own "obscured" form of the password; stdin keeps it
+    // out of the process list.
+    env ??= rcloneEnv(
+      config,
+      (await exec(['obscure', '-'], { stdin: config.password })).trim(),
+    );
     return env;
   }
-
+  const listArgs = [
+    'lsjson',
+    '-R',
+    '--files-only',
+    '--no-mimetype',
+    ...excludeArgs(),
+    ...FLAGS,
+    ':webdav:',
+  ];
   return {
-    async list(): Promise<RemoteFile[]> {
-      const out = await exec(
-        [
-          'lsjson',
-          '-R',
-          '--files-only',
-          '--no-mimetype',
-          ...excludeArgs(),
-          ...FLAGS,
-          ':webdav:',
-        ],
-        { env: await connection() },
-      );
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(out);
-      } catch {
-        throw new Error('Unexpected answer of rclone lsjson (not JSON)');
-      }
-      if (!Array.isArray(parsed)) {
-        throw new Error('Unexpected answer of rclone lsjson (not a list)');
-      }
-      return parsed.map((entry: unknown) => {
-        const e = entry as Record<string, unknown>;
-        if (
-          typeof e.Path !== 'string' ||
-          typeof e.Size !== 'number' ||
-          typeof e.ModTime !== 'string'
-        ) {
-          throw new Error('Unexpected entry in the answer of rclone lsjson');
-        }
-        return { path: e.Path, size: e.Size, modTime: e.ModTime };
-      });
-    },
-
-    async download(destDir: string): Promise<void> {
+    list: async () =>
+      parseListing(await exec(listArgs, { env: await connection() })),
+    download: async (destDir: string) => {
       await exec(['copy', ':webdav:', destDir, ...excludeArgs(), ...FLAGS], {
         env: await connection(),
       });
