@@ -39,18 +39,18 @@ Base: `https://heiss.github.io/muffelblog/`. The raw Markdown of a page is easie
 to read than the HTML:
 `https://raw.githubusercontent.com/Heiss/muffelblog/main/apps/docs/src/content/docs/<path>.md`
 
-| Page (`<path>`)           | Read it when                                                   |
-| ------------------------- | -------------------------------------------------------------- |
-| `start/quickstart`        | The person only wants to try the demo on their machine         |
-| `tutorial/1-prepare`      | Real setup: Nextcloud folder, share, first memo                |
-| `tutorial/2-publish`      | Real setup: `.env`, start, checks, troubleshooting             |
-| `tutorial/3-comments`     | The person wants to try comments and moderation                |
-| `tutorial/4-webmentions`  | The person wants to send webmentions                           |
-| `production/overview`     | To choose between the setups                                   |
-| `production/own-proxy`    | The person has their own reverse proxy (nginx, Caddy, Traefik) |
-| `production/own-caddy`    | The person wants our Caddy with a domain                       |
-| `reference/configuration` | For any variable you are unsure about                          |
-| `production/operations`   | Status, backups, updates, monitoring                           |
+| Page (`<path>`)            | Read it when                                                |
+| -------------------------- | ----------------------------------------------------------- |
+| `start/quickstart`         | The person only wants to try the demo on their machine      |
+| `start/getting-started`    | Real setup: what is needed, `.env`, reverse proxy, start    |
+| `guides/nextcloud`         | The Nextcloud folder and its share                          |
+| `guides/memos`             | Memos for the short notes                                   |
+| `production/reverse-proxy` | Snippets for Caddy, nginx and Traefik; proxy in a container |
+| `guides/comments`          | The person wants to try comments and moderation             |
+| `guides/webmentions`       | The person wants to send webmentions                        |
+| `reference/configuration`  | For any variable you are unsure about                       |
+| `production/operations`    | Status, backups, updates, monitoring                        |
+| `production/host-folder`   | Only if the proxy must serve the files itself (advanced)    |
 
 ## Steps
 
@@ -62,50 +62,49 @@ reach with commands). Do not install software without asking.
 
 - **A. Demo on this machine:** demo content, nothing public, no Nextcloud or
   Memos. Follow `start/quickstart`, then you are done.
-- **B. Real blog behind the person's own reverse proxy:** `compose.yaml` +
-  `compose.production.yaml`. Follow `tutorial/1-prepare`, `tutorial/2-publish`
-  and `production/own-proxy`.
-- **C. Real blog with our Caddy and a domain (HTTPS by itself):** `compose.yaml`
-  - `compose.domain.yaml`. Follow `tutorial/1-prepare`, `tutorial/2-publish`
-    and `production/own-caddy`.
+- **B. Real blog behind the person's reverse proxy:** `compose.yaml` alone.
+  Follow `start/getting-started`. If the person has no reverse proxy yet, point
+  them to the Caddy link on that page; do not set one up unasked.
 
-**2. Sources (B and C).** The person prepares the Nextcloud folder, the public
-share with a password and a public memo themselves: point them to
-`tutorial/1-prepare` and wait. Ask them for `NEXTCLOUD_URL`,
+**2. Sources (B).** The person prepares the Nextcloud folder, the public share
+with a password and a public memo themselves: point them to `guides/nextcloud`
+and `guides/memos` and wait. Ask them for `NEXTCLOUD_URL`,
 `NEXTCLOUD_SHARE_TOKEN` (the part after `/s/`) and `MEMOS_URL`. No Memos token
 exists or is needed.
 
-**3. Ask for the values** (B and C), one at a time: the host names of the blog
-and of the comments (`SITE_URL`, `COMMENTS_URL`; C also `SITE_ADDRESS`,
-`COMMENTS_ADDRESS`), the mail settings (`MAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`,
-`SMTP_USERNAME`), the address of the comment administrator
-(`REMARK_ADMIN_EMAIL`), the language of the interface (`MUFFEL_LANG`: `en`, the
-default, or `de`), and for B the folder that the proxy serves
-(`MUFFEL_RELEASES_DIR`) and the kind of proxy. Mention, but do not push: sending
-webmentions (`MUFFEL_WEBMENTIONS_SEND`) is **off** by default, and it stays off
-unless the person asks for it. Also optional: an alert webhook
+**3. Ask for the values** (B), one at a time: the host names of the blog and of
+the comments (`SITE_URL`, `COMMENTS_URL`), the mail settings (`MAIL_FROM`,
+`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`), the address of the comment
+administrator (`REMARK_ADMIN_EMAIL`), the language of the interface
+(`MUFFEL_LANG`: `en`, the default, or `de`), the kind of reverse proxy and
+whether it runs on the same host outside a container (otherwise `MUFFEL_BIND`
+and `MUFFEL_TRUSTED_PROXIES`, see `production/reverse-proxy`). Mention, but do
+not push: sending webmentions (`MUFFEL_WEBMENTIONS_SEND`) is **off** by default,
+and it stays off unless the person asks for it. Also optional: an alert webhook
 (`MUFFEL_ALERT_WEBHOOK`).
 
 **4. Prepare.** Clone `https://github.com/Heiss/muffelblog.git`, run
-`docker/init-env.sh` (it creates `.env` with its own random secrets and never
-overwrites an existing file). Append the values with `printf 'NAME=%s\n' ...`,
-only for names that are not in `.env` yet (`grep -q '^NAME=' .env`), plus
-`MUFFEL_FIXTURES=` (empty, it switches the demo off) and the two empty password
-lines. Tell the person to open `.env` and type the two passwords. Wait until
+`docker/init-env.sh` (for A: `docker/init-env.sh --demo`; it creates `.env` with
+its own random secrets and never overwrites an existing file). For B, fill in
+the empty lines of `.env` with `sed -i 's|^NAME=$|NAME=value|' .env`, except the
+two password lines. Tell the person to open `.env` and type
+`NEXTCLOUD_SHARE_PASSWORD` and `SMTP_PASSWORD`. Wait until
 `grep -q '^NEXTCLOUD_SHARE_PASSWORD=.' .env` and the same for `SMTP_PASSWORD`
-succeed. Then run `docker compose <files> config -q`; fix what it reports.
+succeed (the mail password may stay empty if the mail server needs no login:
+ask). Then run `docker compose config -q`; fix what it reports.
 
-**5. Reverse proxy (B).** Fetch `production/own-proxy`, write the configuration
-for the person's proxy from its example, show it, and ask before you apply or
-reload it. The Content Security Policy in the example must stay exactly as it is.
+**5. Reverse proxy (B).** Fetch `production/reverse-proxy`, write the two
+forwards for the person's proxy from its example, show them, and ask before you
+apply or reload anything.
 
-**6. Start (after "yes").** `docker compose <files> up -d --build`. Watch
-`docker compose logs builder`; the expected lines and the table of problems are
-in `tutorial/2-publish`. Check `state/status.json` for `"state": "ok"`.
+**6. Start (after "yes").** `docker compose up -d` (for A:
+`docker compose up --build`). Watch `docker compose logs builder`; the table of
+problems is in `start/getting-started`. Check
+`docker compose exec builder cat /data/state/status.json` for `"state": "ok"`.
 
-**7. Check with the person.** They open the blog and see the first post and memo
-(`tutorial/2-publish`). Offer `tutorial/3-comments` and `tutorial/4-webmentions`
-as the next steps, but do not start them unasked.
+**7. Check with the person.** They open the blog and see the first post and
+memo. Offer `guides/comments` and `guides/webmentions` as the next steps, but do
+not start them unasked.
 
 **8. Hand over.** Say what is running, where `.env` is, how to see the state
 (`production/operations`), and what is left for the person: the legal pages of

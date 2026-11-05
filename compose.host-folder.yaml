@@ -1,0 +1,25 @@
+# Advanced: YOUR reverse proxy serves the files of the blog itself.
+#
+#   COMPOSE_FILE=compose.yaml:compose.host-folder.yaml   (in .env)
+#   docker compose up -d
+#
+# What changes compared to compose.yaml:
+#  * Our Caddy is not started: your proxy serves the folder `current` of the
+#    releases directory (a folder on the host) and sets the security headers.
+#  * Remark42 listens on 127.0.0.1, your proxy forwards the comments host to it.
+# The default setup (compose.yaml alone) is simpler: your proxy only forwards.
+# Docs: https://heiss.github.io/muffelblog/production/host-folder/
+
+services:
+  builder:
+    volumes:
+      # Same container path as in compose.yaml, so this entry replaces the volume.
+      - ${MUFFEL_RELEASES_DIR:?set MUFFEL_RELEASES_DIR to a folder on the host, for example /srv/muffelblog/releases}:/data/releases
+
+  web:
+    # Not started: your proxy does its job.
+    profiles: [not-used]
+
+  remark42:
+    ports:
+      - '127.0.0.1:${REMARK_PORT:-8082}:8080'

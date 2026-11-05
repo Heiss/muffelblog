@@ -36,23 +36,40 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 * **[E]** CI job "Compose stack" builds the images, starts the stack and runs
   `docker/smoke.sh`.
 
-# Production variants (2026-11-04)
+# Setup (2026-11-05, replaces the variants of 2026-11-04)
 
-* **[E]** `compose.production.yaml` (decided with the user): your own reverse
-  proxy, shared mount. `web` and `mailpit` are behind profiles and not started;
-  the builder writes into the host folder `MUFFEL_RELEASES_DIR` (bind mount),
-  the proxy serves `current/`; Remark42 listens on `127.0.0.1:${REMARK_PORT}` for
-  the proxy; the SMTP variables are required (fail-closed). A unit test checks
-  that Remark42 is never opened beyond the host.
-* **[E]** `compose.domain.yaml`: our Caddy with `SITE_ADDRESS` and
-  `COMMENTS_ADDRESS` as host names (automatic HTTPS), ports 80 and 443 instead of
-  the local ones.
+* **[E]** (decided by the owner) `compose.yaml` alone is the production setup
+  behind the operator's reverse proxy: `docker/init-env.sh`, fill in `.env`,
+  `docker compose up -d`. Our Caddy stays (owner: Caddy, not nginx) and serves
+  plain HTTP on `127.0.0.1:8080` (blog) and `:8081` (comments); the proxy only
+  adds HTTPS and forwards. Headers, cache rules, 404 and the Basic-auth block
+  stay inside our Caddy.
+* **[E]** Required values fail at `docker compose up` (`${VAR:?}`): `SITE_URL`,
+  `COMMENTS_URL`, `MAIL_FROM`, `REMARK_ADMIN_EMAIL`, `SMTP_HOST`, `SMTP_PORT`,
+  the Remark42 secrets. The sources are checked by the builder at its start.
+  `SMTP_USERNAME`/`SMTP_PASSWORD` are optional (relays without login).
+* **[E]** Visitor address: Caddy believes `X-Forwarded-For` only from
+  `MUFFEL_TRUSTED_PROXIES` (default `private_ranges`) and reads it from the
+  right (`trusted_proxies_strict`), then sets `X-Real-IP` for Remark42.
+* **[E]** `compose.demo.yaml`: Mailpit for the local demo and CI;
+  `docker/init-env.sh --demo` writes local values, `MUFFEL_FIXTURES=demo` and
+  `COMPOSE_FILE=compose.yaml:compose.demo.yaml` into `.env`.
+* **[E]** `compose.host-folder.yaml` (advanced, owner: offer both): the proxy
+  serves the host folder `MUFFEL_RELEASES_DIR` itself, our `web` is not started,
+  Remark42 on `127.0.0.1:${REMARK_PORT}`.
+* **[E]** `compose.domain.yaml` (our Caddy with automatic HTTPS) is removed; the
+  docs link the Caddy quick start for operators without a proxy. The 4-chapter
+  tutorial is folded into Getting started and the guides.
 * **[E]** The Docker health check of `web` asks a port that exists only inside
-  the container (`:2020/healthz`), so it works with a host name as address too.
-* **[U]** Not run for real: a Caddy with a real domain and certificate, and
-  the proxy examples in the documentation against a real nginx/Traefik. The
-  Caddyfile validates with a host name, the merged Compose files are checked in
-  CI (`config -q`).
+  the container (`:2020/healthz`).
+* **[U]** Not run for real: the setup behind a real proxy with a domain and
+  certificate, and the nginx/Traefik snippets. CI starts the demo stack and
+  checks the production files with `config -q`, including that a missing
+  `SITE_URL` is named.
+* **Found while rebuilding:** in the removed variants with our Caddy
+  (`compose.domain.yaml`, profile `own-caddy`) the web service did not get
+  `COMMENTS_URL`, so its CSP named `http://localhost:8081` and would have
+  blocked the comment widget. `compose.yaml` now passes it, a test checks it.
 
 # Services (proposal)
 

@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-05
+* **Update**: Simple setup (decided by the owner): `compose.yaml` alone is production behind the operator's reverse proxy, which only forwards to `127.0.0.1:8080/8081`; Caddy stays; `compose.demo.yaml` + `docker/init-env.sh --demo` for the demo; `compose.host-folder.yaml` as the advanced variant; `compose.domain.yaml` and the tutorial removed; docs: Getting started with the required variables, reverse proxy examples, full configuration table. See [Docker operation](/architecture/docker.md).
 * **Update**: HEIC photos (O36 decided): `heif-convert` in the builder image, content check, limits, converter used for articles and memos; `heic-check.ts` runs in the Compose job; HSTS recorded as the proxy's job (owner's decision).
 * **Update**: W07 banner "N new entries": `entries.json` (newest 20 entries, built with the site), polling of `build.json` every 60 s while the tab is visible, count by series and tag, click shows the top; E2E tests with a controlled clock.
 * **Update**: The builder runs as the user `node` (uid 1000) instead of root (decided by the owner): data folders owned by it, a start check with repair instructions for old volumes, the host folder of the own-proxy setup needs `chown 1000:1000`; CI checks the user and the write access.

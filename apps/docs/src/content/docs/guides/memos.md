@@ -13,6 +13,12 @@ description: Show the public memos of your Memos instance as short posts.
 - The instance must allow anonymous reading of public memos. Without that it
   answers "not logged in" and the build stops.
 - Memos you want on the blog have visibility **Public**. Everything else is ignored.
+- No token: the builder reads like an anonymous visitor.
+
+**Check:** open your Memos address in a private browser window, without logging
+in. If you can read a public memo there, the builder can too. (This is the
+reading of the Memos behaviour by the project, not a test against every
+version.)
 
 ```sh
 MEMOS_URL=https://memos.example.org

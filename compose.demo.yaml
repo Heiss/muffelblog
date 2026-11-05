@@ -1,0 +1,20 @@
+# Local demo: sample content, and a mail sink instead of a real mail server.
+#
+#   docker/init-env.sh --demo   writes .env with the demo values and
+#                               COMPOSE_FILE=compose.yaml:compose.demo.yaml
+#   docker compose up --build
+#
+# The site is on http://localhost:8080, the comments on :8081 and the mail sink
+# (Mailpit) on http://localhost:8025. Nothing leaves this machine.
+
+services:
+  remark42:
+    depends_on:
+      - mailpit
+
+  # Login mails of Remark42 land here, none leave the machine.
+  mailpit:
+    image: axllent/mailpit:v1.33
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${MUFFEL_MAIL_PORT:-8025}:8025'

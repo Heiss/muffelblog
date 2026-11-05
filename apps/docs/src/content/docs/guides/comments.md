@@ -23,10 +23,10 @@ running next to the blog; you do not need an account anywhere else.
 | `MAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_TLS` | The mail server for the login mails                                                                                                                              |
 | `SITE_URL`                                                                          | Required for the static copy: the address of a page is the key of its comments                                                                                   |
 
-Locally the login mails go to **Mailpit** (http://localhost:8025) and nothing
-leaves your machine. In production you set a real SMTP server (for example
-Migadu: host `smtp.migadu.com`, a mailbox of your domain as sender; check the
-port and encryption in your provider's settings).
+You set a real SMTP server (for example Migadu: host `smtp.migadu.com`, a
+mailbox of your domain as sender; check the port and encryption in your
+provider's settings). In the local demo the login mails go to **Mailpit**
+(http://localhost:8025) and nothing leaves your machine.
 
 ## Moderation
 
@@ -42,16 +42,15 @@ docker/moderate.sh unblock <user-id>
 ```
 
 It runs inside the builder container with `REMARK_ADMIN_PASSWD` from `.env`, so the
-password never crosses the network. With a production override set the files first,
-for example `COMPOSE_FILE=compose.yaml:compose.production.yaml`. The deleted
-comment leaves the page at the next build.
+password never crosses the network. The deleted comment leaves the page at the
+next build.
 
 ### In the Remark42 interface
 
-Set `REMARK_ADMIN_EMAIL` in `.env`. Whoever logs in **with this address by email**
-is the administrator and sees delete and block buttons on every comment. In the
-local demo the default is `admin@localhost`; read the login mail in Mailpit.
-In production this variable is **required**: Remark42's own default would be
+`REMARK_ADMIN_EMAIL` in `.env` (required). Whoever logs in **with this address by
+email** is the administrator and sees delete and block buttons on every comment.
+In the local demo it is `admin@localhost`; read the login mail in Mailpit.
+It is required because Remark42's own default would be
 `admin@<your comments host>`, a guessable address.
 
 This follows the Remark42 documentation; the clicks in the interface are not
@@ -60,7 +59,7 @@ covered by the project's tests (the command line is).
 ### Notification
 
 Every new comment is mailed to the administrator (`NOTIFY_ADMINS=email`, with
-`MAIL_FROM` as sender). Locally the mail lands in Mailpit.
+`MAIL_FROM` as sender). In the demo the mail lands in Mailpit.
 
 ## Good to know
 

@@ -4,18 +4,21 @@ description: Run Muffelblog with demo content on your own machine in a few minut
 ---
 
 You need Docker with Compose and a checkout of the repository. The demo needs no
-Nextcloud and no Memos.
+Nextcloud, no Memos and no mail server; nothing is public. For a real blog see
+[Getting started](/muffelblog/start/getting-started/).
 
 ## 1. Create the secrets
 
 ```sh
 git clone https://github.com/Heiss/muffelblog.git
 cd muffelblog
-docker/init-env.sh
+docker/init-env.sh --demo
 ```
 
-`docker/init-env.sh` creates `.env` from `.env.example` with fresh random secrets
-for Remark42. It never overwrites an existing `.env`.
+`docker/init-env.sh --demo` creates `.env` with fresh random secrets for
+Remark42, local addresses, the demo content and
+`COMPOSE_FILE=compose.yaml:compose.demo.yaml`, which adds the mail sink
+Mailpit. It never overwrites an existing `.env`.
 
 ## 2. Start
 
@@ -59,4 +62,5 @@ docker compose down --volumes  # delete releases, comments and caches
 
 - Use your own content: [Nextcloud](/muffelblog/guides/nextcloud/) and
   [Memos](/muffelblog/guides/memos/).
-- Put it on a server: [Production overview](/muffelblog/production/overview/).
+- Put it on a server: [Getting started](/muffelblog/start/getting-started/)
+  (start with a new `.env`: `docker/init-env.sh` without `--demo`).

@@ -1,7 +1,14 @@
 ---
-title: Your own reverse proxy
-description: Run the builder and Remark42 in Docker and serve the blog from your existing nginx, Caddy or Traefik through a shared folder.
+title: Proxy serves the files
+description: Advanced - your nginx or Caddy serves the files of the blog from a host folder instead of forwarding to our web server.
 ---
+
+:::note[Advanced]
+The normal setup is simpler: your proxy only forwards to our web server, see
+[Getting started](/muffelblog/start/getting-started/). Use this page only if
+your proxy must serve the files itself. Then it also has to send the security
+headers, set the cache rules and protect the comments administrator, as below.
+:::
 
 Here the builder writes the finished site into a **folder on the host**. Your
 proxy serves that folder directly; only Remark42 is reached over the network.
@@ -24,29 +31,23 @@ The builder does not run as root, it runs as the user `node` (uid 1000), so the
 folder must belong to uid 1000. Your proxy only **reads** it (the files are
 readable for everybody), so it can run as any user.
 
-In `.env`:
+Fill in `.env` as in [Getting started](/muffelblog/start/getting-started/),
+and add:
 
 ```sh
+COMPOSE_FILE=compose.yaml:compose.host-folder.yaml
 MUFFEL_RELEASES_DIR=/srv/muffelblog/releases
-SITE_URL=https://blog.example.org
-COMMENTS_URL=https://comments.example.org
-MAIL_FROM=blog@example.org
-REMARK_ADMIN_EMAIL=you@example.org          # the comment administrator, see Comments
-SMTP_HOST=smtp.example.org
-SMTP_PORT=465
-SMTP_USERNAME=blog@example.org
-SMTP_PASSWORD=...
 ```
 
 ## 2. Start
 
 ```sh
-docker compose -f compose.yaml -f compose.production.yaml up -d
+docker compose up -d
 ```
 
-What this changes: our `web` and `mailpit` are not started, the releases go to
-`MUFFEL_RELEASES_DIR`, Remark42 listens on `127.0.0.1:8082` (set `REMARK_PORT` to
-change it) and the mail variables are **required**.
+What this changes: our `web` is not started, the releases go to
+`MUFFEL_RELEASES_DIR`, and Remark42 listens on `127.0.0.1:8082` (set
+`REMARK_PORT` to change it).
 
 The folder holds one directory per release and a relative link `current`.
 Because the link is relative, it works wherever your proxy sees the folder (for
@@ -55,8 +56,8 @@ releases (`MUFFEL_RELEASES_KEPT`), so a browser tab that is still open can finis
 loading its files.
 
 :::note
-Files are written as root inside the container with normal permissions
-(readable by everyone). Your proxy only needs read access.
+Files are written by uid 1000 with normal permissions (readable by everyone).
+Your proxy only needs read access.
 :::
 
 ## 3. Configure the proxy
@@ -165,46 +166,8 @@ you add locations.
 
 ### Traefik
 
-Traefik routes requests, it **does not serve static files** and has no rule to
-refuse a request header. So let our Caddy do those two jobs behind Traefik: start
-it with the profile `own-caddy`. It then serves the same host folder, sets the
-Content Security Policy and refuses `Authorization: Basic` on the comments host.
-
-```sh
-docker compose -f compose.yaml -f compose.production.yaml --profile own-caddy up -d
-```
-
-Our Caddy listens on the published ports `MUFFEL_PORT` (default 8080, the blog)
-and `MUFFEL_COMMENTS_PORT` (default 8081, the comments). Traefik only needs to
-forward the two host names to them:
-
-```yaml
-http:
-  routers:
-    blog:
-      rule: Host(`blog.example.org`)
-      entryPoints: [websecure]
-      tls: { certResolver: letsencrypt }
-      service: blog
-    comments:
-      rule: Host(`comments.example.org`)
-      entryPoints: [websecure]
-      tls: { certResolver: letsencrypt }
-      service: comments
-  services:
-    blog:
-      loadBalancer:
-        servers: [{ url: 'http://127.0.0.1:8080' }]
-    comments:
-      loadBalancer:
-        servers: [{ url: 'http://127.0.0.1:8081' }]
-```
-
-Set `COMMENTS_URL=https://comments.example.org` in `.env` so the policy names the
-right origin. The two ports are published on `127.0.0.1` only (`MUFFEL_BIND`), so
-only a proxy on the same machine reaches them. If your Traefik runs in a
-container, point it at the address of the host that the container can reach, and
-set `MUFFEL_BIND` to that address, never to `0.0.0.0` without a firewall.
+Traefik does not serve static files. Use the normal setup of
+[Getting started](/muffelblog/start/getting-started/) instead.
 
 ## Client addresses and the rate limit
 
@@ -214,8 +177,8 @@ any address and get around the limit (Remark42 warns about this in its log):
 
 1. **Your proxy sets `X-Real-IP` itself** and never passes on the visitor's value.
    The Caddy and nginx examples above do exactly that. A proxy that only appends
-   to `X-Forwarded-For` (Traefik, most cloud load balancers) does not do it, which
-   is one more reason to let our Caddy sit in between.
+   to `X-Forwarded-For` (Traefik, most cloud load balancers) does not do it; use
+   the normal setup with such a proxy.
 2. **`TRUSTED_PROXY` names the network your proxy connects from**, and nothing
    wider. The default `172.16.0.0/12` covers the Docker networks, which is right
    when the proxy is on this host: a proxy on the host reaches the published
@@ -233,6 +196,7 @@ any address and get around the limit (Remark42 warns about this in its log):
 - `curl -s -o /dev/null -w '%{http_code}\n' -H 'Authorization: Basic YTpi' https://comments.example.org/ping` prints **403**.
 - A request without that header to `https://comments.example.org/ping` prints `pong`.
 
-The nginx and Traefik examples are written from the documentation of the two
-programs and have **not** been run against real installations; the Caddy
-configuration is the one the project tests in CI.
+The nginx example is written from the documentation of nginx and has **not**
+been run against a real installation; the Caddy configuration is the one our own
+web server uses (`docker/Caddyfile`), without the client address handling for a
+proxy in front.
