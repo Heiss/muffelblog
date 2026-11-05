@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import sharp from 'sharp';
@@ -201,5 +208,92 @@ describe('createLocalImageResolver', () => {
       ok: false,
       code: 'invalid',
     });
+  });
+});
+
+describe('createLocalImageResolver with HEIC photos', () => {
+  let dir: string;
+  let heic: Buffer;
+  beforeAll(async () => {
+    dir = await mkdtemp(path.join(tmpdir(), 'heic-resolver-'));
+    heic = await readFile(
+      new URL('../fixtures/heic/sample.heic', import.meta.url),
+    );
+    await writeFile(path.join(dir, 'foto.heic'), heic);
+    await writeFile(path.join(dir, 'zweites.heif'), heic);
+    await writeFile(path.join(dir, 'falsch.heic'), await jpeg(10, 10));
+  });
+  afterAll(() => rm(dir, { recursive: true, force: true }));
+
+  const converter = () => {
+    const calls: number[] = [];
+    return {
+      calls,
+      convert: async (input: Buffer) => {
+        calls.push(input.length);
+        return jpeg(96, 64);
+      },
+    };
+  };
+
+  it('converts a HEIC photo and processes the JPEG like any other image', async () => {
+    const c = converter();
+    const r = createLocalImageResolver({
+      root: dir,
+      urlPrefix: '/media/',
+      convertHeic: c.convert,
+    });
+    const result = await r.resolve('foto.heic');
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.image.width).toBe(96);
+    expect(result.image.src).toMatch(/^\/media\/[0-9a-f]{16}-96\.webp$/);
+    expect(c.calls).toEqual([heic.length]);
+  });
+
+  it('converts a photo only once, however often it is used', async () => {
+    const c = converter();
+    const r = createLocalImageResolver({
+      root: dir,
+      urlPrefix: '/media/',
+      convertHeic: c.convert,
+    });
+    await r.resolve('foto.heic');
+    await r.resolve('foto.heic');
+    await r.resolve('zweites.heif');
+    expect(c.calls).toHaveLength(1);
+  });
+
+  it('says why a HEIC photo is not used when there is no converter', async () => {
+    const r = createLocalImageResolver({ root: dir, urlPrefix: '/media/' });
+    const result = await r.resolve('foto.heic');
+    expect(result).toMatchObject({ ok: false, code: 'unsupported' });
+    expect(JSON.stringify(result)).toMatch(/HEIC/);
+  });
+
+  it('does not trust the extension: a file that is no HEIC photo is refused without converting', async () => {
+    const c = converter();
+    const r = createLocalImageResolver({
+      root: dir,
+      urlPrefix: '/media/',
+      convertHeic: c.convert,
+    });
+    const result = await r.resolve('falsch.heic');
+    expect(result).toMatchObject({ ok: false, code: 'invalid' });
+    expect(c.calls).toEqual([]);
+  });
+
+  it('gives an invalid result when the conversion fails', async () => {
+    const r = createLocalImageResolver({
+      root: dir,
+      urlPrefix: '/media/',
+      convertHeic: async () => {
+        throw new Error('tool failed, path /secret/place');
+      },
+    });
+    const result = await r.resolve('foto.heic');
+    expect(result).toMatchObject({ ok: false, code: 'invalid' });
+    // the message of the tool (with its paths) is not passed on
+    expect(JSON.stringify(result)).not.toContain('/secret/place');
   });
 });

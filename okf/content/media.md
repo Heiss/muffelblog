@@ -78,8 +78,17 @@ the Content Security Policy. A new domain is a code change with a test.
   (`processImage`) as for article images, WebP in several widths.
 * **[E]** Alt text: file name without extension, underscores and hyphens become
   spaces (`IMG_2043.jpg` becomes "IMG 2043").
-* **[V]** Image formats PNG, JPEG, WebP, GIF and AVIF. HEIC and HEIF are not
-  decoded and are skipped with a note (O36).
+* **[V]** Image formats PNG, JPEG, WebP, GIF and AVIF.
+* **[E]** HEIC/HEIF (O36, decided by the owner): converted to JPEG with
+  `heif-convert` (packages `libheif-examples`, `libheif-plugin-libde265` in the
+  builder image) in `packages/core/src/heic.ts`. The content is checked by the
+  `ftyp` brand, not by the name; size limit (25 MB), time limit (20 s) and a JPEG
+  check of the result apply; the program runs without a shell in a temporary
+  folder that is always removed. Without the program (or for a file that is not
+  HEIC) the file is skipped with a note. `docker compose exec builder node
+  src/heic-check.ts` converts a sample file and runs in CI.
+* **[U]** Orientation (EXIF) of the converted output is not verified with a
+  rotated phone photo.
 * **[V]** Size limit per file: 25 MB (configurable, see
   [Configuration](/ops/config.md)). Time limit per fetch: 30 seconds.
   Redirects are never followed.

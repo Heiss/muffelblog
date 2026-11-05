@@ -75,6 +75,7 @@ Put images in the same folder and use normal Markdown links:
 `![A mortise](images/mortise.jpg)`.
 
 - PNG, JPEG, WebP, GIF and AVIF up to 25 MB. SVG is rejected.
+- HEIC photos (iPhone) are converted to JPEG by the builder image. If you run the builder without that image, convert them to JPEG first: HEIC files are skipped with a warning.
 - They are scaled to several widths (480 to 1920 px), served as WebP, and **all
   metadata (EXIF, GPS) is removed**.
 - A missing image does not stop the build; a placeholder with the alt text appears.

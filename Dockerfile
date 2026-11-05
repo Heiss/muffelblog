@@ -35,6 +35,10 @@ ENV REPO_DIR=/repo \
 # folders (a new Docker volume takes over this owner from the image) and the
 # places where Astro and Vite write while they build. Everything else in /repo
 # stays owned by root and read-only for the builder.
+# heif-convert turns HEIC photos (iPhone) into JPEG before they are processed.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libheif-examples libheif-plugin-libde265 \
+ && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /data/releases /data/cache /data/state \
  && chown -R node:node /data /repo/apps /repo/packages
 USER node

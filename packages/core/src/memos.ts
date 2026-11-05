@@ -13,6 +13,7 @@ import {
   safeFileName,
   sniffMatches,
 } from './media-files.ts';
+import type { HeicConverter } from './heic.ts';
 import { processImage, toResolvedImage } from './media.ts';
 import { renderMarkdown } from './render.ts';
 import { normalizeTag } from './slug.ts';
@@ -434,6 +435,8 @@ export interface BuildMemosOptions {
   urlPrefix?: string;
   /** Language of the generated texts (title, PDF label). Default: `en`. */
   lang?: Language;
+  /** Turns HEIC photos into JPEG. Without it they are skipped with a hint. */
+  convertHeic?: HeicConverter;
 }
 
 function contentId(data: Buffer): string {
@@ -519,13 +522,15 @@ export async function buildMemoEntries(
           ?.split('.')
           .pop()
           ?.toLowerCase() ?? '';
-      const isImage = IMAGE_EXTENSIONS.has(ext);
+      const heicName = ext === 'heic' || ext === 'heif';
+      const isImage =
+        IMAGE_EXTENSIONS.has(ext) ||
+        (heicName && options.convertHeic !== undefined);
       const fileRule = allowedFileFor(attachment.filename);
       if (!isImage && fileRule === null) {
-        const hint =
-          ext === 'heic' || ext === 'heif'
-            ? ' (HEIC is not supported, please upload as JPEG)'
-            : '';
+        const hint = heicName
+          ? ' (HEIC photos need the converter heif-convert, which is not available: please upload as JPEG)'
+          : '';
         warn(
           `attachment "${attachment.filename}" has a file type that is not allowed and is skipped${hint}`,
         );
@@ -543,7 +548,11 @@ export async function buildMemoEntries(
 
       if (isImage) {
         try {
-          const image = await processImage(data);
+          const source =
+            heicName && options.convertHeic
+              ? await options.convertHeic(data)
+              : data;
+          const image = await processImage(source);
           for (const v of image.variants) store.set(v.file, v.data);
           const resolved = toResolvedImage(image, prefix);
           attachments.push(

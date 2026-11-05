@@ -35,6 +35,7 @@ domain was never run (see [Docker](/architecture/docker.md)).
 * **HSTS.** `Strict-Transport-Security` is not set by our Caddy (the same file
   serves plain HTTP in the demo, where it would be wrong) and is not in the
   proxy examples. Set it at your proxy once HTTPS works; start with a short
-  `max-age`, because browsers remember it. Mentioned in the production overview.
+  `max-age`, because browsers remember it. Mentioned in the production overview. **Decided by the owner: HSTS is the job of the reverse proxy, our setup does not provide it.**
+* **HEIC converter.** `heif-convert` (libheif) parses untrusted photos from Nextcloud and Memos, a typical source of memory errors. Mitigations: no shell, size and time limit, content check before the call, unprivileged user `node`, temporary folder removed. Keep the image updated (Renovate does not cover the apt packages: rebuild the image for Debian security updates).
 * **Not tested:** a real domain with certificates, a real mail provider, the
   Remark42 widget in a browser, other proxies than the examples.

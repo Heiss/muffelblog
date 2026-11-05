@@ -1,6 +1,8 @@
 import {
   buildMemoEntries,
+  createHeifConverter,
   createLocalImageResolver,
+  heifAvailable,
   loadArticles,
   renderMarkdown,
 } from '@muffelblog/core';
@@ -23,8 +25,15 @@ async function build(): Promise<Content> {
   const config = contentConfig();
   const media = new Map<string, Buffer>();
 
+  // HEIC photos need heif-convert (the builder image has it); without it they
+  // are reported and skipped.
+  const convertHeic = (await heifAvailable())
+    ? createHeifConverter()
+    : undefined;
+
   const { articles, warnings } = await loadArticles(config.contentDir);
   const resolver = createLocalImageResolver({
+    convertHeic,
     root: config.contentDir,
     urlPrefix: '/media/',
     store: media,
@@ -43,6 +52,7 @@ async function build(): Promise<Content> {
 
   // If fetching the memos fails, the build stops and the last good version stays online.
   const memoResult = await buildMemoEntries(config.memos, media, {
+    convertHeic,
     maxFileBytes: getSettings().memosMaxFileBytes,
     descriptionChars: getSettings().memosDescriptionChars,
     lang: getSettings().lang,

@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { isHeic } from './heic.ts';
+import type { HeicConverter } from './heic.ts';
 import type { ImageResolveResult, ResolvedImage } from './render.ts';
 
 export interface ImageVariant {
@@ -92,6 +94,8 @@ export function createLocalImageResolver(options: {
   urlPrefix: string;
   /** Shared store of the served files, otherwise a private one. */
   store?: Map<string, Buffer>;
+  /** Without it HEIC photos are not used (the decoder is not part of the image library). */
+  convertHeic?: HeicConverter;
 }): LocalImageResolver {
   const files = options.store ?? new Map<string, Buffer>();
   const processed = new Map<string, ProcessedImage>();
@@ -126,12 +130,15 @@ export function createLocalImageResolver(options: {
         return failure('invalid', 'Hidden path');
       }
       const extension = path.posix.extname(normal).toLowerCase();
-      if (!EXTENSIONS.has(extension)) {
+      const heicName = extension === '.heic' || extension === '.heif';
+      if (!EXTENSIONS.has(extension) && !(heicName && options.convertHeic)) {
         return failure(
           'unsupported',
           extension === '.svg'
             ? 'SVG is not supported'
-            : `File type ${extension || '(none)'} is not supported`,
+            : heicName
+              ? 'HEIC photos need the converter heif-convert (package libheif-examples), which is not available here: use JPEG'
+              : `File type ${extension || '(none)'} is not supported`,
         );
       }
 
@@ -158,8 +165,20 @@ export function createLocalImageResolver(options: {
           .digest('hex')
           .slice(0, 16);
         const existing = processed.get(id);
-        image = existing ?? (await processImage(content));
-        processed.set(image.id, image);
+        if (existing) {
+          image = existing;
+        } else {
+          let source: Buffer = content;
+          if (heicName) {
+            // The content must be what the name says, then the tool runs.
+            if (!isHeic(content) || !options.convertHeic)
+              return failure('invalid', 'File is not a HEIC photo');
+            source = await options.convertHeic(content);
+          }
+          image = await processImage(source);
+          // Keyed by the original, so a converted photo is converted only once.
+          processed.set(id, image);
+        }
       } catch {
         return failure('invalid', 'File is not a readable image');
       }
