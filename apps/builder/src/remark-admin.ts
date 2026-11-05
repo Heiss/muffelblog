@@ -156,13 +156,16 @@ export function createAdminClient(options: AdminOptions) {
 
 /** One readable line per comment: id, time, author, page and the start of the text. */
 export function formatComment(c: AdminComment): string {
+  // Entities first, then everything that looks like a tag goes; no `<` or `>`
+  // survives, so nothing in the output can become a tag again.
   const plain = c.text
-    .replace(/<[^>]*>/g, '')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, '&')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/[<>]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
   const short = plain.length > 120 ? `${plain.slice(0, 117)}...` : plain;

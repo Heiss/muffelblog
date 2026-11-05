@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFile, realpath, stat } from 'node:fs/promises';
+import { open, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { isHeic } from './heic.ts';
@@ -147,11 +147,15 @@ function checkImagePath(
   return failure('unsupported', unsupportedReason(extension, heic));
 }
 
-/** The real path of the file inside the content folder, or a refusal. */
-async function realFile(
+/**
+ * The content of the file inside the content folder, or a refusal. Size and
+ * kind are checked on the opened file, so it cannot change between the check
+ * and the read.
+ */
+async function readImageFile(
   r: Resolver,
   normal: string,
-): Promise<string | ImageResolveResult> {
+): Promise<Buffer | ImageResolveResult> {
   r.realRoot ??= await realpath(r.options.root);
   const base = r.realRoot;
   let real: string;
@@ -162,10 +166,15 @@ async function realFile(
   }
   if (real !== base && !real.startsWith(base + path.sep))
     return failure('invalid', 'Link leads out of the content folder');
-  const info = await stat(real);
-  if (!info.isFile()) return failure('invalid', 'Not an image');
-  if (info.size > MAX_BYTES) return failure('invalid', 'File is too large');
-  return real;
+  const file = await open(real, 'r');
+  try {
+    const info = await file.stat();
+    if (!info.isFile()) return failure('invalid', 'Not an image');
+    if (info.size > MAX_BYTES) return failure('invalid', 'File is too large');
+    return await file.readFile();
+  } finally {
+    await file.close();
+  }
 }
 
 /** Processes the image once per content (HEIC converted first); null for a HEIC name with other content. */
@@ -195,11 +204,11 @@ async function resolveImage(
 ): Promise<ImageResolveResult> {
   const checked = checkImagePath(r, rel);
   if ('ok' in checked) return checked;
-  const real = await realFile(r, checked.normal);
-  if (typeof real !== 'string') return real;
+  const content = await readImageFile(r, checked.normal);
+  if (!Buffer.isBuffer(content)) return content;
   let image: ProcessedImage | null;
   try {
-    image = await processOnce(r, await readFile(real), checked.heic);
+    image = await processOnce(r, content, checked.heic);
   } catch {
     return failure('invalid', 'File is not a readable image');
   }

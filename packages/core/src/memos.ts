@@ -1,7 +1,7 @@
 import { DEFAULT_SETTINGS } from './config.ts';
 import type { Language } from './config.ts';
 import { createHash } from 'node:crypto';
-import { readFile, stat } from 'node:fs/promises';
+import { open, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
@@ -359,6 +359,28 @@ export function createHttpMemosSource(options: HttpMemosOptions): MemosSource {
   };
 }
 
+/** Reads a file of the sample set; the size is checked on the opened file. */
+async function readFixtureFile(
+  file: string,
+  maxBytes: number,
+): Promise<AttachmentResult> {
+  let handle;
+  try {
+    handle = await open(file, 'r');
+  } catch {
+    return { ok: false, code: 'not-found', reason: 'File not found' };
+  }
+  try {
+    if ((await handle.stat()).size > maxBytes)
+      return { ok: false, code: 'too-large', reason: 'too large' };
+    return { ok: true, data: await handle.readFile() };
+  } catch {
+    return { ok: false, code: 'not-found', reason: 'File not found' };
+  } finally {
+    await handle.close();
+  }
+}
+
 /**
  * Source from files, for development and tests: `memos.json` in the shape of
  * the list response and the attachments under `attachments/<uid>/<file name>`.
@@ -398,13 +420,7 @@ export function createFixtureMemosSource(folder: string): MemosSource {
         match[1] ?? '',
         attachment.filename,
       );
-      try {
-        if ((await stat(file)).size > maxBytes)
-          return { ok: false, code: 'too-large', reason: 'too large' };
-        return { ok: true, data: await readFile(file) };
-      } catch {
-        return { ok: false, code: 'not-found', reason: 'File not found' };
-      }
+      return readFixtureFile(file, maxBytes);
     },
   };
 }
