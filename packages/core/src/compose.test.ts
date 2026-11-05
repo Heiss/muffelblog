@@ -228,6 +228,12 @@ describe('Remark42 hardening and moderation', () => {
       expect(builder).toMatch(/rm -rf \/var\/lib\/apt\/lists/);
     });
 
+    it('installs the system certificates, so rclone can check HTTPS', async () => {
+      const text = await dockerfile();
+      const builder = text.slice(text.indexOf('AS builder'));
+      expect(builder).toMatch(/apt-get install[^\n]*\bca-certificates\b/);
+    });
+
     it('has no pnpm at run time and starts node directly', async () => {
       const text = await dockerfile();
       const builder = text.slice(text.indexOf('AS builder'));
