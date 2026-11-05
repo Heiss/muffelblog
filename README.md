@@ -151,3 +151,7 @@ it public in its settings on GitHub.
 `.github/workflows/ci.yml` checks every pull request. The **CI Gate** job is the
 required check for `main`. Changes only to `okf/` and to Markdown files in the
 root directory skip the heavy checks.
+
+## License
+
+[MIT](LICENSE), copyright 2026 Muffelblog contributors.
