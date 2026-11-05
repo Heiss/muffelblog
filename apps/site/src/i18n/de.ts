@@ -63,6 +63,12 @@ export const de: Messages = {
     short: 'Kurz',
     terms: 'Begriffe',
   },
+  og: {
+    post: 'Beitrag',
+    memo: 'Memo',
+    term: 'Begriff',
+    alt: (title: string) => `Vorschaubild: ${title}`,
+  },
   glossary: {
     title: 'Glossar',
     lettersLabel: 'Buchstaben',

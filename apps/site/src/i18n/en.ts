@@ -67,6 +67,12 @@ export const en = {
     short: 'Short',
     terms: 'Terms',
   },
+  og: {
+    post: 'Post',
+    memo: 'Memo',
+    term: 'Term',
+    alt: (title: string) => `Preview image: ${title}`,
+  },
   glossary: {
     title: 'Glossary',
     lettersLabel: 'Letters',
