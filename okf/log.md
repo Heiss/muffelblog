@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-05
+* **Update**: Coverage gate (W18): unit tests must cover at least 90 % of the lines and 85 % of the branches, CI blocks below, see [Test strategy](/ops/testing.md).
 * **Update**: Security gates (W18, owner): gitleaks, pnpm audit, CodeQL and Trivy in the CI, all blocking, see [Test strategy](/ops/testing.md).
 * **Update**: Code quality gates (W18, strict): ESLint complexity, cognitive complexity, nesting and function length block; all existing places rebuilt, see [Test strategy](/ops/testing.md).
 * **Update**: W20 and W21: links between files of the folder lead to their pages, "Links of this page" with backlinks, link graph with posts, terms, memos and one node per external domain, local graph per page and `/graph/`; demo content links its posts and terms.

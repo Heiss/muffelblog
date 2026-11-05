@@ -99,3 +99,25 @@ describe('createRcloneRemote', () => {
     );
   });
 });
+
+describe('parseListing', () => {
+  it('refuses an answer that is not JSON, not a list, or has broken entries', async () => {
+    const { parseListing } = await import('./rclone.ts');
+    expect(() => parseListing('nonsense')).toThrow(/not JSON/);
+    expect(() => parseListing('{}')).toThrow(/not a list/);
+    expect(() => parseListing('[{"Path": 1}]')).toThrow(/Unexpected entry/);
+  });
+
+  it('obscures the password only once for several calls', async () => {
+    const { calls, exec } = recorder({ obscure: 'X\n', lsjson: '[]' });
+    const remote = createRcloneRemote(config, exec);
+    await remote.list();
+    await remote.download('/tmp/x');
+    expect(calls.filter((c) => c.args[0] === 'obscure')).toHaveLength(1);
+    expect(calls.at(-1)?.args.slice(0, 3)).toEqual([
+      'copy',
+      ':webdav:',
+      '/tmp/x',
+    ]);
+  });
+});

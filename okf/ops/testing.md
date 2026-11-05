@@ -135,6 +135,12 @@ only: free of what the tests see.
   hold their state in a small object and call module functions.
 * **[E]** The builder's entry point `cli.ts` is a thin shell; its parts live in
   `wiring.ts`.
+* **[E]** Unit test coverage blocks in every CI run (`pnpm test:coverage`,
+  `vitest.config.ts`): at least 90 % of the lines and 85 % of the branches of
+  `packages/core`, `apps/builder` and the logic of `apps/site` (`src/lib`,
+  `src/scripts/*-logic.ts`). Not counted: the thin entry points (`cli.ts`,
+  `*-cli.ts`, `heic-check.ts`), which the compose job runs. Level at the
+  introduction: 94.4 % lines, 86.9 % branches.
 
 # Security gates (W18, decided by the owner 2026-11-05)
 

@@ -66,7 +66,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm typecheck
-      - run: pnpm test
+      - run: pnpm test:coverage
       - run: pnpm build
       - name: Build the documentation site
         run: pnpm --filter @muffelblog/docs build
