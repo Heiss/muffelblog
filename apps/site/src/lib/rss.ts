@@ -58,11 +58,7 @@ export function absolutizeHtml(html: string, origin: string): string {
     );
 }
 
-export function rssXml(
-  base: string,
-  items: readonly RssItem[],
-  options: RssOptions,
-): string {
+function rssOrigin(base: string): string {
   let root: URL;
   try {
     root = new URL(base);
@@ -72,27 +68,36 @@ export function rssXml(
   if (root.protocol !== 'https:' && root.protocol !== 'http:') {
     throw new Error(`SITE_URL must start with http:// or https://: ${base}`);
   }
-  const origin = root.origin;
+  return root.origin;
+}
+
+function itemXml(item: RssItem, origin: string): string {
+  const link = escapeXml(origin + item.url);
+  return [
+    '    <item>',
+    `      <title>${escapeXml(item.title)}</title>`,
+    `      <link>${link}</link>`,
+    `      <guid isPermaLink="false">${escapeXml(item.id)}</guid>`,
+    `      <pubDate>${item.date.toUTCString()}</pubDate>`,
+    ...item.tags.map((t) => `      <category>${escapeXml(t)}</category>`),
+    `      <description>${escapeXml(item.summary)}</description>`,
+    ...(item.html !== undefined
+      ? [
+          `      <content:encoded>${cdata(absolutizeHtml(item.html, origin))}</content:encoded>`,
+        ]
+      : []),
+    '    </item>',
+  ].join('\n');
+}
+
+export function rssXml(
+  base: string,
+  items: readonly RssItem[],
+  options: RssOptions,
+): string {
+  const origin = rssOrigin(base);
   const shown = items.slice(0, options.limit ?? items.length);
   const newest = shown[0]?.date;
-  const entries = shown.map((item) => {
-    const link = escapeXml(origin + item.url);
-    return [
-      '    <item>',
-      `      <title>${escapeXml(item.title)}</title>`,
-      `      <link>${link}</link>`,
-      `      <guid isPermaLink="false">${escapeXml(item.id)}</guid>`,
-      `      <pubDate>${item.date.toUTCString()}</pubDate>`,
-      ...item.tags.map((t) => `      <category>${escapeXml(t)}</category>`),
-      `      <description>${escapeXml(item.summary)}</description>`,
-      ...(item.html !== undefined
-        ? [
-            `      <content:encoded>${cdata(absolutizeHtml(item.html, origin))}</content:encoded>`,
-          ]
-        : []),
-      '    </item>',
-    ].join('\n');
-  });
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">',
@@ -105,7 +110,7 @@ export function rssXml(
     ...(newest
       ? [`    <lastBuildDate>${newest.toUTCString()}</lastBuildDate>`]
       : []),
-    ...entries,
+    ...shown.map((item) => itemXml(item, origin)),
     '  </channel>',
     '</rss>',
     '',
