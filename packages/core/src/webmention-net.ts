@@ -20,54 +20,74 @@ function ipv4Parts(ip: string): number[] | null {
   return numbers.every((n) => n >= 0 && n <= 255) ? numbers : null;
 }
 
+// Ranges that are not routable on the public internet (RFC 6890 and friends).
+const NON_PUBLIC_IPV4: readonly [string, number][] = [
+  ['0.0.0.0', 8], // "this" network
+  ['10.0.0.0', 8], // private
+  ['100.64.0.0', 10], // carrier-grade NAT
+  ['127.0.0.0', 8], // loopback
+  ['169.254.0.0', 16], // link-local, cloud metadata
+  ['172.16.0.0', 12], // private
+  ['192.0.0.0', 24], // IETF protocol assignments
+  ['192.0.2.0', 24], // documentation
+  ['192.168.0.0', 16], // private
+  ['198.18.0.0', 15], // benchmarking
+  ['198.51.100.0', 24], // documentation
+  ['203.0.113.0', 24], // documentation
+  ['224.0.0.0', 3], // multicast, reserved, broadcast
+];
+
+const ipv4Number = (parts: number[]): number =>
+  parts.reduce((n, p) => n * 256 + p, 0);
+
+const NON_PUBLIC_IPV4_RANGES = NON_PUBLIC_IPV4.map(([base, bits]) => ({
+  base: ipv4Number(ipv4Parts(base) as number[]),
+  size: 2 ** (32 - bits),
+}));
+
 /** True for an IPv4 address that is routable on the public internet. */
 function isPublicIPv4(parts: number[]): boolean {
-  const [a, b, c] = parts as [number, number, number, number];
-  if (a === 0) return false; // "this" network
-  if (a === 10) return false; // private
-  if (a === 100 && b >= 64 && b <= 127) return false; // carrier-grade NAT
-  if (a === 127) return false; // loopback
-  if (a === 169 && b === 254) return false; // link-local, cloud metadata
-  if (a === 172 && b >= 16 && b <= 31) return false; // private
-  if (a === 192 && b === 0 && c === 0) return false; // IETF protocol assignments
-  if (a === 192 && b === 0 && c === 2) return false; // documentation
-  if (a === 192 && b === 168) return false; // private
-  if (a === 198 && (b === 18 || b === 19)) return false; // benchmarking
-  if (a === 198 && b === 51 && c === 100) return false; // documentation
-  if (a === 203 && b === 0 && c === 113) return false; // documentation
-  if (a >= 224) return false; // multicast, reserved, broadcast
-  return true;
+  const n = ipv4Number(parts);
+  return !NON_PUBLIC_IPV4_RANGES.some(
+    (r) => n >= r.base && n < r.base + r.size,
+  );
 }
+
+/** Replaces a trailing dotted IPv4 part (`::ffff:1.2.3.4`) by two groups. */
+function expandDottedTail(text: string): string | null {
+  const dotted = /(\d+\.\d+\.\d+\.\d+)$/.exec(text);
+  if (!dotted) return text;
+  const v4 = ipv4Parts(dotted[1] as string);
+  if (!v4) return null;
+  const hi = ((v4[0] as number) << 8) | (v4[1] as number);
+  const lo = ((v4[2] as number) << 8) | (v4[3] as number);
+  return (
+    text.slice(0, -(dotted[1] as string).length) +
+    `${hi.toString(16)}:${lo.toString(16)}`
+  );
+}
+
+const hexGroups = (part: string): number[] =>
+  part === ''
+    ? []
+    : part
+        .split(':')
+        .map((g) => (/^[0-9a-f]{1,4}$/i.test(g) ? parseInt(g, 16) : NaN));
 
 /** The eight 16-bit groups of an IPv6 address, or null. */
 function ipv6Groups(ip: string): number[] | null {
-  let text = ip.split('%')[0] ?? '';
-  const dotted = /(\d+\.\d+\.\d+\.\d+)$/.exec(text);
-  if (dotted) {
-    const v4 = ipv4Parts(dotted[1] as string);
-    if (!v4) return null;
-    const hi = ((v4[0] as number) << 8) | (v4[1] as number);
-    const lo = ((v4[2] as number) << 8) | (v4[3] as number);
-    text =
-      text.slice(0, -(dotted[1] as string).length) +
-      `${hi.toString(16)}:${lo.toString(16)}`;
-  }
+  const text = expandDottedTail(ip.split('%')[0] ?? '');
+  if (text === null) return null;
   const halves = text.split('::');
   if (halves.length > 2) return null;
-  const toGroups = (part: string) =>
-    part === ''
-      ? []
-      : part
-          .split(':')
-          .map((g) => (/^[0-9a-f]{1,4}$/i.test(g) ? parseInt(g, 16) : NaN));
-  const head = toGroups(halves[0] as string);
-  const tail = halves.length === 2 ? toGroups(halves[1] as string) : [];
-  let groups: number[];
-  if (halves.length === 2) {
-    const fill = 8 - head.length - tail.length;
-    if (fill < 1) return null;
-    groups = [...head, ...Array<number>(fill).fill(0), ...tail];
-  } else groups = head;
+  const head = hexGroups(halves[0] as string);
+  const tail = halves.length === 2 ? hexGroups(halves[1] as string) : [];
+  const fill = 8 - head.length - tail.length;
+  if (halves.length === 2 && fill < 1) return null;
+  const groups =
+    halves.length === 2
+      ? [...head, ...Array<number>(fill).fill(0), ...tail]
+      : head;
   return groups.length === 8 && groups.every((g) => g >= 0 && g <= 0xffff)
     ? groups
     : null;
@@ -77,36 +97,39 @@ function embeddedIPv4(hi: number, lo: number): number[] {
   return [hi >> 8, hi & 255, lo >> 8, lo & 255];
 }
 
+const allZero = (n: number[]) => n.every((x) => x === 0);
+
+/**
+ * Rules for IPv6, in order: the first that matches decides. `false` means not
+ * public; a number pair names the groups of an embedded IPv4 address, which
+ * then decides.
+ */
+const IPV6_RULES: readonly [
+  (g: number[]) => boolean,
+  false | [number, number],
+][] = [
+  [(g) => allZero(g), false], // ::
+  [(g) => allZero(g.slice(0, 7)) && g[7] === 1, false], // ::1
+  [(g) => allZero(g.slice(0, 5)) && g[5] === 0xffff, [6, 7]], // IPv4-mapped
+  [(g) => allZero(g.slice(0, 6)), false], // IPv4-compatible (deprecated)
+  [(g) => g[0] === 0x64 && g[1] === 0xff9b && allZero(g.slice(2, 6)), [6, 7]], // NAT64
+  [(g) => g[0] === 0x100 && allZero(g.slice(1, 4)), false], // discard prefix
+  [(g) => g[0] === 0x2001 && g[1] === 0, false], // Teredo
+  [(g) => g[0] === 0x2001 && g[1] === 0xdb8, false], // documentation
+  [(g) => g[0] === 0x2002, [1, 2]], // 6to4
+  [(g) => ((g[0] as number) & 0xfe00) === 0xfc00, false], // unique local
+  [(g) => ((g[0] as number) & 0xffc0) === 0xfe80, false], // link-local
+  [(g) => ((g[0] as number) & 0xff00) === 0xff00, false], // multicast
+];
+
 function isPublicIPv6(g: number[]): boolean {
-  const [g0, g1, g2, g3, g4, g5, g6, g7] = g as [
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-  ];
-  const zero = (n: number[]) => n.every((x) => x === 0);
-  if (zero(g)) return false; // ::
-  if (zero([g0, g1, g2, g3, g4, g5, g6]) && g7 === 1) return false; // ::1
-  // IPv4-mapped (::ffff:a.b.c.d): judge by the IPv4 address
-  if (zero([g0, g1, g2, g3, g4]) && g5 === 0xffff)
-    return isPublicIPv4(embeddedIPv4(g6, g7));
-  // IPv4-compatible (::a.b.c.d, deprecated): never public
-  if (zero([g0, g1, g2, g3, g4, g5])) return false;
-  // NAT64 (64:ff9b::/96): judge by the IPv4 address
-  if (g0 === 0x64 && g1 === 0xff9b && zero([g2, g3, g4, g5]))
-    return isPublicIPv4(embeddedIPv4(g6, g7));
-  if (g0 === 0x100 && zero([g1, g2, g3])) return false; // discard prefix
-  if (g0 === 0x2001 && g1 === 0) return false; // Teredo
-  if (g0 === 0x2001 && g1 === 0xdb8) return false; // documentation
-  if (g0 === 0x2002) return isPublicIPv4(embeddedIPv4(g1, g2)); // 6to4
-  if ((g0 & 0xfe00) === 0xfc00) return false; // unique local
-  if ((g0 & 0xffc0) === 0xfe80) return false; // link-local
-  if ((g0 & 0xff00) === 0xff00) return false; // multicast
-  return true;
+  const rule = IPV6_RULES.find(([matches]) => matches(g));
+  if (!rule) return true;
+  const verdict = rule[1];
+  if (verdict === false) return false;
+  return isPublicIPv4(
+    embeddedIPv4(g[verdict[0]] as number, g[verdict[1]] as number),
+  );
 }
 
 /**
@@ -209,6 +232,72 @@ async function checkedAddress(
   return found[0] as Resolved;
 }
 
+/** A DNS look-up that always answers with the address that was checked. */
+function pinnedLookup(address: string, family: number) {
+  return (
+    _host: string,
+    lookupOptions: unknown,
+    callback: (...args: unknown[]) => void,
+  ) => {
+    if ((lookupOptions as { all?: boolean }).all)
+      callback(null, [{ address, family }]);
+    else callback(null, address, family);
+  };
+}
+
+function requestHeaders(init: SafeFetchInit): Record<string, string> {
+  return {
+    'user-agent':
+      'Muffelblog-Webmention (+https://github.com/Heiss/muffelblog)',
+    accept: 'text/html, */*;q=0.1',
+    ...(init.body !== undefined
+      ? { 'content-length': String(Buffer.byteLength(init.body)) }
+      : {}),
+    ...init.headers,
+  };
+}
+
+/** Reads a response up to `maxBytes`; more is cut off and marked as truncated. */
+function readResponse(
+  response: http.IncomingMessage,
+  url: URL,
+  maxBytes: number,
+): Promise<SafeResponse> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    let truncated = false;
+    const done = () =>
+      resolve({
+        status: response.statusCode ?? 0,
+        url: url.href,
+        headers: Object.fromEntries(
+          Object.entries(response.headers).map(([k, v]) => [
+            k.toLowerCase(),
+            Array.isArray(v) ? v.join(', ') : (v ?? ''),
+          ]),
+        ),
+        body: Buffer.concat(chunks).toString('utf8'),
+        truncated,
+      });
+    response.on('data', (chunk: Buffer) => {
+      const room = maxBytes - size;
+      if (chunk.length <= room) {
+        chunks.push(chunk);
+        size += chunk.length;
+        return;
+      }
+      chunks.push(chunk.subarray(0, room));
+      size += room;
+      truncated = true;
+      response.destroy();
+      done();
+    });
+    response.on('end', done);
+    response.on('error', (e) => reject(new NetError(e.message)));
+  });
+}
+
 function once(
   url: URL,
   target: Resolved,
@@ -230,64 +319,14 @@ function once(
       url,
       {
         method: init.method ?? 'GET',
-        headers: {
-          'user-agent':
-            'Muffelblog-Webmention (+https://github.com/Heiss/muffelblog)',
-          accept: 'text/html, */*;q=0.1',
-          ...(init.body !== undefined
-            ? { 'content-length': String(Buffer.byteLength(init.body)) }
-            : {}),
-          ...init.headers,
-        },
+        headers: requestHeaders(init),
         // The checked address is the one that is used: no second look-up.
-        lookup: (_host, lookupOptions, callback) => {
-          if ((lookupOptions as { all?: boolean }).all)
-            (callback as (e: null, a: Resolved[]) => void)(null, [
-              { address, family },
-            ]);
-          else
-            (callback as (e: null, a: string, f: number) => void)(
-              null,
-              address,
-              family,
-            );
-        },
+        lookup: pinnedLookup(address, family) as never,
       },
       (response) => {
-        const chunks: Buffer[] = [];
-        let size = 0;
-        let truncated = false;
-        const done = () =>
-          finish(() =>
-            resolve({
-              status: response.statusCode ?? 0,
-              url: url.href,
-              headers: Object.fromEntries(
-                Object.entries(response.headers).map(([k, v]) => [
-                  k.toLowerCase(),
-                  Array.isArray(v) ? v.join(', ') : (v ?? ''),
-                ]),
-              ),
-              body: Buffer.concat(chunks).toString('utf8'),
-              truncated,
-            }),
-          );
-        response.on('data', (chunk: Buffer) => {
-          const room = options.maxBytes - size;
-          if (chunk.length > room) {
-            chunks.push(chunk.subarray(0, room));
-            size += room;
-            truncated = true;
-            response.destroy();
-            done();
-            return;
-          }
-          chunks.push(chunk);
-          size += chunk.length;
-        });
-        response.on('end', done);
-        response.on('error', (e) =>
-          finish(() => reject(new NetError(e.message))),
+        readResponse(response, url, options.maxBytes).then(
+          (r) => finish(() => resolve(r)),
+          (e: unknown) => finish(() => reject(e)),
         );
       },
     );
