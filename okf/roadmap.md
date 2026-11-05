@@ -500,8 +500,9 @@ Applies to every work package in addition to its own criteria:
 
 ## W14 - Webmentions: receiving and display
 
-* State (2026-11-05): **not built.** Proposed for after 26.11.0, once the domain
-  is live; decision of the owner open ([Open points](/open-points.md), A).
+* State (2026-11-05): not built. **Decided by the owner: part of 26.11.0**,
+  testable without a domain through a stand-in of the webmention.io API
+  ([Open points](/open-points.md), A).
 
 * Branch: `feature/w14-webmentions-empfang`
 * Depends on: W13, W10, domain
