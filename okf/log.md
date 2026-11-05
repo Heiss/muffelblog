@@ -3,6 +3,7 @@
 ## 2026-11-05
 * **Update**: Mutation tests (W18, O37): Stryker over core, builder and site logic, 80 % blocks; incremental on pull requests and `main`, complete nightly and on a tag; score 83.1 %; a raw `<input>` in Markdown is removed again, see [Test strategy](/ops/testing.md).
 * **Update**: Coverage gate (W18): unit tests must cover at least 90 % of the lines and 85 % of the branches, CI blocks below, see [Test strategy](/ops/testing.md).
+* **Update**: Security gates (W18, owner): gitleaks, pnpm audit, CodeQL and Trivy in the CI, all blocking, see [Test strategy](/ops/testing.md).
 * **Update**: Code quality gates (W18, strict): ESLint complexity, cognitive complexity, nesting and function length block; all existing places rebuilt, see [Test strategy](/ops/testing.md).
 * **Update**: W20 and W21: links between files of the folder lead to their pages, "Links of this page" with backlinks, link graph with posts, terms, memos and one node per external domain, local graph per page and `/graph/`; demo content links its posts and terms.
 * **Update**: W14 receiving webmentions: webmention.io API read by the builder, mentions as Remark42 comments of the administrator, deletions follow, state recovery from Remark42 (O3); stand-in of webmention.io for demo and CI (`docker/webmention-io-standin.mjs`, flow test); `rel=me` from `MUFFEL_REL_ME`; off by default.

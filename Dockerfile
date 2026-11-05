@@ -41,6 +41,10 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /data/releases /data/cache /data/state \
  && chown -R node:node /data /repo/apps /repo/packages
+# pnpm is needed to install, not to run: it goes, with the libraries it bundles
+# (Trivy found an old `tar` in it). The builder calls node and the binaries in
+# node_modules/.bin directly.
+RUN npm uninstall --global pnpm
 USER node
 WORKDIR /repo/apps/builder
-CMD ["pnpm", "start"]
+CMD ["node", "src/cli.ts"]

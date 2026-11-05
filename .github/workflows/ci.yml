@@ -135,6 +135,11 @@ jobs:
           fi
           grep SITE_URL missing.txt
       - run: docker compose up --detach --build
+      - name: No critical holes in the builder image (Trivy; only those with a fix)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.1 \
+            image --severity CRITICAL --ignore-unfixed --exit-code 1 --no-progress \
+            ghcr.io/heiss/muffelblog-builder:latest
       - name: rclone is in the builder image
         run: docker compose run --rm --no-deps --entrypoint rclone builder version
       - name: The builder does not run as root and can write its folders
@@ -230,6 +235,49 @@ jobs:
           rclone version
       - run: pnpm test:contract
 
+  # Secrets in the whole history (gitleaks) and known holes in the production
+  # dependencies (pnpm audit, high and critical block). Runs for every change.
+  security:
+    name: Secrets and dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: No secrets in the history (gitleaks, exceptions in .gitleaksignore)
+        run: |
+          docker run --rm -v "$PWD:/repo" --entrypoint sh zricethezav/gitleaks:v8.30.1 -c \
+            'git config --global --add safe.directory /repo && cd /repo && gitleaks git . --redact --no-banner'
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: No known high or critical holes in the production dependencies
+        run: pnpm audit --prod --audit-level high
+
+  # Static analysis (CodeQL). A finding of severity high or above blocks.
+  codeql:
+    name: CodeQL
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+      - uses: github/codeql-action/analyze@v4
+        with:
+          output: sarif
+      - name: Findings of severity high or above block
+        run: node .github/scripts/codeql-gate.mjs sarif
+
   # Required check for main. Always runs, so GitHub does not block the merge
   # because of a check that was never reported, and decides itself whether
   # skipped jobs are fine.
@@ -267,7 +315,19 @@ jobs:
 
   gate:
     name: CI Gate
-    needs: [changes, versions, check, e2e, docker, compose, contract, mutation]
+    needs:
+      [
+        changes,
+        versions,
+        security,
+        codeql,
+        check,
+        e2e,
+        docker,
+        compose,
+        contract,
+        mutation,
+      ]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -275,6 +335,8 @@ jobs:
         env:
           CHANGES: ${{ needs.changes.result }}
           VERSIONS: ${{ needs.versions.result }}
+          SECURITY: ${{ needs.security.result }}
+          CODEQL: ${{ needs.codeql.result }}
           CODE: ${{ needs.changes.outputs.code }}
           CHECK: ${{ needs.check.result }}
           E2E: ${{ needs.e2e.result }}
@@ -283,12 +345,16 @@ jobs:
           CONTRACT: ${{ needs.contract.result }}
           MUTATION: ${{ needs.mutation.result }}
         run: |
+          if [ "$SECURITY" != "success" ]; then
+            echo "Secrets or dependencies check failed: $SECURITY"
+            exit 1
+          fi
           if [ "$CHANGES" != "success" ]; then
             echo "Change detection failed: $CHANGES"
             exit 1
           fi
           if [ "$CODE" = "true" ]; then
-            for result in "$VERSIONS" "$CHECK" "$E2E" "$DOCKER" "$COMPOSE" "$CONTRACT" "$MUTATION"; do
+            for result in "$VERSIONS" "$CODEQL" "$CHECK" "$E2E" "$DOCKER" "$COMPOSE" "$CONTRACT" "$MUTATION"; do
               if [ "$result" != "success" ]; then
                 echo "A required job was not successful: $result"
                 exit 1

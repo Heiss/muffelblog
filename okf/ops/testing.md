@@ -153,3 +153,14 @@ only: free of what the tests see.
   `webmention-net.ts`) were removed from the code instead of being tested; a
   raw `<input>` in Markdown was found this way and is removed again
   (`render.ts`, only the box of a task list item stays).
+
+# Security gates (W18, decided by the owner 2026-11-05)
+
+* **[E]** Every change: gitleaks over the whole history (exceptions only by
+  fingerprint in `.gitleaksignore`, with the reason; today the placeholder
+  values of the production check in `ci.yml`) and `pnpm audit --prod` (high
+  and critical block). Code changes: CodeQL (`security-extended`), a finding of
+  security severity 7.0 or more blocks (`.github/scripts/codeql-gate.mjs`), and
+  Trivy on the builder image (critical with an available fix blocks; holes
+  without a fix are reported by Trivy but cannot be acted on).
+* **[E]** The images of gitleaks and Trivy are pinned and raised by Renovate.

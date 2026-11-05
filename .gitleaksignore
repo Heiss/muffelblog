@@ -1,0 +1,7 @@
+# Findings of gitleaks that are not secrets, by fingerprint (commit:file:rule:line).
+# The production-setup check in ci.yml uses placeholder values for REMARK_SECRET
+# and REMARK_ADMIN_PASSWD (secret-1234567890, passwd-1234567890); they protect nothing.
+6bdb375eb9d8444f3e4ac74d15d8eb8d0b3f9e91:.github/workflows/ci.yml:generic-api-key:121
+6bdb375eb9d8444f3e4ac74d15d8eb8d0b3f9e91:.github/workflows/ci.yml:generic-api-key:122
+40f41e50544c060709d4c7aded7f55b85d6a3440:.github/workflows/ci.yml:generic-api-key:121
+40f41e50544c060709d4c7aded7f55b85d6a3440:.github/workflows/ci.yml:generic-api-key:122
