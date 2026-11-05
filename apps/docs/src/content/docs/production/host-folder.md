@@ -65,7 +65,9 @@ Your proxy only needs read access.
 The Content Security Policy below must be sent for the blog host. It allows
 scripts and frames only from the blog itself, from your comments host, and from
 `youtube-nocookie.com` (frames only); images only from the blog and the three
-image hosts allowed in posts. Replace `comments.example.org` with your host.
+image hosts allowed in posts. Replace `comments.example.org` with your host. With
+[Matomo](/muffelblog/guides/statistics/) add its address to `script-src`,
+`connect-src` and `img-src`.
 
 ```text
 default-src 'none'; script-src 'self' 'wasm-unsafe-eval' https://comments.example.org; style-src 'self'; font-src 'self'; img-src 'self' https://upload.wikimedia.org https://raw.githubusercontent.com https://user-images.githubusercontent.com; frame-src https://www.youtube-nocookie.com https://comments.example.org; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'

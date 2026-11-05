@@ -64,6 +64,14 @@ tell this blog that they link to a post. These messages are collected by
 webmention.io, run by [PLACEHOLDER: check the operator]; the blog shows the
 name given by the other website and the address of its page as a comment.
 
+## Statistics
+
+[DELETE this section if you do not set MATOMO_URL.] This blog counts visits
+with Matomo, run by [PLACEHOLDER: who runs it] at [PLACEHOLDER: address]. Your
+browser sends the address of the page, the referring page, your browser and
+screen data and your IP address [CHECK: anonymized in your Matomo settings?] to
+that server. No cookies are set.
+
 ## Your rights
 
 [CHECK: the rights you owe to visitors in your country, for example access,

@@ -17,6 +17,7 @@ import { canonicalUrl, siteUrl } from '../lib/feed';
 import { messages } from '../i18n/messages';
 import { getContent } from '../lib/articles';
 import { relMeLinks, webmentionEndpoint } from '../lib/indieweb';
+import { matomoConfig } from '../lib/matomo';
 import { DEFAULT_LIGHT, THEMES } from '../lib/themes';
 
 interface Props {
@@ -33,6 +34,7 @@ const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
 const { articles } = await getContent();
 const webmention = webmentionEndpoint();
 const relMe = relMeLinks();
+const matomo = matomoConfig();
 const legalPages = articles
   .filter((a) => a.type === 'page')
   .sort((a, b) => a.title.localeCompare(b.title, messages.lang));
@@ -107,9 +109,18 @@ const legalPages = articles
         {siteUrl() && <a href="/feed.xml">{messages.footer.rss}</a>}
       </nav>
     </footer>
+    {matomo && (
+      <span
+        hidden
+        data-matomo
+        data-url={matomo.base}
+        data-site={matomo.siteId}
+      ></span>
+    )}
   </body>
 </html>
 
 <script>
   import '../scripts/theme-switch';
+  import '../scripts/matomo';
 </script>
