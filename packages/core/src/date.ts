@@ -55,6 +55,62 @@ export function berlinLocalToInstant(
 const PATTERN =
   /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?\s*(Z|[+-]\d{2}:?\d{2})?)?$/i;
 
+interface DateParts {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+  millisecond: number;
+  zone?: string;
+}
+
+/** The numbers of a match; a date without a time counts as 12:00. */
+function partsOf(match: RegExpExecArray): DateParts {
+  const [, y, mo, d, h, min, s, ms, zone] = match;
+  const hasTime = h !== undefined;
+  return {
+    year: Number(y),
+    month: Number(mo),
+    day: Number(d),
+    hour: hasTime ? Number(h) : 12,
+    minute: hasTime ? Number(min) : 0,
+    second: s !== undefined ? Number(s) : 0,
+    millisecond: ms !== undefined ? Number(ms.padEnd(3, '0')) : 0,
+    zone,
+  };
+}
+
+/** True when month, day and time exist (no 31 February, no 25:00). */
+function isValidDate(p: DateParts): boolean {
+  if (p.month < 1 || p.month > 12) return false;
+  if (p.hour > 23 || p.minute > 59 || p.second > 59) return false;
+  const calendar = new Date(Date.UTC(p.year, p.month - 1, p.day));
+  return (
+    calendar.getUTCMonth() === p.month - 1 && calendar.getUTCDate() === p.day
+  );
+}
+
+/** The instant of a date with `Z` or an offset like `+02:00`. */
+function withZone(p: DateParts, zone: string): Date {
+  const naive = Date.UTC(
+    p.year,
+    p.month - 1,
+    p.day,
+    p.hour,
+    p.minute,
+    p.second,
+    p.millisecond,
+  );
+  if (zone.toUpperCase() === 'Z') return new Date(naive);
+  const sign = zone.startsWith('-') ? -1 : 1;
+  const digits = zone.slice(1).replace(':', '');
+  const offsetMinutes =
+    Number(digits.slice(0, 2)) * 60 + Number(digits.slice(2, 4));
+  return new Date(naive - sign * offsetMinutes * 60_000);
+}
+
 /**
  * Reads a date from the frontmatter.
  * - `2026-01-05`: date only, counts as 12:00 in Europe/Berlin
@@ -63,54 +119,21 @@ const PATTERN =
  * Returns null if the value is not a valid date.
  */
 export function parseDate(value: unknown): Date | null {
-  if (value instanceof Date) {
+  if (value instanceof Date)
     return Number.isNaN(value.getTime()) ? null : new Date(value.getTime());
-  }
   if (typeof value !== 'string') return null;
-
   const match = PATTERN.exec(value.trim());
   if (!match) return null;
-
-  const [, y, mo, d, h, min, s, ms, zone] = match;
-  const year = Number(y);
-  const month = Number(mo);
-  const day = Number(d);
-  const hasTime = h !== undefined;
-  const hour = hasTime ? Number(h) : 12;
-  const minute = hasTime ? Number(min) : 0;
-  const second = s !== undefined ? Number(s) : 0;
-  const millisecond = ms !== undefined ? Number(ms.padEnd(3, '0')) : 0;
-
-  if (month < 1 || month > 12 || hour > 23 || minute > 59 || second > 59)
-    return null;
-  const calendar = new Date(Date.UTC(year, month - 1, day));
-  if (calendar.getUTCMonth() !== month - 1 || calendar.getUTCDate() !== day)
-    return null;
-
-  if (zone === undefined) {
-    return berlinLocalToInstant(
-      year,
-      month,
-      day,
-      hour,
-      minute,
-      second,
-      millisecond,
-    );
-  }
-  const naive = Date.UTC(
-    year,
-    month - 1,
-    day,
-    hour,
-    minute,
-    second,
-    millisecond,
+  const p = partsOf(match);
+  if (!isValidDate(p)) return null;
+  if (p.zone !== undefined) return withZone(p, p.zone);
+  return berlinLocalToInstant(
+    p.year,
+    p.month,
+    p.day,
+    p.hour,
+    p.minute,
+    p.second,
+    p.millisecond,
   );
-  if (zone.toUpperCase() === 'Z') return new Date(naive);
-  const sign = zone.startsWith('-') ? -1 : 1;
-  const digits = zone.slice(1).replace(':', '');
-  const offsetMinutes =
-    Number(digits.slice(0, 2)) * 60 + Number(digits.slice(2, 4));
-  return new Date(naive - sign * offsetMinutes * 60_000);
 }

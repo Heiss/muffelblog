@@ -269,20 +269,13 @@ function defaults(): Settings {
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze(defaults());
 
-/**
- * Reads and validates all settings. An empty variable counts as unset
- * (Compose delivers it like that when `${VAR:-}` stays empty). Only unsigned
- * integers are allowed. All errors are collected.
- */
-export function readSettings(
-  env: Record<string, string | undefined> = process.env,
-): Settings {
-  const values: Record<string, unknown> = {
-    lang: DEFAULT_LANG,
-    ...FLAG_DEFAULTS,
-    webmentionsBlock: [],
-  };
-  const errors: string[] = [];
+type Values = Record<string, unknown>;
+
+function readFlags(
+  env: Record<string, string | undefined>,
+  values: Values,
+  errors: string[],
+) {
   for (const [key, name] of FLAGS) {
     const raw = env[name]?.trim();
     if (raw === undefined || raw === '') continue;
@@ -292,27 +285,48 @@ export function readSettings(
         `${name}="${raw}" is invalid, allowed are 0 and 1, default 0`,
       );
   }
+}
+
+function readBlock(
+  env: Record<string, string | undefined>,
+  values: Values,
+  errors: string[],
+) {
   const block = env.MUFFEL_WEBMENTIONS_BLOCK?.trim();
-  if (block) {
-    const hosts = block
-      .split(',')
-      .map((h) => h.trim().toLowerCase())
-      .filter((h) => h !== '');
-    const bad = hosts.filter((h) => !HOST_NAME.test(h));
-    if (bad.length > 0)
-      errors.push(
-        `MUFFEL_WEBMENTIONS_BLOCK contains no host name: ${bad.map((h) => `"${h}"`).join(', ')} (comma separated host names such as example.org)`,
-      );
-    else values.webmentionsBlock = hosts;
+  if (!block) return;
+  const hosts = block
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter((h) => h !== '');
+  const bad = hosts.filter((h) => !HOST_NAME.test(h));
+  if (bad.length === 0) {
+    values.webmentionsBlock = hosts;
+    return;
   }
+  errors.push(
+    `MUFFEL_WEBMENTIONS_BLOCK contains no host name: ${bad.map((h) => `"${h}"`).join(', ')} (comma separated host names such as example.org)`,
+  );
+}
+
+function readLang(
+  env: Record<string, string | undefined>,
+  values: Values,
+  errors: string[],
+) {
   const lang = env.MUFFEL_LANG?.trim().toLowerCase();
-  if (lang) {
-    if ((LANGUAGES as readonly string[]).includes(lang)) values.lang = lang;
-    else
-      errors.push(
-        `MUFFEL_LANG="${env.MUFFEL_LANG?.trim()}" is invalid, allowed are ${LANGUAGES.join(', ')}, default ${DEFAULT_LANG}`,
-      );
-  }
+  if (!lang) return;
+  if ((LANGUAGES as readonly string[]).includes(lang)) values.lang = lang;
+  else
+    errors.push(
+      `MUFFEL_LANG="${env.MUFFEL_LANG?.trim()}" is invalid, allowed are ${LANGUAGES.join(', ')}, default ${DEFAULT_LANG}`,
+    );
+}
+
+function readNumbers(
+  env: Record<string, string | undefined>,
+  values: Values,
+  errors: string[],
+) {
   for (const spec of SETTING_SPECS) {
     const raw = env[spec.env]?.trim();
     if (raw === undefined || raw === '') {
@@ -321,17 +335,37 @@ export function readSettings(
     }
     const number = /^\d+$/.test(raw) ? Number(raw) : NaN;
     if (
-      !Number.isSafeInteger(number) ||
-      number < spec.min ||
-      number > spec.max
+      Number.isSafeInteger(number) &&
+      number >= spec.min &&
+      number <= spec.max
     ) {
-      errors.push(
-        `${spec.env}="${raw}" is invalid, allowed are integers from ${spec.min} to ${spec.max} (${spec.unit}), default ${spec.default}`,
-      );
+      values[spec.key] = number * spec.factor;
       continue;
     }
-    values[spec.key] = number * spec.factor;
+    errors.push(
+      `${spec.env}="${raw}" is invalid, allowed are integers from ${spec.min} to ${spec.max} (${spec.unit}), default ${spec.default}`,
+    );
   }
+}
+
+/**
+ * Reads and validates all settings. An empty variable counts as unset
+ * (Compose delivers it like that when `${VAR:-}` stays empty). Only unsigned
+ * integers are allowed. All errors are collected.
+ */
+export function readSettings(
+  env: Record<string, string | undefined> = process.env,
+): Settings {
+  const values: Values = {
+    lang: DEFAULT_LANG,
+    ...FLAG_DEFAULTS,
+    webmentionsBlock: [],
+  };
+  const errors: string[] = [];
+  readFlags(env, values, errors);
+  readBlock(env, values, errors);
+  readLang(env, values, errors);
+  readNumbers(env, values, errors);
   if (errors.length > 0) {
     throw new ConfigError(`Invalid settings:\n- ${errors.join('\n- ')}`);
   }
