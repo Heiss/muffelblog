@@ -6,12 +6,15 @@ test.describe('Glossary', () => {
     page,
   }) => {
     await page.goto('/g/cache/');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cache');
+    // The title is a question; the term (`term: Cache`) is used in the letter view.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Was ist ein Cache?',
+    );
     await expect(page.locator('.kind')).toHaveText(ui.glossary.term);
     await expect(page.locator('.content')).toContainText(
       'hält Ergebnisse bereit',
     );
-    await expect(page).toHaveTitle('Cache – Muffelblog');
+    await expect(page).toHaveTitle('Was ist ein Cache? – Muffelblog');
   });
 
   test('a post and a term can share a slug', async ({ page }) => {
@@ -116,6 +119,22 @@ test.describe('Glossary', () => {
     await expect(
       page.locator('[data-feed-list] article[data-kind="glossary"]'),
     ).toHaveCount(3);
+  });
+
+  test('a term has a comment section', async ({ page }) => {
+    await page.route('http://localhost:4322/**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: '',
+      }),
+    );
+    await page.goto('/g/cache/');
+    await expect(
+      page.locator('#comments').getByRole('heading', {
+        name: ui.comments.title,
+      }),
+    ).toBeVisible();
   });
 
   test('works without JavaScript', async ({ browser }) => {

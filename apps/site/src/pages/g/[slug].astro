@@ -1,4 +1,5 @@
 ---
+import Comments from '../../components/Comments.astro';
 import { messages } from '../../i18n/messages';
 import Base from '../../layouts/Base.astro';
 import { getContent } from '../../lib/articles';
@@ -53,6 +54,7 @@ const date = new Intl.DateTimeFormat(messages.locale, {
     )}
     <div class="content e-content" set:html={article.html} />
   </article>
+  <Comments />
 </Base>
 
 <script>

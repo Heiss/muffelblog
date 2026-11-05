@@ -60,16 +60,8 @@ test.describe('Comments', () => {
     );
   });
 
-  test('terms, pages, the feed and search have no comments', async ({
-    request,
-  }) => {
-    for (const path of [
-      '/g/cache/',
-      '/impressum/',
-      '/',
-      '/glossary/',
-      '/search/',
-    ]) {
+  test('pages, the feed and search have no comments', async ({ request }) => {
+    for (const path of ['/impressum/', '/', '/glossary/', '/search/']) {
       const html = await (await request.get(path)).text();
       expect(html, path).not.toContain('id="comments"');
     }
