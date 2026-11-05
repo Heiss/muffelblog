@@ -82,7 +82,7 @@ only: free of what the tests see.
 * **[V]** Memos: public list, attachments, fields that the loader reads.
   Implemented as `packages/core/contract/memos.contract.test.ts` and the CI job
   "Contract tests" with a Memos instance as a service container
-  (`neosmemo/memos:26.11.0`, the image exists, checked in the first run). The
+  (`neosmemo/memos:26.11.0`, the image exists, checked in the first run). Since 2026-11-05 a matrix runs the contract tests against the current and the previous supported versions (`supported-versions.json`, O8). The
   test creates the first user, sets the access mode to PUBLIC and creates memos
   with an attachment. A "green" run is reliable only if the test was not
   skipped: the job log says "5 passed".
