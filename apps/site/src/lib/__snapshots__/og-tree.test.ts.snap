@@ -1,0 +1,127 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`cardTree > lays out a card with a short title and an excerpt 1`] = `
+{
+  "props": {
+    "children": [
+      {
+        "props": {
+          "children": undefined,
+          "style": {
+            "backgroundColor": "#268bd2",
+            "display": "flex",
+            "height": 630,
+            "width": 24,
+          },
+        },
+        "type": "div",
+      },
+      {
+        "props": {
+          "children": [
+            {
+              "props": {
+                "children": "Post",
+                "style": {
+                  "color": "#268bd2",
+                  "display": "flex",
+                  "fontSize": 30,
+                  "fontWeight": 700,
+                },
+              },
+              "type": "div",
+            },
+            {
+              "props": {
+                "children": [
+                  {
+                    "props": {
+                      "children": "Hello",
+                      "style": {
+                        "display": "flex",
+                        "fontSize": 68,
+                        "fontWeight": 700,
+                        "lineHeight": 1.15,
+                      },
+                    },
+                    "type": "div",
+                  },
+                  {
+                    "props": {
+                      "children": "A short text",
+                      "style": {
+                        "color": "#586e75",
+                        "display": "flex",
+                        "fontSize": 30,
+                        "lineHeight": 1.35,
+                        "marginTop": 24,
+                      },
+                    },
+                    "type": "div",
+                  },
+                ],
+                "style": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                },
+              },
+              "type": "div",
+            },
+            {
+              "props": {
+                "children": [
+                  {
+                    "props": {
+                      "children": "Blog",
+                      "style": {
+                        "color": "#073642",
+                        "display": "flex",
+                        "fontWeight": 700,
+                      },
+                    },
+                    "type": "div",
+                  },
+                  {
+                    "props": {
+                      "children": "1 Jan 2026",
+                      "style": {
+                        "display": "flex",
+                      },
+                    },
+                    "type": "div",
+                  },
+                ],
+                "style": {
+                  "color": "#586e75",
+                  "display": "flex",
+                  "fontSize": 28,
+                  "justifyContent": "space-between",
+                },
+              },
+              "type": "div",
+            },
+          ],
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "height": 518,
+            "justifyContent": "space-between",
+            "margin": "56px 72px",
+            "width": 1032,
+          },
+        },
+        "type": "div",
+      },
+    ],
+    "style": {
+      "backgroundColor": "#fdf6e3",
+      "color": "#073642",
+      "display": "flex",
+      "fontFamily": "Source Sans 3",
+      "height": 630,
+      "width": 1200,
+    },
+  },
+  "type": "div",
+}
+`;

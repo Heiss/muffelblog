@@ -119,7 +119,8 @@ function footer(card: OgCard): Node {
 }
 
 /** The card: a colored bar on the left, kind, title with excerpt, site and date. */
-function cardTree(card: OgCard): Node {
+/** The layout tree that satori draws; exported for its tests. */
+export function cardTree(card: OgCard): Node {
   const content = el(
     'div',
     {
