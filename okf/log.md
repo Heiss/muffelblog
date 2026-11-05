@@ -2,6 +2,7 @@
 
 ## 2026-11-05
 * **Update**: W20 and W21: links between files of the folder lead to their pages, "Links of this page" with backlinks, link graph with posts, terms, memos and one node per external domain, local graph per page and `/graph/`; demo content links its posts and terms.
+* **Update**: W14 receiving webmentions: webmention.io API read by the builder, mentions as Remark42 comments of the administrator, deletions follow, state recovery from Remark42 (O3); stand-in of webmention.io for demo and CI (`docker/webmention-io-standin.mjs`, flow test); `rel=me` from `MUFFEL_REL_ME`; off by default.
 * **Update**: File tree `/files/` (owner's wish): published files in the folders of the Nextcloud folder, without drafts, see [URLs and SEO](/frontend/urls-seo.md).
 * **Update**: Social preview images (O17): one PNG per post, memo and term at build time (`satori`, `sharp`), `og:image` only with `SITE_URL`.
 * **Update**: Statistics (O19, changed by the owner): no own counter; optional Matomo through `MATOMO_URL` and `MATOMO_SITE_ID`, without cookies, off by default; the CSP names exactly that address.

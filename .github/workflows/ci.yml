@@ -151,6 +151,8 @@ jobs:
         run: docker/moderation-flow.sh
       - name: Webmentions are on, the first start sends nothing
         run: docker/webmention-flow.sh
+      - name: A received webmention becomes a comment and goes again when deleted
+        run: docker/webmention-receive-flow.sh
       - name: The builder reports its status
         run: |
           docker compose exec -T builder cat /data/state/status.json | tee /dev/stderr | grep -q '"state": "ok"'
@@ -158,7 +160,7 @@ jobs:
         if: failure()
         run: |
           echo '--- builder status'; docker compose exec -T builder cat /data/state/status.json || true
-          docker compose logs --no-color --tail 25 remark42 mailpit web
+          docker compose logs --no-color --tail 25 remark42 mailpit web webmention-io
       - run: docker compose down --volumes
 
   # The supported versions (supported-versions.json) for the contract matrix.

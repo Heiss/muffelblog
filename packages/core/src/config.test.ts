@@ -27,6 +27,7 @@ describe('readSettings', () => {
       webmentionsNoEndpointDays: 30,
       webmentionsEndpointDays: 7,
       webmentionsSend: false,
+      webmentionsReceive: false,
       webmentionsAllowPrivate: false,
       webmentionsBlock: [],
     });
@@ -62,6 +63,7 @@ describe('readSettings', () => {
       webmentionsNoEndpointDays: 30,
       webmentionsEndpointDays: 7,
       webmentionsSend: false,
+      webmentionsReceive: false,
       webmentionsAllowPrivate: false,
       webmentionsBlock: [],
     });
@@ -161,6 +163,7 @@ describe('readSettings', () => {
     it('is off by default and does not allow private addresses', () => {
       const s = readSettings({});
       expect(s.webmentionsSend).toBe(false);
+      expect(s.webmentionsReceive).toBe(false);
       expect(s.webmentionsAllowPrivate).toBe(false);
       expect(s.webmentionsBlock).toEqual([]);
     });

@@ -24,6 +24,8 @@ import { fileStore, sourcesFrom } from './serve.ts';
 import { assertWritable } from './dirs.ts';
 import { writeHealth } from './health.ts';
 import { createWebmentionRunner } from './webmentions.ts';
+import { createReceiveRunner } from './webmentions-receive.ts';
+import { createAdminClient } from './remark-admin.ts';
 import type { WebmentionSummary } from './scheduler.ts';
 
 /** Runs a command and fails with its exit code. Output goes to the container log. */
@@ -203,6 +205,59 @@ async function main(): Promise<void> {
       })
     : undefined;
 
+  // Receiving webmentions (W14): off by default. When on, the builder asks
+  // webmention.io (or the stand-in of the demo) at every check and writes new
+  // mentions into Remark42 as comments of the administrator.
+  let receiver: ReturnType<typeof createReceiveRunner> | undefined;
+  if (settings.webmentionsReceive) {
+    const token = process.env.WEBMENTION_IO_TOKEN?.trim() ?? '';
+    const missing = [
+      ['SITE_URL', siteUrl],
+      ['WEBMENTION_IO_TOKEN', token],
+      ['REMARK_INTERNAL_URL', remarkUrl ?? ''],
+      ['REMARK_ADMIN_PASSWD', process.env.REMARK_ADMIN_PASSWD ?? ''],
+    ]
+      .filter(([, v]) => !v)
+      .map(([name]) => name);
+    if (missing.length > 0) {
+      throw new Error(
+        `MUFFEL_WEBMENTIONS_RECEIVE=1 needs ${missing.join(', ')}`,
+      );
+    }
+    receiver = createReceiveRunner({
+      stateDir,
+      siteUrl,
+      apiUrl: process.env.WEBMENTION_IO_URL?.trim() || 'https://webmention.io',
+      token,
+      lang: settings.lang,
+      admin: createAdminClient({
+        baseUrl: remarkUrl as string,
+        site: process.env.COMMENTS_SITE_ID?.trim() || 'muffelblog',
+        password: process.env.REMARK_ADMIN_PASSWD as string,
+      }),
+      log: (line) => log(line),
+      timeoutMs: settings.webmentionsTimeoutMs,
+      maxBytes: settings.webmentionsMaxBytes,
+    });
+  }
+  let receiving: Promise<void> | undefined;
+  const receive = (): Promise<void> => {
+    if (!receiver || receiving) return receiving ?? Promise.resolve();
+    receiving = receiver
+      .run()
+      .then(() => undefined)
+      .catch((error: unknown) => {
+        // Existing mentions stay in Remark42; the next check tries again.
+        log(
+          `webmentions received: run failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      })
+      .finally(() => {
+        receiving = undefined;
+      });
+    return receiving;
+  };
+
   const scheduler = createScheduler({
     sources: polled,
     debounceChecks: settings.debounceChecks,
@@ -218,6 +273,8 @@ async function main(): Promise<void> {
       delete env.NEXTCLOUD_SHARE_PASSWORD;
       delete env.NEXTCLOUD_SHARE_PASSWORD_FILE;
       delete env.NEXTCLOUD_SHARE_TOKEN;
+      delete env.WEBMENTION_IO_TOKEN;
+      delete env.REMARK_ADMIN_PASSWD;
       if (remote) {
         const synced = await syncNextcloud({ remote, cacheDir, stateDir });
         log(
@@ -264,6 +321,12 @@ async function main(): Promise<void> {
       console.error('[builder] unexpected error in the check', error);
     }
     if (result !== 'idle') log(`check: ${result}`);
+    if (receiver) {
+      // In the background, like the sender; a new comment rebuilds the page
+      // through the comments source at a later check.
+      const started = receive();
+      if (once) await started;
+    }
     if (webmentions && result === 'built') {
       // In the background: slow foreign servers must not delay the next check.
       const started = webmentions.run();

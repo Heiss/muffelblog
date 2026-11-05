@@ -122,5 +122,21 @@ export type {
   GraphNodeKind,
   LinkGraph,
 } from './link-graph.ts';
+export {
+  emptyReceiveState,
+  mentionKey,
+  mentionText,
+  parseDeleted,
+  parseMentions,
+  planReceive,
+  targetPage,
+} from './webmention-receive.ts';
+export type {
+  DeletedMention,
+  PostedMention,
+  ReceivePlan,
+  ReceiveState,
+  ReceivedMention,
+} from './webmention-receive.ts';
 export { buildFileTree } from './file-tree.ts';
 export type { TreeFile, TreeFolder } from './file-tree.ts';

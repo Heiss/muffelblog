@@ -47,6 +47,8 @@ export interface Settings {
   webmentionsEndpointDays: number;
   /** Send webmentions at all. Off by default: the instance stays inside. */
   webmentionsSend: boolean;
+  /** Receive webmentions through webmention.io. Off by default: the instance stays inside. */
+  webmentionsReceive: boolean;
   /** Lift the address check (loopback, private). Only for tests and the tutorial. */
   webmentionsAllowPrivate: boolean;
   /** Hosts that are never asked, lower case. */
@@ -234,12 +236,14 @@ export const SETTING_SPECS: readonly SettingSpec[] = [
 /** Settings that are no numbers: switches (`0`/`1`) and the block list. */
 const FLAG_DEFAULTS = {
   webmentionsSend: false,
+  webmentionsReceive: false,
   webmentionsAllowPrivate: false,
   webmentionsBlock: [] as string[],
 };
 
 const FLAGS = [
   ['webmentionsSend', 'MUFFEL_WEBMENTIONS_SEND'],
+  ['webmentionsReceive', 'MUFFEL_WEBMENTIONS_RECEIVE'],
   ['webmentionsAllowPrivate', 'MUFFEL_WEBMENTIONS_ALLOW_PRIVATE'],
 ] as const;
 

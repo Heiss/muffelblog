@@ -500,22 +500,22 @@ Applies to every work package in addition to its own criteria:
 
 ## W14 - Webmentions: receiving and display
 
-* State (2026-11-05): not built. **Decided by the owner: part of 26.11.0**,
-  testable without a domain through a stand-in of the webmention.io API
-  ([Open points](/open-points.md), A).
+* State (2026-11-05): **built** (decided by the owner: part of 26.11.0),
+  testable without a domain through the stand-in of the webmention.io API, see
+  [Webmentions](/community/webmentions.md).
 
 * Branch: `feature/w14-webmentions-empfang`
 * Depends on: W13, W10, domain
 * Decisions: state and recovery (O3), comment text, checking the webmention.io
   API (O25).
 * DoD:
-  * [ ] `rel=webmention` and `rel=me` are set.
-  * [ ] New mentions appear as a comment in the timeline of the target page.
-  * [ ] Mentions are never posted twice, also after losing the state.
-  * [ ] The mention text is sanitized as text, no HTML.
-  * [ ] Avatar mirroring has SSRF and size protection or is dropped.
-  * [ ] If webmention.io fails, existing mentions stay visible.
-  * [ ] Posting and deleting mentions as `admin` is secured against the real
+  * [x] `rel=webmention` and `rel=me` are set (when switched on).
+  * [x] New mentions appear as a comment of the target page (CI flow with the stand-in).
+  * [x] Mentions are never posted twice, also after losing the state (unit and contract tests).
+  * [x] The mention text is built from escaped plain text, no foreign HTML or Markdown.
+  * [x] Avatars are dropped.
+  * [x] If webmention.io fails, existing mentions stay visible (they live in Remark42).
+  * [x] Posting and deleting mentions as `admin` is secured against the real
     Remark42 test instance in the contract test.
 
 ## W15 - Webmentions: sending

@@ -57,7 +57,7 @@ generated: { by: claude-code/web, at: 2026-11-03T05:30:00Z }
 | `MUFFEL_WEBMENTIONS_NO_ENDPOINT_DAYS` | 30 | 1 to 365 | Days a host without an endpoint is not asked again |
 | `MUFFEL_WEBMENTIONS_ENDPOINT_DAYS` | 7 | 1 to 365 | Days a found endpoint is reused |
 
-Further variables: `MATOMO_URL`, `MATOMO_SITE_ID` (optional Matomo of the operator, without cookies; both or none, an invalid address stops the build; O19). Setup of Compose (see [Docker operation](/architecture/docker.md)):
+Webmentions receiving: `MUFFEL_WEBMENTIONS_RECEIVE` (`0`/`1`, off), `WEBMENTION_IO_TOKEN` (secret), `WEBMENTION_IO_URL` (default webmention.io, the demo sets its stand-in), `MUFFEL_REL_ME` (profiles as `rel=me`). Further variables: `MATOMO_URL`, `MATOMO_SITE_ID` (optional Matomo of the operator, without cookies; both or none, an invalid address stops the build; O19). Setup of Compose (see [Docker operation](/architecture/docker.md)):
 `MUFFEL_BIND`, `MUFFEL_PORT`, `MUFFEL_COMMENTS_PORT`, `MUFFEL_TRUSTED_PROXIES`
 (addresses of the reverse proxy whose `X-Forwarded-For` is believed, default
 `private_ranges`), `MUFFEL_VERSION`, `MUFFEL_RELEASES_DIR`, `REMARK_PORT`,
