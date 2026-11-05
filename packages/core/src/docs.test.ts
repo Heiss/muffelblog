@@ -110,6 +110,12 @@ describe('documentation matches the code', () => {
           .replace(/(^|\/)index$/, ''),
       ),
     );
+    // Files of the folder `public/` are served as they are (agent.md).
+    for (const name of await readdir(
+      path.join(docsDir, '..', '..', '..', 'public'),
+    )) {
+      slugs.add(name);
+    }
     for (const file of files) {
       const text = await readFile(file, 'utf8');
       const targets = Array.from(
@@ -220,6 +226,71 @@ describe('documentation matches the code', () => {
         }
         expect(known, name).toContain(name);
       }
+    });
+  });
+
+  describe('the guide for AI agents (agent.md)', () => {
+    const agent = () => read('apps', 'docs', 'public', 'agent.md');
+
+    it('only lists pages that exist', async () => {
+      const text = await agent();
+      const table = text.slice(text.indexOf('## Pages to fetch'));
+      const paths = [...table.matchAll(/^\| `([a-z0-9/-]+)`/gm)].map(
+        (m) => m[1],
+      );
+      expect(paths.length).toBeGreaterThanOrEqual(8);
+      for (const p of paths) {
+        await expect(
+          stat(path.join(docsDir, `${p}.md`)),
+          p,
+        ).resolves.toBeTruthy();
+      }
+    });
+
+    it('only names scripts, Compose files and variables that exist', async () => {
+      const text = await agent();
+      for (const name of text.match(/docker\/[a-z-]+\.(?:sh|mjs)/g) ?? []) {
+        await stat(path.join(root, name));
+      }
+      for (const name of text.match(/compose(?:\.[a-z]+)?\.yaml/g) ?? []) {
+        await stat(path.join(root, name));
+      }
+      const known = [
+        await read('.env.example'),
+        await read('compose.yaml'),
+        await read('compose.production.yaml'),
+        await read('compose.domain.yaml'),
+        SETTING_SPECS.map((s) => s.env).join('\n'),
+        'MUFFEL_WEBMENTIONS_SEND MUFFEL_LANG MUFFEL_FIXTURES',
+      ].join('\n');
+      const names = new Set(text.match(/\b[A-Z][A-Z0-9]*_[A-Z0-9_]+\b/g) ?? []);
+      expect(names.size).toBeGreaterThan(10);
+      for (const name of names) expect(known, name).toContain(name);
+    });
+
+    it('keeps the rules about secrets and about asking first', async () => {
+      const text = await agent();
+      expect(text).toMatch(/Never ask for,\s+read or print a password/);
+      expect(text).toContain('NEXTCLOUD_SHARE_PASSWORD');
+      expect(text).toContain('SMTP_PASSWORD');
+      expect(text).toMatch(/explicit "yes"/);
+      expect(text).toContain('MUFFEL_WEBMENTIONS_SEND');
+      expect(text).toMatch(/\*\*off\*\* by default/);
+    });
+
+    it('is linked from the prompt page, which carries the address of agent.md', async () => {
+      const page = await read(
+        'apps',
+        'docs',
+        'src',
+        'content',
+        'docs',
+        'start',
+        'agent-install.md',
+      );
+      expect(page).toContain('https://heiss.github.io/muffelblog/agent.md');
+      const config = await read('apps', 'docs', 'astro.config.mjs');
+      expect(config).toContain("slug: 'start/agent-install'");
     });
   });
 });
