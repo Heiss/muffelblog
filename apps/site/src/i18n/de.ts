@@ -9,7 +9,25 @@ export const de: Messages = {
     home: 'Start',
     tags: 'Tags',
     glossary: 'Glossar',
+    graph: 'Graph',
     search: 'Suche',
+  },
+  graph: {
+    title: 'Graph',
+    intro:
+      'Wie Beiträge, Begriffe und Memos untereinander und auf andere Websites verlinken. Jede andere Website ist ein Punkt.',
+    linksTo: 'Verlinkt auf',
+    linkedFrom: 'Verlinkt von',
+    local: 'Links dieser Seite',
+    needsJs:
+      'Die Zeichnung braucht JavaScript; die Listen der Links funktionieren ohne.',
+    empty: 'Noch keine Links.',
+    kinds: {
+      post: 'Beitrag',
+      glossary: 'Begriff',
+      memo: 'Memo',
+      domain: 'Website',
+    },
   },
   search: {
     title: 'Suche',

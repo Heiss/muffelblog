@@ -11,7 +11,25 @@ export const en = {
     home: 'Home',
     tags: 'Tags',
     glossary: 'Glossary',
+    graph: 'Graph',
     search: 'Search',
+  },
+  graph: {
+    title: 'Graph',
+    intro:
+      'How posts, terms and memos link to each other and to other websites. Each other website is one point.',
+    linksTo: 'Links to',
+    linkedFrom: 'Linked from',
+    local: 'Links of this page',
+    needsJs:
+      'The drawing needs JavaScript; the lists of links work without it.',
+    empty: 'No links yet.',
+    kinds: {
+      post: 'Post',
+      glossary: 'Term',
+      memo: 'Memo',
+      domain: 'Website',
+    },
   },
   search: {
     title: 'Search',

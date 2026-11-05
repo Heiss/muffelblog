@@ -1,0 +1,55 @@
+---
+import { messages } from '../../i18n/messages';
+import Base from '../../layouts/Base.astro';
+import { getGraph } from '../../lib/graph';
+
+// The whole graph. Without JavaScript the page lists every page with its links.
+const graph = await getGraph();
+const t = messages.graph;
+const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+const pages = graph.nodes
+  .filter((n) => n.kind !== 'domain')
+  .map((n) => ({
+    node: n,
+    to: graph.edges
+      .filter((e) => e.from === n.id)
+      .map((e) => byId.get(e.to))
+      .filter((x) => x !== undefined),
+  }))
+  .filter((p) => p.to.length > 0);
+---
+
+<Base title={t.title}>
+  <h1>{t.title}</h1>
+  <p>{t.intro}</p>
+  <figure class="graph graph-all" data-graph hidden>
+    <figcaption>{t.title}</figcaption>
+  </figure>
+  <noscript>
+    <p>{t.needsJs}</p>
+  </noscript>
+  {pages.length === 0 && <p>{t.empty}</p>}
+  {pages.length > 0 && (
+    <section class="links">
+      <h2>{t.linksTo}</h2>
+      <ul class="link-list">
+        {pages.map(({ node, to }) => (
+          <li>
+            <a href={node.id}>{node.title}</a>
+            <span class="kind"> {t.kinds[node.kind]}</span>:
+            {to.map((n, i) => (
+              <>
+                {i > 0 && ', '}
+                {n.kind === 'domain' ? n.title : <a href={n.id}>{n.title}</a>}
+              </>
+            ))}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Base>
+
+<script>
+  import '../../scripts/graph';
+</script>

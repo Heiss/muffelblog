@@ -19,3 +19,5 @@ Entscheidend sind die Nebenwirkungen:
 ![Schema: Blende, Zeit und ISO im Gleichgewicht](bilder/blende-zeit-iso.jpg)
 
 Ein Beispiel: Für Nebel im Park nehme ich f/2,8, 1/250 s und ISO 100. Das Licht reicht, das Bild bleibt sauber, und die Hintergrundunschärfe hebt das Motiv ab.
+
+Die drei Größen im Glossar: [Blende](glossar/blende.md), [Belichtungszeit](glossar/belichtungszeit.md), [ISO-Empfindlichkeit](glossar/iso-empfindlichkeit.md). Mehr zum Licht am Abend: [Goldene Stunde](goldene-stunde.md).

@@ -31,3 +31,6 @@ const x = 1;
 ![Fehlt](bilder/gibt-es-nicht.png)
 
 <iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" width="560" height="315"></iframe>
+
+Ein Link auf einen Begriff im Ordner: [Cache](cache.md), und einer auf einen
+Entwurf, der Text bleibt: [Entwurf](ohne-publish.md).

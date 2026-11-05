@@ -24,3 +24,5 @@ Der ganze Ablauf passt in zwei Zeilen:
 pnpm build
 rsync -a dist/ server:/var/www/blog/
 ```
+
+Mehr dazu im Glossar: [statische Website](glossar/statische-website.md) und [Reverse Proxy](glossar/reverse-proxy.md). Gebaut wird mit [Astro](https://astro.build).
