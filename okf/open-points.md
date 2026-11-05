@@ -18,11 +18,6 @@ listed with their result, so those references keep working. Cleaned up on
 | O3, O11, O32 | Receiving webmentions (W14) | Before the release, and testable without a domain: production uses webmention.io, tests and the demo use a stand-in that copies the webmention.io API. |
 | O8 | Supported versions | Pinned versions, never "latest". The supported versions are listed in the docs. Contract tests run in parallel for the current and the previous version (Memos and Nextcloud); Renovate opens a PR when a new version appears, the contract test shows whether it works. |
 | O17 | Social preview images | Generated per page at build time (posts, memos, terms); developed and checked with the demo set. |
-<<<<<<< HEAD
-| O38 | Glossary details | Optional field `term:` (the term; the title may be a question, the letter view sorts by the term), and comments under terms. Umlaut sorting is solved (collator `de`). |
-=======
-| O19 | Statistics | View counter per post, memo and term: visitors per day from the access log of our Caddy (only a hash with a daily changing salt, never the address; bots filtered), baked into the HTML at every build, shown publicly on the page. On by default, `MUFFEL_STATS=0` switches it off. GoAccess as an extra container is described in the docs only. |
->>>>>>> origin/main
 
 # B. Open: tasks of the owner for the go-live (W17)
 
