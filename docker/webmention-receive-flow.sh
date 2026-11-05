@@ -9,8 +9,9 @@ SITE="${1:-http://localhost:8080}"
 STANDIN="${2:-http://localhost:8090}"
 COMMENTS="${3:-http://localhost:8081}"
 
-page="$(curl -fsS "$SITE/entries.json" | grep -o '"url":"/p/[^"]*"' | head -1 | cut -d'"' -f4)"
-[ -n "$page" ] || { echo "FAIL  no post found in entries.json"; exit 1; }
+slug="$(curl -fsS "$SITE/entries.json" | grep -o '"id":"post:[^"]*"' | head -1 | cut -d: -f3 | tr -d '"')"
+[ -n "$slug" ] || { echo "FAIL  no post found in entries.json"; exit 1; }
+page="/p/$slug/"
 target="$SITE$page"
 host="mention-$(date +%s).example"
 source="https://$host/post"
