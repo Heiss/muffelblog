@@ -32,93 +32,122 @@ export function neighborhood(graph: Graph, id: string): Graph {
   };
 }
 
+type Point = { x: number; y: number };
+
+/** Every pair of nodes pushes apart. */
+function repel(pos: Point[], disp: Point[], k: number): void {
+  for (let i = 0; i < pos.length; i++) {
+    for (let j = i + 1; j < pos.length; j++) {
+      const a = pos[i] as Point;
+      const b = pos[j] as Point;
+      let dx = a.x - b.x;
+      let dy = a.y - b.y;
+      if (Math.hypot(dx, dy) < 1e-6) {
+        dx = 1e-3 * (i - j);
+        dy = 1e-3;
+      }
+      const dist = Math.hypot(dx, dy);
+      const force = (REPULSION * k * k) / dist;
+      shift(disp[i] as Point, dx, dy, dist, force);
+      shift(disp[j] as Point, dx, dy, dist, -force);
+    }
+  }
+}
+
+/** Every edge pulls its two nodes together. */
+function attract(graph: Graph, pos: Point[], disp: Point[], k: number): void {
+  const index = new Map(graph.nodes.map((node, i) => [node.id, i]));
+  for (const e of graph.edges) {
+    const i = index.get(e.from);
+    const j = index.get(e.to);
+    if (i === undefined || j === undefined) continue;
+    const a = pos[i] as Point;
+    const b = pos[j] as Point;
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    const dist = Math.max(Math.hypot(dx, dy), 1e-6);
+    const force = (dist * dist) / k;
+    shift(disp[i] as Point, dx, dy, dist, -force);
+    shift(disp[j] as Point, dx, dy, dist, force);
+  }
+}
+
+function shift(d: Point, dx: number, dy: number, dist: number, force: number) {
+  d.x += (dx / dist) * force;
+  d.y += (dy / dist) * force;
+}
+
 /**
- * A small force layout (repulsion between all nodes, springs along edges),
- * deterministic: the same graph gives the same picture. Coordinates in a
- * square of `size`.
+ * Moves every node (not the center) by its displacement, at most
+ * `temperature`. Gravity keeps unlinked nodes near the middle instead of
+ * drifting away and squeezing the linked groups together.
+ */
+function move(
+  graph: Graph,
+  pos: Point[],
+  disp: Point[],
+  temperature: number,
+  center?: string,
+): void {
+  pos.forEach((p, i) => {
+    if (graph.nodes[i]?.id === center) return;
+    const d = disp[i] as Point;
+    d.x -= p.x * GRAVITY;
+    d.y -= p.y * GRAVITY;
+    const len = Math.max(Math.hypot(d.x, d.y), 1e-9);
+    p.x += (d.x / len) * Math.min(len, temperature);
+    p.y += (d.y / len) * Math.min(len, temperature);
+  });
+}
+
+/** Scales the positions into the square, with a margin for the labels. */
+function fit(graph: Graph, pos: Point[], size: number): Placed[] {
+  if (pos.length === 1)
+    return graph.nodes.map((node) => ({ ...node, x: size / 2, y: size / 2 }));
+  const minX = Math.min(...pos.map((p) => p.x));
+  const minY = Math.min(...pos.map((p) => p.y));
+  const span = Math.max(
+    Math.max(...pos.map((p) => p.x)) - minX,
+    Math.max(...pos.map((p) => p.y)) - minY,
+    1e-6,
+  );
+  const margin = size * 0.12;
+  const scale = (size - 2 * margin) / span;
+  return graph.nodes.map((node, i) => ({
+    ...node,
+    x: margin + ((pos[i] as Point).x - minX) * scale,
+    y: margin + ((pos[i] as Point).y - minY) * scale,
+  }));
+}
+
+/**
+ * A small force layout (repulsion between all nodes, springs along edges,
+ * gravity), deterministic: the same graph gives the same picture. Coordinates
+ * in a square of `size`.
  */
 export function layout(
   graph: Graph,
   options: { size?: number; iterations?: number; center?: string } = {},
 ): Placed[] {
-  const size = options.size ?? 600;
   const n = graph.nodes.length;
   if (n === 0) return [];
-  const pos = graph.nodes.map((node, i) => {
-    if (node.id === options.center) return { x: 0, y: 0 };
-    const angle = (2 * Math.PI * i) / n;
-    return { x: Math.cos(angle), y: Math.sin(angle) };
-  });
-  const index = new Map(graph.nodes.map((node, i) => [node.id, i]));
+  // Start on a circle; the center (if any) in the middle.
+  const pos: Point[] = graph.nodes.map((node, i) =>
+    node.id === options.center
+      ? { x: 0, y: 0 }
+      : {
+          x: Math.cos((2 * Math.PI * i) / n),
+          y: Math.sin((2 * Math.PI * i) / n),
+        },
+  );
   const k = Math.sqrt(1 / n);
   let temperature = 0.1;
-  const iterations = options.iterations ?? 300;
-  for (let step = 0; step < iterations; step++) {
+  for (let step = 0; step < (options.iterations ?? 300); step++) {
     const disp = pos.map(() => ({ x: 0, y: 0 }));
-    for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        const a = pos[i] as { x: number; y: number };
-        const b = pos[j] as { x: number; y: number };
-        let dx = a.x - b.x;
-        let dy = a.y - b.y;
-        let dist = Math.hypot(dx, dy);
-        if (dist < 1e-6) {
-          dx = 1e-3 * (i - j);
-          dy = 1e-3;
-          dist = Math.hypot(dx, dy);
-        }
-        const force = (REPULSION * k * k) / dist;
-        const fx = (dx / dist) * force;
-        const fy = (dy / dist) * force;
-        (disp[i] as { x: number }).x += fx;
-        (disp[i] as { y: number }).y += fy;
-        (disp[j] as { x: number }).x -= fx;
-        (disp[j] as { y: number }).y -= fy;
-      }
-    }
-    for (const e of graph.edges) {
-      const i = index.get(e.from);
-      const j = index.get(e.to);
-      if (i === undefined || j === undefined) continue;
-      const a = pos[i] as { x: number; y: number };
-      const b = pos[j] as { x: number; y: number };
-      const dx = a.x - b.x;
-      const dy = a.y - b.y;
-      const dist = Math.max(Math.hypot(dx, dy), 1e-6);
-      const force = (dist * dist) / k;
-      const fx = (dx / dist) * force;
-      const fy = (dy / dist) * force;
-      (disp[i] as { x: number }).x -= fx;
-      (disp[i] as { y: number }).y -= fy;
-      (disp[j] as { x: number }).x += fx;
-      (disp[j] as { y: number }).y += fy;
-    }
-    for (let i = 0; i < n; i++) {
-      if (graph.nodes[i]?.id === options.center) continue;
-      const d = disp[i] as { x: number; y: number };
-      // Gravity: unlinked nodes stay near the middle instead of drifting away
-      // and squeezing the linked groups together.
-      const p0 = pos[i] as { x: number; y: number };
-      d.x -= p0.x * GRAVITY;
-      d.y -= p0.y * GRAVITY;
-      const len = Math.max(Math.hypot(d.x, d.y), 1e-9);
-      const p = pos[i] as { x: number; y: number };
-      p.x += (d.x / len) * Math.min(len, temperature);
-      p.y += (d.y / len) * Math.min(len, temperature);
-    }
+    repel(pos, disp, k);
+    attract(graph, pos, disp, k);
+    move(graph, pos, disp, temperature, options.center);
     temperature *= 0.985;
   }
-  // Fit into the square with a margin for the labels.
-  const xs = pos.map((p) => p.x);
-  const ys = pos.map((p) => p.y);
-  const minX = Math.min(...xs);
-  const minY = Math.min(...ys);
-  const span = Math.max(Math.max(...xs) - minX, Math.max(...ys) - minY, 1e-6);
-  const margin = size * 0.12;
-  const scale = (size - 2 * margin) / span;
-  return graph.nodes.map((node, i) => ({
-    ...node,
-    x: n === 1 ? size / 2 : margin + ((pos[i]?.x ?? 0) - minX) * scale,
-    y: n === 1 ? size / 2 : margin + ((pos[i]?.y ?? 0) - minY) * scale,
-  }));
+  return fit(graph, pos, options.size ?? 600);
 }
