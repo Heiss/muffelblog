@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-05
+* **Update**: Social preview images (O17): one PNG per post, memo and term at build time (`satori`, `sharp`), `og:image` only with `SITE_URL`.
 * **Update**: Glossary field `term:` (title may be a question, letter view sorts by the term) and comments on terms (O38).
 * **Update**: Decisions of the owner on the open points: W14 before the release with a webmention.io stand-in; pinned versions with parallel contract tests (current and previous) and Renovate; per-page social preview images; view counter from the Caddy log (public, on by default, `MUFFEL_STATS`); glossary field `term:` and comments on terms; favicon accepted; O27 reading confirmed; repo public; Renovate details after the release.
 * **Update**: OKF aligned before the release: [Open points](/open-points.md) split into open decisions of the owner (with proposals), owner tasks for the go-live, settled points and unverified facts; `docker.md` (builder not root, scheduler in 26.11.0), overview (license, setup, webmention state), W14 state, favicon in URLs and SEO.

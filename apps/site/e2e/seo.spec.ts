@@ -78,6 +78,28 @@ test.describe('Open Graph', () => {
     );
   });
 
+  test('posts, memos and terms have a preview image of 1200 x 630', async ({
+    request,
+  }) => {
+    for (const path of ['/og/p/hallo-welt.png', '/og/g/cache.png']) {
+      const res = await request.get(path);
+      expect(res.status(), path).toBe(200);
+      expect(res.headers()['content-type'], path).toContain('image/png');
+      const png = await res.body();
+      // PNG header: width and height at bytes 16 and 20.
+      expect([png.readUInt32BE(16), png.readUInt32BE(20)], path).toEqual([
+        1200, 630,
+      ]);
+    }
+  });
+
+  test('the image is named only with a known domain (og:image must be absolute)', async ({
+    page,
+  }) => {
+    await page.goto('/p/hallo-welt/');
+    await expect(page.locator('meta[property="og:image"]')).toHaveCount(0);
+  });
+
   test('other pages are websites, og:url only with a known domain', async ({
     page,
   }) => {

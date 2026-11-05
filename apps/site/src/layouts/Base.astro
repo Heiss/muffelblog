@@ -16,6 +16,7 @@ import { SITE_NAME, pageTitle } from '@muffelblog/core';
 import { canonicalUrl, siteUrl } from '../lib/feed';
 import { messages } from '../i18n/messages';
 import { getContent } from '../lib/articles';
+import { OG_HEIGHT, OG_WIDTH, ogImagePath } from '../lib/og';
 import { DEFAULT_LIGHT, THEMES } from '../lib/themes';
 
 interface Props {
@@ -30,6 +31,10 @@ interface Props {
 const { title, description, noindex, ogType = 'website' } = Astro.props;
 const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
 const { articles } = await getContent();
+// Social preview image: posts, memos and terms, only with SITE_URL (absolute URL).
+const ogPath = ogImagePath(Astro.url.pathname);
+const ogImage =
+  ogPath && siteUrl() ? canonicalUrl(siteUrl(), ogPath) : undefined;
 const legalPages = articles
   .filter((a) => a.type === 'page')
   .sort((a, b) => a.title.localeCompare(b.title, messages.lang));
@@ -59,7 +64,22 @@ const legalPages = articles
     <meta property="og:locale" content={messages.locale.replace('-', '_')} />
     {description && <meta property="og:description" content={description} />}
     {canonical && <meta property="og:url" content={canonical} />}
-    <meta name="twitter:card" content="summary" />
+    {ogImage && (
+      <>
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:width" content={String(OG_WIDTH)} />
+        <meta property="og:image:height" content={String(OG_HEIGHT)} />
+        <meta
+          property="og:image:alt"
+          content={messages.og.alt(title ?? SITE_NAME)}
+        />
+      </>
+    )}
+    <meta
+      name="twitter:card"
+      content={ogImage ? 'summary_large_image' : 'summary'}
+    />
     {noindex && <meta name="robots" content="noindex, follow" />}
     <!-- Sets data-theme before the first paint, so it is blocking and from the own domain. -->
     <script is:inline src="/theme-init.js"></script>
