@@ -218,6 +218,28 @@ function markLink(
   else if (isFileLink(c, href)) files.push([node, parent]);
 }
 
+/** The first child that is not blank text, if it is an element. */
+function firstElement(node: Element): Element | undefined {
+  const first = node.children.find(
+    (child) => child.type !== 'text' || child.value.trim() !== '',
+  );
+  return first?.type === 'element' ? first : undefined;
+}
+
+/**
+ * The checkbox of a task list item (`- [x] ...`), directly in the item or in
+ * its first paragraph. Any other input is removed: the sanitizer turns every
+ * input into a disabled checkbox, so the type alone does not tell them apart.
+ */
+function taskBox(item: Element): Element | undefined {
+  const classes = item.properties?.className;
+  if (!Array.isArray(classes) || !classes.includes('task-list-item'))
+    return undefined;
+  const first = firstElement(item);
+  const box = first?.tagName === 'p' ? firstElement(first) : first;
+  return box?.tagName === 'input' ? box : undefined;
+}
+
 /** Collects the elements the later steps change; shifts headings on the way. */
 function collect(c: Content, tree: Root) {
   const found = {
@@ -225,6 +247,7 @@ function collect(c: Content, tree: Root) {
     frames: [] as Found,
     inputs: [] as Found,
     files: [] as Found,
+    tasks: new Set<Element>(),
   };
   const buckets: Record<string, Found> = {
     img: found.images,
@@ -239,6 +262,10 @@ function collect(c: Content, tree: Root) {
     else if (/^h[1-6]$/.test(node.tagName))
       node.tagName = `h${Math.min(6, Number(node.tagName.slice(1)) + 1)}`;
     else if (node.tagName === 'a') markLink(c, node, p, found.files);
+    else if (node.tagName === 'li') {
+      const box = taskBox(node);
+      if (box) found.tasks.add(box);
+    }
   });
   return found;
 }
@@ -432,7 +459,7 @@ function rehypeContent(options: RenderOptions, warnings: string[]) {
     for (const [node, parent] of found.files) resolveFileLink(c, node, parent);
     highlightCode(tree);
     for (const [node, parent] of found.inputs)
-      if (node.properties?.type !== 'checkbox') replaceNode(parent, node, []);
+      if (!found.tasks.has(node)) replaceNode(parent, node, []);
     for (const [node, parent] of found.frames) replaceFrame(c, node, parent);
     for (const [node, parent] of found.images)
       await replaceImage(c, node, parent);

@@ -13,12 +13,8 @@ export class NetError extends Error {
 
 // --- Addresses ---------------------------------------------------------------
 
-function ipv4Parts(ip: string): number[] | null {
-  const parts = ip.split('.');
-  if (parts.length !== 4) return null;
-  const numbers = parts.map((p) => (/^\d{1,3}$/.test(p) ? Number(p) : NaN));
-  return numbers.every((n) => n >= 0 && n <= 255) ? numbers : null;
-}
+/** The four numbers of an IPv4 address that `isIP` has accepted. */
+const ipv4Parts = (ip: string): number[] => ip.split('.').map(Number);
 
 // Ranges that are not routable on the public internet (RFC 6890 and friends).
 const NON_PUBLIC_IPV4: readonly [string, number][] = [
@@ -41,7 +37,7 @@ const ipv4Number = (parts: number[]): number =>
   parts.reduce((n, p) => n * 256 + p, 0);
 
 const NON_PUBLIC_IPV4_RANGES = NON_PUBLIC_IPV4.map(([base, bits]) => ({
-  base: ipv4Number(ipv4Parts(base) as number[]),
+  base: ipv4Number(ipv4Parts(base)),
   size: 2 ** (32 - bits),
 }));
 
@@ -54,43 +50,31 @@ function isPublicIPv4(parts: number[]): boolean {
 }
 
 /** Replaces a trailing dotted IPv4 part (`::ffff:1.2.3.4`) by two groups. */
-function expandDottedTail(text: string): string | null {
-  const dotted = /(\d+\.\d+\.\d+\.\d+)$/.exec(text);
-  if (!dotted) return text;
-  const v4 = ipv4Parts(dotted[1] as string);
-  if (!v4) return null;
-  const hi = ((v4[0] as number) << 8) | (v4[1] as number);
-  const lo = ((v4[2] as number) << 8) | (v4[3] as number);
-  return (
-    text.slice(0, -(dotted[1] as string).length) +
-    `${hi.toString(16)}:${lo.toString(16)}`
-  );
+function expandDottedTail(text: string): string {
+  const dotted = text.slice(text.lastIndexOf(':') + 1);
+  if (!dotted.includes('.')) return text;
+  const [a, b, c, d] = ipv4Parts(dotted) as [number, number, number, number];
+  const hi = (a << 8) | b;
+  const lo = (c << 8) | d;
+  return `${text.slice(0, -dotted.length)}${hi.toString(16)}:${lo.toString(16)}`;
 }
 
 const hexGroups = (part: string): number[] =>
-  part === ''
-    ? []
-    : part
-        .split(':')
-        .map((g) => (/^[0-9a-f]{1,4}$/i.test(g) ? parseInt(g, 16) : NaN));
+  part === '' ? [] : part.split(':').map((g) => parseInt(g, 16));
 
-/** The eight 16-bit groups of an IPv6 address, or null. */
-function ipv6Groups(ip: string): number[] | null {
-  const text = expandDottedTail(ip.split('%')[0] ?? '');
-  if (text === null) return null;
-  const halves = text.split('::');
-  if (halves.length > 2) return null;
-  const head = hexGroups(halves[0] as string);
-  const tail = halves.length === 2 ? hexGroups(halves[1] as string) : [];
-  const fill = 8 - head.length - tail.length;
-  if (halves.length === 2 && fill < 1) return null;
-  const groups =
-    halves.length === 2
-      ? [...head, ...Array<number>(fill).fill(0), ...tail]
-      : head;
-  return groups.length === 8 && groups.every((g) => g >= 0 && g <= 0xffff)
-    ? groups
-    : null;
+/**
+ * The eight 16-bit groups of an IPv6 address that `isIP` has accepted
+ * (a zone such as `%eth0` is dropped).
+ */
+function ipv6Groups(ip: string): number[] {
+  const [head = '', tail] = expandDottedTail(ip.split('%')[0] as string).split(
+    '::',
+  );
+  if (tail === undefined) return hexGroups(head);
+  const first = hexGroups(head);
+  const last = hexGroups(tail);
+  const fill = 8 - first.length - last.length;
+  return [...first, ...Array<number>(fill).fill(0), ...last];
 }
 
 function embeddedIPv4(hi: number, lo: number): number[] {
@@ -108,10 +92,9 @@ const IPV6_RULES: readonly [
   (g: number[]) => boolean,
   false | [number, number],
 ][] = [
-  [(g) => allZero(g), false], // ::
-  [(g) => allZero(g.slice(0, 7)) && g[7] === 1, false], // ::1
   [(g) => allZero(g.slice(0, 5)) && g[5] === 0xffff, [6, 7]], // IPv4-mapped
-  [(g) => allZero(g.slice(0, 6)), false], // IPv4-compatible (deprecated)
+  // `::`, `::1` and the deprecated IPv4-compatible addresses `::a.b.c.d`.
+  [(g) => allZero(g.slice(0, 6)), false],
   [(g) => g[0] === 0x64 && g[1] === 0xff9b && allZero(g.slice(2, 6)), [6, 7]], // NAT64
   [(g) => g[0] === 0x100 && allZero(g.slice(1, 4)), false], // discard prefix
   [(g) => g[0] === 0x2001 && g[1] === 0, false], // Teredo
@@ -139,14 +122,8 @@ function isPublicIPv6(g: number[]): boolean {
  */
 export function isPublicAddress(ip: string): boolean {
   const kind = isIP(ip);
-  if (kind === 4) {
-    const parts = ipv4Parts(ip);
-    return parts !== null && isPublicIPv4(parts);
-  }
-  if (kind === 6) {
-    const groups = ipv6Groups(ip);
-    return groups !== null && isPublicIPv6(groups);
-  }
+  if (kind === 4) return isPublicIPv4(ipv4Parts(ip));
+  if (kind === 6) return isPublicIPv6(ipv6Groups(ip));
   return false;
 }
 

@@ -281,6 +281,38 @@ jobs:
   # Required check for main. Always runs, so GitHub does not block the merge
   # because of a check that was never reported, and decides itself whether
   # skipped jobs are fine.
+  # Mutation tests (W18): incremental on pull requests and on main (the result
+  # of the last run is restored from the cache), complete on a release tag and
+  # every night (mutation.yml).
+  # A mutation score below 80 % fails the job (stryker.config.json).
+  mutation:
+    name: Mutation tests
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Result of the last run
+        uses: actions/cache@v4
+        with:
+          path: reports/stryker-incremental.json
+          key: stryker-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            stryker-${{ github.ref }}-
+            stryker-refs/heads/main-
+      - name: Incremental run
+        if: github.ref_type != 'tag'
+        run: pnpm test:mutation
+      - name: Complete run (release tag)
+        if: github.ref_type == 'tag'
+        run: pnpm test:mutation --force
+
   gate:
     name: CI Gate
     needs:
@@ -294,6 +326,7 @@ jobs:
         docker,
         compose,
         contract,
+        mutation,
       ]
     if: always()
     runs-on: ubuntu-latest
@@ -310,6 +343,7 @@ jobs:
           DOCKER: ${{ needs.docker.result }}
           COMPOSE: ${{ needs.compose.result }}
           CONTRACT: ${{ needs.contract.result }}
+          MUTATION: ${{ needs.mutation.result }}
         run: |
           if [ "$SECURITY" != "success" ]; then
             echo "Secrets or dependencies check failed: $SECURITY"
@@ -320,7 +354,7 @@ jobs:
             exit 1
           fi
           if [ "$CODE" = "true" ]; then
-            for result in "$VERSIONS" "$CODEQL" "$CHECK" "$E2E" "$DOCKER" "$COMPOSE" "$CONTRACT"; do
+            for result in "$VERSIONS" "$CODEQL" "$CHECK" "$E2E" "$DOCKER" "$COMPOSE" "$CONTRACT" "$MUTATION"; do
               if [ "$result" != "success" ]; then
                 echo "A required job was not successful: $result"
                 exit 1
