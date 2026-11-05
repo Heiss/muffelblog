@@ -36,7 +36,37 @@ import path would be possible, but it deletes all comments of the site on every
 run (`DeleteAll` before writing).[^remark42-migrator] It is therefore not
 acceptable.
 
-# Procedure (proposal)
+# Receiving (W14, built 2026-11-05)
+
+Decisions of the owner (2026-11-05): before the release, testable without a
+domain through a stand-in of the webmention.io API; off by default
+(`MUFFEL_WEBMENTIONS_RECEIVE=1` plus `WEBMENTION_IO_TOKEN`); `rel=me` from
+`MUFFEL_REL_ME`; comment text "kind from author: link", no excerpt, no avatar.
+
+* **[E]** At every check the builder reads `/api/mentions.jf2` (token as bearer
+  header and query parameter, `since_id`, `sort-dir=up`, 100 per page) and
+  `/api/deleted`; `WEBMENTION_IO_URL` points to webmention.io or to the
+  stand-in `docker/webmention-io-standin.mjs` (demo, CI).
+* **[E]** Only targets on the own origin under `/p/`, `/m/`, `/g/` count; the
+  key is `source -> page`, so one source is posted once per page.
+* **[E]** Comment as `admin` through `POST /api/v1/comment?site=`; text
+  "{kind} from {author or host}: [link](link)", Markdown and HTML of foreign
+  names escaped, parentheses in links encoded. Avatars are dropped (no foreign
+  images, no SSRF). Kinds from `wm-property`.
+* **[E]** State `state/webmentions-received.json` (since id, posted comments).
+  Lost or damaged: the comments of the administrator in Remark42 are read and
+  every linked source counts as posted (O3); visitors' comments are ignored for
+  that.
+* **[E]** A deleted mention deletes its comment.
+* **[E]** A failure is logged; existing mentions stay; the next check tries
+  again. Secrets (`WEBMENTION_IO_TOKEN`, `REMARK_ADMIN_PASSWD`) are removed from
+  the environment of the site build.
+* **[U]** Against the live webmention.io: the jf2 fields and `/api/deleted`
+  follow its README on GitHub (the site itself was not reachable from the build
+  environment); the bearer header is documented only in the newer README, so
+  the token is also sent as `token=`.
+
+# Procedure (earlier proposal, replaced by the section above)
 
 * **[V]** The builder queries webmention.io every 3 minutes.
 * **[V]** For every new mention it posts a comment through
@@ -117,13 +147,13 @@ Decided by the owner on 2026-11-04 (W15). Sending is **off by default**
 
 # Prerequisites
 
-* **[V]** `<link rel="webmention" href="https://webmention.io/<domain>/webmention">`
-  and `rel=me` links in the `<head>` or on the page, IndieAuth login at
-  webmention.io. This needs the final domain.
+* **[E]** `<link rel="webmention" href="https://webmention.io/<host>/webmention">`
+  (only when receiving is on and `SITE_URL` is set) and `rel=me` links from
+  `MUFFEL_REL_ME` in the `<head>`. The IndieAuth login at webmention.io needs
+  the final domain; everything else is testable with the stand-in.
 * **[V]** Microformats (`h-entry`, `h-card`, `u-url`) on post and memo pages,
   so receivers can read title and author. This was not discussed (O11).
-* **[U]** The public webmention.io API delivers mentions without a token and
-  has a `since` parameter. Not checked.
+* The domain-wide listing needs the token; `since_id` exists (README).
 
 # Risks
 

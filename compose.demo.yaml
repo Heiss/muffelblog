@@ -8,6 +8,28 @@
 # (Mailpit) on http://localhost:8025. Nothing leaves this machine.
 
 services:
+  builder:
+    environment:
+      # Receiving webmentions through the local stand-in of webmention.io:
+      # docker/webmention-io-standin.mjs. The token is not a secret, it only
+      # exists for this stand-in.
+      MUFFEL_WEBMENTIONS_RECEIVE: '1'
+      WEBMENTION_IO_URL: http://webmention-io:8090
+      WEBMENTION_IO_TOKEN: demo-standin-token
+
+  # Stand-in of webmention.io (same image as the builder, which has Node).
+  webmention-io:
+    image: ghcr.io/heiss/muffelblog-builder:${MUFFEL_VERSION:-latest}
+    build:
+      context: .
+      target: builder
+    restart: unless-stopped
+    command: ['node', '/repo/docker/webmention-io-standin.mjs', '8090']
+    environment:
+      WEBMENTION_IO_TOKEN: demo-standin-token
+    ports:
+      - '127.0.0.1:${MUFFEL_STANDIN_PORT:-8090}:8090'
+
   remark42:
     depends_on:
       - mailpit

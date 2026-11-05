@@ -59,6 +59,11 @@ The colour scheme and the filter you choose are stored in your browser
 website in a post, this blog can tell that website about the link by sending it
 the address of the post and the address of the link.
 
+[DELETE this paragraph if you do not receive webmentions.] Other websites can
+tell this blog that they link to a post. These messages are collected by
+webmention.io, run by [PLACEHOLDER: check the operator]; the blog shows the
+name given by the other website and the address of its page as a comment.
+
 ## Statistics
 
 [DELETE this section if you do not set MATOMO_URL.] This blog counts visits

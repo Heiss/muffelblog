@@ -51,12 +51,17 @@ export function createAdminClient(options: AdminOptions) {
     method: string,
     url: string,
     body?: Uint8Array<ArrayBuffer>,
+    contentType?: string,
   ): Promise<Response> {
     let res: Response;
     try {
       res = await doFetch(url, {
         method,
-        headers: { Authorization: auth, Accept: 'application/json' },
+        headers: {
+          Authorization: auth,
+          Accept: 'application/json',
+          ...(contentType ? { 'Content-Type': contentType } : {}),
+        },
         ...(body ? { body: new Blob([body]) } : {}),
         redirect: 'manual',
         signal: AbortSignal.timeout(120_000),
@@ -78,6 +83,22 @@ export function createAdminClient(options: AdminOptions) {
     async list(limit: number): Promise<AdminComment[]> {
       const res = await call('GET', endpoint(`/api/v1/last/${limit}`));
       return (await res.json()) as AdminComment[];
+    },
+    /** Writes a comment as the administrator (received webmentions). Returns its id. */
+    async postComment(text: string, pageUrl: string): Promise<string> {
+      const body = new TextEncoder().encode(
+        JSON.stringify({ text, locator: { site: options.site, url: pageUrl } }),
+      );
+      const res = await call(
+        'POST',
+        endpoint('/api/v1/comment'),
+        body,
+        'application/json',
+      );
+      const json = (await res.json()) as { id?: unknown };
+      if (typeof json.id !== 'string' || json.id === '')
+        throw new Error('Remark42 did not return the id of the new comment');
+      return json.id;
     },
     async deleteComment(id: string, pageUrl: string): Promise<void> {
       await call(
