@@ -62,6 +62,15 @@ describe('groupByLetter', () => {
     ]);
   });
 
+  it('sorts and groups by the term when there is one, not by the title', () => {
+    const groups = groupByLetter([
+      { title: 'Was ist Holacracy?', term: 'Holacracy' },
+      { title: 'Agil' },
+    ]);
+    expect(groups.map((g) => g.letter)).toEqual(['A', 'H']);
+    expect(groups[1]?.items[0]?.term).toBe('Holacracy');
+  });
+
   it('returns nothing for no terms', () => {
     expect(groupByLetter([])).toEqual([]);
   });

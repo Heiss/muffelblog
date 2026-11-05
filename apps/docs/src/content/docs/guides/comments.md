@@ -3,7 +3,7 @@ title: Comments
 description: Self-hosted comments with Remark42, login by email, moderation and the static copy.
 ---
 
-Posts and memos have a comment section. It is [Remark42](https://remark42.com),
+Posts, memos and glossary terms have a comment section. It is [Remark42](https://remark42.com),
 running next to the blog; you do not need an account anywhere else.
 
 ## How it works for readers

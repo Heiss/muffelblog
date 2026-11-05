@@ -38,6 +38,8 @@ export interface Article {
   type: ArticleType;
   slug: string;
   title: string;
+  /** Glossary only: the term itself (`term:`), when the title is a question. */
+  term?: string;
   date: Date;
   dateSource: 'frontmatter' | 'mtime';
   tags: string[];
@@ -201,6 +203,19 @@ export function parseArticle(input: {
   };
   if (typeof data.description === 'string' && data.description.trim() !== '') {
     article.description = data.description.trim();
+  }
+  if (data.term !== undefined) {
+    const term =
+      typeof data.term === 'string' || typeof data.term === 'number'
+        ? String(data.term).trim()
+        : '';
+    if (type !== 'glossary') {
+      warn('term is only used for glossary entries (type: glossary), ignored');
+    } else if (term === '') {
+      warn('term is empty or not text, the title is used as the term');
+    } else {
+      article.term = term;
+    }
   }
   return { kind: 'article', article, warnings };
 }
