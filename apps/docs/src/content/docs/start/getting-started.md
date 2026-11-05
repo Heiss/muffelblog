@@ -91,6 +91,10 @@ the proxy reaches, and `MUFFEL_TRUSTED_PROXIES` to the address of the proxy
 docker compose up -d
 ```
 
+This pulls the published builder image. Before the first release, or while the
+image is not public yet, build it on the server instead: `docker compose up -d
+--build`.
+
 The first start takes a few minutes: the builder fetches your content and builds
 the site, then the web server starts. Follow it with
 `docker compose logs -f builder`; it ends with a line like

@@ -534,8 +534,8 @@ Applies to every work package in addition to its own criteria:
     servers (`safeFetch`, tested with real local servers).
   * [x] Compose job checks that the first start sends nothing
     (`docker/webmention-flow.sh`).
-  * [ ] A real receiver on the internet is not tested; the tutorial covers it
-    with a local receiver (`docker/webmention-receiver.mjs`).
+  * [ ] A real receiver on the internet is not tested; the webmentions guide
+    covers it with a local receiver (`docker/webmention-receiver.mjs`).
 
 ## W16 - Hardening and operation
 
