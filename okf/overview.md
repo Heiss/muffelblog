@@ -37,7 +37,7 @@ This specification separates what is confirmed from proposals:
 * **[E]** Glossary and knowledge graph, see [Glossary](/features/glossary.md).
 * **[E]** Auto-update through `build.json`, banner "N new entries".
 * **[E]** Search with Pagefind, tags, combined RSS feed.
-* **[E]** Comments: Remark42 with email login, for posts and memos.
+* **[E]** Comments: Remark42 with email login, for posts, memos and terms.
 * **[E]** Webmentions: webmention.io, receiving and sending, displayed as
   comments in Remark42.
 * **[E]** UI language per deployment setting (`en` default, or `de`); the

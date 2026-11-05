@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-05
+* **Update**: Glossary field `term:` (title may be a question, letter view sorts by the term) and comments on terms (O38).
 * **Update**: OKF aligned before the release: [Open points](/open-points.md) split into open decisions of the owner (with proposals), owner tasks for the go-live, settled points and unverified facts; `docker.md` (builder not root, scheduler in 26.11.0), overview (license, setup, webmention state), W14 state, favicon in URLs and SEO.
 * **Update**: Simple setup (decided by the owner): `compose.yaml` alone is production behind the operator's reverse proxy, which only forwards to `127.0.0.1:8080/8081`; Caddy stays; `compose.demo.yaml` + `docker/init-env.sh --demo` for the demo; `compose.host-folder.yaml` as the advanced variant; `compose.domain.yaml` and the tutorial removed; docs: Getting started with the required variables, reverse proxy examples, full configuration table. See [Docker operation](/architecture/docker.md).
 * **Update**: HEIC photos (O36 decided): `heif-convert` in the builder image, content check, limits, converter used for articles and memos; `heic-check.ts` runs in the Compose job; HSTS recorded as the proxy's job (owner's decision).

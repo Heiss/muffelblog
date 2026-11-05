@@ -30,6 +30,7 @@ The text starts here.
 | `description` | no       | Used as meta description and feed excerpt.                             |
 | `slug`        | no       | The last part of the address. Missing: derived from the file name.     |
 | `type`        | no       | `glossary` or `page`. Missing: a post.                                 |
+| `term`        | no       | Glossary only: the term, when the title is a question.                 |
 
 Unknown fields (`aliases`, `cssclasses`, ...) are ignored.
 
@@ -56,7 +57,9 @@ search and in the sitemap.
 ### Glossary terms: `type: glossary`
 
 Address `/g/<slug>/`. The title is the term, the description is the short
-definition shown in lists. Terms appear in the feed under _Begriffe_ (and in
+definition shown in lists. The title may also be a question ("Was ist ein
+Cache?"): then set `term: Cache`, and the letter view shows and sorts the term.
+Terms have a comment section, like posts and memos. Terms appear in the feed under _Begriffe_ (and in
 _Alle_, marked as terms), never under _Lang_. `/glossary/` lists all terms by
 first letter; umlauts count under their base letter, digits under `#`. A term and
 a post may share a slug, because the addresses are separate.

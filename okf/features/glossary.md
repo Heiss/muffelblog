@@ -102,9 +102,15 @@ generated: { by: claude-code/web, at: 2026-11-03T12:30:00Z }
 * **Size of `graph.json`:** grows with nodes and edges. Not critical at the
   expected amount, a threshold is set in W21.
 
+# Decided 2026-11-05 (O38)
+
+* **[E]** Optional field `term:` for a glossary entry: the term itself, when
+  the title is a question. The letter view shows and sorts the term (or else the
+  title). The address still comes from the file name or `slug:`.
+* **[E]** Terms have comments like posts and memos.
+* **[E]** Umlauts sort under the base letter (collator `de`).
+
 # Open
 
-See O38 in [Open points](/open-points.md): comments and webmentions on terms,
-sorting of umlauts, question form of the title and name of the term field,
-display of memos in the graph, structure of a single term page in the model
+Display of memos in the graph, structure of a single term page in the model
 (not observed).
