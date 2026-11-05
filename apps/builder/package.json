@@ -1,6 +1,7 @@
 {
   "name": "@muffelblog/builder",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
