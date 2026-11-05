@@ -88,105 +88,134 @@ export interface LocalImageResolver {
   files: () => Map<string, Buffer>;
 }
 
-/** Resolves images from the content folder and processes each image only once. */
-export function createLocalImageResolver(options: {
+interface ResolverOptions {
   root: string;
   urlPrefix: string;
   /** Shared store of the served files, otherwise a private one. */
   store?: Map<string, Buffer>;
   /** Without it HEIC photos are not used (the decoder is not part of the image library). */
   convertHeic?: HeicConverter;
-}): LocalImageResolver {
-  const files = options.store ?? new Map<string, Buffer>();
-  const processed = new Map<string, ProcessedImage>();
-  let realRoot: string | undefined;
+}
 
-  const rootPath = async (): Promise<string> => {
-    realRoot ??= await realpath(options.root);
-    return realRoot;
+/** The state of one resolver: options, served files, processed images. */
+interface Resolver {
+  options: ResolverOptions;
+  files: Map<string, Buffer>;
+  processed: Map<string, ProcessedImage>;
+  realRoot?: string;
+}
+
+const failure = (
+  code: 'not-found' | 'unsupported' | 'invalid',
+  reason: string,
+): ImageResolveResult => ({ ok: false, code, reason });
+
+const HEIC_MISSING =
+  'HEIC photos need the converter heif-convert (package libheif-examples), which is not available here: use JPEG';
+
+/** Why a normalized path may not be read, or null. */
+function pathProblem(normal: string): string | null {
+  if (
+    normal === '..' ||
+    normal.startsWith('../') ||
+    path.posix.isAbsolute(normal)
+  )
+    return 'Path is outside the content folder';
+  if (normal.split('/').some((part) => part.startsWith('.')))
+    return 'Hidden path';
+  return null;
+}
+
+function unsupportedReason(extension: string, heic: boolean): string {
+  if (extension === '.svg') return 'SVG is not supported';
+  if (heic) return HEIC_MISSING;
+  return `File type ${extension || '(none)'} is not supported`;
+}
+
+/** Checks the path and the file type; a refusal, or the facts for reading. */
+function checkImagePath(
+  r: Resolver,
+  rel: string,
+): ImageResolveResult | { normal: string; heic: boolean } {
+  const normal = path.posix.normalize(rel);
+  const problem = pathProblem(normal);
+  if (problem !== null) return failure('invalid', problem);
+  const extension = path.posix.extname(normal).toLowerCase();
+  const heic = extension === '.heic' || extension === '.heif';
+  if (EXTENSIONS.has(extension) || (heic && r.options.convertHeic))
+    return { normal, heic };
+  return failure('unsupported', unsupportedReason(extension, heic));
+}
+
+/** The real path of the file inside the content folder, or a refusal. */
+async function realFile(
+  r: Resolver,
+  normal: string,
+): Promise<string | ImageResolveResult> {
+  r.realRoot ??= await realpath(r.options.root);
+  const base = r.realRoot;
+  let real: string;
+  try {
+    real = await realpath(path.join(base, normal));
+  } catch {
+    return failure('not-found', 'File not found');
+  }
+  if (real !== base && !real.startsWith(base + path.sep))
+    return failure('invalid', 'Link leads out of the content folder');
+  const info = await stat(real);
+  if (!info.isFile()) return failure('invalid', 'Not an image');
+  if (info.size > MAX_BYTES) return failure('invalid', 'File is too large');
+  return real;
+}
+
+/** Processes the image once per content (HEIC converted first); null for a HEIC name with other content. */
+async function processOnce(
+  r: Resolver,
+  content: Buffer,
+  heic: boolean,
+): Promise<ProcessedImage | null> {
+  const id = createHash('sha256').update(content).digest('hex').slice(0, 16);
+  const existing = r.processed.get(id);
+  if (existing) return existing;
+  let source: Buffer = content;
+  if (heic) {
+    // The content must be what the name says, then the tool runs.
+    if (!isHeic(content) || !r.options.convertHeic) return null;
+    source = await r.options.convertHeic(content);
+  }
+  const image = await processImage(source);
+  // Keyed by the original, so a converted photo is converted only once.
+  r.processed.set(id, image);
+  return image;
+}
+
+async function resolveImage(
+  r: Resolver,
+  rel: string,
+): Promise<ImageResolveResult> {
+  const checked = checkImagePath(r, rel);
+  if ('ok' in checked) return checked;
+  const real = await realFile(r, checked.normal);
+  if (typeof real !== 'string') return real;
+  let image: ProcessedImage | null;
+  try {
+    image = await processOnce(r, await readFile(real), checked.heic);
+  } catch {
+    return failure('invalid', 'File is not a readable image');
+  }
+  if (image === null) return failure('invalid', 'File is not a HEIC photo');
+  for (const variant of image.variants) r.files.set(variant.file, variant.data);
+  return { ok: true, image: toResolvedImage(image, r.options.urlPrefix) };
+}
+
+/** Resolves images from the content folder and processes each image only once. */
+export function createLocalImageResolver(
+  options: ResolverOptions,
+): LocalImageResolver {
+  const r: Resolver = {
+    options,
+    files: options.store ?? new Map<string, Buffer>(),
+    processed: new Map(),
   };
-
-  const failure = (
-    code: 'not-found' | 'unsupported' | 'invalid',
-    reason: string,
-  ): ImageResolveResult => ({
-    ok: false,
-    code,
-    reason,
-  });
-
-  return {
-    files: () => files,
-    async resolve(rel) {
-      const normal = path.posix.normalize(rel);
-      if (
-        normal === '..' ||
-        normal.startsWith('../') ||
-        path.posix.isAbsolute(normal)
-      ) {
-        return failure('invalid', 'Path is outside the content folder');
-      }
-      if (normal.split('/').some((part) => part.startsWith('.'))) {
-        return failure('invalid', 'Hidden path');
-      }
-      const extension = path.posix.extname(normal).toLowerCase();
-      const heicName = extension === '.heic' || extension === '.heif';
-      if (!EXTENSIONS.has(extension) && !(heicName && options.convertHeic)) {
-        return failure(
-          'unsupported',
-          extension === '.svg'
-            ? 'SVG is not supported'
-            : heicName
-              ? 'HEIC photos need the converter heif-convert (package libheif-examples), which is not available here: use JPEG'
-              : `File type ${extension || '(none)'} is not supported`,
-        );
-      }
-
-      const base = await rootPath();
-      let real: string;
-      try {
-        real = await realpath(path.join(base, normal));
-      } catch {
-        return failure('not-found', 'File not found');
-      }
-      if (real !== base && !real.startsWith(base + path.sep)) {
-        return failure('invalid', 'Link leads out of the content folder');
-      }
-
-      const info = await stat(real);
-      if (!info.isFile()) return failure('invalid', 'Not an image');
-      if (info.size > MAX_BYTES) return failure('invalid', 'File is too large');
-
-      let image: ProcessedImage;
-      try {
-        const content = await readFile(real);
-        const id = createHash('sha256')
-          .update(content)
-          .digest('hex')
-          .slice(0, 16);
-        const existing = processed.get(id);
-        if (existing) {
-          image = existing;
-        } else {
-          let source: Buffer = content;
-          if (heicName) {
-            // The content must be what the name says, then the tool runs.
-            if (!isHeic(content) || !options.convertHeic)
-              return failure('invalid', 'File is not a HEIC photo');
-            source = await options.convertHeic(content);
-          }
-          image = await processImage(source);
-          // Keyed by the original, so a converted photo is converted only once.
-          processed.set(id, image);
-        }
-      } catch {
-        return failure('invalid', 'File is not a readable image');
-      }
-
-      for (const variant of image.variants)
-        files.set(variant.file, variant.data);
-
-      return { ok: true, image: toResolvedImage(image, options.urlPrefix) };
-    },
-  };
+  return { files: () => r.files, resolve: (rel) => resolveImage(r, rel) };
 }

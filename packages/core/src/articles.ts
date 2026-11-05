@@ -90,101 +90,69 @@ function fileName(relPath: string): string {
   return name.replace(/\.md$/i, '').normalize('NFC').trim();
 }
 
-export function parseArticle(input: {
-  path: string;
-  text: string;
-  mtime: Date;
-}): ParseResult {
-  const { path: relPath, text, mtime } = input;
-  if (isIgnoredPath(relPath)) return { kind: 'ignored' };
+/** Thrown inside the field readers: the file is skipped with this message. */
+class Skip extends Error {}
 
-  const warnings: string[] = [];
-  const warn = (message: string) => warnings.push(`${relPath}: ${message}`);
+type Data = Record<string, unknown>;
+type Warn = (message: string) => void;
 
-  const split = splitFrontmatter(text);
-  if (!split.ok) {
-    // Only report if the file was clearly meant to be published.
-    if (/^\s*publish:\s*true\s*$/m.test(text)) {
-      warn(`skipped, ${split.error}`);
-      return { kind: 'skipped', warnings };
-    }
-    return { kind: 'ignored' };
-  }
+const textOf = (value: unknown): string =>
+  typeof value === 'string' || typeof value === 'number'
+    ? String(value).trim()
+    : '';
 
-  const { data, body } = split;
-  if (data.publish !== true) return { kind: 'ignored' };
-
-  if (hasWikilink(body)) {
-    warn(
-      'skipped, contains wikilinks ([[...]]); turn off "Use Wikilinks" in Obsidian',
-    );
-    return { kind: 'skipped', warnings };
-  }
-
-  const name = fileName(relPath);
-
-  let slugSource = name;
+function readSlug(data: Data, name: string, warn: Warn): string {
+  let source = name;
   if (data.slug !== undefined) {
-    if (typeof data.slug === 'string' && data.slug.trim() !== '') {
-      slugSource = data.slug;
-    } else {
-      warn('slug is not text, the file name is used');
-    }
+    if (typeof data.slug === 'string' && data.slug.trim() !== '')
+      source = data.slug;
+    else warn('slug is not text, the file name is used');
   }
-  const slug = toSlug(slugSource);
-  if (slug === null) {
-    warn(`skipped, no slug can be built from "${slugSource}"`);
-    return { kind: 'skipped', warnings };
-  }
+  const slug = toSlug(source);
+  if (slug === null) throw new Skip(`no slug can be built from "${source}"`);
+  return slug;
+}
 
-  let type: ArticleType = 'post';
-  if (data.type === 'glossary') {
-    type = 'glossary';
-  } else if (data.type === 'page') {
-    type = 'page';
-    if (RESERVED_PAGE_SLUGS.has(slug)) {
-      warn(`skipped, "${slug}" is reserved for the site and cannot be a page`);
-      return { kind: 'skipped', warnings };
-    }
-  } else if (data.type !== undefined) {
+function readType(data: Data, slug: string, warn: Warn): ArticleType {
+  if (data.type === 'glossary') return 'glossary';
+  if (data.type === 'page') {
+    if (RESERVED_PAGE_SLUGS.has(slug))
+      throw new Skip(`"${slug}" is reserved for the site and cannot be a page`);
+    return 'page';
+  }
+  if (data.type !== undefined)
     warn(
       `unknown type ${JSON.stringify(data.type)}, treated as a post (known: glossary)`,
     );
-  }
+  return 'post';
+}
 
-  const rawTitle =
-    typeof data.title === 'string' || typeof data.title === 'number'
-      ? String(data.title).trim()
-      : '';
-  const title = rawTitle !== '' ? rawTitle : name;
-  if (title === '') {
-    warn('skipped, no title');
-    return { kind: 'skipped', warnings };
-  }
-
-  let date = parseDate(data.date);
-  let dateSource: Article['dateSource'] = 'frontmatter';
-  if (date === null && type === 'page') {
-    // A static page has no place in time; the date is only a placeholder.
-    date = new Date(mtime.getTime());
-    dateSource = 'mtime';
-  } else if (date === null) {
+function readDate(
+  data: Data,
+  type: ArticleType,
+  mtime: Date,
+  warn: Warn,
+): { date: Date; dateSource: Article['dateSource'] } {
+  const date = parseDate(data.date);
+  if (date !== null) return { date, dateSource: 'frontmatter' };
+  // A static page has no place in time; the date is only a placeholder.
+  if (type !== 'page')
     warn(
       data.date === undefined
         ? 'no date, the modification date of the file is used'
         : `invalid date "${String(data.date)}", the modification date of the file is used`,
     );
-    date = new Date(mtime.getTime());
-    dateSource = 'mtime';
-  }
+  return { date: new Date(mtime.getTime()), dateSource: 'mtime' };
+}
 
-  const rawTags = Array.isArray(data.tags)
+function readTags(data: Data, warn: Warn): string[] {
+  const raw = Array.isArray(data.tags)
     ? data.tags
     : data.tags === undefined
       ? []
       : [data.tags];
   const tags: string[] = [];
-  for (const entry of rawTags) {
+  for (const entry of raw) {
     if (typeof entry !== 'string') {
       warn(`tag ${JSON.stringify(entry)} is not text and is ignored`);
       continue;
@@ -192,34 +160,82 @@ export function parseArticle(input: {
     const tag = normalizeTag(entry);
     if (tag !== null && !tags.includes(tag)) tags.push(tag);
   }
+  return tags;
+}
 
+function readTerm(
+  data: Data,
+  type: ArticleType,
+  warn: Warn,
+): string | undefined {
+  if (data.term === undefined) return undefined;
+  const term = textOf(data.term);
+  if (type !== 'glossary')
+    warn('term is only used for glossary entries (type: glossary), ignored');
+  else if (term === '')
+    warn('term is empty or not text, the title is used as the term');
+  else return term;
+  return undefined;
+}
+
+/** The article of a published file; throws Skip when it cannot be shown. */
+function buildArticle(
+  data: Data,
+  body: string,
+  input: { path: string; mtime: Date },
+  warn: Warn,
+): Article {
+  if (hasWikilink(body))
+    throw new Skip(
+      'contains wikilinks ([[...]]); turn off "Use Wikilinks" in Obsidian',
+    );
+  const name = fileName(input.path);
+  const slug = readSlug(data, name, warn);
+  const type = readType(data, slug, warn);
+  const title = textOf(data.title) || name;
+  if (title === '') throw new Skip('no title');
   const article: Article = {
     type,
     slug,
     title,
-    date,
-    dateSource,
-    tags,
+    ...readDate(data, type, input.mtime, warn),
+    tags: readTags(data, warn),
     body,
-    path: relPath,
+    path: input.path,
   };
-  if (typeof data.description === 'string' && data.description.trim() !== '') {
-    article.description = data.description.trim();
+  const description =
+    typeof data.description === 'string' ? data.description.trim() : '';
+  if (description !== '') article.description = description;
+  const term = readTerm(data, type, warn);
+  if (term !== undefined) article.term = term;
+  return article;
+}
+
+export function parseArticle(input: {
+  path: string;
+  text: string;
+  mtime: Date;
+}): ParseResult {
+  const { path: relPath, text } = input;
+  if (isIgnoredPath(relPath)) return { kind: 'ignored' };
+  const warnings: string[] = [];
+  const warn = (message: string) => warnings.push(`${relPath}: ${message}`);
+  const split = splitFrontmatter(text);
+  if (!split.ok) {
+    // Only report if the file was clearly meant to be published.
+    if (!/^\s*publish:\s*true\s*$/m.test(text)) return { kind: 'ignored' };
+    warn(`skipped, ${split.error}`);
+    return { kind: 'skipped', warnings };
   }
-  if (data.term !== undefined) {
-    const term =
-      typeof data.term === 'string' || typeof data.term === 'number'
-        ? String(data.term).trim()
-        : '';
-    if (type !== 'glossary') {
-      warn('term is only used for glossary entries (type: glossary), ignored');
-    } else if (term === '') {
-      warn('term is empty or not text, the title is used as the term');
-    } else {
-      article.term = term;
-    }
+  if (split.data.publish !== true) return { kind: 'ignored' };
+  try {
+    const article = buildArticle(split.data, split.body, input, warn);
+    return { kind: 'article', article, warnings };
+  } catch (error) {
+    if (!(error instanceof Skip)) throw error;
+    warn(`skipped, ${error.message}`);
+    return { kind: 'skipped', warnings };
   }
-  return { kind: 'article', article, warnings };
 }
 
 /**
