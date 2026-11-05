@@ -34,9 +34,10 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 
 # Basic rules
 
-* **[V]** Static-first: every page works without foreign services, without
-  Nextcloud and without Memos once it is served. Only commenting needs
-  Remark42. This is my reading of "standalone", unconfirmed (O27).
+* **[E]** Static-first ("standalone", confirmed by the owner, O27): once a
+  release is served, every page stays online and readable when Nextcloud, Memos
+  or Remark42 are down (last good release, static comment copy). Only writing
+  comments needs Remark42. New content needs the sources.
 * **[E]** At run time the browser loads nothing from third-party services. The
   Remark42 widget is loaded from the own server. Articles are an exception:
   they may contain remote images and embeds from allowlists, embeds only after

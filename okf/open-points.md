@@ -11,22 +11,15 @@ The IDs (O1 to O39) are referenced in the other concepts. Settled points stay
 listed with their result, so those references keep working. Cleaned up on
 2026-11-05 against the log, the code and the repository.
 
-# A. Open: decision of the owner
+# A. Decided on 2026-11-05, to be built before 26.11.0
 
-Each point has a proposal **[V]** of the assistant; it counts only once the owner
-confirmed it.
-
-| ID | Topic | What is open | Proposal [V] |
-|---|---|---|---|
-| O3, O11, O32 | Receiving webmentions (W14) | W14 is not built: `rel=webmention`, `rel=me`, display of mentions, recovery of the state (O3), read test against webmention.io (O32). Needs the domain. | Not in 26.11.0; after the release, once the domain is live. |
-| O8 | Memos version | "Always newest" against pinning. The contract test and the docs pin 26.11.0; an API change of Memos can stop the build. | Pinned reference version 26.11.0; newer versions are raised by hand after the contract test. |
-| O16 | Favicon | White M on blue, chosen by the assistant (2026-11-05). | Review by the owner. |
-| O17 | Social preview images | Open Graph tags are done (W10); preview images are not. | After 26.11.0. |
-| O19 | Statistics | Entry: none; if any, without foreign services. Never confirmed. | None in 26.11.0. |
-| O27 | Reading of "standalone" | Entry: the delivered site runs without Nextcloud, Memos and foreign services. Implemented like that, never confirmed. | Confirm. |
-| O31 | Renovate details | Grouping of updates, schedule, whether the waiting time holds with auto-merge. Renovate runs. | Keep as it runs; revisit after the release. |
-| O34 | Visibility of the repo | Public repos have unlimited CI minutes, private ones do not. | Decision of the owner. |
-| O38 | Glossary details | Question form of the title with a separate term field, comments and webmentions on terms, sorting of umlauts. | After 26.11.0. |
+| ID | Topic | Decision of the owner |
+|---|---|---|
+| O3, O11, O32 | Receiving webmentions (W14) | Before the release, and testable without a domain: production uses webmention.io, tests and the demo use a stand-in that copies the webmention.io API. |
+| O8 | Supported versions | Pinned versions, never "latest". The supported versions are listed in the docs. Contract tests run in parallel for the current and the previous version (Memos and Nextcloud); Renovate opens a PR when a new version appears, the contract test shows whether it works. |
+| O17 | Social preview images | Generated per page at build time (posts, memos, terms); developed and checked with the demo set. |
+| O19 | Statistics | View counter per post, memo and term: visitors per day from the access log of our Caddy (only a hash with a daily changing salt, never the address; bots filtered), baked into the HTML at every build, shown publicly on the page. On by default, `MUFFEL_STATS=0` switches it off. GoAccess as an extra container is described in the docs only. |
+| O38 | Glossary details | Optional field `term:` (the term; the title may be a question, the letter view sorts by the term), and comments under terms. Umlaut sorting is solved (collator `de`). |
 
 # B. Open: tasks of the owner for the go-live (W17)
 
@@ -41,10 +34,14 @@ confirmed it.
 |---|---|---|
 | O1 | Block series for the filter | Three series (mixed, memos, posts), blocks of 20 (W05). |
 | O2 | Date format and time zone | Plain date = 12:00 Berlin time, time without zone = Berlin local time. |
-| O4 | Remark42 display | Mentions in the timeline belong to W14 (see A). Widget sorting and the display of `admin` are unchecked, see D. |
+| O4 | Remark42 display | Mentions in the timeline: W14 (see A). Widget sorting and the display of `admin` are unchecked, see D. |
 | O5 | Foreign content in Markdown | Only from allowlists (images: Wikimedia, GitHub; embeds: youtube-nocookie after a click). |
 | O6 | Attachments | PDF, audio, video mirrored with size limit and signature check. |
 | O7 | Image sizes and formats | WebP in widths 480 to 1920, EXIF removed, SVG rejected. |
+| O16 | Favicon | White M on blue, accepted by the owner. |
+| O27 | Reading of "standalone" | The delivered site stays online and readable when Nextcloud, Memos or Remark42 are down (last good release, static comment copy). Confirmed by the owner. |
+| O31 | Renovate details | Kept as it runs; grouping and schedule are looked at after the release. |
+| O34 | Visibility of the repo | Public. |
 | O9 | Reverse proxy, Remark42 host | The operator's reverse proxy forwards to our Caddy on `127.0.0.1:8080/8081`; Remark42 on a host of its own (2026-11-05, see [Docker](/architecture/docker.md)). |
 | O10 | Image build | GitHub Actions, images only on a CalVer tag, registry GHCR. |
 | O11 | Webmentions sender | Own module; `h-entry`/`h-card` exist. `rel=me` and IndieAuth belong to W14 (see A). |
