@@ -228,6 +228,16 @@ describe('Remark42 hardening and moderation', () => {
       expect(builder).toMatch(/rm -rf \/var\/lib\/apt\/lists/);
     });
 
+    it('has no pnpm at run time and starts node directly', async () => {
+      const text = await dockerfile();
+      const builder = text.slice(text.indexOf('AS builder'));
+      expect(builder).toMatch(/npm uninstall --global pnpm/);
+      expect(builder).toMatch(/^CMD \["node", "src\/cli\.ts"\]$/m);
+      expect(builder.indexOf('npm uninstall')).toBeLessThan(
+        builder.indexOf('USER node'),
+      );
+    });
+
     it('does not set a user in the stages that only build', async () => {
       const text = await dockerfile();
       const before = text.slice(0, text.indexOf('AS builder'));
