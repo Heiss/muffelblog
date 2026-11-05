@@ -28,14 +28,10 @@ domain was never run (see [Docker](/architecture/docker.md)).
 | Comments administrator | `compose.production.yaml` | `REMARK_ADMIN_EMAIL` is required in production, so there is no guessable default administrator address. |
 | Webmention state | change of the domain | **Finding, fixed:** after a change of `SITE_URL` every entry would have looked new and all links would have been reported again. The sender now stores the entries without sending (like the first start). |
 | Dependencies | `pnpm audit` | Production dependencies: no known vulnerabilities. Development: one moderate advisory in `eslint > minimatch` (GHSA-g3hv-75wg-m249), not shipped, left to Renovate. |
-| Containers | Dockerfile | **Open:** the builder runs as `root` (no `USER`). Changing it needs a decision on the owner of the host folder in the production setup (see below). |
+| Containers | Dockerfile | **Finding, fixed:** the builder ran as `root`. It now runs as the user `node` (uid 1000); the data folders and the places where the build writes belong to that user, the rest of the repository stays root-owned. A start check names a folder that is not writable (volumes of older versions) and says how to repair it. CI checks the user and the write access. |
 
 # Open findings
 
-* **Builder as `root`.** Named volumes can be prepared in the image, but the
-  bind mount `MUFFEL_RELEASES_DIR` of the production setup would have to be
-  writable for the new user (`node`, uid 1000). It changes what the operator has
-  to do (`chown`), so it is not done silently.
 * **HSTS.** `Strict-Transport-Security` is not set by our Caddy (the same file
   serves plain HTTP in the demo, where it would be wrong) and is not in the
   proxy examples. Set it at your proxy once HTTPS works; start with a short

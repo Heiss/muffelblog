@@ -21,6 +21,7 @@ import type { Step } from './release.ts';
 import { createScheduler } from './scheduler.ts';
 import type { AlertEvent, Source, Status } from './scheduler.ts';
 import { fileStore, sourcesFrom } from './serve.ts';
+import { assertWritable } from './dirs.ts';
 import { writeHealth } from './health.ts';
 import { createWebmentionRunner } from './webmentions.ts';
 import type { WebmentionSummary } from './scheduler.ts';
@@ -87,6 +88,9 @@ async function main(): Promise<void> {
   const cacheDir = process.env.CACHE_DIR || '/data/cache';
   const stateDir = process.env.STATE_DIR || '/data/state';
   const repoRoot = process.env.REPO_DIR || process.cwd();
+
+  // The builder runs as a normal user: say it plainly if a folder is not writable.
+  await assertWritable({ releasesDir, cacheDir, stateDir });
 
   // What a stopped build left behind is not a release.
   await removeIncomplete(releasesDir);

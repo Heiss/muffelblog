@@ -546,8 +546,8 @@ Applies to every work package in addition to its own criteria:
   * [x] Backup and restore of Remark42 are tested (`docker/moderation-flow.sh`;
     restore works into an empty Remark42). The state is rebuilt from the sources.
   * [~] Security review (secrets, SSRF, sanitizing, headers): done, see
-    [Security review](/security/review.md). Two findings were fixed; the builder
-    still runs as `root` and HSTS is left to the operator (open, with reasons).
+    [Security review](/security/review.md). Three findings were fixed (the builder
+    no longer runs as `root`); HSTS is left to the operator (open, with reasons).
   * [x] Runbook for disruptions (source not reachable, build broken, roll back,
     disk full, mail, domain change, leaked secret): `production/runbook` in the
     docs.

@@ -17,7 +17,12 @@ Remark42 ◄── 127.0.0.1:8082 ◄── your proxy (comments host)
 
 ```sh
 sudo mkdir -p /srv/muffelblog/releases
+sudo chown 1000:1000 /srv/muffelblog/releases   # the builder runs as uid 1000, not root
 ```
+
+The builder does not run as root, it runs as the user `node` (uid 1000), so the
+folder must belong to uid 1000. Your proxy only **reads** it (the files are
+readable for everybody), so it can run as any user.
 
 In `.env`:
 

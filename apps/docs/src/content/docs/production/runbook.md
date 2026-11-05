@@ -54,7 +54,8 @@ check).
 
 The builder keeps the newest `MUFFEL_RELEASES_KEPT` releases (default 3). The
 folder `current` is a link to the one that is online. Switch it atomically
-(on the host folder with your own proxy, otherwise inside the volume):
+(on the host folder with your own proxy, use `sudo -u '#1000'` or `sudo`, because
+the folder belongs to uid 1000; otherwise inside the volume):
 
 ```sh
 cd /srv/muffelblog/releases        # your MUFFEL_RELEASES_DIR
@@ -66,6 +67,22 @@ mv -T current.new current
 The old release is online at once. The builder does not undo it: it builds again
 when the content changes. If a bad file is the cause, remove it first, otherwise
 the next build is broken again.
+
+## The builder says a folder is not writable
+
+The builder runs as the user `node` (uid 1000), not as root. A volume or a host
+folder that an **older version** created belongs to root, and the builder stops
+at the start and names the folder. Repair the owner once:
+
+```sh
+# the Docker volumes (releases, cache, state)
+docker compose run --rm --no-deps --user root --entrypoint chown builder \
+  -R 1000:1000 /data/releases /data/cache /data/state
+# the folder of your own proxy (MUFFEL_RELEASES_DIR)
+sudo chown -R 1000:1000 /srv/muffelblog/releases
+```
+
+Then `docker compose up -d` again. Your proxy keeps reading the folder as before.
 
 ## The disk is full
 
