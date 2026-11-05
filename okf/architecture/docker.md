@@ -17,9 +17,9 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   a new release folder, `build.json` last, atomic swap of `current`, last good
   version stays online on failure, newest `MUFFEL_RELEASES_KEPT` kept),
   `web` (Caddy 2.11, `docker/Caddyfile`), `remark42` (v1.18.0) and `mailpit`
-  (v1.33, local mail sink). The scheduler (every 3 minutes) is W12 and follows
-  with 26.11.1.
-* **[E]** Remark42 gets a host of its own (`COMMENTS_ADDRESS`, port 8081 locally)
+  (v1.33, local mail sink, demo only since 2026-11-05). The scheduler (every 3
+  minutes, W12) is part of 26.11.0.
+* **[E]** Remark42 gets a host of its own (port 8081 of our Caddy)
   instead of a path; requests with `Authorization: Basic` are answered with 403
   and the header is never passed on. The site blocks keep a strict CSP; the
   comments host only gets the hardening headers because Remark42 brings its own
@@ -32,7 +32,8 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   no violations on feed, article, term, memo and search.
 * **[E]** Secrets come from `.env` (created by `docker/init-env.sh`, not
   committed); `REMARK_SECRET` and `REMARK_ADMIN_PASSWD` are required.
-* **[E]** The builder image runs as root for now; hardening is W16.
+* **[E]** The builder runs as the user `node` (uid 1000), not as root (W16,
+  decided by the owner); `heif-convert` (libheif) is installed in its image.
 * **[E]** CI job "Compose stack" builds the images, starts the stack and runs
   `docker/smoke.sh`.
 

@@ -40,10 +40,15 @@ This specification separates what is confirmed from proposals:
 * **[E]** Comments: Remark42 with email login, for posts and memos.
 * **[E]** Webmentions: webmention.io, receiving and sending, displayed as
   comments in Remark42.
-* **[E]** UI language per deployment setting (`de` or `en`), the blog itself is
-  German. The domain is set later. Development is in English (see
+* **[E]** UI language per deployment setting (`en` default, or `de`); the
+  content of the owner's blog is German. The domain is set later. Development is in English (see
   [Languages](/ops/language.md)).
-* **[E]** Operation entirely in Docker.
+* **[E]** Operation entirely in Docker: `compose.yaml` behind the operator's
+  reverse proxy (see [Docker](/architecture/docker.md)).
+* **[E]** License MIT, holder "Muffelblog contributors" (`LICENSE`, decided by
+  the owner 2026-11-05).
+* **[E]** Webmentions: sending is built (W15, off by default); receiving (W14)
+  is not built yet (see [Open points](/open-points.md), A).
 
 # Non-goals
 
