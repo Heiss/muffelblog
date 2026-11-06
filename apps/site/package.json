@@ -29,7 +29,7 @@
     "@emnapi/core": "^1.11.3",
     "@emnapi/runtime": "^1.11.3",
     "@types/node": "^26.6.6",
-    "pagefind": "^1.6.0",
+    "pagefind": "1.5.2",
     "sirv-cli": "^3.0.1",
     "typescript": "~6.0.3"
   }

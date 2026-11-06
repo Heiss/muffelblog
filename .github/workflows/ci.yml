@@ -68,6 +68,12 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test:coverage
       - run: pnpm build
+      # Home servers often have CPUs without AVX (Celeron, Atom): Pagefind
+      # 1.6.0 crashed there. A Renovate raise of pagefind fails here.
+      - name: The search index builds on a CPU without AVX
+        run: |
+          sudo apt-get install -y -q qemu-user > /dev/null
+          scripts/pagefind-without-avx.sh
       - name: Build the documentation site
         run: pnpm --filter @muffelblog/docs build
 

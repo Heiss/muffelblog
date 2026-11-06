@@ -31,6 +31,10 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   terms); feed blocks, tag and search pages carry none. Kind is a
   `<meta data-pagefind-filter="kind[content]">`, tags are `data-pagefind-filter="tag"`.
 * **[E]** Pagefind runs as part of `pnpm build` (`astro build && pagefind --site dist`).
+* **[E]** (2026-11-06) Pagefind is pinned to 1.5.2: 1.6.0 needs AVX and crashed
+  on the first real server (Celeron J4105). The CI builds the index on an
+  emulated CPU without AVX (`scripts/pagefind-without-avx.sh`); a raise is taken
+  only when that check passes.
 * **[V]** The CSP needs `script-src 'self' 'wasm-unsafe-eval'` because Pagefind
   uses WebAssembly.
 
