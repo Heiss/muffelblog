@@ -149,6 +149,13 @@ jobs:
             ghcr.io/heiss/muffelblog-builder:latest
       - name: rclone is in the builder image
         run: docker compose run --rm --no-deps --entrypoint rclone builder version
+      # A real Nextcloud is reached over HTTPS: rclone must trust public
+      # certificates inside the image (the first release could not).
+      - name: rclone in the builder image verifies HTTPS
+        run: |
+          docker compose run --rm --no-deps --entrypoint rclone builder \
+            cat --http-url https://raw.githubusercontent.com/Heiss/muffelblog/main/ :http:LICENSE \
+            | grep -q 'MIT License'
       - name: The Pagefind of the noavx variant is in the builder image
         run: |
           docker compose run --rm --no-deps --entrypoint node builder \

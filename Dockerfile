@@ -40,8 +40,10 @@ ENV REPO_DIR=/repo \
 # places where Astro and Vite write while they build. Everything else in /repo
 # stays owned by root and read-only for the builder.
 # heif-convert turns HEIC photos (iPhone) into JPEG before they are processed.
+# ca-certificates: rclone (Go) checks HTTPS against the certificates of the
+# system; the slim base image has none (Node carries its own, rclone does not).
 RUN apt-get update \
- && apt-get install -y --no-install-recommends libheif-examples libheif-plugin-libde265 \
+ && apt-get install -y --no-install-recommends ca-certificates libheif-examples libheif-plugin-libde265 \
  && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /data/releases /data/cache /data/state \
  && chown -R node:node /data /repo/apps /repo/packages
