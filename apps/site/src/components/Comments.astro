@@ -5,6 +5,10 @@ import { commentsFor } from '../lib/comments-static';
 import { canonicalUrl, siteUrl } from '../lib/feed';
 import CommentTree from './CommentTree.astro';
 
+interface Props {
+  enabled?: boolean;
+}
+const { enabled = true } = Astro.props;
 const config = commentsConfig();
 const url = canonicalUrl(siteUrl(), Astro.url.pathname);
 const t = messages.comments;
@@ -17,7 +21,7 @@ const existing = config ? await commentsFor(Astro.url.pathname) : undefined;
     id="comments"
     class="comments"
     data-pagefind-ignore
-    data-comments
+    data-comments={enabled ? true : undefined}
     data-host={config.host}
     data-site-id={config.siteId}
     data-url={url}
@@ -25,14 +29,22 @@ const existing = config ? await commentsFor(Astro.url.pathname) : undefined;
     data-locale={messages.locale.slice(0, 2)}
   >
     <h2>{t.title}</h2>
-    <p data-comments-nojs>{t.needsJs}</p>
+    {enabled ? (
+      <p data-comments-nojs>{t.needsJs}</p>
+    ) : (
+      <p data-comments-closed>{t.closed}</p>
+    )}
     {existing && existing.length > 0 && (
       <div data-comments-static>
         <CommentTree nodes={existing} />
       </div>
     )}
-    <div id="remark42"></div>
-    <p data-comments-error role="alert" hidden></p>
+    {enabled && (
+      <>
+        <div id="remark42"></div>
+        <p data-comments-error role="alert" hidden></p>
+      </>
+    )}
   </section>
 )}
 

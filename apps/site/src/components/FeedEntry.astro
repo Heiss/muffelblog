@@ -1,5 +1,5 @@
 ---
-import { tagSlug } from '@muffelblog/core';
+import Tags from './Tags.astro';
 import type { FeedItem } from '@muffelblog/core';
 import { messages } from '../i18n/messages';
 
@@ -32,12 +32,5 @@ const date = new Intl.DateTimeFormat(messages.locale, {
   ) : (
     item.excerpt && <p class="excerpt">{item.excerpt}</p>
   )}
-  {item.tags.length > 0 && (
-    <ul aria-label={messages.tags.label} class="tags">
-      {item.tags.map((tag) => {
-        const slug = tagSlug(tag);
-        return <li>{slug ? <a href={`/tag/${slug}/`}>{tag}</a> : tag}</li>;
-      })}
-    </ul>
-  )}
+  <Tags tags={item.tags} />
 </article>

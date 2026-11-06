@@ -88,10 +88,10 @@ describe('Caddyfile and client addresses', () => {
     expect(text).toMatch(/^\s*trusted_proxies_strict$/m);
   });
 
-  it('serves plain HTTP on fixed ports; HTTPS is the job of the reverse proxy', async () => {
+  it('serves plain HTTP on configurable ports; HTTPS is the job of the reverse proxy', async () => {
     const text = await readFile(caddyfile, 'utf8');
-    expect(text).toMatch(/^:80 \{$/m);
-    expect(text).toMatch(/^:8081 \{$/m);
+    expect(text).toMatch(/^:\{\$MUFFEL_WEB_LISTEN_PORT:80\} \{$/m);
+    expect(text).toMatch(/^:\{\$MUFFEL_COMMENTS_LISTEN_PORT:8081\} \{$/m);
     expect(text).not.toContain('SITE_ADDRESS');
   });
 });

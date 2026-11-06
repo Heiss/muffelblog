@@ -1,4 +1,5 @@
 ---
+import Tags from '../../components/Tags.astro';
 import Comments from '../../components/Comments.astro';
 import LinkLists from '../../components/LinkLists.astro';
 import { messages } from '../../i18n/messages';
@@ -44,19 +45,11 @@ const date = new Intl.DateTimeFormat(messages.locale, {
         </time>
       </a>
     </p>
-    {article.tags.length > 0 && (
-      <ul aria-label={messages.tags.label} class="tags">
-        {article.tags.map((tag) => (
-          <li class="p-category" data-pagefind-filter="tag">
-            {tag}
-          </li>
-        ))}
-      </ul>
-    )}
+    <Tags tags={article.tags} indexed />
     <div class="content e-content" set:html={article.html} />
   </article>
   <LinkLists url={`/g/${article.slug}/`} />
-  <Comments />
+  <Comments enabled={article.comments !== false} />
 </Base>
 
 <script>

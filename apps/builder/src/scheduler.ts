@@ -160,6 +160,7 @@ async function build(
 async function tick(
   s: SchedulerState,
   deps: SchedulerDeps,
+  force: boolean,
 ): Promise<TickResult> {
   const at = deps.now().toISOString();
   if (!s.loaded) {
@@ -174,12 +175,12 @@ async function tick(
     return 'poll-failed';
   }
   const online = await deps.hasRelease();
-  if (online && marker === s.builtMarker) {
+  if (!force && online && marker === s.builtMarker) {
     s.pending = undefined;
     await ok(s, deps, at);
     return 'idle';
   }
-  if (stillWaiting(s, deps, marker, online)) {
+  if (!force && stillWaiting(s, deps, marker, online)) {
     await ok(s, deps, at);
     return 'waiting';
   }
@@ -198,5 +199,8 @@ export function createScheduler(deps: SchedulerDeps) {
     lastSuccess: undefined,
     lastError: undefined,
   };
-  return { tick: () => tick(state, deps) };
+  return {
+    tick: (options: { force?: boolean } = {}) =>
+      tick(state, deps, options.force ?? false),
+  };
 }

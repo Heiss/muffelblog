@@ -210,3 +210,28 @@ describe('scheduler', () => {
     expect(await s.tick()).toBe('idle');
   });
 });
+
+describe('forced build', () => {
+  it('rebuilds unchanged sources immediately and persists the resulting marker', async () => {
+    const h = harness({ debounceChecks: 5 });
+    const scheduler = createScheduler(h.deps);
+    await scheduler.tick();
+    expect(await scheduler.tick()).toBe('idle');
+    expect(await scheduler.tick({ force: true })).toBe('built');
+    expect(h.builds).toBe(2);
+    expect(await createScheduler(h.deps).tick()).toBe('idle');
+  });
+  it('still requires readable sources and preserves state after a failed build', async () => {
+    const h = harness();
+    const scheduler = createScheduler(h.deps);
+    await scheduler.tick();
+    const saved = { ...h.saved };
+    h.failPoll.add('memos');
+    expect(await scheduler.tick({ force: true })).toBe('poll-failed');
+    expect(h.builds).toBe(1);
+    h.failPoll.clear();
+    h.failBuild.value = true;
+    expect(await scheduler.tick({ force: true })).toBe('failed');
+    expect(h.saved).toEqual(saved);
+  });
+});

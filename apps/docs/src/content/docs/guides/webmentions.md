@@ -42,6 +42,19 @@ address for the source.
   the message once more, so the other site can see that the link is gone.
 - **Removed entry:** its links get the message once more.
 
+## Verify an actual outgoing delivery
+
+Enabling sending and seeing no delivery logs on the first run can be correct:
+the sender baselines existing entries as already sent. To test, create a **new**
+public entry linking to a public page that actually advertises a Webmention
+endpoint. Wait for its release, inspect `docker/webmentions.sh list` and the
+builder log, then confirm acceptance at the recipient. A link to an ordinary
+page without an endpoint yields `no-endpoint`, not a failed sender. Do not use
+`send-existing` merely to test setup; it deliberately contacts historical targets.
+
+Sending and receiving are independent: `MUFFEL_WEBMENTIONS_SEND=1` neither creates
+a webmention.io account nor configures receiving, its read token or advertisement.
+
 ## How a message goes out
 
 1. The builder fetches the target page and looks for the endpoint: first the
@@ -138,19 +151,56 @@ policy.
    MUFFEL_REL_ME=https://github.com/you,mailto:you@example.org
    ```
 
-   `docker compose up -d`, wait for the next build.
+   Rebuild the static release with `docker/rebuild.sh`, then inspect the public
+   homepage for `<link rel="me" ...>`. A container recreate alone can leave the
+   old HTML online when the content marker has not changed. Use a public profile
+   that links back to your blog so the identity link can be verified.
 
-2. Sign in at webmention.io with the address of your blog and copy your **API
-   token** from the settings there.
-3. In `.env`:
+2. Sign in at [webmention.io](https://webmention.io/) with your public blog URL
+   and complete its identity/domain verification. Use the account interface's
+   instructions and inspect the public profile link first if verification
+   fails. This is an external account action; Muffelblog does not create it.
+3. In that account, copy the **exact receiving endpoint** shown for your domain
+   and the **read API token** from its settings/API section. See its
+   [API documentation](https://webmention.io/api). Do not guess the endpoint
+   from the hostname; the service may identify your account differently.
+4. Edit `.env` locally (never paste the token into chat or commit it):
 
    ```sh
    MUFFEL_WEBMENTIONS_RECEIVE=1
-   WEBMENTION_IO_TOKEN=the-token-from-webmention.io
+   WEBMENTION_ENDPOINT=https://webmention.io/account.example/webmention
+   # WEBMENTION_IO_URL=https://webmention.io  # read API base; normally leave unset
+   # Set WEBMENTION_IO_TOKEN securely to the read token from your account.
    ```
 
-   `docker compose up -d`. Every page now announces
-   `https://webmention.io/<your host>/webmention`.
+   The endpoint above is illustrative: replace it with the account's exact URL.
+   `WEBMENTION_IO_URL` is the base for reading mentions through the API, not
+   the endpoint to which other sites POST. Keeping the token blank does not
+   enable receiving successfully. Existing configurations without the explicit
+   `WEBMENTION_ENDPOINT` retain the old hostname-derived endpoint for
+   compatibility; new production setups should set it explicitly.
+
+5. Run `docker compose config --quiet`, then `docker/rebuild.sh`. Verify the
+   public HTML advertises the exact endpoint, and inspect recent builder logs:
+
+   ```sh
+   curl -fsS https://blog.example.org/ -o /tmp/muffel-home.html
+   # Inspect only the public rel=me and rel=webmention tags in that file.
+   docker compose logs --tail 50 builder
+   ```
+
+   Expected: the requested `rel="me"` and `rel="webmention"` links in the new
+   HTML, no missing-token or receiving errors, and successful checks. An HTTP
+   `Link` header can also advertise a Webmention endpoint; Muffelblog emits the
+   HTML link. A `/.well-known/webmention` 404 is not a failure because this
+   application does not claim to serve that path. Check the advertised URL.
+
+6. For an end-to-end receive check, publish a page on another public site that
+   links to an existing blog entry, submit its source/target through the account's
+   endpoint, and let webmention.io verify it. Allow for the service's processing
+   delay and builder polling. Inspect the received comment and the builder log;
+   an empty read response alone does not prove delivery. A 401/403 when reading
+   suggests the token/account scope needs checking; do not print the token.
 
 The builder uses the administrator login of Remark42 (`REMARK_ADMIN_PASSWD`) to
 write the comments; it needs `SITE_URL` and the comments (`COMMENTS_URL`).

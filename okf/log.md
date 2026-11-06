@@ -1,6 +1,12 @@
 # Update log
 
 ## 2026-11-06
+* **Fix**: Deployment handoff review: explicit Remark42 UI administrator IDs, a configurable advertised Webmention endpoint independent of the read API, a supported `--once --force` build and restart helper, and a proxy-network Compose override with matching Caddy listeners. Production/runbook/webmention docs now distinguish public checks, persisted content markers and external account steps.
+* **Update**: Added self-contained AI authoring instructions (`authoring.md`) for Nextcloud blog posts and glossary terms, complete draft templates, exact frontmatter/Markdown rules, comment choices and a copyable prompt in the documentation.
+* **Update**: Per-page `comments: false` frontmatter keeps existing static comments and removes the posting widget on posts and terms. Remark42's independent administrator Disable/Enable controls close discussions on the server without rebuilds; normal builds preserve that state.
+* **Fix**: Sparse local graphs no longer reserve a square of blank space before comments; the SVG canvas fits the drawing and its labels.
+* **Update**: Feed entry types use theme colors for quick recognition: panel for posts, tinted memos with an accent edge, glossary terms with the page background and a muted edge. All ten themes are supported.
+* **Update**: Tags on entry pages link to the selected-tag feed. Graph domains link to their referring entries; focused graphs default to two hops in both directions, with adjustable depth, full-view focus selection and directed arrows. See [Glossary and knowledge graph](/features/glossary.md).
 * **Fix** (first real server, Celeron J4105 without AVX): Pagefind 1.6.0 stopped with "Illegal instruction", its npm wrapper only reported exit 1, so no release came online. Owner's decision: two image tags. The default image keeps the newest Pagefind, the variant `noavx` (`<version>-noavx`, `latest-noavx`) uses `pagefind-noavx` = Pagefind 1.5.2 (checked on an emulated CPU without AVX). A failed search index no longer stops a release (owner): online without search, reported in the status and once through the alert webhook, with a hint to the noavx variant. See [Search](/features/search.md).
 
 ## 2026-11-05

@@ -19,18 +19,22 @@ description: One sentence for search engines and the feed.
 The text starts here.
 ```
 
+For an AI assistant, use the [AI writing guide](/muffelblog/guides/ai-writing/)
+and its downloadable authoring instructions.
+
 ## Fields
 
-| Field         | Required | Rule                                                                   |
-| ------------- | -------- | ---------------------------------------------------------------------- |
-| `publish`     | yes      | Only the boolean `true` counts. `"true"` or `yes` do not.              |
-| `title`       | no       | Missing: the file name.                                                |
-| `date`        | no       | Missing or invalid: the modification date of the file, with a warning. |
-| `tags`        | no       | A list. Tags are lowercased, a leading `#` is dropped.                 |
-| `description` | no       | Used as meta description and feed excerpt.                             |
-| `slug`        | no       | The last part of the address. Missing: derived from the file name.     |
-| `type`        | no       | `glossary` or `page`. Missing: a post.                                 |
-| `term`        | no       | Glossary only: the term, when the title is a question.                 |
+| Field         | Required | Rule                                                                                                                                |
+| ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `publish`     | yes      | Only the boolean `true` counts. `"true"` or `yes` do not.                                                                           |
+| `title`       | no       | Missing: the file name.                                                                                                             |
+| `date`        | no       | Missing or invalid: the modification date of the file, with a warning.                                                              |
+| `tags`        | no       | A list. Tags are lowercased, a leading `#` is dropped.                                                                              |
+| `description` | no       | Used as meta description and feed excerpt.                                                                                          |
+| `slug`        | no       | The last part of the address. Missing: derived from the file name.                                                                  |
+| `type`        | no       | `glossary` or `page`. Missing: a post.                                                                                              |
+| `comments`    | no       | Boolean. `false` keeps existing comments readable and removes the posting widget. Default enabled; Remark42 closure is independent. |
+| `term`        | no       | Glossary only: the term, when the title is a question.                                                                              |
 
 Unknown fields (`aliases`, `cssclasses`, ...) are ignored.
 
@@ -64,6 +68,14 @@ _Alle_, marked as terms), never under _Lang_. `/glossary/` lists all terms by
 first letter; umlauts count under their base letter, digits under `#`. A term and
 a post may share a slug, because the addresses are separate.
 
+### Comments per page
+
+Set `comments: false` in a post or term's frontmatter to keep existing comments
+readable and remove the posting widget. Omit it or use `comments: true` to
+restore the widget. Closing a discussion in Remark42's administrator interface
+is independent and is not reset by rebuilding the blog. See
+[Comments](/muffelblog/guides/comments/) for both controls.
+
 ### Links between your files
 
 Link to another file of the folder with its path, as Obsidian writes it with
@@ -74,7 +86,16 @@ its name never appears on the site.
 
 Every post, term and memo shows **Links of this page**: what it links to
 (external websites as one entry per domain) and what links to it, with a small
-graph of these neighbors. `/graph/` shows all of them.
+graph that follows incoming and outgoing links up to two steps away. Change
+**Link depth** to show fewer or more steps; arrows indicate link direction.
+**Open full graph** opens the same node in the larger view. `/graph/` shows all
+nodes, with a **Focus on** selector for exploring one node's neighborhood.
+Click a domain to see only entries linking to that website. Focus and depth
+are saved in the address so you can share the view. The drawing and filtering
+need JavaScript; the link lists remain available without it.
+
+Tags on posts, memos and terms are clickable and open the feed filtered to that
+tag, just like tags on feed cards.
 
 ### Static pages: `type: page`
 

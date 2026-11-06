@@ -19,17 +19,34 @@ export interface Placed extends GNode {
   y: number;
 }
 
-/** The node, its direct neighbors (both directions) and the edges between them. */
-export function neighborhood(graph: Graph, id: string): Graph {
-  const ids = new Set([id]);
+/** Nodes within `depth` hops, following incoming and outgoing edges. */
+export function neighborhood(graph: Graph, id: string, depth = 1): Graph {
+  const adjacent = new Map(graph.nodes.map((n) => [n.id, new Set<string>()]));
   for (const e of graph.edges) {
-    if (e.from === id) ids.add(e.to);
-    if (e.to === id) ids.add(e.from);
+    adjacent.get(e.from)?.add(e.to);
+    adjacent.get(e.to)?.add(e.from);
+  }
+  const ids = new Set<string>();
+  let frontier = [id];
+  for (let hop = 0; hop <= Math.min(depth, graph.nodes.length); hop++) {
+    const next: string[] = [];
+    for (const node of frontier) {
+      if (ids.has(node)) continue;
+      ids.add(node);
+      next.push(...(adjacent.get(node) ?? []));
+    }
+    frontier = next;
   }
   return {
     nodes: graph.nodes.filter((n) => ids.has(n.id)),
     edges: graph.edges.filter((e) => ids.has(e.from) && ids.has(e.to)),
   };
+}
+
+/** A domain opens its referring entries; pages open their two-hop graph. */
+export function graphUrl(id: string): string {
+  const depth = id.startsWith('domain:') ? 1 : 2;
+  return `/graph/?${new URLSearchParams({ node: id, depth: String(depth) })}`;
 }
 
 type Point = { x: number; y: number };

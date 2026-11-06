@@ -77,3 +77,11 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 # Open
 
 O18 (alerting, backup), O10 (image build), O8 (versions).
+
+# Forced rebuild (2026-11-06)
+
+* **[E]** `--once --force` builds unchanged content without debounce, while still
+  requiring complete successful source polling. `docker/rebuild.sh` stops the
+  normal builder, runs this one-shot build with current Compose settings, and
+  restarts it through an exit trap. Persistent scheduler and webmention state is
+  preserved. Restarting alone does not detect build-time environment changes.

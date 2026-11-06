@@ -1,3 +1,21 @@
+function validateEndpoint(endpoint: string): void {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    throw new Error('WEBMENTION_ENDPOINT must be an absolute HTTP(S) URL');
+  }
+  if (
+    !['https:', 'http:'].includes(url.protocol) ||
+    url.username ||
+    url.password ||
+    url.hash
+  )
+    throw new Error(
+      'WEBMENTION_ENDPOINT must be an HTTP(S) URL without credentials or a fragment',
+    );
+}
+
 /**
  * The address where other sites send webmentions to (W14): announced only when
  * receiving is switched on (`MUFFEL_WEBMENTIONS_RECEIVE=1`) and `SITE_URL` is
@@ -9,6 +27,11 @@ export function webmentionEndpoint(
   if (env.MUFFEL_WEBMENTIONS_RECEIVE?.trim() !== '1') return undefined;
   const site = env.SITE_URL?.trim();
   if (!site) return undefined;
+  const endpoint = env.WEBMENTION_ENDPOINT?.trim();
+  if (endpoint) {
+    validateEndpoint(endpoint);
+    return endpoint;
+  }
   const api = (
     env.WEBMENTION_IO_URL?.trim() || 'https://webmention.io'
   ).replace(/\/+$/, '');

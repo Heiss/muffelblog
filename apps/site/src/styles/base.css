@@ -202,8 +202,15 @@ h1 {
   font-size: 0.875rem;
 }
 
+/* Type cues use each theme's palette, including dark and Matrix themes. */
 .entry-memo {
   background: var(--tint);
+  border-inline-start: 4px solid var(--ac);
+}
+
+.entry-glossary {
+  background: var(--bg);
+  border-inline-start: 4px solid var(--dim);
 }
 
 .excerpt {
@@ -556,4 +563,21 @@ main > .file-tree {
 }
 .file-tree .file {
   padding: 0.1rem 0;
+}
+
+.graph-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.graph-controls select {
+  max-width: 100%;
+}
+.graph-controls input {
+  width: 4rem;
+}
+.graph-svg .edge-arrow {
+  fill: var(--dim);
 }

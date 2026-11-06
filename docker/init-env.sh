@@ -21,6 +21,7 @@ if [ "${1:-}" = "--demo" ]; then
     -e 's|^COMMENTS_URL=.*|COMMENTS_URL=http://localhost:8081|' \
     -e 's|^MAIL_FROM=.*|MAIL_FROM=blog@localhost|' \
     -e 's|^REMARK_ADMIN_EMAIL=.*|REMARK_ADMIN_EMAIL=admin@localhost|' \
+    -e 's|^REMARK_ADMIN_ID=.*|REMARK_ADMIN_ID=email_3d1766e2bd1b02167104f350f84b0668f850ef92|' \
     -e 's|^SMTP_HOST=.*|SMTP_HOST=mailpit|' \
     -e 's|^SMTP_PORT=.*|SMTP_PORT=1025|' \
     -e 's|^SMTP_TLS=.*|SMTP_TLS=false|' \

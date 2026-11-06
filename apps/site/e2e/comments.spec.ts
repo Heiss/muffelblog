@@ -168,3 +168,40 @@ test.describe('Static copy of the comments', () => {
     await expect(page.locator('#comments [data-comments-error]')).toBeVisible();
   });
 });
+
+test.describe('Closed comments from frontmatter', () => {
+  for (const url of ['/p/zeit-ohne-zone/', '/g/cache/']) {
+    test(`${url} keeps existing comments without a posting widget`, async ({
+      page,
+    }) => {
+      const requests: string[] = [];
+      page.on('request', (request) => {
+        if (request.url().startsWith(HOST)) requests.push(request.url());
+      });
+      await page.goto(url);
+      await expect(page.locator('[data-comments-closed]')).toHaveText(
+        ui.comments.closed,
+      );
+      await expect(page.locator('[data-comments-static]')).toBeVisible();
+      await expect(page.locator('[data-comments-static]')).toContainText(
+        'Existing comment on a closed discussion.',
+      );
+      await expect(page.locator('#remark42')).toHaveCount(0);
+      await expect(page.locator('[data-comments]')).toHaveCount(0);
+      expect(requests).toEqual([]);
+    });
+    test(`${url} keeps existing comments without JavaScript`, async ({
+      browser,
+    }) => {
+      const context = await browser.newContext({ javaScriptEnabled: false });
+      const page = await context.newPage();
+      await page.goto(url);
+      await expect(page.locator('[data-comments-static]')).toContainText(
+        'Existing comment on a closed discussion.',
+      );
+      await expect(page.locator('[data-comments-closed]')).toBeVisible();
+      await expect(page.locator('[data-comments-nojs]')).toHaveCount(0);
+      await context.close();
+    });
+  }
+});

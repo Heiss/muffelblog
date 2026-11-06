@@ -46,6 +46,8 @@ export interface Article {
   dateSource: 'frontmatter' | 'mtime';
   tags: string[];
   description?: string;
+  /** False keeps the static comment copy but disables the posting widget. */
+  comments?: boolean;
   body: string;
   /** Path relative to the content folder, with `/` as the separator. */
   path: string;
@@ -178,6 +180,13 @@ function readTerm(
   return undefined;
 }
 
+function readComments(data: Data, warn: Warn): boolean | undefined {
+  if (data.comments === undefined) return undefined;
+  if (typeof data.comments === 'boolean') return data.comments;
+  warn('comments must be a boolean (true or false), ignored');
+  return undefined;
+}
+
 /** The article of a published file; throws Skip when it cannot be shown. */
 function buildArticle(
   data: Data,
@@ -206,6 +215,8 @@ function buildArticle(
   const description =
     typeof data.description === 'string' ? data.description.trim() : '';
   if (description !== '') article.description = description;
+  const comments = readComments(data, warn);
+  if (comments !== undefined) article.comments = comments;
   const term = readTerm(data, type, warn);
   if (term !== undefined) article.term = term;
   return article;

@@ -75,7 +75,8 @@ exists or is needed.
 **3. Ask for the values** (B), one at a time: the host names of the blog and of
 the comments (`SITE_URL`, `COMMENTS_URL`), the mail settings (`MAIL_FROM`,
 `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`), the address of the comment
-administrator (`REMARK_ADMIN_EMAIL`), the language of the interface
+administrator notification address (`REMARK_ADMIN_EMAIL`) and the signed-in
+user ID (`REMARK_ADMIN_ID`, for UI privileges), the language of the interface
 (`MUFFEL_LANG`: `en`, the default, or `de`), the kind of reverse proxy and
 whether it runs on the same host outside a container (otherwise `MUFFEL_BIND`
 and `MUFFEL_TRUSTED_PROXIES`, see `production/reverse-proxy`). Mention, but do

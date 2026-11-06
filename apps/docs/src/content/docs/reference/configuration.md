@@ -22,10 +22,15 @@ a message that names the variable; nothing is silently ignored.
 | `NEXTCLOUD_SHARE_PASSWORD`             | Password of the share                                                                                                                     |
 | `MEMOS_URL`                            | Address of your Memos instance, as the builder container reaches it                                                                       |
 | `MAIL_FROM`                            | Sender of the login mails and of the notifications                                                                                        |
-| `REMARK_ADMIN_EMAIL`                   | Whoever logs in with this address by email administers the comments                                                                       |
+| `REMARK_ADMIN_EMAIL`                   | Administrator notification/contact address; UI privileges require `REMARK_ADMIN_ID`                                                       |
 | `SMTP_HOST`, `SMTP_PORT`               | The mail server                                                                                                                           |
 
 ## Mail and comments
+
+`REMARK_ADMIN_ID` is optional for serving comments but required for administrator
+controls after email login. Copy the actual authenticated ID, including its
+provider prefix; see [Comments](/muffelblog/guides/comments/). It maps to
+Remark42's `ADMIN_SHARED_ID`, independently of the internal Basic-auth password.
 
 | Variable                         | Default                           | Meaning                                                                                 |
 | -------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------- |
@@ -55,6 +60,12 @@ a message that names the variable; nothing is silently ignored.
 | `MATOMO_URL`     | empty   | Address of your Matomo (origin, or a path ending with `/`). See [Statistics](/muffelblog/guides/statistics/) |
 | `MATOMO_SITE_ID` | empty   | Id of the site in Matomo. Only together with `MATOMO_URL`                                                    |
 
+For a shared reverse proxy network, `MUFFEL_PROXY_NETWORK` defaults to `web`
+in `compose.proxy-network.yaml`. `MUFFEL_WEB_LISTEN_PORT` and
+`MUFFEL_COMMENTS_LISTEN_PORT` are Caddy's internal listeners (80/8081 in the
+base setup; 8380/8381 in that override). Match the proxy's target ports to these
+values. See [Docker proxy networking](/muffelblog/production/proxy-network/).
+
 ## Content, advanced
 
 | Variable                        | Default | Meaning                                                                                                                                                                          |
@@ -79,8 +90,9 @@ a message that names the variable; nothing is silently ignored.
 | `MUFFEL_DEBOUNCE_CHECKS`              | 1                       | 0 to 10        | Equal checks a change must survive before it is built                                                                                                                                |
 | `MUFFEL_WEBMENTIONS_SEND`             | `0`                     | `0`, `1`       | Send webmentions for new, changed and removed entries. Needs `SITE_URL`. See [Webmentions](/muffelblog/guides/webmentions/)                                                          |
 | `MUFFEL_WEBMENTIONS_RECEIVE`          | `0`                     | `0`, `1`       | Receive webmentions through webmention.io as comments. Needs `WEBMENTION_IO_TOKEN`, `SITE_URL` and the comments. See [Webmentions](/muffelblog/guides/webmentions/#receive-mentions) |
+| `WEBMENTION_ENDPOINT`                 | derived legacy URL      | HTTP(S) URL    | Exact public receiving endpoint shown by your account; takes precedence over hostname inference. Independent of the read API base.                                                   |
 | `WEBMENTION_IO_TOKEN`                 |                         | secret         | API token of webmention.io                                                                                                                                                           |
-| `WEBMENTION_IO_URL`                   | `https://webmention.io` | URL            | Address of webmention.io; the demo sets its local stand-in                                                                                                                           |
+| `WEBMENTION_IO_URL`                   | `https://webmention.io` | URL            | Read API base of webmention.io; not the advertised receiving endpoint. The demo sets its local stand-in                                                                              |
 | `MUFFEL_REL_ME`                       |                         | URLs           | Your profiles as `rel=me` links, separated by commas (https, http, mailto); for the login at webmention.io                                                                           |
 | `MUFFEL_WEBMENTIONS_BLOCK`            |                         | host names     | Comma separated hosts that are never asked (subdomains included)                                                                                                                     |
 | `MUFFEL_WEBMENTIONS_ALLOW_PRIVATE`    | `0`                     | `0`, `1`       | Allow local and private addresses as targets. **Only for tests and the local receiver**                                                                                              |

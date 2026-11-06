@@ -1,5 +1,6 @@
 ---
 publish: true
+comments: false
 type: glossary
 title: Was ist ein Cache?
 term: Cache

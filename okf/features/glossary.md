@@ -81,12 +81,12 @@ as nodes; a local graph under every page and the overall view `/graph/`.
   without `www.`, no public-suffix logic); edges directed, without duplicates or
   self links, only to existing pages. `/graph.json` holds nodes and edges.
 * **[E]** Every post, term and memo shows "Links of this page" (links to, linked
-  from) as HTML lists, the access without JavaScript; a domain is text, never a
-  link. Below it a local SVG graph of the neighbors; `/graph/` draws all nodes
+  from) as HTML lists, the access without JavaScript; a domain links to its filtered
+  graph view. Below it a local SVG graph of the neighbors; `/graph/` draws all nodes
   and lists every page with its links.
 * **[E]** Drawing: own force layout (repulsion, springs, gravity, deterministic)
   in vanilla TS, SVG, no library, no foreign request; page nodes are links,
-  domain nodes are focusable (`tabindex=0`) with a label.
+  domain nodes are internal links to their referring entries, with a label.
 * **[U]** No size limit for `graph.json` and no zoom or pan; with many hundred
   nodes the overall view gets dense.
 
@@ -137,3 +137,20 @@ as nodes; a local graph under every page and the overall view `/graph/`.
 
 Display of memos in the graph, structure of a single term page in the model
 (not observed).
+
+# Graph navigation (decided 2026-11-06)
+
+* **[E]** Tags on posts, memos and glossary pages link to the same selected-tag
+  feed as tags in feed cards (`/tag/<slug>/`), including without JavaScript.
+* **[E]** Focused graphs show two hops by default, following both incoming and
+  outgoing links. A depth control lets readers increase or decrease the number
+  of hops. Arrows show the direction of each link.
+* **[E]** Clicking a domain opens `/graph/?node=domain%3A<host>&depth=1`, showing
+  that domain and only the entries that reference it. Domain links stay inside
+  the blog; they do not contact the external website.
+* **[E]** Local graphs trim unused SVG canvas around the drawing, including
+  labels, so sparse graphs do not leave a large blank area before comments.
+* **[E]** The overall graph has a node selector and an All nodes option. Focus
+  and depth are kept in the URL for sharing and reloading. Local graphs link
+  to their focused full view. Without JavaScript, the overall link lists remain
+  available; focus and depth controls require JavaScript.

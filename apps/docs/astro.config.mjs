@@ -34,6 +34,7 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { slug: 'guides/writing' },
+            { slug: 'guides/ai-writing' },
             { slug: 'guides/nextcloud' },
             { slug: 'guides/memos' },
             { slug: 'guides/comments' },
@@ -45,6 +46,7 @@ export default defineConfig({
           label: 'Operations',
           items: [
             { slug: 'production/reverse-proxy' },
+            { slug: 'production/proxy-network' },
             { slug: 'production/operations' },
             { slug: 'production/runbook' },
             { slug: 'production/host-folder' },

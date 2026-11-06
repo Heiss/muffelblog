@@ -1,0 +1,25 @@
+---
+import { tagSlug } from '@muffelblog/core';
+import { messages } from '../i18n/messages';
+interface Props {
+  tags: string[];
+  indexed?: boolean;
+}
+const { tags, indexed = false } = Astro.props;
+---
+
+{tags.length > 0 && (
+  <ul aria-label={messages.tags.label} class="tags">
+    {tags.map((tag) => {
+      const slug = tagSlug(tag);
+      return (
+        <li
+          class={indexed ? 'p-category' : undefined}
+          data-pagefind-filter={indexed ? 'tag' : undefined}
+        >
+          {slug ? <a href={`/tag/${slug}/`}>{tag}</a> : tag}
+        </li>
+      );
+    })}
+  </ul>
+)}

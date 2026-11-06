@@ -8,6 +8,10 @@ to `127.0.0.1:8081`, both plain HTTP, with HTTPS on the outside. The blog sets
 its own security headers. Replace `blog.example.org` and `comments.example.org`
 with your host names (the same as in `SITE_URL` and `COMMENTS_URL`).
 
+For a proxy container such as NPMPlus sharing a Docker network, use the complete
+[Docker network pattern](/muffelblog/production/proxy-network/) instead. It
+removes host port publishing and keeps Caddy connected to Remark42.
+
 ## Caddy
 
 ```caddyfile

@@ -114,8 +114,10 @@ What is worth a backup:
 | `.env`            | the repository folder                     | the secrets           |
 | Caddy data        | volume `caddy-data` (only with our Caddy) | certificates          |
 
-Posts live in Nextcloud and memos in Memos, back those up there. Releases, the
-Nextcloud cache and the state can be rebuilt.
+Posts live in Nextcloud and memos in Memos, back those up there. Releases and the Nextcloud cache can be rebuilt. Preserve the state volume too:
+it contains the scheduler marker and webmention send/receive progress. Do not
+clear it to request a rebuild; use `docker/rebuild.sh` as described in the
+[runbook](/muffelblog/production/runbook/#a-changed-setting-is-absent-from-the-public-site).
 
 ```sh
 docker/backup.sh /srv/backups          # writes muffelblog-<time>.tar.gz

@@ -23,6 +23,11 @@ export const en = {
     count: (count: number) => (count === 1 ? '1 file' : `${count} files`),
   },
   graph: {
+    depth: 'Link depth',
+    focus: 'Focus on',
+    all: 'All nodes',
+    full: 'Open full graph',
+
     title: 'Graph',
     intro:
       'How posts, terms and memos link to each other and to other websites. Each other website is one point.',
@@ -55,6 +60,7 @@ export const en = {
     all: 'All',
   },
   comments: {
+    closed: 'Comments are closed. Existing comments remain readable.',
     title: 'Comments',
     needsJs: 'Comments need JavaScript.',
     unavailable: 'The comments could not be loaded.',

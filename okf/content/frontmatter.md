@@ -18,6 +18,7 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 | `description` | text | **[V]** no | Meta description, feed excerpt. |
 | `tags` | list | **[V]** no | Obsidian properties, lists of strings. That tags exist is **[E]**. |
 | `type` | text | **[E]** no | `glossary` marks a glossary entry (see [Glossary](/features/glossary.md)); planned in W19. Without it the file is an article. |
+| `comments` | boolean | **[E]** no | Default enabled. `false` keeps existing static comments visible but omits the posting widget on posts and terms. Only YAML booleans are accepted; other values warn and are ignored. Remark42 server closure is independent. |
 
 Unknown fields (`aliases`, `cssclasses` and others) are ignored.
 

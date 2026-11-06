@@ -316,3 +316,30 @@ describe('loadArticles', () => {
     ]);
   });
 });
+
+describe('comments frontmatter', () => {
+  it('defaults to enabled and accepts explicit booleans for posts and terms', () => {
+    expect(article(doc('date: 2026-01-02')).comments).toBeUndefined();
+    expect(article(doc('date: 2026-01-02\ncomments: false')).comments).toBe(
+      false,
+    );
+    expect(article(doc('date: 2026-01-02\ncomments: true')).comments).toBe(
+      true,
+    );
+    expect(
+      article(doc('date: 2026-01-02\ntype: glossary\ncomments: false'))
+        .comments,
+    ).toBe(false);
+  });
+  it('warns about ambiguous settings instead of treating text as a boolean', () => {
+    for (const value of ['"false"', 'no', '0', 'null', '[]']) {
+      const result = parse(doc(`date: 2026-01-02\ncomments: ${value}`));
+      expect(result).toMatchObject({
+        kind: 'article',
+        warnings: [expect.stringContaining('comments must be a boolean')],
+      });
+      if (result.kind === 'article')
+        expect(result.article.comments).toBeUndefined();
+    }
+  });
+});

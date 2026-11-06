@@ -41,14 +41,65 @@ every `MUFFEL_CHECK_INTERVAL_SECONDS`, no restart is needed.
   set. `MUFFEL_WEBMENTIONS_SEND=1` needs `SITE_URL`.
 - **Out of memory or disk during the build.** See below.
 
-To force a new build without changing content:
+## A changed setting is absent from the public site
+
+The scheduler compares persisted **source content markers**. Recreating the
+builder with a changed build-time setting (`MUFFEL_REL_ME`, language, receiving
+endpoint, etc.) does not guarantee a build when the sources have not changed.
+A healthy existing release can therefore still contain the old setting. A
+process restart and a static-site rebuild are separate operations.
+
+After saving `.env`, use the supported one-shot force rebuild from the checkout:
 
 ```sh
-docker compose exec builder rm /data/state/scheduler.json
+docker/rebuild.sh
 ```
 
-At the next check the builder sees a change and builds (after one more equal
-check).
+The helper stops the regular builder, runs `node /repo/apps/builder/src/cli.ts
+--once --force` in a fresh one-off container with the current Compose environment,
+and restarts the regular builder even if the build fails. It does not delete
+state, send all historical webmentions, or touch comments. Run only one helper
+at a time. This requires a builder image containing the `--force` option; when
+working from source, build the updated builder image first. `--once` alone can
+return success without rebuilding unchanged content.
+
+`--force` still polls sources and preserves the last good release if polling
+or the build fails; it bypasses the unchanged-marker check and debounce for
+this one run. Never run a second builder concurrently against the same volumes.
+Do **not** delete the state volume: it also contains webmention progress. The
+old advice to delete `scheduler.json` while the builder is running is ineffective
+because that process has already loaded its marker. The helper needs no state
+file surgery.
+
+Check the helper's exit status and the new release before calling it fixed:
+
+```sh
+curl -fsS https://blog.example.org/build.json
+docker compose ps builder
+docker compose logs --tail 30 builder
+```
+
+Expected: a new release ID, a running builder and successful subsequent checks.
+For `MUFFEL_REL_ME`, inspect the generated homepage for the requested
+`rel="me"` link; for receiving, look for the exact `rel="webmention"` endpoint.
+Do not print `.env` or a full container environment to diagnose this.
+
+## Public 502 although containers are healthy
+
+Local health checks do not test the reverse proxy route. Confirm that the
+proxy and Caddy share a network, the alias resolves there, the Caddy listener
+matches the forwarding port, and Caddy also shares the default network with
+Remark42. A host-port conflict only matters when host ports are published.
+Use the [complete NPMPlus network checks](/muffelblog/production/proxy-network/).
+Do not edit NPMPlus-generated configuration files.
+
+## Email login works but administrator controls are missing
+
+SMTP and authentication have succeeded; privileges are a separate setting.
+Check `REMARK_ADMIN_ID` / `ADMIN_SHARED_ID` against the actual signed-in ID,
+recreate only Remark42 and sign in again. `ADMIN_SHARED_EMAIL` is the
+notification address, and `ADMIN_PASSWD` is for internal scripts. See
+[administrator setup](/muffelblog/guides/comments/#in-the-remark42-interface).
 
 ## Roll back to an older release
 

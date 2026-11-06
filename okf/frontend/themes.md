@@ -51,6 +51,13 @@ structure stays unchanged, only the CSS files differ.
 * **[E]** All fonts come from the own domain. The preview loaded them from
   Google, the site does not.
 
+# Feed entry types (decided 2026-11-06)
+
+* **[E]** Entry types have subtle color differences in every theme: posts use
+  the panel background, memos use the tint with an accent edge, and glossary
+  terms use the page background with a muted edge. All colors come from the
+  selected theme's variables; there are no fixed light or dark colors.
+
 # Contrast
 
 * **[E]** Every theme reaches at least 4.5:1 for text on background, panel and

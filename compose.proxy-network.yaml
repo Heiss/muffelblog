@@ -1,0 +1,18 @@
+# Docker reverse proxy (for example NPMPlus) on an existing external network.
+# Requires Docker Compose >= 2.24.4 for !reset. No host ports are published.
+# docker compose -f compose.yaml -f compose.proxy-network.yaml config --quiet
+services:
+  web:
+    ports: !reset []
+    environment:
+      MUFFEL_WEB_LISTEN_PORT: ${MUFFEL_WEB_LISTEN_PORT:-8380}
+      MUFFEL_COMMENTS_LISTEN_PORT: ${MUFFEL_COMMENTS_LISTEN_PORT:-8381}
+    networks:
+      default: {}
+      proxy:
+        aliases:
+          - muffelblog-web
+networks:
+  proxy:
+    external: true
+    name: ${MUFFEL_PROXY_NETWORK:-web}

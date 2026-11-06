@@ -1,5 +1,7 @@
 ---
 import { messages } from '../../i18n/messages';
+import Graph from '../../components/Graph.astro';
+import { graphUrl } from '../../scripts/graph-logic';
 import Base from '../../layouts/Base.astro';
 import { getGraph } from '../../lib/graph';
 
@@ -22,9 +24,7 @@ const pages = graph.nodes
 <Base title={t.title}>
   <h1>{t.title}</h1>
   <p>{t.intro}</p>
-  <figure class="graph graph-all" data-graph hidden>
-    <figcaption>{t.title}</figcaption>
-  </figure>
+  <Graph />
   <noscript>
     <p>{t.needsJs}</p>
   </noscript>
@@ -34,13 +34,15 @@ const pages = graph.nodes
       <h2>{t.linksTo}</h2>
       <ul class="link-list">
         {pages.map(({ node, to }) => (
-          <li>
+          <li data-graph-entry={node.id}>
             <a href={node.id}>{node.title}</a>
             <span class="link-kind"> {t.kinds[node.kind]}</span>:
             {to.map((n, i) => (
               <>
                 {i > 0 && ', '}
-                {n.kind === 'domain' ? n.title : <a href={n.id}>{n.title}</a>}
+                <a href={n.kind === 'domain' ? graphUrl(n.id) : n.id}>
+                  {n.title}
+                </a>
               </>
             ))}
           </li>

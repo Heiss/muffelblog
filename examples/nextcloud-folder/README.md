@@ -20,3 +20,13 @@ be replaced and every `[CHECK: ...]` checked before the blog goes public.
 Use it: upload the content of this folder (not the folder itself) to an empty
 Nextcloud folder, share that folder by public link with a password, and point
 the blog at the share. Details: the Nextcloud guide in the documentation.
+
+## Writing with AI
+
+Download the [AI authoring instructions](https://heiss.github.io/muffelblog/authoring.md)
+and give them to your assistant along with the topic and available files. You can
+keep the downloaded file as `AI-AUTHORING.md` here; it has no publishing
+frontmatter, so Muffelblog ignores it. The guide includes post and glossary
+examples, draft publication, exact YAML fields and the independent Markdown and
+Remark42 comment controls. See the [AI writing guide](https://heiss.github.io/muffelblog/guides/ai-writing/)
+for a prompt to copy.

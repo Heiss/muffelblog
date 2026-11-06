@@ -186,11 +186,12 @@ describe('Remark42 hardening and moderation', () => {
     );
   });
 
-  it('names an administrator by email and notifies admins about new comments by email', async () => {
+  it('grants UI privileges by user ID and sends notifications to the admin email', async () => {
     const { remark42 } = await services();
     expect(remark42?.environment?.ADMIN_SHARED_EMAIL).toMatch(
       /REMARK_ADMIN_EMAIL/,
     );
+    expect(remark42?.environment?.ADMIN_SHARED_ID).toMatch(/REMARK_ADMIN_ID/);
     expect(remark42?.environment?.NOTIFY_ADMINS).toBe('email');
     expect(remark42?.environment?.NOTIFY_EMAIL_FROM).toMatch(/MAIL_FROM/);
   });

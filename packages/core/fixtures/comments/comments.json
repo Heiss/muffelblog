@@ -35,5 +35,19 @@
     "user": { "name": "Carla" },
     "time": "2026-11-02T15:00:00Z",
     "locator": { "url": "/m/memo-text/" }
+  },
+  {
+    "id": "c6",
+    "text": "<p>Existing comment on a closed discussion.</p>",
+    "user": { "name": "Reader" },
+    "time": "2026-01-05T12:00:00Z",
+    "locator": { "url": "/g/cache/" }
+  },
+  {
+    "id": "c7",
+    "text": "<p>Existing comment on a closed discussion.</p>",
+    "user": { "name": "Reader" },
+    "time": "2026-01-05T12:00:00Z",
+    "locator": { "url": "/p/zeit-ohne-zone/" }
   }
 ]

@@ -1,0 +1,33 @@
+---
+import { messages } from '../i18n/messages';
+import { graphUrl } from '../scripts/graph-logic';
+interface Props {
+  node?: string;
+}
+const { node } = Astro.props;
+const t = messages.graph;
+---
+
+<figure
+  class={`graph ${node ? 'graph-local' : 'graph-all'}`}
+  data-graph
+  data-graph-node={node}
+  hidden
+>
+  <figcaption>{node ? t.local : t.title}</figcaption>
+  <div class="graph-controls">
+    {!node && (
+      <label>
+        {t.focus}{' '}
+        <select data-graph-center>
+          <option value="">{t.all}</option>
+        </select>
+      </label>
+    )}
+    <label>
+      {t.depth}{' '}
+      <input data-graph-depth type="number" min="1" step="1" value="2" />
+    </label>
+    {node && <a href={graphUrl(node)}>{t.full}</a>}
+  </div>
+</figure>

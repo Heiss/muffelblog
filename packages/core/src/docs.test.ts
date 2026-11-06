@@ -258,8 +258,12 @@ describe('documentation matches the code', () => {
     it('forwards to the ports that compose.yaml publishes', async () => {
       const text = await page();
       const compose = await read('compose.yaml');
-      expect(compose).toContain('${MUFFEL_PORT:-8080}:80');
-      expect(compose).toContain('${MUFFEL_COMMENTS_PORT:-8081}:8081');
+      expect(compose).toContain(
+        '${MUFFEL_PORT:-8080}:${MUFFEL_WEB_LISTEN_PORT:-80}',
+      );
+      expect(compose).toContain(
+        '${MUFFEL_COMMENTS_PORT:-8081}:${MUFFEL_COMMENTS_LISTEN_PORT:-8081}',
+      );
       expect(text).toContain('127.0.0.1:8080');
       expect(text).toContain('127.0.0.1:8081');
     });

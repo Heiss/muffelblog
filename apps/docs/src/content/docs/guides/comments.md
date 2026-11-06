@@ -14,6 +14,24 @@ running next to the blog; you do not need an account anywhere else.
   they read without JavaScript and search engines see them. When the widget has
   loaded, the static copy steps aside.
 
+## Close comments for one Markdown page
+
+Add a boolean to the frontmatter of a post or glossary term:
+
+```yaml
+comments: false
+```
+
+After the next build, the page shows a closed notice and keeps the existing
+static comments readable. It does not load the posting widget. Omit the field
+or use `comments: true` to restore the widget. Quoted values such as `"false"`
+are invalid and produce a build warning; use a YAML boolean.
+
+This setting controls the blog page, and does not change Remark42's server
+settings. To reject new comments at the Remark42 server too, use the
+administrator control described below. Memos do not have Markdown frontmatter;
+close their discussions through Remark42.
+
 ## Settings
 
 | Variable                                                                            | Meaning                                                                                                                                                          |
@@ -47,14 +65,53 @@ next build.
 
 ### In the Remark42 interface
 
-`REMARK_ADMIN_EMAIL` in `.env` (required). Whoever logs in **with this address by
-email** is the administrator and sees delete and block buttons on every comment.
-In the local demo it is `admin@localhost`; read the login mail in Mailpit.
-It is required because Remark42's own default would be
-`admin@<your comments host>`, a guessable address.
+Remark42 **1.18.0** grants web interface privileges by **user ID**, not by the
+notification email alone:
 
-This follows the Remark42 documentation; the clicks in the interface are not
-covered by the project's tests (the command line is).
+| Muffelblog setting    | Remark42 setting     | Role                                                                                                 |
+| --------------------- | -------------------- | ---------------------------------------------------------------------------------------------------- |
+| `REMARK_ADMIN_EMAIL`  | `ADMIN_SHARED_EMAIL` | Administrator notification/contact address. It does not by itself grant UI privileges.               |
+| `REMARK_ADMIN_ID`     | `ADMIN_SHARED_ID`    | Exact authenticated user ID (including its provider prefix); grants the UI controls.                 |
+| `REMARK_ADMIN_PASSWD` | `ADMIN_PASSWD`       | Secret for internal Basic-auth scripts, backups and webmention import; not the email-login password. |
+
+1. Log in with your intended email through the widget. In the local demo use
+   `admin@localhost` and read the login mail in Mailpit. New demo environments
+   include that user's ID automatically; existing `.env` files are not overwritten.
+2. In your browser's developer tools, inspect the authenticated **response body**
+   for `GET /api/v1/user` on the comments host. Copy its `id` and check the user
+   name and `admin` flag. Do not copy cookies, JWTs or authorization headers
+   into chat or documentation. This ID is more authoritative than guessing it
+   from the address. For the pinned email provider it is `email_` followed by a
+   SHA-1 digest of the identity address; provider/normalization differences make
+   the actual signed-in ID the reliable choice.
+3. Put that ID in your local `.env` as `REMARK_ADMIN_ID=...` (retain the provider
+   prefix). The default Compose file passes it to `ADMIN_SHARED_ID`. If you use
+   a locally customized Compose file, add that mapping there too.
+4. Recreate **Remark42 only**, then sign out and back in to refresh the login:
+
+   ```sh
+   docker compose config --quiet
+   docker compose up -d --no-deps --force-recreate remark42
+   ```
+
+Expected: the authenticated response has `admin: true`, and the interface shows
+**Show settings**, **Disable comments** and moderation controls. If email login
+works but these are missing, check the ID mapping and reauthenticate. Do not
+reset comment data or change SMTP to repair a privileges problem. Verify these
+names against the actual Remark42 image if you upgrade it.
+
+As an administrator, use **Disable comments** for the current page to close
+new comments while keeping the discussion readable. **Enable comments** opens
+it again. This is a per-page server setting, enforced by Remark42, and takes
+effect without a blog rebuild. The widget follows this setting whenever it
+loads; normal blog builds do not reset it. These controls were verified in the
+Remark42 1.18.0 source; administrator clicks are not covered by the project's
+browser tests.
+
+The two controls are independent: `comments: false` keeps the posting widget off
+even if Remark42 is open. Removing the Markdown setting does not reopen a
+server-closed discussion. Remove the setting and then use **Enable comments**
+in the widget if you want to reopen both.
 
 ### Notification
 

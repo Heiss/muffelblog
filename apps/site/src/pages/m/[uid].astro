@@ -1,6 +1,7 @@
 ---
 import type { MemoEntry } from '@muffelblog/core';
 import { messages } from '../../i18n/messages';
+import Tags from '../../components/Tags.astro';
 import Comments from '../../components/Comments.astro';
 import LinkLists from '../../components/LinkLists.astro';
 import Base from '../../layouts/Base.astro';
@@ -38,15 +39,7 @@ const { memo } = Astro.props;
         </time>
       </a>
     </h1>
-    {memo.tags.length > 0 && (
-      <ul aria-label={messages.tags.label} class="tags">
-        {memo.tags.map((tag) => (
-          <li class="p-category" data-pagefind-filter="tag">
-            {tag}
-          </li>
-        ))}
-      </ul>
-    )}
+    <Tags tags={memo.tags} indexed />
     <div class="content e-content" set:html={memo.html} />
   </article>
   <LinkLists url={`/m/${memo.uid}/`} />

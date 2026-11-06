@@ -34,6 +34,32 @@ sources:
 * **[E]** Webmentions appear as entries in the same timeline (see
   [Webmentions](/community/webmentions.md)).
 
+# Per-page closure (decided 2026-11-06)
+
+* **[E]** Markdown posts and glossary terms accept `comments: false`. The blog
+  keeps the sanitized static copy and a localized closed notice, without
+  loading the Remark42 posting widget. Omitted or boolean `true` keeps the
+  normal widget. Invalid types warn and are ignored.
+* **[E]** This is a page presentation setting, not a Remark42 server mutation.
+  Remark42 1.18.0 has administrator **Disable comments / Enable comments**
+  controls per page (`auth-panel.tsx`); they use `PUT /api/v1/admin/readonly`
+  with `ro=1|0`. The server rejects posting on closed discussions. Confirmed
+  against the pinned source, not a live administrator browser session.
+* **[E]** Blog builds never reopen discussions closed through Remark42.
+  Markdown and server closure are independent; reopening both requires
+  removing `comments: false` and enabling comments in Remark42. Memos use the
+  Remark42 control because they have no Markdown frontmatter.
+
+# Administrator identity correction (2026-11-06)
+
+* **[E]** Remark42 1.18.0's static administrator store uses `ADMIN_SHARED_ID`
+  for UI rights. `ADMIN_SHARED_EMAIL` supplies notification/contact email,
+  and `ADMIN_PASSWD` enables internal script authentication. The original
+  assumption that the email alone grants UI rights was incorrect.
+* **[E]** Compose now maps `REMARK_ADMIN_ID` to `ADMIN_SHARED_ID`; use the
+  actual authenticated ID, including its provider prefix. Demo initialization
+  sets the known local email identity; existing `.env` files are preserved.
+
 # Configuration
 
 * `AUTH_EMAIL_ENABLE=true`, `AUTH_EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`,

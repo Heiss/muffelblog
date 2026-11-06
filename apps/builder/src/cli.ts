@@ -261,10 +261,10 @@ async function setUp() {
 type Builder = Awaited<ReturnType<typeof setUp>>;
 
 /** One check plus the background tasks after it. */
-async function step(b: Builder, once: boolean): Promise<string> {
+async function step(b: Builder, once: boolean, force = false): Promise<string> {
   let result: string;
   try {
-    result = await b.scheduler.tick();
+    result = await b.scheduler.tick({ force });
   } catch (error) {
     // Unexpected: keep running, the next check tries again.
     result = 'failed';
@@ -290,8 +290,18 @@ async function pause(b: Builder, result: string): Promise<number> {
   return failed && !(await b.online()) ? Math.min(10, interval) : interval;
 }
 
-async function main(): Promise<void> {
+function runOptions() {
   const once = process.argv.includes('--once');
+  const force = process.argv.includes('--force');
+  if (force && !once)
+    throw new Error(
+      '--force requires --once; stop the regular builder before a forced one-shot build',
+    );
+  return { once, force };
+}
+
+async function main(): Promise<void> {
+  const { once, force } = runOptions();
   const b = await setUp();
   const stop = stopper();
   // A release may already be online (restart): take the first state of the
@@ -301,7 +311,7 @@ async function main(): Promise<void> {
     if (once) await started;
   }
   while (!stop.stopping()) {
-    const result = await step(b, once);
+    const result = await step(b, once, force);
     if (once) process.exit(result === 'built' || result === 'idle' ? 0 : 1);
     await stop.wait(await pause(b, result));
   }

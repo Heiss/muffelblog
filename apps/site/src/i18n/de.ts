@@ -21,6 +21,11 @@ export const de: Messages = {
     count: (count: number) => (count === 1 ? '1 Datei' : `${count} Dateien`),
   },
   graph: {
+    depth: 'Verknüpfungstiefe',
+    focus: 'Fokus auf',
+    all: 'Alle Knoten',
+    full: 'Vollständigen Graphen öffnen',
+
     title: 'Graph',
     intro:
       'Wie Beiträge, Begriffe und Memos untereinander und auf andere Websites verlinken. Jede andere Website ist ein Punkt.',
@@ -52,6 +57,8 @@ export const de: Messages = {
     all: 'Alle',
   },
   comments: {
+    closed:
+      'Die Kommentare sind geschlossen. Vorhandene Kommentare bleiben lesbar.',
     title: 'Kommentare',
     needsJs: 'Die Kommentare brauchen JavaScript.',
     unavailable: 'Die Kommentare konnten nicht geladen werden.',

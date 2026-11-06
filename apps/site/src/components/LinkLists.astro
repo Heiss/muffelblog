@@ -1,4 +1,6 @@
 ---
+import Graph from './Graph.astro';
+import { graphUrl } from '../scripts/graph-logic';
 import { linksOf } from '@muffelblog/core';
 import { messages } from '../i18n/messages';
 import { getGraph } from '../lib/graph';
@@ -25,7 +27,9 @@ const t = messages.graph;
         <ul class="link-list">
           {to.map((n) =>
             n.kind === 'domain' ? (
-              <li class="link-domain">{n.title}</li>
+              <li class="link-domain">
+                <a href={graphUrl(n.id)}>{n.title}</a>
+              </li>
             ) : (
               <li>
                 <a href={n.id}>{n.title}</a>
@@ -49,9 +53,7 @@ const t = messages.graph;
         </ul>
       </>
     )}
-    <figure class="graph graph-local" data-graph data-graph-node={url} hidden>
-      <figcaption>{t.local}</figcaption>
-    </figure>
+    <Graph node={url} />
   </section>
 )}
 

@@ -12,6 +12,11 @@ visitor ──https──► your reverse proxy ──http──► 127.0.0.1:80
                                        └─http──► 127.0.0.1:8081  comments
 ```
 
+If your reverse proxy runs in Docker (for example NPMPlus on Unraid), use the
+[shared Docker network setup](/muffelblog/production/proxy-network/) instead of
+publishing host ports. Its upstreams are `muffelblog-web:8380/8381`, not the
+host's loopback ports.
+
 ## What you need
 
 - A server with **Docker** and **Docker Compose**.
@@ -50,7 +55,7 @@ Open `.env` and fill in the required values:
 | `NEXTCLOUD_SHARE_PASSWORD`       | Password of the share link                              |                                |
 | `MEMOS_URL`                      | Address of Memos, as the server reaches it (no token)   | `https://memos.example.org`    |
 | `MAIL_FROM`                      | Sender of the login mails                               | `blog@example.org`             |
-| `REMARK_ADMIN_EMAIL`             | Your address: whoever logs in with it moderates         | `you@example.org`              |
+| `REMARK_ADMIN_EMAIL`             | Your address for administrator notifications            | `you@example.org`              |
 | `SMTP_HOST`, `SMTP_PORT`         | Your mail server                                        | `smtp.example.org`, `465`      |
 | `SMTP_USERNAME`, `SMTP_PASSWORD` | Login of the mailbox (empty if the server needs none)   |                                |
 
@@ -130,3 +135,8 @@ While something fails, the last good version stays online.
 - [Comments](/muffelblog/guides/comments/): moderation.
 - [Webmentions](/muffelblog/guides/webmentions/): off by default.
 - [Operations](/muffelblog/production/operations/): status, backups, updates.
+
+After email login works, configure `REMARK_ADMIN_ID` with the authenticated
+user's exact ID to enable moderation and Disable/Enable comments controls. An
+email address alone does not grant these controls; see
+[administrator setup](/muffelblog/guides/comments/#in-the-remark42-interface).

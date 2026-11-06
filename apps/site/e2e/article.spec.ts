@@ -37,12 +37,12 @@ test.describe('Article pages under /p/<slug>/', () => {
 
   test('reads a time with and without a zone', async ({ page }) => {
     await page.goto('/p/zeit-ohne-zone/');
-    await expect(page.locator('time')).toHaveAttribute(
+    await expect(page.locator('article .dt-published')).toHaveAttribute(
       'datetime',
       '2026-07-01T07:30:00.000Z',
     );
     await page.goto('/p/tief/');
-    await expect(page.locator('time')).toHaveAttribute(
+    await expect(page.locator('article .dt-published')).toHaveAttribute(
       'datetime',
       '2026-07-01T07:30:00.000Z',
     );
