@@ -28,6 +28,13 @@ export function alertConfig(
   return { url: url.href, format };
 }
 
+const TITLES: Record<AlertEvent['kind'], string> = {
+  failed: 'Muffelblog: build failed',
+  recovered: 'Muffelblog: build works again',
+  webmention: 'Muffelblog: webmentions given up',
+  search: 'Muffelblog: online without search',
+};
+
 /**
  * Sends one report. It never throws: a broken channel is logged, it must not
  * stop the builder or hide the original problem.
@@ -37,12 +44,7 @@ export async function sendAlert(
   event: AlertEvent,
   doFetch: typeof fetch = fetch,
 ): Promise<void> {
-  const title =
-    event.kind === 'failed'
-      ? 'Muffelblog: build failed'
-      : event.kind === 'webmention'
-        ? 'Muffelblog: webmentions given up'
-        : 'Muffelblog: build works again';
+  const title = TITLES[event.kind];
   const text = `${title}\n${event.message}\n${event.at}`;
   try {
     const res = await doFetch(config.url, {

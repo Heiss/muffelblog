@@ -125,8 +125,11 @@ importers:
         specifier: ^26.6.6
         version: 26.6.6
       pagefind:
-        specifier: 1.5.2
-        version: 1.5.2
+        specifier: ^1.6.0
+        version: 1.6.0
+      pagefind-noavx:
+        specifier: npm:pagefind@1.5.2
+        version: pagefind@1.5.2
       sirv-cli:
         specifier: ^3.0.1
         version: 3.0.1

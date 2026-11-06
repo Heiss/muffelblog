@@ -52,6 +52,11 @@ The builder rewrites the file at **every check**, inside the release that is
 online. It contains **no error text** (that can hold internal addresses); read
 the reason from `state/status.json` or the log.
 
+If the search index fails, the release still goes online, only without search.
+`state/status.json` then has `"search": { "state": "failed", "message": ... }`,
+and the alert webhook reports it once ("online without search"). On a CPU
+without AVX the message names the image variant `noavx`.
+
 :::caution[A static file cannot say "dead"]
 The file is served like any other page, so the HTTP status is `200` also when
 `state` is `failing`, and when the builder has stopped the file just stays as it

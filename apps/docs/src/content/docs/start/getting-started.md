@@ -95,6 +95,12 @@ This pulls the published builder image. Before the first release, or while the
 image is not public yet, build it on the server instead: `docker compose up -d
 --build`.
 
+**Older or small CPUs (Celeron, Atom, many NAS boxes):** the search index needs
+the CPU feature AVX. Check with `grep -cw avx /proc/cpuinfo`; if it prints `0`,
+set `MUFFEL_VERSION=latest-noavx` in `.env` (or a version like `26.11.1-noavx`).
+Without it the blog still goes online, only without search, and the builder log
+names the variant.
+
 The first start takes a few minutes: the builder fetches your content and builds
 the site, then the web server starts. Follow it with
 `docker compose logs -f builder`; it ends with a line like

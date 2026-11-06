@@ -15,6 +15,7 @@ import { fingerprint } from './nextcloud.ts';
 import { createAdminClient } from './remark-admin.ts';
 import type {
   AlertEvent,
+  SearchStatus,
   Source,
   Status,
   WebmentionSummary,
@@ -125,12 +126,15 @@ export function statusWriter(options: {
   log: Log;
 }) {
   let webmentions: WebmentionSummary | undefined;
+  let search: SearchStatus | undefined;
   let last: Status | undefined;
   const write = async (status: Status) => {
     last = status;
-    await options.writeStatus(
-      webmentions ? { ...status, webmentions } : status,
-    );
+    await options.writeStatus({
+      ...status,
+      ...(webmentions ? { webmentions } : {}),
+      ...(search ? { search } : {}),
+    });
     // The public copy goes into the release that is online. A problem with it
     // is logged and never stops a check.
     try {
@@ -151,6 +155,95 @@ export function statusWriter(options: {
     async webmentions(summary: WebmentionSummary) {
       webmentions = summary;
       if (last) await write(last);
+    },
+    async search(state: SearchStatus) {
+      search = state;
+      if (last) await write(last);
+    },
+  };
+}
+
+/**
+ * The Pagefind of the image: `pagefind` (newest), or in the image variant
+ * `noavx` the older `pagefind-noavx`, whose binary runs on CPUs without AVX
+ * (Pagefind 1.6.0 stops there with "Illegal instruction").
+ */
+export function pagefindCommand(
+  siteDir: string,
+  variant: string | undefined,
+): { command: string; args: string[] } {
+  const pkg = variant === 'noavx' ? 'pagefind-noavx' : 'pagefind';
+  return {
+    command: process.execPath,
+    args: [path.join(siteDir, 'node_modules', pkg, 'lib', 'runner', 'bin.cjs')],
+  };
+}
+
+/**
+ * A hint for the log when the search index failed on an x86 CPU without AVX
+ * in the image that needs it; empty otherwise (other CPUs, the noavx image).
+ */
+export function noAvxHint(
+  cpuinfo: string,
+  variant: string | undefined,
+): string {
+  if (variant === 'noavx') return '';
+  const flags = /^flags\s*:(.*)$/m.exec(cpuinfo)?.[1];
+  if (flags === undefined || /\savx(\s|$)/.test(flags)) return '';
+  return ' (this CPU has no AVX, which the search index of this image needs: use the image variant noavx, MUFFEL_VERSION=latest-noavx or <version>-noavx)';
+}
+
+/**
+ * The search index is not worth a site that stays offline: when it fails
+ * (Pagefind 1.6.0 crashed on CPUs without AVX), the release goes online
+ * without search and the failure is reported instead of thrown.
+ */
+export async function optionalSearch(
+  buildIndex: () => Promise<void>,
+  report: (state: SearchStatus) => void,
+): Promise<void> {
+  try {
+    await buildIndex();
+    report({ state: 'ok' });
+  } catch (error) {
+    report({
+      state: 'failed',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+/**
+ * Keeps the search state for the status and reports a new failure once: in
+ * the log and through the alert webhook. A failure that stays is not repeated.
+ */
+export function searchReporter(options: {
+  alert: (event: AlertEvent) => Promise<void>;
+  status: (state: SearchStatus) => Promise<void>;
+  now?: () => Date;
+}) {
+  let pending: SearchStatus | undefined;
+  let failedBefore = false;
+  return {
+    /** Called by the build step, before the release is online. */
+    note(state: SearchStatus) {
+      pending = state;
+    },
+    /** Called once the release is online. */
+    async online(): Promise<void> {
+      if (!pending) return;
+      const state = pending;
+      pending = undefined;
+      await options.status(state);
+      const failed = state.state === 'failed';
+      if (failed && !failedBefore) {
+        await options.alert({
+          kind: 'search',
+          message: `The release is online without search: ${state.message}`,
+          at: (options.now ?? (() => new Date()))().toISOString(),
+        });
+      }
+      failedBefore = failed;
     },
   };
 }

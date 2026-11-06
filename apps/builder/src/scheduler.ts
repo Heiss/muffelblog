@@ -16,17 +16,23 @@ export interface WebmentionSummary {
   noEndpoint: number;
 }
 
+/** The search index of the release that is online; it never stops a release. */
+export type SearchStatus =
+  { state: 'ok' } | { state: 'failed'; message: string };
+
 export interface Status {
   state: 'ok' | 'failing';
   /** Only present when sending webmentions is switched on. */
   webmentions?: WebmentionSummary;
+  /** Present after the first release of this run. */
+  search?: SearchStatus;
   lastCheck: string;
   lastSuccess?: { id: string; at: string };
   lastError?: { message: string; at: string; since: string };
 }
 
 export interface AlertEvent {
-  kind: 'failed' | 'recovered' | 'webmention';
+  kind: 'failed' | 'recovered' | 'webmention' | 'search';
   message: string;
   at: string;
 }
