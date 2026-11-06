@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-05
+* **Fix** (after 26.11.0, found on the first real server): the builder image had no system certificates, so rclone (Go) refused every HTTPS Nextcloud ("certificate signed by unknown authority"); Node carries its own, so Memos worked. `ca-certificates` is installed now; the compose job fetches a file over HTTPS with rclone in the image, a unit test checks the Dockerfile.
 * **Fix**: The complete CodeQL scan (main, release) found three older findings that the diff scan of the pull requests did not show: a slow regular expression on the `Link` header of foreign servers (`parseLinkHeader`, now a linear scan; a hostile header took 24 s before) and log lines with line breaks from requests in the two test servers under `docker/`.
 * **Fix**: The release workflow grants its CI call `security-events: write` (CodeQL); without it the run on the tag would fail at its start. A unit test compares the rights of `ci.yml` and `release.yml`.
 * **Update**: Mutation tests (W18, O37): Stryker over core, builder and site logic, 80 % blocks; incremental on pull requests and `main`, complete nightly and on a tag; score 83.1 %; a raw `<input>` in Markdown is removed again, see [Test strategy](/ops/testing.md).

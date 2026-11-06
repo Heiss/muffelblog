@@ -142,6 +142,13 @@ jobs:
             ghcr.io/heiss/muffelblog-builder:latest
       - name: rclone is in the builder image
         run: docker compose run --rm --no-deps --entrypoint rclone builder version
+      # A real Nextcloud is reached over HTTPS: rclone must trust public
+      # certificates inside the image (the first release could not).
+      - name: rclone in the builder image verifies HTTPS
+        run: |
+          docker compose run --rm --no-deps --entrypoint rclone builder \
+            cat --http-url https://raw.githubusercontent.com/Heiss/muffelblog/main/ :http:LICENSE \
+            | grep -q 'MIT License'
       - name: The builder does not run as root and can write its folders
         run: |
           test "$(docker compose exec -T builder id -u)" = 1000
