@@ -42,7 +42,7 @@ a message that names the variable; nothing is silently ignored.
 | `MUFFEL_BIND`                         | `127.0.0.1`      | Address the blog and comments ports listen on. See [Reverse proxy examples](/muffelblog/production/reverse-proxy/)       |
 | `MUFFEL_PORT`, `MUFFEL_COMMENTS_PORT` | 8080, 8081       | Ports of the blog and the comments, for your reverse proxy                                                               |
 | `MUFFEL_TRUSTED_PROXIES`              | `private_ranges` | Addresses of your reverse proxy; only from them `X-Forwarded-For` is believed. CIDR ranges separated by spaces           |
-| `MUFFEL_VERSION`                      | `latest`         | Tag of the builder image                                                                                                 |
+| `MUFFEL_VERSION`                      | `latest`         | Tag of the builder image: `latest` or a version (`26.11.1`); for CPUs without AVX `latest-noavx` or `26.11.1-noavx`      |
 | `MUFFEL_RELEASES_DIR`                 |                  | Host folder for the releases ([Proxy serves the files](/muffelblog/production/host-folder/), `compose.host-folder.yaml`) |
 | `REMARK_PORT`                         | 8082             | Port on `127.0.0.1` for Remark42 (`compose.host-folder.yaml`)                                                            |
 | `MUFFEL_MAIL_PORT`                    | 8025             | Port of the mail sink Mailpit (demo only, `compose.demo.yaml`)                                                           |

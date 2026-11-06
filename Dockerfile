@@ -28,8 +28,12 @@ COPY --from=site-build /repo/apps/site/dist/ /
 FROM deps AS builder
 # rclone fetches the Nextcloud share (WebDAV); pinned like every other image.
 COPY --from=rclone/rclone:1.75.2 /usr/local/bin/rclone /usr/local/bin/rclone
+# Image variant: empty (default) or `noavx`, the image for CPUs without AVX
+# (Celeron, Atom): its search index uses the older Pagefind (pagefind-noavx).
+ARG VARIANT=
 ENV REPO_DIR=/repo \
-    RELEASES_DIR=/data/releases
+    RELEASES_DIR=/data/releases \
+    MUFFEL_IMAGE_VARIANT=$VARIANT
 # Not root: the builder fetches content from outside and runs a build. The user
 # `node` (uid 1000) of the base image owns what the builder writes: the data
 # folders (a new Docker volume takes over this owner from the image) and the

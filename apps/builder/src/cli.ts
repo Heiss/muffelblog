@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { cp, rm } from 'node:fs/promises';
+import { cp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { readSettings } from '@muffelblog/core';
 import { alertConfig } from './alert.ts';
@@ -12,7 +12,7 @@ import {
 import { createRcloneRemote } from './rclone.ts';
 import { removeIncomplete, runRelease } from './release.ts';
 import type { Step } from './release.ts';
-import { createScheduler } from './scheduler.ts';
+import { createScheduler, type SearchStatus } from './scheduler.ts';
 import { fileStore, sourcesFrom } from './serve.ts';
 import { createWebmentionRunner } from './webmentions.ts';
 import {
@@ -20,6 +20,10 @@ import {
   buildEnv,
   builderDirs,
   writableDirs,
+  noAvxHint,
+  optionalSearch,
+  pagefindCommand,
+  searchReporter,
   polledSources,
   receiver,
   releaseOnline,
@@ -46,6 +50,28 @@ function run(
   });
 }
 
+/** The search index of the built site; a failure names the image variant to use. */
+async function searchIndex(
+  site: string,
+  staging: string,
+  env: NodeJS.ProcessEnv,
+): Promise<void> {
+  const variant = process.env.MUFFEL_IMAGE_VARIANT;
+  const pagefind = pagefindCommand(site, variant);
+  try {
+    await run(
+      pagefind.command,
+      [...pagefind.args, '--site', staging],
+      site,
+      env,
+    );
+  } catch (error) {
+    const cpuinfo = await readFile('/proc/cpuinfo', 'utf8').catch(() => '');
+    const text = error instanceof Error ? error.message : String(error);
+    throw new Error(`${text}${noAvxHint(cpuinfo, variant)}`, { cause: error });
+  }
+}
+
 /**
  * Astro build and search index in a staging folder inside the container, then
  * a copy into the release folder. Astro moves files with `rename`, which fails
@@ -54,6 +80,7 @@ function run(
 export function siteSteps(
   repoRoot: string,
   env: NodeJS.ProcessEnv = process.env,
+  noteSearch: (state: SearchStatus) => void = () => {},
 ): Step[] {
   const site = path.join(repoRoot, 'apps', 'site');
   const staging = path.join(site, '.release-staging');
@@ -64,7 +91,7 @@ export function siteSteps(
       const bin = (name: string) =>
         path.join(site, 'node_modules', '.bin', name);
       await run(bin('astro'), ['build', '--outDir', staging], site, env);
-      await run(bin('pagefind'), ['--site', staging], site, env);
+      await optionalSearch(() => searchIndex(site, staging, env), noteSearch);
     },
     async (dir) => {
       await cp(staging, dir, { recursive: true });
@@ -103,8 +130,9 @@ function buildRelease(options: {
   dirs: ReturnType<typeof builderDirs>;
   remote?: ReturnType<typeof createRcloneRemote>;
   settings: { releasesKept: number };
+  search: ReturnType<typeof searchReporter>;
 }) {
-  const { dirs, remote } = options;
+  const { dirs, remote, search } = options;
   return async (): Promise<string> => {
     // The build gets the folder, not the secrets.
     const env = buildEnv();
@@ -121,10 +149,11 @@ function buildRelease(options: {
     }
     const id = await runRelease({
       root: dirs.releasesDir,
-      steps: siteSteps(dirs.repoRoot, env),
+      steps: siteSteps(dirs.repoRoot, env, search.note),
       keep: options.settings.releasesKept,
     });
     log(`release ${id} is online in ${dirs.releasesDir}/current`);
+    await search.online();
     return id;
   };
 }
@@ -167,6 +196,16 @@ function webmentionTasks(options: {
   };
 }
 
+/** The folders of the builder, writable and without what a stopped build left. */
+async function preparedDirs() {
+  const dirs = builderDirs();
+  // The builder runs as a normal user: say it plainly if a folder is not writable.
+  await assertWritable(writableDirs(dirs));
+  // What a stopped build left behind is not a release.
+  await removeIncomplete(dirs.releasesDir);
+  return dirs;
+}
+
 /** What is checked, built and run in the background, put together from the settings. */
 async function setUp() {
   // Invalid settings stop the builder before anything is written.
@@ -175,11 +214,7 @@ async function setUp() {
   assertNoFixtures();
   const sources = sourcesFrom();
   const nextcloud = nextcloudConfig();
-  const dirs = builderDirs();
-  // The builder runs as a normal user: say it plainly if a folder is not writable.
-  await assertWritable(writableDirs(dirs));
-  // What a stopped build left behind is not a release.
-  await removeIncomplete(dirs.releasesDir);
+  const dirs = await preparedDirs();
   const remote = nextcloud ? createRcloneRemote(nextcloud) : undefined;
   const online = releaseOnline(dirs.releasesDir);
   const store = fileStore(dirs.stateDir);
@@ -189,6 +224,7 @@ async function setUp() {
     checkIntervalSeconds: settings.checkIntervalSeconds,
     log,
   });
+  const search = searchReporter({ alert, status: status.search });
   const tasks = webmentionTasks({
     settings,
     dirs,
@@ -209,7 +245,7 @@ async function setUp() {
     writeStatus: status.write,
     hasRelease: online,
     alert,
-    build: buildRelease({ dirs, remote, settings }),
+    build: buildRelease({ dirs, remote, settings, search }),
   });
   log(
     `started (${sources.mode}, check every ${settings.checkIntervalSeconds}s, debounce ${settings.debounceChecks})`,

@@ -73,6 +73,21 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # The same image for CPUs without AVX (Celeron, Atom): the search index
+      # runs the older Pagefind. Only amd64, AVX is an x86 matter.
+      - name: Build and push the builder image without AVX (noavx)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: builder
+          platforms: linux/amd64
+          build-args: VARIANT=noavx
+          push: ${{ steps.v.outputs.publish == 'true' }}
+          tags: |
+            ${{ steps.v.outputs.image }}:${{ steps.v.outputs.tag }}-noavx
+            ${{ steps.v.outputs.publish == 'true' && format('{0}:latest-noavx', steps.v.outputs.image) || '' }}
+          cache-from: type=gha
+
       - name: GitHub release
         if: steps.v.outputs.publish == 'true'
         env:

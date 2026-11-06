@@ -31,6 +31,17 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   terms); feed blocks, tag and search pages carry none. Kind is a
   `<meta data-pagefind-filter="kind[content]">`, tags are `data-pagefind-filter="tag"`.
 * **[E]** Pagefind runs as part of `pnpm build` (`astro build && pagefind --site dist`).
+* **[E]** (2026-11-06, owner: two image tags) Pagefind 1.6.0 needs AVX and
+  crashed on the first real server (Celeron J4105). The default image uses the
+  newest Pagefind; the image variant `noavx` (tags `<version>-noavx`,
+  `latest-noavx`, amd64 only, build argument `VARIANT=noavx`, environment
+  `MUFFEL_IMAGE_VARIANT`) uses `pagefind-noavx` (`npm:pagefind@1.5.2`). The CI
+  builds the index of the noavx Pagefind on an emulated CPU without AVX
+  (`scripts/pagefind-without-avx.sh`).
+* **[E]** (2026-11-06, owner) A failed search index does not stop a release:
+  the site goes online without search, the status (`search`) and the alert
+  webhook (once per failure) report it; on an x86 CPU without AVX the message
+  names the noavx variant.
 * **[V]** The CSP needs `script-src 'self' 'wasm-unsafe-eval'` because Pagefind
   uses WebAssembly.
 

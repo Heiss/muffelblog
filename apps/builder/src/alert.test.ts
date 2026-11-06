@@ -101,6 +101,30 @@ describe('sendAlert', () => {
     );
   });
 
+  it('gives every kind its own title', async () => {
+    const titles: string[] = [];
+    for (const kind of [
+      'failed',
+      'recovered',
+      'webmention',
+      'search',
+    ] as const) {
+      const { calls, fetcher } = capture();
+      await sendAlert(
+        { url: 'https://h.example/x', format: 'json' },
+        { ...event, kind },
+        fetcher,
+      );
+      titles.push(String(calls[0]?.init.body).split('\\n')[0] ?? '');
+    }
+    expect(titles).toEqual([
+      '{"text":"Muffelblog: build failed',
+      '{"text":"Muffelblog: build works again',
+      '{"text":"Muffelblog: webmentions given up',
+      '{"text":"Muffelblog: online without search',
+    ]);
+  });
+
   it('never throws: a broken webhook must not stop the builder', async () => {
     const down = (async () => {
       throw new Error('connection refused');

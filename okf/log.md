@@ -1,5 +1,8 @@
 # Update log
 
+## 2026-11-06
+* **Fix** (first real server, Celeron J4105 without AVX): Pagefind 1.6.0 stopped with "Illegal instruction", its npm wrapper only reported exit 1, so no release came online. Owner's decision: two image tags. The default image keeps the newest Pagefind, the variant `noavx` (`<version>-noavx`, `latest-noavx`) uses `pagefind-noavx` = Pagefind 1.5.2 (checked on an emulated CPU without AVX). A failed search index no longer stops a release (owner): online without search, reported in the status and once through the alert webhook, with a hint to the noavx variant. See [Search](/features/search.md).
+
 ## 2026-11-05
 * **Fix** (after 26.11.0, found on the first real server): the builder image had no system certificates, so rclone (Go) refused every HTTPS Nextcloud ("certificate signed by unknown authority"); Node carries its own, so Memos worked. `ca-certificates` is installed now; the compose job fetches a file over HTTPS with rclone in the image, a unit test checks the Dockerfile.
 * **Fix**: The complete CodeQL scan (main, release) found three older findings that the diff scan of the pull requests did not show: a slow regular expression on the `Link` header of foreign servers (`parseLinkHeader`, now a linear scan; a hostile header took 24 s before) and log lines with line breaks from requests in the two test servers under `docker/`.

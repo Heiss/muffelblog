@@ -228,6 +228,13 @@ describe('Remark42 hardening and moderation', () => {
       expect(builder).toMatch(/rm -rf \/var\/lib\/apt\/lists/);
     });
 
+    it('takes the image variant as a build argument into the environment', async () => {
+      const text = await dockerfile();
+      const builder = text.slice(text.indexOf('AS builder'));
+      expect(builder).toMatch(/^ARG VARIANT=$/m);
+      expect(builder).toMatch(/MUFFEL_IMAGE_VARIANT=\$VARIANT/);
+    });
+
     it('installs the system certificates, so rclone can check HTTPS', async () => {
       const text = await dockerfile();
       const builder = text.slice(text.indexOf('AS builder'));

@@ -9,10 +9,14 @@ import {
   buildEnv,
   builderDirs,
   nextcloudSource,
+  noAvxHint,
+  optionalSearch,
+  pagefindCommand,
   polledSources,
   receiver,
   releaseOnline,
   requireSiteUrl,
+  searchReporter,
   single,
   statusWriter,
   writableDirs,
@@ -232,5 +236,139 @@ describe('writableDirs', () => {
       cacheDir: '/data/cache',
       stateDir: '/data/state',
     });
+  });
+});
+
+describe('optionalSearch', () => {
+  it('reports ok after a working index', async () => {
+    const states: unknown[] = [];
+    await optionalSearch(
+      async () => {},
+      (s) => states.push(s),
+    );
+    expect(states).toEqual([{ state: 'ok' }]);
+  });
+
+  it('reports a failure instead of throwing it', async () => {
+    const states: unknown[] = [];
+    await optionalSearch(
+      async () => {
+        throw new Error('pagefind exited with 1');
+      },
+      (s) => states.push(s),
+    );
+    await optionalSearch(
+      async () => {
+        throw 'plain';
+      },
+      (s) => states.push(s),
+    );
+    expect(states).toEqual([
+      { state: 'failed', message: 'pagefind exited with 1' },
+      { state: 'failed', message: 'plain' },
+    ]);
+  });
+});
+
+describe('searchReporter', () => {
+  const setup = () => {
+    const alerts: unknown[] = [];
+    const states: unknown[] = [];
+    const r = searchReporter({
+      alert: async (e) => {
+        alerts.push(e);
+      },
+      status: async (s) => {
+        states.push(s);
+      },
+      now: () => new Date('2026-11-06T01:00:00Z'),
+    });
+    return { r, alerts, states };
+  };
+
+  it('does nothing before a release was built', async () => {
+    const { r, alerts, states } = setup();
+    await r.online();
+    expect([alerts, states]).toEqual([[], []]);
+  });
+
+  it('alerts once per failure and takes each state into the status', async () => {
+    const { r, alerts, states } = setup();
+    const failed = { state: 'failed' as const, message: 'boom' };
+    r.note(failed);
+    await r.online();
+    r.note(failed);
+    await r.online();
+    r.note({ state: 'ok' });
+    await r.online();
+    r.note(failed);
+    await r.online();
+    await r.online();
+    expect(states).toEqual([failed, failed, { state: 'ok' }, failed]);
+    const alert = {
+      kind: 'search',
+      message: 'The release is online without search: boom',
+      at: '2026-11-06T01:00:00.000Z',
+    };
+    expect(alerts).toEqual([alert, alert]);
+  });
+});
+
+describe('pagefindCommand', () => {
+  it('runs the newest Pagefind, or the older one in the noavx image', () => {
+    expect(pagefindCommand('/site', undefined)).toEqual({
+      command: process.execPath,
+      args: ['/site/node_modules/pagefind/lib/runner/bin.cjs'],
+    });
+    expect(pagefindCommand('/site', 'noavx').args).toEqual([
+      '/site/node_modules/pagefind-noavx/lib/runner/bin.cjs',
+    ]);
+    expect(pagefindCommand('/site', 'other').args[0]).toContain(
+      '/node_modules/pagefind/',
+    );
+  });
+});
+
+describe('noAvxHint', () => {
+  const cpu = (flags: string) =>
+    `processor\t: 0\nmodel name\t: x\nflags\t\t: ${flags}\nbugs\t\t: none\n`;
+
+  it('names the noavx image on an x86 CPU without AVX', () => {
+    const hint = noAvxHint(cpu('fpu sse4_2 avx512_vnni_x'), undefined);
+    expect(hint).toBe(
+      ' (this CPU has no AVX, which the search index of this image needs: use the image variant noavx, MUFFEL_VERSION=latest-noavx or <version>-noavx)',
+    );
+    expect(noAvxHint(cpu('fpu sse4_2'), '')).toBe(hint);
+  });
+
+  it('says nothing with AVX, without x86 flags or in the noavx image', () => {
+    expect(noAvxHint(cpu('fpu avx avx2'), undefined)).toBe('');
+    expect(noAvxHint(cpu('fpu sse4_2 avx'), undefined)).toBe('');
+    expect(noAvxHint('Features\t: fp asimd\n', undefined)).toBe('');
+    expect(noAvxHint('', undefined)).toBe('');
+    expect(noAvxHint(cpu('fpu sse4_2'), 'noavx')).toBe('');
+  });
+});
+
+describe('statusWriter: search', () => {
+  it('adds the search state to every later status', async () => {
+    const written: Status[] = [];
+    const w = statusWriter({
+      writeStatus: async (s) => {
+        written.push(s);
+      },
+      releasesDir: dir,
+      checkIntervalSeconds: 180,
+      log: () => {},
+    });
+    await w.search({ state: 'ok' });
+    expect(written).toEqual([]);
+    const status = { state: 'ok', lastCheck: 'x' } as Status;
+    await w.write(status);
+    await w.search({ state: 'failed', message: 'boom' });
+    expect(written).toEqual([
+      { ...status, search: { state: 'ok' } },
+      { ...status, search: { state: 'failed', message: 'boom' } },
+    ]);
   });
 });

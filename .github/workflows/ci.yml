@@ -68,6 +68,13 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test:coverage
       - run: pnpm build
+      # Home servers often have CPUs without AVX (Celeron, Atom): Pagefind
+      # 1.6.0 crashed there. The noavx image uses pagefind-noavx; a raise of it
+      # that needs AVX fails here.
+      - name: The search index of the noavx image builds on a CPU without AVX
+        run: |
+          sudo apt-get install -y -q qemu-user > /dev/null
+          scripts/pagefind-without-avx.sh
       - name: Build the documentation site
         run: pnpm --filter @muffelblog/docs build
 
@@ -149,6 +156,11 @@ jobs:
           docker compose run --rm --no-deps --entrypoint rclone builder \
             cat --http-url https://raw.githubusercontent.com/Heiss/muffelblog/main/ :http:LICENSE \
             | grep -q 'MIT License'
+      - name: The Pagefind of the noavx variant is in the builder image
+        run: |
+          docker compose run --rm --no-deps --entrypoint node builder \
+            /repo/apps/site/node_modules/pagefind-noavx/lib/runner/bin.cjs --version \
+            | grep -q '^pagefind 1\.5\.'
       - name: The builder does not run as root and can write its folders
         run: |
           test "$(docker compose exec -T builder id -u)" = 1000
