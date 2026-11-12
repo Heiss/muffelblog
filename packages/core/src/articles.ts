@@ -33,6 +33,7 @@ export const RESERVED_PAGE_SLUGS: ReadonlySet<string> = new Set([
   'theme-init',
   '_astro',
   'index',
+  'updated',
 ]);
 
 export interface Article {
@@ -42,8 +43,12 @@ export interface Article {
   title: string;
   /** Glossary only: the term itself (`term:`), when the title is a question. */
   term?: string;
-  date: Date;
-  dateSource: 'frontmatter' | 'mtime';
+  /** Frontmatter `created`; without a valid one the modification date. */
+  created: Date;
+  createdSource: 'frontmatter' | 'mtime';
+  /** Frontmatter `updated`; without a valid one the modification date. */
+  updated: Date;
+  updatedSource: 'frontmatter' | 'mtime';
   tags: string[];
   description?: string;
   body: string;
@@ -127,22 +132,43 @@ function readType(data: Data, slug: string, warn: Warn): ArticleType {
   return 'post';
 }
 
-function readDate(
+type StampKey = 'created' | 'updated';
+
+function readStamp(
+  data: Data,
+  key: StampKey,
+  type: ArticleType,
+  mtime: Date,
+  warn: Warn,
+): { value: Date; source: 'frontmatter' | 'mtime' } {
+  const value = parseDate(data[key]);
+  if (value !== null) return { value, source: 'frontmatter' };
+  // A static page has no place in time; the dates are only placeholders.
+  if (type !== 'page')
+    warn(
+      data[key] === undefined
+        ? `no ${key}, the modification date of the file is used`
+        : `invalid ${key} "${String(data[key])}", the modification date of the file is used`,
+    );
+  return { value: new Date(mtime.getTime()), source: 'mtime' };
+}
+
+function readDates(
   data: Data,
   type: ArticleType,
   mtime: Date,
   warn: Warn,
-): { date: Date; dateSource: Article['dateSource'] } {
-  const date = parseDate(data.date);
-  if (date !== null) return { date, dateSource: 'frontmatter' };
-  // A static page has no place in time; the date is only a placeholder.
-  if (type !== 'page')
-    warn(
-      data.date === undefined
-        ? 'no date, the modification date of the file is used'
-        : `invalid date "${String(data.date)}", the modification date of the file is used`,
-    );
-  return { date: new Date(mtime.getTime()), dateSource: 'mtime' };
+): Pick<Article, 'created' | 'createdSource' | 'updated' | 'updatedSource'> {
+  if (data.date !== undefined && type !== 'page')
+    warn('date is no longer read, use created (and updated)');
+  const created = readStamp(data, 'created', type, mtime, warn);
+  const updated = readStamp(data, 'updated', type, mtime, warn);
+  return {
+    created: created.value,
+    createdSource: created.source,
+    updated: updated.value,
+    updatedSource: updated.source,
+  };
 }
 
 function readTags(data: Data, warn: Warn): string[] {
@@ -198,7 +224,7 @@ function buildArticle(
     type,
     slug,
     title,
-    ...readDate(data, type, input.mtime, warn),
+    ...readDates(data, type, input.mtime, warn),
     tags: readTags(data, warn),
     body,
     path: input.path,
@@ -239,9 +265,9 @@ export function parseArticle(input: {
 }
 
 /**
- * Assigns unique slugs. The article with the older date (on a tie, the path in
+ * Assigns unique slugs. The article with the older `created` date (on a tie, the path in
  * text order) keeps the slug, all others get -2, -3, ...
- * The result is sorted by date, ascending.
+ * The result is sorted by `created`, ascending.
  */
 export function assignUniqueSlugs(articles: Article[]): {
   articles: Article[];
@@ -249,7 +275,7 @@ export function assignUniqueSlugs(articles: Article[]): {
 } {
   const sorted = [...articles].sort(
     (a, b) =>
-      a.date.getTime() - b.date.getTime() ||
+      a.created.getTime() - b.created.getTime() ||
       (a.path < b.path ? -1 : a.path > b.path ? 1 : 0),
   );
   const taken = new Set<string>();
@@ -315,7 +341,7 @@ export async function loadArticles(
   }
   const articles = merged.sort(
     (a, b) =>
-      b.date.getTime() - a.date.getTime() ||
+      b.created.getTime() - a.created.getTime() ||
       (a.path < b.path ? 1 : a.path > b.path ? -1 : 0),
   );
   return { articles, warnings };

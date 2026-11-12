@@ -51,7 +51,7 @@ describe('example Nextcloud folder', () => {
   it('gives the post what the tutorial needs: a date, tags, a description, an external link and a link to the term', async () => {
     const { articles } = await loadArticles(folder);
     const post = articles.find((a) => a.slug === 'hello-world');
-    expect(post?.dateSource).toBe('frontmatter');
+    expect(post?.createdSource).toBe('frontmatter');
     expect(post?.tags).toEqual(['welcome', 'indieweb']);
     expect(post?.description?.length).toBeGreaterThan(20);
     expect(post?.body).toMatch(/\]\(https:\/\/indieweb\.org\//);

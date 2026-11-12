@@ -1,7 +1,8 @@
 ---
 publish: true
 title: 'Backups, die man wirklich zurückspielt'
-date: 2026-09-20 18:00
+created: 2026-09-20 18:00
+updated: 2026-09-20 18:00
 tags: [it, backup, alltag]
 description: 'Ein Backup zählt erst, wenn die Wiederherstellung einmal geklappt hat. Die 3-2-1-Regel hilft bei der Planung.'
 ---

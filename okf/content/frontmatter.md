@@ -12,21 +12,31 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 | Field | Type | Required | Rule |
 |---|---|---|---|
 | `publish` | boolean | **[E]** yes | Only the boolean `true` counts. `"true"` or `yes` do not. If it is missing, the file is ignored. |
-| `date` | date/time | **[E]** yes, with fallback | Missing or invalid: modification date of the file. |
+| `created` | date/time | **[E]** yes, with fallback | Creation date, shown and used for the chronology. Missing or invalid: modification date of the file, with a warning. Replaces `date` (decided 2026-11-12). |
+| `updated` | date/time | **[E]** yes, with fallback | Date of the last edit. Missing or invalid: modification date of the file, with a warning. |
 | `title` | text | **[V]** yes | If it is missing, it is derived from the file name. |
 | `slug` | text | **[V]** no | If it is missing, it is derived from the file name. |
 | `description` | text | **[V]** no | Meta description, feed excerpt. |
 | `tags` | list | **[V]** no | Obsidian properties, lists of strings. That tags exist is **[E]**. |
 | `type` | text | **[E]** no | `glossary` marks a glossary entry (see [Glossary](/features/glossary.md)); planned in W19. Without it the file is an article. |
 
-Unknown fields (`aliases`, `cssclasses` and others) are ignored.
+Unknown fields (`aliases`, `cssclasses` and others) are ignored. `date` is **no
+longer read**: a file that still has it gets a warning ("date is no longer
+read, use created (and updated)") and counts as without `created`.
 
-# Date
+# Dates (`created`, `updated`)
 
-* **[E]** `date` is a required field. If it is missing, the modification date
-  of the file counts as a fallback.
+* **[E]** Decided 2026-11-12: `created` replaces `date` for all articles (posts
+  and terms); `updated` is new. Both are required fields with the same
+  fallback. Pages (`type: page`) have no dates and no warning.
+* **[E]** `created` drives the chronology (feed, RSS `pubDate`, slug priority,
+  "N new entries"). `updated` drives the second sort order of the feed (see
+  [Feed](/frontend/feed.md)) and the `lastmod` of the sitemap.
+* **[E]** Missing or invalid: the modification date of the file, one warning per
+  field. `updated` is deliberately **not** derived from `created`.
+* **[U]** `updated` before `created` is not checked or corrected.
 * **[U]** Over WebDAV only `getlastmodified` is available, no creation date. The
-  modification date is set anew on every edit. Posts without `date` therefore
+  modification date is set anew on every edit. Posts without `created` therefore
   jump in the chronology and appear as new again in RSS if the GUID depends on
   the date.
 * **[V]** The RSS GUID therefore does not depend on the date (see
@@ -47,7 +57,7 @@ Unknown fields (`aliases`, `cssclasses` and others) are ignored.
 * **[V]** Slugs are transliterated: ä→ae, ö→oe, ü→ue, ß→ss, then lowercase
   letters, digits and `-`.
 * **[E]** Duplicate slugs (O26): a suffix is appended automatically (`-2`,
-  `-3`). The article with the older `date` keeps the slug, on a tie the path
+  `-3`). The article with the older `created` keeps the slug, on a tie the path
   decides. This is deterministic but not stable: if an article with an older
   date and the same slug is added later, the URLs swap. A `slug:` in the
   frontmatter avoids that. Every assignment of a suffix is logged as a warning.
@@ -71,8 +81,8 @@ Unknown fields (`aliases`, `cssclasses` and others) are ignored.
 
 * **[V]** Invalid YAML in a file: only that file is skipped and logged, never
   the whole build.
-* **[V]** `publish: true` with an invalid `date`: fallback to the modification
-  date and a warning in the log.
+* **[V]** `publish: true` with an invalid `created` or `updated`: fallback to the
+  modification date and a warning in the log.
 * **[V]** Invalid YAML is reported only if the file clearly contains
   `publish: true`. Otherwise it stays silently ignored, so private notes in the
   folder do not produce warnings.

@@ -40,6 +40,8 @@ export interface MemoRaw {
   visibility: string;
   state?: string;
   createTime: string;
+  /** Last edit; missing for old Memos versions, then `createTime` counts. */
+  updateTime?: string;
   tags?: string[];
   attachments?: MemoAttachmentRaw[];
   /** Set for comments. */
@@ -121,6 +123,8 @@ function parseMemo(value: unknown): MemoRaw | null {
     attachments: attachmentsOf(value.attachments),
   };
   if (typeof value.state === 'string') memo.state = value.state;
+  if (textOr(value.updateTime) !== '')
+    memo.updateTime = value.updateTime as string;
   if (textOr(value.parent) !== '') memo.parent = value.parent as string;
   return memo;
 }
@@ -431,7 +435,8 @@ export interface MemoEntry {
   path: string;
   title: string;
   description: string;
-  date: Date;
+  created: Date;
+  updated: Date;
   tags: string[];
   /** Sanitized HTML of the text together with the mirrored attachments. */
   html: string;
@@ -526,10 +531,25 @@ interface MemoBuild {
 }
 
 /** Uid and date of a memo that is shown, or null (with a warning where useful). */
+/** Last edit of a memo; `createTime` when `updateTime` is missing or invalid. */
+function updatedAtOf(
+  raw: MemoRaw,
+  createdAt: Date,
+  warn: (text: string) => void,
+): Date {
+  if (raw.updateTime === undefined) return createdAt;
+  const updatedAt = new Date(raw.updateTime);
+  if (Number.isNaN(updatedAt.getTime())) {
+    warn(`invalid updateTime "${raw.updateTime}", createTime is used`);
+    return createdAt;
+  }
+  return updatedAt;
+}
+
 function memoIdentity(
   raw: MemoRaw,
   warnings: string[],
-): { uid: string; createdAt: Date } | null {
+): { uid: string; createdAt: Date; updatedAt: Date } | null {
   const uid = MEMO_NAME.exec(raw.name)?.[1];
   if (uid === undefined) {
     warnings.push(`${raw.name}: invalid identifier, skipped`);
@@ -547,7 +567,7 @@ function memoIdentity(
     warn(`invalid createTime "${raw.createTime}", skipped`);
     return null;
   }
-  return { uid, createdAt };
+  return { uid, createdAt, updatedAt: updatedAtOf(raw, createdAt, warn) };
 }
 
 /**
@@ -688,7 +708,8 @@ async function buildEntry(
     path: `memos/${id.uid}`,
     title: memoTitle(id.createdAt, build.lang),
     description: makeDescription(raw.content, build.descriptionMax),
-    date: id.createdAt,
+    created: id.createdAt,
+    updated: id.updatedAt,
     tags: memoTags(raw.tags),
     html: rendered.html + media,
   };
@@ -723,7 +744,8 @@ export async function buildMemoEntries(
     if (entry) entries.push(entry);
   }
   entries.sort(
-    (a, b) => b.date.getTime() - a.date.getTime() || (a.uid < b.uid ? -1 : 1),
+    (a, b) =>
+      b.created.getTime() - a.created.getTime() || (a.uid < b.uid ? -1 : 1),
   );
   return { memos: entries, warnings };
 }
@@ -739,6 +761,7 @@ export function memosFingerprint(memos: readonly MemoRaw[]): string {
       JSON.stringify([
         m.name,
         m.createTime,
+        m.updateTime ?? '',
         m.content,
         [...(m.tags ?? [])].sort(),
         (m.attachments ?? [])

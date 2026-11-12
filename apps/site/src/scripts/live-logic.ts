@@ -59,6 +59,10 @@ const SERIES: Record<string, Scope['kind']> = {
   '/posts/': 'post',
   '/memos/': 'memo',
   '/terms/': 'glossary',
+  '/updated/': 'all',
+  '/posts/updated/': 'post',
+  '/memos/updated/': 'memo',
+  '/terms/updated/': 'glossary',
 };
 
 /**

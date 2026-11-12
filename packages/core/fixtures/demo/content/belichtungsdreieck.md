@@ -1,7 +1,8 @@
 ---
 publish: true
 title: 'Blende, Zeit, ISO: das Belichtungsdreieck in der Praxis'
-date: 2026-08-30 10:00
+created: 2026-08-30 10:00
+updated: 2026-08-30 10:00
 tags: [fotografie, technik, grundlagen]
 description: 'Drei Stellschrauben bestimmen die Helligkeit eines Fotos. Jede hat außerdem eine Nebenwirkung auf das Bild.'
 ---

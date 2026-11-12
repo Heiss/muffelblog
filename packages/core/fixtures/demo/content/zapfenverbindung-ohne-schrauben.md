@@ -1,7 +1,8 @@
 ---
 publish: true
 title: 'Holzverbindungen ohne Schrauben: der Zapfen'
-date: 2026-09-06 08:45
+created: 2026-09-06 08:45
+updated: 2026-09-06 08:45
 tags: [holzbau, handwerk, verbindungen]
 description: 'Ein Zapfen greift in ein Zapfenloch und überträgt Kräfte über die Form statt über Metall.'
 ---

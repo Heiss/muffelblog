@@ -16,7 +16,7 @@ export function liveEntries(
   const entries: LiveEntry[] = items.slice(0, limit).map((item) => ({
     id: item.id,
     kind: item.kind,
-    date: item.date.toISOString(),
+    date: item.created.toISOString(),
     tags: item.tags
       .map((tag) => tagSlug(tag))
       .filter((slug): slug is string => slug !== null && slug !== ''),

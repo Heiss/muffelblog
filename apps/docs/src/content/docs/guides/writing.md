@@ -11,7 +11,8 @@ folder stays private.
 ---
 publish: true
 title: A post about timber joints
-date: 2026-11-04
+created: 2026-11-04
+updated: 2026-11-04
 tags: [holzbau, grundlagen]
 description: One sentence for search engines and the feed.
 ---
@@ -21,16 +22,17 @@ The text starts here.
 
 ## Fields
 
-| Field         | Required | Rule                                                                   |
-| ------------- | -------- | ---------------------------------------------------------------------- |
-| `publish`     | yes      | Only the boolean `true` counts. `"true"` or `yes` do not.              |
-| `title`       | no       | Missing: the file name.                                                |
-| `date`        | no       | Missing or invalid: the modification date of the file, with a warning. |
-| `tags`        | no       | A list. Tags are lowercased, a leading `#` is dropped.                 |
-| `description` | no       | Used as meta description and feed excerpt.                             |
-| `slug`        | no       | The last part of the address. Missing: derived from the file name.     |
-| `type`        | no       | `glossary` or `page`. Missing: a post.                                 |
-| `term`        | no       | Glossary only: the term, when the title is a question.                 |
+| Field         | Required | Rule                                                                                                   |
+| ------------- | -------- | ------------------------------------------------------------------------------------------------------ |
+| `publish`     | yes      | Only the boolean `true` counts. `"true"` or `yes` do not.                                              |
+| `title`       | no       | Missing: the file name.                                                                                |
+| `created`     | no       | Creation date. Missing or invalid: the modification date of the file, with a warning. Replaces `date`. |
+| `updated`     | no       | Date of the last edit. Missing or invalid: the modification date of the file, with a warning.          |
+| `tags`        | no       | A list. Tags are lowercased, a leading `#` is dropped.                                                 |
+| `description` | no       | Used as meta description and feed excerpt.                                                             |
+| `slug`        | no       | The last part of the address. Missing: derived from the file name.                                     |
+| `type`        | no       | `glossary` or `page`. Missing: a post.                                                                 |
+| `term`        | no       | Glossary only: the term, when the title is a question.                                                 |
 
 Unknown fields (`aliases`, `cssclasses`, ...) are ignored.
 

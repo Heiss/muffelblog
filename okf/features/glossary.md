@@ -51,14 +51,15 @@ generated: { by: claude-code/web, at: 2026-11-03T12:30:00Z }
 * **[V]** URL of a term: `/g/<slug>/`. The slug is built from the title like for
   articles, with a counter for duplicates within the glossary. The namespace is
   separate from `/p/`, so a term can never displace an article.
-* **[V]** Fields like for articles (`title`, `date`, `tags`, `description`,
-  `publish`) plus an optional field for the term. The title may be a question
+* **[V]** Fields like for articles (`title`, `created`, `updated`, `tags`,
+  `description`, `publish`; `date` was replaced on 2026-11-12, see
+  [Frontmatter](/content/frontmatter.md)) plus an optional field for the term. The title may be a question
   like in the model ("Was ist Agilität?"). The term ("Agilität") determines
   letter and sorting and is highlighted in the title. If the field is missing,
   the title counts as the term. The description is the short definition for the
   feed excerpt.
 * **[V]** The feed gets a third kind `glossary` and a fourth filter. An entry
-  shows term, date and short definition, not the whole text.
+  shows term, creation date (and a changed `updated`) and short definition, not the whole text.
 * **[V]** Letter view `/glossary/`: a bar A to Z and all terms grouped by the
   first letter of the term. The letters of the bar are real links (anchors), not
   only script elements. Umlauts count as the base letter (Ä under A), digits and

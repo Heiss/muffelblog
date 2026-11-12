@@ -2,7 +2,8 @@
 publish: true
 type: glossary
 title: Webmention
-date: 2026-11-04 10:05
+created: 2026-11-04 10:05
+updated: 2026-11-04 10:05
 tags: [welcome, indieweb]
 description: A small message from one website to another that says "my page links to your page".
 ---

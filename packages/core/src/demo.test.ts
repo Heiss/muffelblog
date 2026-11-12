@@ -69,10 +69,11 @@ describe('demo set: articles and terms', () => {
     const articles = loaded.articles.filter((a) => a.type !== 'page');
     expect(new Set(articles.map((a) => a.slug)).size).toBe(articles.length);
     const months = new Set(
-      articles.map((a) => a.date.toISOString().slice(0, 7)),
+      articles.map((a) => a.created.toISOString().slice(0, 7)),
     );
     expect(months.size).toBeGreaterThanOrEqual(3);
-    for (const a of articles) expect(a.dateSource, a.path).toBe('frontmatter');
+    for (const a of articles)
+      expect(a.createdSource, a.path).toBe('frontmatter');
   });
 
   it('renders every article without warnings, with all local images found', async () => {

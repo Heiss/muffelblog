@@ -2,7 +2,8 @@
 publish: true
 type: glossary
 title: 'Zapfenverbindung'
-date: 2026-09-02 09:00
+created: 2026-09-02 09:00
+updated: 2026-09-02 09:00
 tags: [holzbau, glossar]
 description: 'Eine Holzverbindung, bei der ein Zapfen in ein passendes Zapfenloch greift und oft mit einem Holznagel gesichert wird.'
 ---

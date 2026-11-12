@@ -85,6 +85,12 @@ export const en = {
     short: 'Short',
     terms: 'Terms',
   },
+  sort: {
+    label: 'Sort by',
+    created: 'Created',
+    updated: 'Updated',
+    updatedOn: (date: string) => `Updated: ${date}`,
+  },
   og: {
     post: 'Post',
     memo: 'Memo',

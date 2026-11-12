@@ -2,7 +2,8 @@
 publish: true
 type: glossary
 title: 'Reverse Proxy'
-date: 2026-08-19 09:00
+created: 2026-08-19 09:00
+updated: 2026-08-19 09:00
 tags: [it, glossar]
 description: 'Ein Server, der Anfragen von außen annimmt und an einen oder mehrere Dienste dahinter weiterreicht.'
 ---

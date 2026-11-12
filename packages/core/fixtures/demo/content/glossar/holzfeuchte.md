@@ -2,7 +2,8 @@
 publish: true
 type: glossary
 title: 'Holzfeuchte'
-date: 2026-09-30 09:00
+created: 2026-09-30 09:00
+updated: 2026-11-05 08:15
 tags: [holzbau, glossar]
 description: 'Der Wassergehalt des Holzes in Prozent seiner Trockenmasse; er bestimmt, wie stark Holz quillt und schwindet.'
 ---

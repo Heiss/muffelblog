@@ -47,7 +47,7 @@ test.describe('Endless Scroll', () => {
     await page.goto('/');
     await scrollToEnd(page, TOTAL);
     const zeiten = await page
-      .locator('[data-feed-list] > article time')
+      .locator('[data-feed-list] > article > p > time')
       .evaluateAll((els) =>
         els.map((el) => Date.parse(el.getAttribute('datetime') ?? '')),
       );
@@ -226,4 +226,64 @@ test('loading more stays on the own origin', async ({ page, baseURL }) => {
   await page.goto('/');
   await scrollToEnd(page, TOTAL);
   expect(foreign).toEqual([]);
+});
+
+test.describe('Sorting', () => {
+  const sortLink = (page: Page, name: string) =>
+    page.locator('[data-sort]').getByRole('link', { name });
+
+  /** The `updated` dates of the entries: the second `time` when shown, else the first. */
+  async function updatedTimes(page: Page): Promise<number[]> {
+    return entries(page).evaluateAll((els) =>
+      els.map((el) => {
+        const all = el.querySelectorAll('time');
+        return Date.parse(all[all.length - 1]?.getAttribute('datetime') ?? '');
+      }),
+    );
+  }
+
+  test('switches to updated without reloading, keeps the filter and remembers it', async ({
+    page,
+  }) => {
+    await page.goto('/terms/');
+    await sortLink(page, ui.sort.updated).click();
+    await expect(page).toHaveURL(/\/terms\/updated\/$/);
+    await expect(sortLink(page, ui.sort.updated)).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(sortLink(page, ui.sort.created)).not.toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    const times = await updatedTimes(page);
+    expect(times.length).toBeGreaterThan(0);
+    expect(times).toEqual([...times].sort((a, b) => b - a));
+    // The filter links now lead to the series sorted by updated.
+    await expect(
+      page.locator('[data-filter]').getByRole('link', { name: ui.filter.long }),
+    ).toHaveAttribute('href', '/posts/updated/');
+    // `/` honors the remembered sort.
+    await page.goto('/');
+    await expect(page).toHaveURL(/\/updated\/$/);
+    await expect(sortLink(page, ui.sort.updated)).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+  });
+
+  test('switching back to created restores the created order', async ({
+    page,
+  }) => {
+    await page.goto('/updated/');
+    await sortLink(page, ui.sort.created).click();
+    await expect(page).toHaveURL(/localhost:\d+\/$/);
+    await scrollToEnd(page, TOTAL);
+    const zeiten = await page
+      .locator('[data-feed-list] > article > p > time')
+      .evaluateAll((els) =>
+        els.map((el) => Date.parse(el.getAttribute('datetime') ?? '')),
+      );
+    expect(zeiten).toEqual([...zeiten].sort((a, b) => b - a));
+  });
 });

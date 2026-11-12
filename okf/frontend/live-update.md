@@ -25,7 +25,7 @@ settled while building it.
 * **[E]** Two small files, both revalidated at every request (`Cache-Control:
   no-cache`): `build.json` (`{"id", "builtAt"}`, written by the builder as the
   last file) says that a new build is online; `entries.json` (written by the site
-  build) lists the newest 20 entries: `id`, `kind`, `date` and the tag addresses,
+  build) lists the newest 20 entries: `id`, `kind`, `date` (= `created`) and the tag addresses,
   newest first, no titles and no texts. The proposal to put the list into
   `build.json` was not followed, so the builder stays independent of the site
   content.

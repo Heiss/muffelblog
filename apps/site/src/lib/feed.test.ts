@@ -1,11 +1,39 @@
 import { describe, expect, it } from 'vitest';
-import { canonicalUrl, restPages, sitemapXml } from './feed';
+import type { FeedItem } from '@muffelblog/core';
+import { canonicalUrl, latestUpdate, restPages, sitemapXml } from './feed';
 
 describe('restPages', () => {
   it('returns the pages from 2', () => {
     expect(restPages(45, 20)).toEqual([2, 3]);
     expect(restPages(20, 20)).toEqual([]);
     expect(restPages(0, 20)).toEqual([]);
+  });
+});
+
+describe('latestUpdate', () => {
+  const item = (updated: string): FeedItem => ({
+    kind: 'post',
+    id: `post:${updated}`,
+    url: '/p/x/',
+    title: 'x',
+    created: new Date('2026-01-01T00:00:00Z'),
+    updated: new Date(updated),
+    tags: [],
+    excerpt: '',
+  });
+
+  it('is the newest updated date, not the order of the list', () => {
+    expect(
+      latestUpdate([
+        item('2026-02-01T00:00:00Z'),
+        item('2026-05-01T00:00:00Z'),
+        item('2026-03-01T00:00:00Z'),
+      ]),
+    ).toEqual(new Date('2026-05-01T00:00:00Z'));
+  });
+
+  it('is undefined for an empty list', () => {
+    expect(latestUpdate([])).toBeUndefined();
   });
 });
 

@@ -1,0 +1,18 @@
+---
+import { filterKind, paginate, sortFeed } from '@muffelblog/core';
+import FeedPage from '../../../components/FeedPage.astro';
+import { messages } from '../../../i18n/messages';
+import { getFeed } from '../../../lib/feed';
+import { getSettings } from '../../../lib/settings';
+
+const entries = sortFeed(filterKind(await getFeed(), 'memo'), 'updated');
+const page = paginate(
+  entries,
+  1,
+  '/memos/updated/',
+  getSettings().feedPageSize,
+);
+const title = messages.filter.short;
+---
+
+<FeedPage series="memo" sort="updated" {title} heading={title} {page} />

@@ -329,7 +329,7 @@ describe('buildMemoEntries: basic data', () => {
     expect(memos).toHaveLength(1);
     const memo = memos[0];
     expect(memo?.uid).toBe('abc');
-    expect(memo?.date.toISOString()).toBe('2026-11-02T13:32:00.000Z');
+    expect(memo?.created.toISOString()).toBe('2026-11-02T13:32:00.000Z');
     expect(memo?.title).toBe('Memo of 2 Nov 2026, 14:32');
     expect(memo?.path).toBe('memos/abc');
     expect(memo?.html).toContain('<p>Renovate eingerichtet.</p>');

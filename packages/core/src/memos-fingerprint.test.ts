@@ -40,6 +40,9 @@ describe('memosFingerprint', () => {
     expect(
       memosFingerprint([memo({ createTime: '2026-11-01T11:00:00Z' })]),
     ).not.toBe(base);
+    expect(
+      memosFingerprint([memo({ updateTime: '2026-11-03T11:00:00Z' })]),
+    ).not.toBe(base);
   });
 
   it('does not depend on field order of tags or noise fields', () => {

@@ -11,6 +11,15 @@ export async function getFeed(): Promise<FeedItem[]> {
   });
 }
 
+/** The most recent `updated` of the entries, undefined for none. */
+export function latestUpdate(items: readonly FeedItem[]): Date | undefined {
+  return items.reduce<Date | undefined>(
+    (max, item) =>
+      max === undefined || item.updated > max ? item.updated : max,
+    undefined,
+  );
+}
+
 /** Page numbers from 2: page 1 lives at the base and is not a route of its own. */
 export function restPages(count: number, size: number): number[] {
   const pages = Math.max(1, Math.ceil(count / size));

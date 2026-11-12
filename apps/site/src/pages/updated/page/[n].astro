@@ -1,0 +1,24 @@
+---
+import { SITE_NAME, paginate, sortFeed } from '@muffelblog/core';
+import FeedPage from '../../../components/FeedPage.astro';
+import { getFeed, restPages } from '../../../lib/feed';
+import { getSettings } from '../../../lib/settings';
+
+export async function getStaticPaths() {
+  const entries = sortFeed(await getFeed(), 'updated');
+  return restPages(entries.length, getSettings().feedPageSize).map((n) => ({
+    params: { n: String(n) },
+    props: { entries },
+  }));
+}
+
+const { entries } = Astro.props;
+const page = paginate(
+  entries,
+  Number(Astro.params.n),
+  '/updated/',
+  getSettings().feedPageSize,
+);
+---
+
+<FeedPage series="all" sort="updated" heading={SITE_NAME} {page} />

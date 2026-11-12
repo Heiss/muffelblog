@@ -1,5 +1,5 @@
 ---
-import { tagSlug } from '@muffelblog/core';
+import { differentDay, tagSlug } from '@muffelblog/core';
 import type { FeedItem } from '@muffelblog/core';
 import { messages } from '../i18n/messages';
 
@@ -8,11 +8,14 @@ interface Props {
 }
 
 const { item } = Astro.props;
-const date = new Intl.DateTimeFormat(messages.locale, {
+const format = new Intl.DateTimeFormat(messages.locale, {
   dateStyle: 'long',
   ...(item.kind === 'memo' ? { timeStyle: 'short' } : {}),
   timeZone: 'Europe/Berlin',
-}).format(item.date);
+});
+const created = format.format(item.created);
+// Only when the edit happened on another day than the creation.
+const showUpdated = differentDay(item.created, item.updated);
 ---
 
 <article
@@ -25,7 +28,15 @@ const date = new Intl.DateTimeFormat(messages.locale, {
     <a href={item.url}>{item.title}</a>
   </h2>
   <p>
-    <time datetime={item.date.toISOString()}>{date}</time>
+    <time datetime={item.created.toISOString()}>{created}</time>
+    {showUpdated && (
+      <span class="updated">
+        ·
+        <time datetime={item.updated.toISOString()}>
+          {messages.sort.updatedOn(format.format(item.updated))}
+        </time>
+      </span>
+    )}
   </p>
   {item.html !== undefined ? (
     <div class="content" set:html={item.html} />

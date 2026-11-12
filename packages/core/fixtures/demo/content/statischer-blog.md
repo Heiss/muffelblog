@@ -1,7 +1,8 @@
 ---
 publish: true
 title: 'Warum ein statischer Blog genügt'
-date: 2026-08-14 09:30
+created: 2026-08-14 09:30
+updated: 2026-08-14 09:30
 tags: [it, web, hosting]
 description: 'Ein statischer Blog besteht aus fertigen Dateien. Das macht ihn schnell, sicher und billig zu betreiben.'
 ---

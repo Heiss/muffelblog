@@ -1,9 +1,16 @@
 import { messages } from '../i18n/messages';
-import { blockPath, freshIds, parseFilter, seriesPath } from './feed-logic';
+import {
+  blockPath,
+  freshIds,
+  parseFilter,
+  parseSort,
+  seriesPath,
+} from './feed-logic';
 import { startLive } from './live';
-import type { Filter } from './feed-logic';
+import type { Filter, Sort } from './feed-logic';
 
 const FILTER_KEY = 'muffel:filter';
+const SORT_KEY = 'muffel:sort';
 const POSITION_KEY = 'muffel:feed-position';
 const ORIGIN = location.origin;
 
@@ -62,6 +69,10 @@ interface Feed {
   status: HTMLElement;
   pager: HTMLElement | null;
   filterNav: HTMLElement | null;
+  sortNav: HTMLElement | null;
+  /** What the list shows now. */
+  filter: Filter;
+  sort: Sort;
   sentinel: HTMLElement;
   observer: IntersectionObserver;
   next: string | null;
@@ -125,9 +136,18 @@ async function loadNext(f: Feed): Promise<void> {
   observe(f);
 }
 
-function mark(f: Feed, filter: Filter): void {
-  for (const a of f.filterNav?.querySelectorAll<HTMLElement>('a') ?? []) {
-    if (a.dataset.filterId === filter) a.setAttribute('aria-current', 'page');
+/** Marks the current filter and sort and points every link at the series it leads to. */
+function mark(f: Feed): void {
+  for (const a of f.filterNav?.querySelectorAll<HTMLAnchorElement>('a') ?? []) {
+    const id = parseFilter(a.dataset.filterId);
+    a.href = seriesPath(id, f.sort);
+    if (id === f.filter) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  }
+  for (const a of f.sortNav?.querySelectorAll<HTMLAnchorElement>('a') ?? []) {
+    const id = parseSort(a.dataset.sortId);
+    a.href = seriesPath(f.filter, id);
+    if (id === f.sort) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   }
 }
@@ -152,18 +172,23 @@ async function replaceWith(f: Feed, path: string): Promise<boolean> {
   }
 }
 
-/** Filter: replaces the list with page 1 of the chosen series, without reloading. */
-async function setFilter(
+/** Filter and sort: replaces the list with page 1 of the chosen series, without reloading. */
+async function setView(
   f: Feed,
-  filter: Filter,
+  view: { filter: Filter; sort: Sort },
   persist: boolean,
 ): Promise<void> {
-  const path = seriesPath(filter);
+  const path = seriesPath(view.filter, view.sort);
   // Without success the link acts like a normal link.
   if (!(await replaceWith(f, path))) return location.assign(path);
+  f.filter = view.filter;
+  f.sort = view.sort;
   history.replaceState(null, '', path);
-  mark(f, filter);
-  if (persist) write('local', FILTER_KEY, filter);
+  mark(f);
+  if (persist) {
+    write('local', FILTER_KEY, view.filter);
+    write('local', SORT_KEY, view.sort);
+  }
   window.scrollTo(0, 0);
   observe(f);
 }
@@ -181,13 +206,22 @@ const isPlainClick = (event: MouseEvent) =>
   event.button === 0 &&
   !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
 
-function onFilterClick(f: Feed, event: MouseEvent): void {
+function onNavClick(f: Feed, event: MouseEvent): void {
   const target = event.target;
   if (!(target instanceof Element)) return;
-  const a = target.closest<HTMLAnchorElement>('a[data-filter-id]');
+  const a = target.closest<HTMLAnchorElement>(
+    'a[data-filter-id], a[data-sort-id]',
+  );
   if (!a || !isPlainClick(event)) return;
   event.preventDefault();
-  void setFilter(f, parseFilter(a.dataset.filterId), true);
+  void setView(
+    f,
+    {
+      filter: a.dataset.filterId ? parseFilter(a.dataset.filterId) : f.filter,
+      sort: a.dataset.sortId ? parseSort(a.dataset.sortId) : f.sort,
+    },
+    true,
+  );
 }
 
 interface Position {
@@ -245,6 +279,9 @@ function newFeed(
     status,
     pager: feed.querySelector<HTMLElement>('[data-pager]'),
     filterNav: feed.querySelector<HTMLElement>('[data-filter]'),
+    sortNav: feed.querySelector<HTMLElement>('[data-sort]'),
+    filter: parseFilter(feed.dataset.series),
+    sort: parseSort(feed.dataset.sortBy),
     sentinel,
     next: null,
     loaded: [],
@@ -260,12 +297,14 @@ function newFeed(
   return f;
 }
 
-/** On `/` a stored filter wins. Series that were opened explicitly do not. */
+/** On `/` a stored filter and sort win. Series that were opened explicitly do not. */
 async function restoreOrFilter(f: Feed): Promise<void> {
   if (await restore(f)) return;
   if (f.feed.dataset.series !== 'all' || location.pathname !== '/') return;
-  const stored = parseFilter(read('local', FILTER_KEY));
-  if (stored !== 'all') await setFilter(f, stored, false);
+  const filter = parseFilter(read('local', FILTER_KEY));
+  const sort = parseSort(read('local', SORT_KEY));
+  if (filter !== 'all' || sort !== 'created')
+    await setView(f, { filter, sort }, false);
 }
 
 function start(
@@ -278,7 +317,8 @@ function start(
   // With JavaScript the browser loads more, the pager is only the way out without.
   if (f.pager) f.pager.hidden = true;
   if (f.next !== null) f.observer.observe(f.sentinel);
-  f.filterNav?.addEventListener('click', (event) => onFilterClick(f, event));
+  f.filterNav?.addEventListener('click', (event) => onNavClick(f, event));
+  f.sortNav?.addEventListener('click', (event) => onNavClick(f, event));
   // Remember the position when leaving, restore it when coming back.
   history.scrollRestoration = 'manual';
   window.addEventListener('pagehide', () => {

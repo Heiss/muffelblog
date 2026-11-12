@@ -1,6 +1,6 @@
 ---
 publish: true
-date: 2026-01-06
+created: 2026-01-06
 tags:
   - Über Größe
 ---

@@ -1,7 +1,8 @@
 ---
-import type { FeedItem, Page } from '@muffelblog/core';
+import type { FeedItem, FeedSort, Page } from '@muffelblog/core';
 import { messages } from '../i18n/messages';
 import Base from '../layouts/Base.astro';
+import { seriesPath } from '../scripts/feed-logic';
 import FeedEntry from './FeedEntry.astro';
 
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
   page: Page<FeedItem>;
   /** Series the page belongs to. Only there the filter is shown. */
   series?: 'all' | 'post' | 'memo' | 'glossary';
+  /** Date the series is sorted by. */
+  sort?: FeedSort;
   /** Hint shown when the block is empty. */
   empty?: string;
 }
@@ -19,6 +22,7 @@ const {
   heading,
   page,
   series,
+  sort = 'created',
   empty = messages.feed.empty,
 } = Astro.props;
 const pageTitle =
@@ -26,16 +30,20 @@ const pageTitle =
     ? messages.feed.pageTitle(title ?? heading, page.page)
     : (title ?? undefined);
 const filters = [
-  { id: 'all', name: messages.filter.all, href: '/' },
-  { id: 'post', name: messages.filter.long, href: '/posts/' },
-  { id: 'memo', name: messages.filter.short, href: '/memos/' },
-  { id: 'glossary', name: messages.filter.terms, href: '/terms/' },
+  { id: 'all', name: messages.filter.all },
+  { id: 'post', name: messages.filter.long },
+  { id: 'memo', name: messages.filter.short },
+  { id: 'glossary', name: messages.filter.terms },
+] as const;
+const sorts = [
+  { id: 'created', name: messages.sort.created },
+  { id: 'updated', name: messages.sort.updated },
 ] as const;
 ---
 
-<Base title={pageTitle} noindex={page.page > 1}>
+<Base title={pageTitle} noindex={page.page > 1 || sort === 'updated'}>
   <h1>{heading}</h1>
-  <div data-feed data-series={series}>
+  <div data-feed data-series={series} data-sort-by={sort}>
     <div class="live-banner" data-live-banner role="status" hidden>
       <button type="button"></button>
     </div>
@@ -43,11 +51,24 @@ const filters = [
       <nav aria-label={messages.filter.label} class="filter" data-filter>
         {filters.map((f) => (
           <a
-            href={f.href}
+            href={seriesPath(f.id, sort)}
             data-filter-id={f.id}
             aria-current={f.id === series ? 'page' : undefined}
           >
             {f.name}
+          </a>
+        ))}
+      </nav>
+    )}
+    {series && (
+      <nav aria-label={messages.sort.label} class="sort" data-sort>
+        {sorts.map((o) => (
+          <a
+            href={seriesPath(series, o.id)}
+            data-sort-id={o.id}
+            aria-current={o.id === sort ? 'page' : undefined}
+          >
+            {o.name}
           </a>
         ))}
       </nav>

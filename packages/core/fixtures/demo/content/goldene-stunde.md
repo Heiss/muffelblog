@@ -1,7 +1,8 @@
 ---
 publish: true
 title: 'Goldene Stunde: warum Licht alles ist'
-date: 2026-09-27 19:30
+created: 2026-09-27 19:30
+updated: 2026-09-27 19:30
 tags: [fotografie, licht]
 description: 'Kurz nach Sonnenaufgang und vor Sonnenuntergang ist das Licht warm, weich und richtungsstark.'
 ---
