@@ -144,7 +144,7 @@ jobs:
       - run: docker compose up --detach --build
       - name: No critical holes in the builder image (Trivy; only those with a fix)
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.1 \
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.2 \
             image --severity CRITICAL --ignore-unfixed --exit-code 1 --no-progress \
             ghcr.io/heiss/muffelblog-builder:latest
       - name: rclone is in the builder image
