@@ -2,7 +2,8 @@
 publish: true
 type: glossary
 title: 'Konstruktiver Holzschutz'
-date: 2026-10-14 09:00
+created: 2026-10-14 09:00
+updated: 2026-10-14 09:00
 tags: [holzbau, glossar]
 description: 'Bauliche Maßnahmen, die Holz trocken halten, damit es nicht fault: Abstand zum Boden, Abtropfkanten, Hinterlüftung.'
 ---

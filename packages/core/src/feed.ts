@@ -12,7 +12,8 @@ export interface FeedItem {
   id: string;
   url: string;
   title: string;
-  date: Date;
+  created: Date;
+  updated: Date;
   tags: string[];
   /** Plain text: description, otherwise the start of the text. */
   excerpt: string;
@@ -34,7 +35,8 @@ export function buildFeed(
         id: `${a.type}:${a.slug}`,
         url: a.type === 'glossary' ? `/g/${a.slug}/` : `/p/${a.slug}/`,
         title: a.title,
-        date: a.date,
+        created: a.created,
+        updated: a.updated,
         tags: a.tags,
         excerpt: a.description?.trim() || plainExcerpt(a.html, auszugMax),
       })),
@@ -43,17 +45,39 @@ export function buildFeed(
       id: `memo:${m.uid}`,
       url: `/m/${m.uid}/`,
       title: m.title,
-      date: m.date,
+      created: m.created,
+      updated: m.updated,
       tags: m.tags,
       excerpt: m.description,
       html: m.html,
     })),
   ];
-  return items.sort(
+  return sortFeed(items, 'created');
+}
+
+/** Which date the feed is sorted by. */
+export type FeedSort = 'created' | 'updated';
+
+/** A sorted copy, newest first; on a tie the id decides. */
+export function sortFeed(
+  items: readonly FeedItem[],
+  sort: FeedSort,
+): FeedItem[] {
+  return [...items].sort(
     (a, b) =>
-      b.date.getTime() - a.date.getTime() ||
+      b[sort].getTime() - a[sort].getTime() ||
       (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
   );
+}
+
+/**
+ * True when the two instants fall on different calendar days in Berlin time.
+ * Used to show "updated" only when it adds information.
+ */
+export function differentDay(a: Date, b: Date): boolean {
+  const day = (d: Date) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(d);
+  return day(a) !== day(b);
 }
 
 export function filterKind(items: FeedItem[], kind: FeedKind): FeedItem[] {

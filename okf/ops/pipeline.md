@@ -12,8 +12,8 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 * **[E]** The builder runs permanently (`restart: unless-stopped`). Every
   `MUFFEL_CHECK_INTERVAL_SECONDS` (180) it reads a **marker** of each source
   without downloading: Nextcloud = fingerprint of the file list (path, size,
-  `getlastmodified`), Memos = fingerprint of the public memos (text, date, tags,
-  attachment names and sizes). A source that cannot be read completely, or an
+  `getlastmodified`), Memos = fingerprint of the public memos (text, date, `updateTime`,
+  tags, attachment names and sizes). A source that cannot be read completely, or an
   empty Nextcloud list, is an error and never a change.
 * **[E]** Debounce (decided 2026-11-04): a changed marker is built only after it
   stayed the same for `MUFFEL_DEBOUNCE_CHECKS` further checks (default 1, so new

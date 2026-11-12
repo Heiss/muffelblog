@@ -33,7 +33,7 @@ const { memo } = Astro.props;
     />
     <h1 class="p-name">
       <a class="u-url" href={`/m/${memo.uid}/`}>
-        <time class="dt-published" datetime={memo.date.toISOString()}>
+        <time class="dt-published" datetime={memo.created.toISOString()}>
           {memo.title}
         </time>
       </a>

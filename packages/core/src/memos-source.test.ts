@@ -694,6 +694,30 @@ describe('buildMemoEntries: exact results', () => {
     ]);
   });
 
+  it('takes updated from updateTime, and createTime when it is missing or invalid', async () => {
+    const { memos, warnings } = await buildMemoEntries(
+      sourceOf([
+        raw('a', { updateTime: '2026-11-05T08:00:00Z' }),
+        raw('b'),
+        raw('c', { updateTime: 'nonsense' }),
+      ]),
+      new Map(),
+    );
+    const byUid = new Map(memos.map((m) => [m.uid, m]));
+    expect(byUid.get('a')?.created.toISOString()).toBe(
+      '2026-11-02T13:32:00.000Z',
+    );
+    expect(byUid.get('a')?.updated.toISOString()).toBe(
+      '2026-11-05T08:00:00.000Z',
+    );
+    expect(byUid.get('b')?.updated).toEqual(byUid.get('b')?.created);
+    expect(byUid.get('c')?.updated).toEqual(byUid.get('c')?.created);
+    expect(warnings).toContain(
+      'memos/c: invalid updateTime "nonsense", createTime is used',
+    );
+    expect(warnings.filter((w) => w.startsWith('memos/b'))).toEqual([]);
+  });
+
   it('orders memos of the same time by their identifier', async () => {
     const { memos } = await buildMemoEntries(
       sourceOf([

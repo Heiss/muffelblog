@@ -2,7 +2,8 @@
 publish: true
 type: glossary
 title: 'Idempotenz'
-date: 2026-10-16 09:00
+created: 2026-10-16 09:00
+updated: 2026-11-08 17:40
 tags: [it, glossar]
 description: 'Eine Operation ist idempotent, wenn ihre mehrfache Ausführung dasselbe Ergebnis hat wie die einmalige.'
 ---

@@ -1,0 +1,11 @@
+---
+import { SITE_NAME, paginate, sortFeed } from '@muffelblog/core';
+import FeedPage from '../../components/FeedPage.astro';
+import { getFeed } from '../../lib/feed';
+import { getSettings } from '../../lib/settings';
+
+const entries = sortFeed(await getFeed(), 'updated');
+const page = paginate(entries, 1, '/updated/', getSettings().feedPageSize);
+---
+
+<FeedPage series="all" sort="updated" heading={SITE_NAME} {page} />

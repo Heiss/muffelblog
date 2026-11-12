@@ -43,5 +43,5 @@ contract tests in CI run against those versions.
 If Memos cannot be read completely, the build **stops** and the last good
 version stays online; the failure is reported once and again when it is over.
 Edits, new memos and deleted memos are noticed through a fingerprint of the
-public memos (text, date, tags, attachment names and sizes). A changed attachment
+public memos (text, date, edit time, tags, attachment names and sizes). A changed attachment
 that keeps its name and size is not noticed.

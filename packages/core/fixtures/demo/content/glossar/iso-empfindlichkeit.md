@@ -2,7 +2,8 @@
 publish: true
 type: glossary
 title: 'ISO-Empfindlichkeit'
-date: 2026-09-11 09:00
+created: 2026-09-11 09:00
+updated: 2026-09-11 09:00
 tags: [fotografie, glossar]
 description: 'Die Verstärkung des Sensorsignals; höhere Werte machen das Bild heller, aber auch verrauschter.'
 ---

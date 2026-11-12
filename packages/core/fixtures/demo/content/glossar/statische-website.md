@@ -2,7 +2,8 @@
 publish: true
 type: glossary
 title: 'Statische Website'
-date: 2026-08-05 09:00
+created: 2026-08-05 09:00
+updated: 2026-08-05 09:00
 tags: [it, glossar]
 description: 'Eine Website aus fertigen Dateien, die ohne Datenbank und ohne Code auf dem Server ausgeliefert wird.'
 ---

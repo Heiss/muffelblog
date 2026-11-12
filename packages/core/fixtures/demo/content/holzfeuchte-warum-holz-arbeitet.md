@@ -1,7 +1,8 @@
 ---
 publish: true
 title: 'Holzfeuchte: warum Holz arbeitet'
-date: 2026-10-04 14:00
+created: 2026-10-04 14:00
+updated: 2026-10-04 14:00
 tags: [holzbau, holz, grundlagen]
 description: 'Holz nimmt Feuchte auf und gibt sie wieder ab. Dabei quillt und schwindet es, und zwar quer zur Faser deutlich stärker.'
 ---

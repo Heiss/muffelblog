@@ -66,12 +66,14 @@ export { toResolvedImage } from './media.ts';
 export { plainExcerpt } from './excerpt.ts';
 export {
   buildFeed,
+  differentDay,
   filterKind,
   groupByTag,
   pagePath,
   paginate,
+  sortFeed,
 } from './feed.ts';
-export type { FeedItem, FeedKind, Page, TagGroup } from './feed.ts';
+export type { FeedItem, FeedKind, FeedSort, Page, TagGroup } from './feed.ts';
 export {
   ConfigError,
   DEFAULT_LANG,

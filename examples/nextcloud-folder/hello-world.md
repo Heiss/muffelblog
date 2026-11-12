@@ -1,7 +1,8 @@
 ---
 publish: true
 title: Hello, world
-date: 2026-11-04 10:00
+created: 2026-11-04 10:00
+updated: 2026-11-04 10:00
 tags: [welcome, indieweb]
 description: The first post of a new blog. It shows what a post in the Nextcloud folder looks like.
 ---
@@ -13,7 +14,7 @@ minutes and builds a new version of the site.
 ## What you can see here
 
 - **Frontmatter** at the top: `publish: true` makes the file public, `title`,
-  `date`, `tags` and `description` describe it. A file without `publish: true`
+  `created`, `updated`, `tags` and `description` describe it. A file without `publish: true`
   stays private, so drafts and notes can live in the same folder.
 - **Links** to other sites, like [the IndieWeb page about webmentions](https://indieweb.org/Webmention).
   When the blog is set up to send webmentions, the site you link to is told

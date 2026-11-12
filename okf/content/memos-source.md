@@ -59,7 +59,10 @@ sources:
 * Attachment file: `GET /file/attachments/<uid>/<file name>`.[^memos-proto]
 * A memo has `name` (`memos/<uid>`), `content`, `visibility`, `state`, `tags`
   (extracted from the text), `attachments` and `createTime`. There is **no**
-  `displayTime`, so `createTime` is the date.[^memos-proto]
+  `displayTime`, so `createTime` is the date.[^memos-proto] `updated` comes from
+  `updateTime` (**[U]** field assumed as in the Memos API and present in the
+  demo data, not yet checked against the contract test instance); missing or
+  invalid means `updated` = `createdAt`.
 * Without login the instance returns memos only if its access mode (`ACCESS`)
   is `PUBLIC`. Then an anonymous caller sees only `PUBLIC` memos, and the file
   route serves their attachments. With `PRIVATE` the instance answers "not

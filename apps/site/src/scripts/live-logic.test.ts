@@ -82,6 +82,10 @@ describe('scopeFor', () => {
   it('knows the series and the tag pages', () => {
     expect(scopeFor('/')).toEqual({ kind: 'all' });
     expect(scopeFor('/posts/')).toEqual({ kind: 'post' });
+    expect(scopeFor('/updated/')).toEqual({ kind: 'all' });
+    expect(scopeFor('/posts/updated/')).toEqual({ kind: 'post' });
+    expect(scopeFor('/memos/updated/')).toEqual({ kind: 'memo' });
+    expect(scopeFor('/terms/updated/')).toEqual({ kind: 'glossary' });
     expect(scopeFor('/tag/tooling/')).toEqual({ kind: 'all', tag: 'tooling' });
     expect(scopeFor('/tag/a-b/')).toEqual({ kind: 'all', tag: 'a-b' });
   });
@@ -89,6 +93,7 @@ describe('scopeFor', () => {
   it('is null where no banner belongs: later blocks and other pages', () => {
     expect(scopeFor('/page/2/')).toBeNull();
     expect(scopeFor('/memos/page/3/')).toBeNull();
+    expect(scopeFor('/updated/page/2/')).toBeNull();
     expect(scopeFor('/tag/x/page/2/')).toBeNull();
     expect(scopeFor('/p/hallo/')).toBeNull();
   });

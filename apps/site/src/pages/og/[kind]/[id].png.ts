@@ -29,7 +29,7 @@ export const GET: APIRoute<{ item: FeedItem }> = async ({ props }) => {
     date: new Intl.DateTimeFormat(messages.locale, {
       dateStyle: 'long',
       timeZone: 'Europe/Berlin',
-    }).format(item.date),
+    }).format(item.created),
     excerpt: item.excerpt,
   });
   return new Response(new Uint8Array(png), {

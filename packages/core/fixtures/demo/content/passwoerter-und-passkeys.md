@@ -1,7 +1,8 @@
 ---
 publish: true
 title: 'Passwörter, Passkeys und der Rest'
-date: 2026-10-18 20:15
+created: 2026-10-18 20:15
+updated: 2026-10-18 20:15
 tags: [it, sicherheit]
 description: 'Ein Passwortmanager, Passkeys wo möglich und ein zweiter Faktor: so lässt sich die Anmeldung mit wenig Aufwand absichern.'
 ---

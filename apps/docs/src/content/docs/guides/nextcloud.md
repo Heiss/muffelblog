@@ -64,7 +64,7 @@ content by accident.
 ## Good to know
 
 - Over WebDAV only the _modification_ date exists, no creation date. Put a
-  `date:` in the frontmatter, otherwise a post moves in the timeline whenever
+  `created:` and `updated:` in the frontmatter, otherwise a post moves in the timeline whenever
   you edit it.
 - Nextcloud's conflict copies (`(conflicted copy ...)`, `(Konfliktkopie ...)`) are ignored.
 - The transport is `rclone` (pinned version, inside the builder image).

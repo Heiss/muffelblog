@@ -2,7 +2,8 @@
 publish: true
 type: glossary
 title: 'Abbund'
-date: 2026-10-30 09:00
+created: 2026-10-30 09:00
+updated: 2026-11-10 10:05
 tags: [holzbau, glossar]
 description: 'Das Zuschneiden und Bearbeiten der Hölzer für eine Konstruktion, bevor sie aufgerichtet wird.'
 ---

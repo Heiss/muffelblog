@@ -204,3 +204,83 @@ test('without SITE_URL there is no RSS feed and no feed link', async ({
   const html = await (await request.get('/')).text();
   expect(html).not.toContain('application/rss+xml');
 });
+
+test.describe('Sorted by updated (static, without JavaScript)', () => {
+  test('lists every entry once, newest update first, and is not indexed', async ({
+    page,
+  }) => {
+    await page.goto('/updated/');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      /noindex/,
+    );
+    const hrefs: string[] = [];
+    const updated: number[] = [];
+    for (let i = 0; i < 20; i++) {
+      const rowsHere = await page.locator('article.entry').evaluateAll((els) =>
+        els.map((el) => {
+          const times = el.querySelectorAll('time');
+          return {
+            href: el.querySelector('h2 a')?.getAttribute('href') ?? '',
+            updated: Date.parse(
+              times[times.length - 1]?.getAttribute('datetime') ?? '',
+            ),
+          };
+        }),
+      );
+      for (const r of rowsHere) {
+        hrefs.push(r.href);
+        updated.push(r.updated);
+      }
+      const weiter = page.getByRole('link', { name: ui.feed.older });
+      if ((await weiter.count()) === 0) break;
+      await weiter.click();
+    }
+    expect(hrefs).toHaveLength(TOTAL);
+    expect(new Set(hrefs).size).toBe(TOTAL);
+    expect(updated).toEqual([...updated].sort((a, b) => b - a));
+  });
+
+  test('has a sort link per series and marks the current one', async ({
+    page,
+  }) => {
+    for (const [path, updatedPath] of [
+      ['/', '/updated/'],
+      ['/posts/', '/posts/updated/'],
+      ['/memos/', '/memos/updated/'],
+      ['/terms/', '/terms/updated/'],
+    ] as const) {
+      await page.goto(path);
+      const nav = page.locator('[data-sort]');
+      const created = nav.getByRole('link', { name: ui.sort.created });
+      await expect(created).toHaveAttribute('aria-current', 'page');
+      await expect(created).toHaveAttribute('href', path);
+      await expect(
+        nav.getByRole('link', { name: ui.sort.updated }),
+      ).toHaveAttribute('href', updatedPath);
+    }
+  });
+
+  test('shows "updated" only when its calendar day (Berlin) differs from the creation day', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const days = await page.locator('article.entry').evaluateAll((els) => {
+      const day = (iso: string | null) =>
+        new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(
+          new Date(iso ?? ''),
+        );
+      return els.map((el) => {
+        const times = el.querySelectorAll('time');
+        return {
+          shown: el.querySelector('.updated') !== null,
+          differs:
+            day(times[0]?.getAttribute('datetime') ?? null) !==
+            day(times[times.length - 1]?.getAttribute('datetime') ?? null),
+        };
+      });
+    });
+    expect(days.length).toBeGreaterThan(0);
+    for (const d of days) expect(d.shown).toBe(d.differs);
+  });
+});

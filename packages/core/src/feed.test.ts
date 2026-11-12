@@ -1,40 +1,52 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildFeed,
+  differentDay,
   filterKind,
   groupByTag,
   paginate,
   pagePath,
+  sortFeed,
 } from './feed.ts';
 import { DEFAULT_SETTINGS } from './config.ts';
 import type { Article } from './articles.ts';
 import type { MemoEntry } from './memos.ts';
 
+// `date` in the tests sets `created` and, unless given, `updated` too.
 function artikel(
-  teil: Partial<Article & { html: string }> & { slug: string },
+  teil: Partial<Article & { html: string }> & { slug: string; date?: Date },
 ): Article & { html: string } {
+  const { date, ...rest } = teil;
+  const created = date ?? teil.created ?? new Date('2026-01-01T00:00:00Z');
   return {
     type: 'post',
     title: teil.slug,
-    date: new Date('2026-01-01T00:00:00Z'),
-    dateSource: 'frontmatter',
+    created,
+    createdSource: 'frontmatter',
+    updated: created,
+    updatedSource: 'frontmatter',
     tags: [],
     body: '',
     path: `${teil.slug}.md`,
     html: '<p>Text des Artikels</p>',
-    ...teil,
+    ...rest,
   };
 }
 
-function memo(teil: Partial<MemoEntry> & { uid: string }): MemoEntry {
+function memo(
+  teil: Partial<MemoEntry> & { uid: string; date?: Date },
+): MemoEntry {
+  const { date, ...rest } = teil;
+  const created = date ?? teil.created ?? new Date('2026-01-01T00:00:00Z');
   return {
     path: `memos/${teil.uid}`,
     title: `Memo ${teil.uid}`,
     description: 'Kurztext',
-    date: new Date('2026-01-01T00:00:00Z'),
+    created,
+    updated: created,
     tags: [],
     html: '<p>Memo-Text</p>',
-    ...teil,
+    ...rest,
   };
 }
 
@@ -274,5 +286,117 @@ describe('groupByTag', () => {
   it('drops tags without a usable URL form', () => {
     const feed = buildFeed([artikel({ slug: 'a', tags: ['???'] })], []);
     expect(groupByTag(feed)).toEqual([]);
+  });
+});
+
+describe('created and updated', () => {
+  const day = (d: string) => new Date(`${d}T10:00:00Z`);
+
+  it('takes both dates from articles and memos', () => {
+    const feed = buildFeed(
+      [
+        artikel({
+          slug: 'a',
+          created: day('2026-01-01'),
+          updated: day('2026-03-01'),
+        }),
+      ],
+      [
+        memo({
+          uid: 'm',
+          created: day('2026-01-02'),
+          updated: day('2026-02-01'),
+        }),
+      ],
+    );
+    const byId = new Map(feed.map((i) => [i.id, i]));
+    expect(byId.get('post:a')).toMatchObject({
+      created: day('2026-01-01'),
+      updated: day('2026-03-01'),
+    });
+    expect(byId.get('memo:m')).toMatchObject({
+      created: day('2026-01-02'),
+      updated: day('2026-02-01'),
+    });
+  });
+
+  it('sorts by created in the feed and by updated on request, ties by id', () => {
+    const feed = buildFeed(
+      [
+        artikel({
+          slug: 'old-but-edited',
+          created: day('2026-01-01'),
+          updated: day('2026-05-01'),
+        }),
+        artikel({
+          slug: 'new',
+          created: day('2026-03-01'),
+          updated: day('2026-03-01'),
+        }),
+        artikel({
+          slug: 'same-b',
+          created: day('2026-02-01'),
+          updated: day('2026-04-01'),
+        }),
+        artikel({
+          slug: 'same-a',
+          created: day('2026-02-02'),
+          updated: day('2026-04-01'),
+        }),
+      ],
+      [],
+    );
+    expect(feed.map((i) => i.id)).toEqual([
+      'post:new',
+      'post:same-a',
+      'post:same-b',
+      'post:old-but-edited',
+    ]);
+    expect(sortFeed(feed, 'updated').map((i) => i.id)).toEqual([
+      'post:old-but-edited',
+      'post:same-a',
+      'post:same-b',
+      'post:new',
+    ]);
+    expect(sortFeed(feed, 'created')).toEqual(feed);
+  });
+
+  it('does not change the list it sorts', () => {
+    const feed = buildFeed(
+      [
+        artikel({
+          slug: 'a',
+          created: day('2026-01-01'),
+          updated: day('2026-05-01'),
+        }),
+        artikel({
+          slug: 'b',
+          created: day('2026-02-01'),
+          updated: day('2026-02-01'),
+        }),
+      ],
+      [],
+    );
+    const before = feed.map((i) => i.id);
+    sortFeed(feed, 'updated');
+    expect(feed.map((i) => i.id)).toEqual(before);
+  });
+});
+
+describe('differentDay', () => {
+  it('compares calendar days in Berlin time, not UTC', () => {
+    // 22:30 UTC is 23:30 in Berlin (winter), 23:30 UTC is already the next day.
+    expect(
+      differentDay(
+        new Date('2026-01-10T22:30:00Z'),
+        new Date('2026-01-10T23:30:00Z'),
+      ),
+    ).toBe(true);
+    expect(
+      differentDay(
+        new Date('2026-01-10T08:00:00Z'),
+        new Date('2026-01-10T22:30:00Z'),
+      ),
+    ).toBe(false);
   });
 });

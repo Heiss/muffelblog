@@ -81,6 +81,12 @@ export const de: Messages = {
     short: 'Kurz',
     terms: 'Begriffe',
   },
+  sort: {
+    label: 'Sortierung',
+    created: 'Erstellt',
+    updated: 'Aktualisiert',
+    updatedOn: (date: string) => `Aktualisiert: ${date}`,
+  },
   og: {
     post: 'Beitrag',
     memo: 'Memo',

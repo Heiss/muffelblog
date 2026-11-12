@@ -23,6 +23,19 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   series stay `/memos/` and `/posts/` (and `/terms/` for terms), the single
   pages `/m/<uid>/` and `/p/<slug>/`.
 * **[E]** Memos appear in full with their images.
+* **[E]** Sorting (decided 2026-11-12): every filter can be sorted by **created**
+  (default) or **updated**. Each entry shows its creation date; "Updated: ..."
+  is added only if the day (Berlin time) differs from the creation day.
+* **[E]** The sort order is a static series of its own, so it works without
+  JavaScript and endless scroll follows it: `/updated/`, `/posts/updated/`,
+  `/memos/updated/`, `/terms/updated/`, each with `page/N/`. These series are
+  `noindex`, not in the sitemap. `updated` is therefore a reserved page slug.
+  Tag pages are not sortable.
+* **[E]** The sort links keep the filter and the filter links keep the sort. The
+  choice is kept in the browser storage (`muffel:sort`) and applied on `/` like the
+  filter. Memos take `created`/`updated` from `createTime`/`updateTime`.
+* **[E]** The banner "N new entries" counts by `created`, also in the sorted
+  series; an edited entry raises no banner.
 
 # Data source for endless scroll
 

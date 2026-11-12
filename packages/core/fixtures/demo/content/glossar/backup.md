@@ -2,7 +2,8 @@
 publish: true
 type: glossary
 title: 'Backup'
-date: 2026-09-09 09:00
+created: 2026-09-09 09:00
+updated: 2026-09-09 09:00
 tags: [it, glossar]
 description: 'Eine Kopie von Daten an einem anderen Ort, mit der sich nach einem Verlust der Stand wiederherstellen lässt.'
 ---

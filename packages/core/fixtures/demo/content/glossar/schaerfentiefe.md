@@ -2,7 +2,8 @@
 publish: true
 type: glossary
 title: 'Schärfentiefe'
-date: 2026-10-07 09:00
+created: 2026-10-07 09:00
+updated: 2026-10-07 09:00
 tags: [fotografie, glossar]
 description: 'Der Bereich vor und hinter der Schärfeebene, der noch scharf erscheint; sie wächst mit kleinerer Blende.'
 ---

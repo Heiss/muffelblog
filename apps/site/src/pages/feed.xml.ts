@@ -21,7 +21,7 @@ export const GET: APIRoute = async () => {
     id: entry.id,
     url: entry.url,
     title: entry.title,
-    date: entry.date,
+    date: entry.created,
     summary: entry.excerpt,
     tags: entry.tags,
     // Posts and memos in full, terms with their short definition only.

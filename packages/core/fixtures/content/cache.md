@@ -3,7 +3,7 @@ publish: true
 type: glossary
 title: Was ist ein Cache?
 term: Cache
-date: 2026-01-08
+created: 2026-01-08
 tags: [Python]
 description: Zwischenspeicher für Daten, die oft gebraucht werden.
 ---

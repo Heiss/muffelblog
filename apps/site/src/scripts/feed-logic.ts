@@ -7,6 +7,12 @@ const PATHS: Record<Filter, string> = {
   glossary: '/terms/',
 };
 
+export type Sort = 'created' | 'updated';
+
+export function parseSort(raw: string | null | undefined): Sort {
+  return raw === 'updated' ? 'updated' : 'created';
+}
+
 export function parseFilter(raw: string | null | undefined): Filter {
   return raw === 'post' || raw === 'memo' || raw === 'glossary' || raw === 'all'
     ? raw
@@ -14,13 +20,14 @@ export function parseFilter(raw: string | null | undefined): Filter {
 }
 
 /** First page of the series from which a filter takes its entries. */
-export function seriesPath(filter: Filter): string {
-  return PATHS[filter];
+export function seriesPath(filter: Filter, sort: Sort = 'created'): string {
+  return sort === 'updated' ? `${PATHS[filter]}updated/` : PATHS[filter];
 }
 
-// Blocks of the own site: a base, optionally followed by `page/N/` with N >= 2.
+// Blocks of the own site: a base (optionally sorted by `updated/`; tag pages
+// are not), optionally followed by `page/N/` with N >= 2.
 const BLOCK =
-  /^\/(?:(?:memos|posts|terms)\/|tag\/[a-z0-9]+(?:-[a-z0-9]+)*\/)?(?:page\/(?:[2-9]|[1-9]\d+)\/)?$/;
+  /^\/(?:(?:(?:memos|posts|terms)\/)?(?:updated\/)?|tag\/[a-z0-9]+(?:-[a-z0-9]+)*\/)(?:page\/(?:[2-9]|[1-9]\d+)\/)?$/;
 
 /**
  * Checks whether an address is a block of the own site and then returns the

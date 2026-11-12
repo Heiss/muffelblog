@@ -1,7 +1,8 @@
 ---
 publish: true
 title: 'RAW oder JPEG? Ein ehrlicher Vergleich'
-date: 2026-10-25 11:20
+created: 2026-10-25 11:20
+updated: 2026-10-25 11:20
 tags: [fotografie, technik, bildbearbeitung]
 description: 'RAW bewahrt Spielraum für die Nachbearbeitung, JPEG spart Platz und Zeit. Beides hat seinen Platz.'
 ---

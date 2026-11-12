@@ -1,5 +1,8 @@
 # Update log
 
+## 2026-11-12
+* **Update**: Frontmatter `created` replaces `date` for all articles, `updated` is new (both with fallback to the modification date and a warning); the feed shows `created` and a changed `updated`, every filter sorts by created or updated (static series `/updated/`, `/posts/updated/`, `/memos/updated/`, `/terms/updated/`); memos use `createTime`/`updateTime`; see [Frontmatter](/content/frontmatter.md) and [Feed](/frontend/feed.md).
+
 ## 2026-11-06
 * **Fix** (first real server, Celeron J4105 without AVX): Pagefind 1.6.0 stopped with "Illegal instruction", its npm wrapper only reported exit 1, so no release came online. Owner's decision: two image tags. The default image keeps the newest Pagefind, the variant `noavx` (`<version>-noavx`, `latest-noavx`) uses `pagefind-noavx` = Pagefind 1.5.2 (checked on an emulated CPU without AVX). A failed search index no longer stops a release (owner): online without search, reported in the status and once through the alert webhook, with a hint to the noavx variant. See [Search](/features/search.md).
 

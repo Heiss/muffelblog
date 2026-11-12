@@ -39,7 +39,7 @@ describe('isIgnoredPath', () => {
 
 describe('parseArticle', () => {
   const ok =
-    '---\npublish: true\ntitle: Titel\ndate: 2026-01-05\ntags: [A, b]\n---\nText\n';
+    '---\npublish: true\ntitle: Titel\ncreated: 2026-01-05\nupdated: 2026-02-03\ntags: [A, b]\n---\nText\n';
 
   it('reads a published article', () => {
     const r = parse('ordner/datei.md', ok);
@@ -49,10 +49,12 @@ describe('parseArticle', () => {
       slug: 'datei',
       title: 'Titel',
       tags: ['a', 'b'],
-      dateSource: 'frontmatter',
+      createdSource: 'frontmatter',
       path: 'ordner/datei.md',
     });
-    expect(r.article.date.toISOString()).toBe('2026-01-05T11:00:00.000Z');
+    expect(r.article.created.toISOString()).toBe('2026-01-05T11:00:00.000Z');
+    expect(r.article.updated.toISOString()).toBe('2026-02-03T11:00:00.000Z');
+    expect(r.article.updatedSource).toBe('frontmatter');
     expect(r.warnings).toEqual([]);
   });
 
@@ -87,27 +89,33 @@ describe('parseArticle', () => {
     expect(parse('a.md', text).kind).toBe('article');
   });
 
-  it('falls back to the modification date if the date is missing', () => {
+  it('falls back to the modification date if created and updated are missing', () => {
     const r = parse('a.md', '---\npublish: true\n---\nText');
     expect(r.kind).toBe('article');
     if (r.kind !== 'article') return;
-    expect(r.article.date).toEqual(mtime);
-    expect(r.article.dateSource).toBe('mtime');
-    expect(r.warnings.length).toBe(1);
+    expect(r.article.created).toEqual(mtime);
+    expect(r.article.createdSource).toBe('mtime');
+    expect(r.article.updated).toEqual(mtime);
+    expect(r.article.updatedSource).toBe('mtime');
+    expect(r.warnings.length).toBe(2);
   });
 
-  it('falls back to the modification date for an invalid date and warns', () => {
-    const r = parse('a.md', '---\npublish: true\ndate: gestern\n---\nText');
+  it('falls back to the modification date for an invalid created and warns', () => {
+    const r = parse(
+      'a.md',
+      '---\npublish: true\ncreated: gestern\nupdated: 2026-01-05\n---\nText',
+    );
     expect(r.kind).toBe('article');
     if (r.kind !== 'article') return;
-    expect(r.article.dateSource).toBe('mtime');
+    expect(r.article.createdSource).toBe('mtime');
+    expect(r.article.updatedSource).toBe('frontmatter');
     expect(r.warnings.length).toBe(1);
   });
 
   it('derives the title from the file name', () => {
     const r = parse(
       'ordner/Größe und Maße.md',
-      '---\npublish: true\ndate: 2026-01-05\n---\nText',
+      '---\npublish: true\ncreated: 2026-01-05\n---\nText',
     );
     expect(r.kind === 'article' && r.article.title).toBe('Größe und Maße');
     expect(r.kind === 'article' && r.article.slug).toBe('groesse-und-masse');
@@ -116,21 +124,21 @@ describe('parseArticle', () => {
   it('takes a given slug and normalizes it', () => {
     const r = parse(
       'a.md',
-      '---\npublish: true\nslug: Mein Slug\ndate: 2026-01-05\n---\nText',
+      '---\npublish: true\nslug: Mein Slug\ncreated: 2026-01-05\n---\nText',
     );
     expect(r.kind === 'article' && r.article.slug).toBe('mein-slug');
   });
 
   it('skips articles whose slug is not usable', () => {
     expect(
-      parse('日本語.md', '---\npublish: true\ndate: 2026-01-05\n---\nText')
+      parse('日本語.md', '---\npublish: true\ncreated: 2026-01-05\n---\nText')
         .kind,
     ).toBe('skipped');
   });
 
   it('normalizes tags, removes duplicates and warns about invalid ones', () => {
     const text =
-      '---\npublish: true\ndate: 2026-01-05\ntags: [Python, python, " ML ", 5]\n---\nText';
+      '---\npublish: true\ncreated: 2026-01-05\nupdated: 2026-01-05\ntags: [Python, python, " ML ", 5]\n---\nText';
     const r = parse('a.md', text);
     expect(r.kind).toBe('article');
     if (r.kind !== 'article') return;
@@ -141,7 +149,7 @@ describe('parseArticle', () => {
   it('accepts a single tag as text', () => {
     const r = parse(
       'a.md',
-      '---\npublish: true\ndate: 2026-01-05\ntags: Python\n---\nText',
+      '---\npublish: true\ncreated: 2026-01-05\ntags: Python\n---\nText',
     );
     expect(r.kind === 'article' && r.article.tags).toEqual(['python']);
   });
@@ -149,7 +157,7 @@ describe('parseArticle', () => {
   it('takes over the description', () => {
     const r = parse(
       'a.md',
-      '---\npublish: true\ndate: 2026-01-05\ndescription: Kurz\n---\nText',
+      '---\npublish: true\ncreated: 2026-01-05\ndescription: Kurz\n---\nText',
     );
     expect(r.kind === 'article' && r.article.description).toBe('Kurz');
   });
@@ -157,7 +165,7 @@ describe('parseArticle', () => {
 
 describe('parseArticle type', () => {
   const base = (type: string) =>
-    `---\npublish: true\ntitle: Begriff\ndate: 2026-01-05\n${type}---\nText\n`;
+    `---\npublish: true\ntitle: Begriff\ncreated: 2026-01-05\nupdated: 2026-01-05\n${type}---\nText\n`;
 
   it('is a post without the field', () => {
     const r = parse('a.md', base(''));
@@ -265,8 +273,10 @@ describe('assignUniqueSlugs', () => {
     type: 'post' as const,
     slug,
     title: path,
-    date: new Date(date),
-    dateSource: 'frontmatter' as const,
+    created: new Date(date),
+    createdSource: 'frontmatter' as const,
+    updated: new Date(date),
+    updatedSource: 'frontmatter' as const,
     tags: [],
     body: '',
     path,
@@ -322,7 +332,7 @@ describe('loadArticles slugs per type', () => {
     const { join } = await import('node:path');
     const dir = await mkdtemp(join(tmpdir(), 'muffel-'));
     await mkdir(join(dir, 'g'));
-    const head = '---\npublish: true\ndate: 2026-01-05\n';
+    const head = '---\npublish: true\ncreated: 2026-01-05\n';
     await writeFile(join(dir, 'x.md'), `${head}---\nA`);
     await writeFile(join(dir, 'g', 'x.md'), `${head}type: glossary\n---\nB`);
     await writeFile(join(dir, 'g', 'y.md'), `${head}type: glossary\n---\nC`);
@@ -342,7 +352,7 @@ describe('loadArticles slugs per type', () => {
     const { tmpdir } = await import('node:os');
     const { join } = await import('node:path');
     const dir = await mkdtemp(join(tmpdir(), 'muffel-'));
-    const t = '---\npublish: true\ntype: glossary\ndate: 2026-01-05\n---\nT';
+    const t = '---\npublish: true\ntype: glossary\ncreated: 2026-01-05\n---\nT';
     await writeFile(join(dir, 'a.md'), t);
     await writeFile(join(dir, 'b.md'), t.replace('---\nT', 'slug: a\n---\nT'));
     const { articles } = await loadArticles(dir);
@@ -387,7 +397,7 @@ describe('loadArticles (Fixtures)', () => {
 
   it('sorts by date, newest first', async () => {
     const { articles } = await loadArticles(dir);
-    const times = articles.map((a) => a.date.getTime());
+    const times = articles.map((a) => a.created.getTime());
     expect(times).toEqual([...times].sort((a, b) => b - a));
   });
 

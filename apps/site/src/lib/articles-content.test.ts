@@ -26,7 +26,7 @@ const put = async (file: string, text: string) => {
   await writeFile(path.join(state.dir, file), text);
 };
 const doc = (front: string, body: string) =>
-  `---\npublish: true\ndate: 2026-01-01\n${front}\n---\n${body}`;
+  `---\npublish: true\ncreated: 2026-01-01\nupdated: 2026-01-01\n${front}\n---\n${body}`;
 
 beforeEach(async () => {
   vi.resetModules();

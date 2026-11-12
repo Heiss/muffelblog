@@ -1,7 +1,8 @@
 ---
 publish: true
 title: 'Konstruktiver Holzschutz: Wasser muss ablaufen können'
-date: 2026-11-01 10:30
+created: 2026-11-01 10:30
+updated: 2026-11-01 10:30
 tags: [holzbau, holzschutz]
 description: 'Holz fault nur, wenn es dauerhaft nass bleibt. Gute Konstruktion sorgt dafür, dass Wasser abläuft und das Holz trocknen kann.'
 ---
