@@ -17,6 +17,28 @@ const title = messages.files.title;
   {tree.count === 0 ? (
     <p>{messages.files.none}</p>
   ) : (
-    <FileFolder folder={tree} />
+    <>
+      {tree.folders.length > 0 && (
+        <div
+          class="tree-controls"
+          role="group"
+          aria-label={messages.files.controls}
+          data-tree-controls
+          hidden
+        >
+          <button type="button" data-tree-open>
+            {messages.files.openAll}
+          </button>
+          <button type="button" data-tree-close>
+            {messages.files.closeAll}
+          </button>
+        </div>
+      )}
+      <FileFolder folder={tree} />
+    </>
   )}
 </Base>
+
+<script>
+  import '../../scripts/file-tree';
+</script>

@@ -19,6 +19,9 @@ export const de: Messages = {
     intro:
       'Alle veröffentlichten Beiträge, Begriffe und Seiten, in den Ordnern, in denen sie geschrieben sind.',
     none: 'Noch keine Dateien.',
+    openAll: 'Alle Ordner öffnen',
+    closeAll: 'Alle Ordner schließen',
+    controls: 'Ordner',
     count: (count: number) => (count === 1 ? '1 Datei' : `${count} Dateien`),
   },
   graph: {

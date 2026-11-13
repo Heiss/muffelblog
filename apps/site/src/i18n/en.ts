@@ -21,6 +21,9 @@ export const en = {
     intro:
       'All published posts, terms and pages, in the folders where they are written.',
     none: 'No files yet.',
+    openAll: 'Open all folders',
+    closeAll: 'Close all folders',
+    controls: 'Folders',
     count: (count: number) => (count === 1 ? '1 file' : `${count} files`),
   },
   graph: {

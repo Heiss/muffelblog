@@ -610,9 +610,17 @@ main > .file-tree {
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
+.tree-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+.tree-controls button,
 .graph-controls button {
   min-width: 2.5rem;
   min-height: 2.5rem;
+  padding: 0 1rem;
   border: 1px solid var(--line);
   border-radius: var(--pill);
   background: var(--panel);
