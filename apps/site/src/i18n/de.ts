@@ -10,6 +10,7 @@ export const de: Messages = {
     tags: 'Tags',
     glossary: 'Glossar',
     graph: 'Graph',
+    comments: 'Kommentare',
     more: 'Mehr',
     files: 'Dateien',
     search: 'Suche',
@@ -19,6 +20,9 @@ export const de: Messages = {
     intro:
       'Alle veröffentlichten Beiträge, Begriffe und Seiten, in den Ordnern, in denen sie geschrieben sind.',
     none: 'Noch keine Dateien.',
+    openAll: 'Alle Ordner öffnen',
+    closeAll: 'Alle Ordner schließen',
+    controls: 'Ordner',
     count: (count: number) => (count === 1 ? '1 Datei' : `${count} Dateien`),
   },
   graph: {
@@ -55,6 +59,17 @@ export const de: Messages = {
       many: '{count} Treffer für „{term}“.',
     },
     all: 'Alle',
+  },
+  recentComments: {
+    title: 'Neue Kommentare',
+    intro:
+      'Die neuesten Kommentare zu allen Beiträgen, Memos und Begriffen, neueste zuerst.',
+    none: 'Noch keine Kommentare.',
+    on: 'zu',
+    replyTo: (author: string) => `Antwort an ${author}`,
+    replyToGone: 'Antwort auf einen Kommentar, den es nicht mehr gibt',
+    jump: 'Zum Kommentar',
+    label: 'Kommentare',
   },
   comments: {
     title: 'Kommentare',

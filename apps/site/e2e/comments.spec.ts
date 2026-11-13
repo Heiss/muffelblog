@@ -168,3 +168,59 @@ test.describe('Static copy of the comments', () => {
     await expect(page.locator('#comments [data-comments-error]')).toBeVisible();
   });
 });
+
+test.describe('New comments (/comments/)', () => {
+  test('lists all comments of the site as one list, newest first, deleted ones left out', async ({
+    page,
+  }) => {
+    await page.goto('/comments/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      ui.recentComments.title,
+    );
+    const authors = page.locator('.comment-entry .comment-author');
+    // Fixture times: Carla (memo, Nov), Mallory (7 Jan), Bernd (reply, 6 Jan), Anna (6 Jan).
+    await expect(authors).toHaveText([
+      'Carla',
+      '<b>Mallory</b>',
+      'Bernd',
+      'Anna',
+    ]);
+    const html = await page.content();
+    expect(html).not.toContain('Weg');
+    expect(html).not.toContain("alert('x')");
+    expect(html).not.toContain('evil.example');
+  });
+
+  test('a reply names what it answers, and every entry links to its comment on the page', async ({
+    page,
+  }) => {
+    await page.goto('/comments/');
+    const reply = page.locator('.comment-entry', { hasText: 'Bernd' });
+    await expect(reply.locator('.comment-reply')).toContainText(
+      ui.recentComments.replyTo('Anna'),
+    );
+    await expect(reply.locator('.comment-reply q')).toContainText(
+      'Schöner erster Beitrag',
+    );
+    await expect(
+      reply.getByRole('link', { name: ui.recentComments.jump }),
+    ).toHaveAttribute('href', '/p/hallo-welt/#remark42__comment-c2');
+    await expect(reply.locator('a[href="/p/hallo-welt/"]')).toBeVisible();
+    const memo = page.locator('.comment-entry', { hasText: 'Carla' });
+    await expect(
+      memo.getByRole('link', { name: ui.recentComments.jump }),
+    ).toHaveAttribute('href', '/m/memo-text/#remark42__comment-c5');
+  });
+
+  test('the page has the target of the link for visitors without the widget, and the menu links here', async ({
+    page,
+  }) => {
+    await page.goto('/p/hallo-welt/');
+    await expect(page.locator('#remark42__comment-c2')).toHaveCount(1);
+    await expect(
+      page
+        .getByRole('navigation', { name: ui.nav.label })
+        .getByRole('link', { name: ui.nav.comments }),
+    ).toHaveAttribute('href', '/comments/');
+  });
+});

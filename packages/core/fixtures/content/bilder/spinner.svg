@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="60" height="30" onload="document.title='x'">
+  <title>Pulsierender Punkt</title>
+  <script>document.body.setAttribute('data-hacked', '1')</script>
+  <style>
+    @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.3 } }
+    .dot { animation: pulse 1.5s infinite }
+  </style>
+  <circle class="dot" cx="15" cy="15" r="6" fill="#2a7"/>
+  <circle cx="45" cy="15" r="4" fill="#27a">
+    <animate attributeName="r" values="4;8;4" dur="1.2s" repeatCount="indefinite"/>
+  </circle>
+  <foreignObject width="10" height="10"><div xmlns="http://www.w3.org/1999/xhtml">x</div></foreignObject>
+  <image href="https://tracker.example/pixel.png" width="1" height="1"/>
+</svg>

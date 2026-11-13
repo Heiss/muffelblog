@@ -13,8 +13,9 @@ import {
   safeFileName,
   sniffMatches,
 } from './media-files.ts';
+import type { GlossaryLinking } from './glossary-links.ts';
 import type { HeicConverter } from './heic.ts';
-import { processImage, toResolvedImage } from './media.ts';
+import { processImage, storeSvg, toResolvedImage } from './media.ts';
 import { renderMarkdown } from './render.ts';
 import { normalizeTag } from './slug.ts';
 
@@ -442,7 +443,15 @@ export interface MemoEntry {
   html: string;
 }
 
-const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'avif']);
+const IMAGE_EXTENSIONS = new Set([
+  'png',
+  'jpg',
+  'jpeg',
+  'webp',
+  'gif',
+  'avif',
+  'svg',
+]);
 // Texts that end up in the pages. The rest of the UI lives in the message
 // catalog of the site; these are built here because the memo entries are built
 // here. Dates are shown in Berlin time.
@@ -513,6 +522,8 @@ export interface BuildMemosOptions {
   lang?: Language;
   /** Turns HEIC photos into JPEG. Without it they are skipped with a hint. */
   convertHeic?: HeicConverter;
+  /** Links glossary terms in the memo texts. */
+  glossary?: GlossaryLinking;
 }
 
 function contentId(data: Buffer): string {
@@ -528,6 +539,7 @@ interface MemoBuild {
   prefix: string;
   lang: Language;
   convertHeic?: HeicConverter;
+  glossary?: GlossaryLinking;
 }
 
 /** Uid and date of a memo that is shown, or null (with a warning where useful). */
@@ -587,6 +599,21 @@ function extensionOf(filename: string): string {
   return filename.split(/[\\/]/).pop()?.split('.').pop()?.toLowerCase() ?? '';
 }
 
+/** An SVG attachment, cleaned, as one file in the store and an <img>; null if it is no SVG. */
+function svgHtml(
+  build: MemoBuild,
+  attachment: MemoAttachmentRaw,
+  data: Buffer,
+): string | null {
+  const svg = storeSvg(data, build.store, build.prefix);
+  if (!svg.ok) return null;
+  const { image } = svg;
+  return (
+    `<img src="${escapeHtml(image.src)}" width="${image.width}" height="${image.height}" ` +
+    `alt="${escapeHtml(altTextFromFilename(attachment.filename))}" loading="lazy" decoding="async">`
+  );
+}
+
 /** An image attachment as WebP variants in the store and an <img>; null if unreadable. */
 async function imageHtml(
   build: MemoBuild,
@@ -595,6 +622,8 @@ async function imageHtml(
   heic: boolean,
 ): Promise<string | null> {
   try {
+    if (extensionOf(attachment.filename) === 'svg')
+      return svgHtml(build, attachment, data);
     const source =
       heic && build.convertHeic ? await build.convertHeic(data) : data;
     const image = await processImage(source);
@@ -687,6 +716,7 @@ async function buildEntry(
     articlePath: `memos/${id.uid}.md`,
     remoteContent: 'none',
     lang: build.lang,
+    glossary: build.glossary,
     resolveImage: async () => ({
       ok: false,
       code: 'unsupported',
@@ -735,6 +765,7 @@ export async function buildMemoEntries(
     prefix: options.urlPrefix ?? '/media/',
     lang: options.lang ?? DEFAULT_SETTINGS.lang,
     convertHeic: options.convertHeic,
+    glossary: options.glossary,
   };
   const list = await source.listPublicMemos();
   const warnings = [...list.warnings];

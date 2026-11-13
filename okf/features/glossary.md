@@ -119,6 +119,28 @@ as nodes; a local graph under every page and the overall view `/graph/`.
   arise. Otherwise titles and slugs of unpublished files would leak through
   `graph.json`.
 
+# Automatic links to terms (decided 2026-11-13)
+
+* **[E]** The first mention of a term in posts, memos and other terms is linked
+  to `/g/<slug>/` automatically (`packages/core/src/glossary-links.ts`, a hast
+  step after sanitizing and after the links of the page are resolved). Pages
+  (`type: page`) are not touched.
+* **[E]** Names: `term:` (else the title) and the new optional `aliases:` of a
+  glossary entry. Whole words, upper and lower case do not matter, the longest
+  name wins at a position, names under two characters are ignored, two terms with
+  the same name: the first by slug.
+* **[E]** Once per page: a link written by hand to the same term counts as that
+  link. Never inside `a`, `code`, `pre`, headings, `kbd`, `samp`, buttons; never
+  on the term's own page.
+* **[E]** The link is `<a class="glossary-link" title="<description>">`; the
+  tooltip is the native `title`, no JavaScript. A richer preview on hover is not
+  built.
+* **[E]** Automatic links count like any link for the link graph and the lists
+  "Links of this page" (the graph is built from the finished HTML), so a term
+  lists every page that mentions it.
+* **[U]** German inflection ("Backups", "Sicherungen") is found only through
+  `aliases:`. No stemming.
+
 # Risks
 
 * **Value of the graph:** with few nodes the graph is decoration. The backlink

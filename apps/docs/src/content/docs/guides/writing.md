@@ -78,6 +78,17 @@ Every post, term and memo shows **Links of this page**: what it links to
 (external websites as one entry per domain) and what links to it, with a small
 graph of these neighbors. `/graph/` shows all of them.
 
+### Automatic links to terms
+
+The first mention of a glossary term in a post, a memo or another term is linked
+to its page automatically (a dotted underline; the mouse over it shows the short
+definition from `description`). The term is its `term:` (else the title); more
+names go into `aliases:` in the frontmatter of the term, for example
+`aliases: [Backups, Sicherung]`. Rules: whole words only, upper and lower case do
+not matter, the longest term wins, every term is linked once per page. A link you
+wrote by hand counts as that link. Nothing is linked inside links, code,
+headings or on the term's own page. Pages (`type: page`) are left alone.
+
 ### Static pages: `type: page`
 
 Address `/<slug>/`, for example `impressum` or `datenschutz`. Pages need no date,
@@ -93,7 +104,12 @@ header, in the dropdown "More" (and no longer in the footer); only the boolean
 Put images in the same folder and use normal Markdown links:
 `![A mortise](images/mortise.jpg)`.
 
-- PNG, JPEG, WebP, GIF and AVIF up to 25 MB. SVG is rejected.
+- PNG, JPEG, WebP, GIF and AVIF up to 25 MB.
+- SVG, also animated (SMIL and CSS animations), up to 25 MB. The builder cleans every SVG: scripts,
+  `foreignObject`, event handlers, embedded images and every link or `url()` that
+  leaves the file are removed. It is shown only through `<img>`, with the size of its `width`/`height` or `viewBox`.
+  Use it for diagrams and icons you made yourself. The same holds for SVG
+  attachments of memos.
 - HEIC photos (iPhone) are converted to JPEG by the builder image. If you run the builder without that image, convert them to JPEG first: HEIC files are skipped with a warning.
 - They are scaled to several widths (480 to 1920 px), served as WebP, and **all
   metadata (EXIF, GPS) is removed**.

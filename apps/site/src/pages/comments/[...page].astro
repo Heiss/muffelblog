@@ -1,0 +1,82 @@
+---
+import { paginate } from '@muffelblog/core';
+import type { Page, RecentComment } from '@muffelblog/core';
+import { messages } from '../../i18n/messages';
+import Base from '../../layouts/Base.astro';
+import { commentsConfig } from '../../lib/comments';
+import { restPages } from '../../lib/feed';
+import { RECENT_PAGE_SIZE, getRecentComments } from '../../lib/recent-comments';
+
+// /comments/ and /comments/page/N/. Without comments (no COMMENTS_URL) there is no such page.
+export async function getStaticPaths() {
+  if (!commentsConfig()) return [];
+  const list = (await getRecentComments()) ?? [];
+  return [
+    { params: { page: undefined }, props: { list, n: 1 } },
+    ...restPages(list.length, RECENT_PAGE_SIZE).map((n) => ({
+      params: { page: `page/${n}` },
+      props: { list, n },
+    })),
+  ];
+}
+
+const { list, n } = Astro.props as { list: RecentComment[]; n: number };
+const page: Page<RecentComment> = paginate(
+  list,
+  n,
+  '/comments/',
+  RECENT_PAGE_SIZE,
+);
+const t = messages.recentComments;
+const format = new Intl.DateTimeFormat(messages.locale, {
+  dateStyle: 'long',
+  timeStyle: 'short',
+  timeZone: 'Europe/Berlin',
+});
+const title =
+  page.page > 1 ? messages.feed.pageTitle(t.title, page.page) : t.title;
+---
+
+<Base {title} noindex={page.page > 1}>
+  <h1>{t.title}</h1>
+  <p>{t.intro}</p>
+  <div data-pagefind-ignore>
+    {page.items.length === 0 && <p>{t.none}</p>}
+    {page.items.map((c) => (
+      <article class="comment-entry" aria-label={t.label}>
+        <p class="comment-meta">
+          <span class="comment-author">{c.author}</span>
+          <time datetime={c.time}>{format.format(new Date(c.time))}</time>
+          <span>
+            {t.on} <a href={c.page.url}>{c.page.title}</a>
+          </span>
+        </p>
+        {c.replyTo && (
+          <p class="comment-reply">
+            ↳ {c.replyTo.author ? t.replyTo(c.replyTo.author) : t.replyToGone}
+            {c.replyTo.excerpt && <q>{c.replyTo.excerpt}</q>}
+          </p>
+        )}
+        <div class="comment-text" set:html={c.html} />
+        <p>
+          <a href={`${c.page.url}#remark42__comment-${c.id}`}>{t.jump}</a>
+        </p>
+      </article>
+    ))}
+  </div>
+  {(page.prev || page.next) && (
+    <nav aria-label={messages.feed.pagesLabel} class="pager">
+      {page.prev && (
+        <a href={page.prev} rel="prev">
+          {messages.feed.newer}
+        </a>
+      )}
+      <span>{messages.feed.pageOf(page.page, page.pages)}</span>
+      {page.next && (
+        <a href={page.next} rel="next">
+          {messages.feed.older}
+        </a>
+      )}
+    </nav>
+  )}
+</Base>

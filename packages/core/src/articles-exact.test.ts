@@ -52,6 +52,7 @@ describe('reserved page names', () => {
         'memos',
         'terms',
         'updated',
+        'comments',
         'glossary',
         'graph',
         'files',
@@ -176,6 +177,30 @@ describe('parseArticle: fields', () => {
       ],
     });
     expect((post as { article: Article }).article.nav).toBeUndefined();
+  });
+
+  it('reads aliases of a glossary entry, drops what is no text, ignores them elsewhere', () => {
+    const term = parse(
+      doc(
+        'type: glossary\naliases: [Sicherung, " Kopie ", 3, Sicherung]\ncreated: 2026-01-02',
+      ),
+    );
+    expect(term).toMatchObject({
+      article: { aliases: ['Sicherung', 'Kopie', '3'] },
+    });
+    const bad = parse(
+      doc('type: glossary\naliases: [[x], ""]\ncreated: 2026-01-02'),
+    );
+    expect((bad as { article: Article }).article.aliases).toBeUndefined();
+    expect((bad as { warnings: string[] }).warnings).toHaveLength(2);
+    expect(
+      article(doc('type: glossary\naliases: Sicherung\ncreated: 2026-01-02'))
+        .aliases,
+    ).toEqual(['Sicherung']);
+    // Obsidian writes aliases on any note: no warning, no effect.
+    const post = parse(doc('aliases: [x]\ncreated: 2026-01-02'));
+    expect(post).toMatchObject({ warnings: [] });
+    expect((post as { article: Article }).article.aliases).toBeUndefined();
   });
 
   it('reads created and updated separately and no longer reads date', () => {

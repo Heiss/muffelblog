@@ -108,7 +108,8 @@ comments.example.org {
 }
 ```
 
-This is the same configuration our own Caddy uses (`docker/Caddyfile`).
+This is the same configuration our own Caddy uses (`docker/Caddyfile`), which
+also sends a sandbox policy for SVG images (see [SVG images](#svg-images) below).
 
 ### nginx
 
@@ -137,6 +138,10 @@ server {
     }
     location /_astro/ {
         add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options nosniff always;
+    }
+    location ~ ^/media/.+\.svg$ {
+        add_header Content-Security-Policy "sandbox; default-src 'none'; style-src 'unsafe-inline'" always;
         add_header X-Content-Type-Options nosniff always;
     }
 }
@@ -170,6 +175,15 @@ you add locations.
 
 Traefik does not serve static files. Use the normal setup of
 [Getting started](/muffelblog/start/getting-started/) instead.
+
+### SVG images
+
+The builder cleans every SVG image (scripts, event handlers and links that leave
+the file are removed; animations stay) and the pages show it only through
+`<img>`. As a second layer, send this header for `/media/*.svg`, so an SVG that
+someone opens directly cannot run anything. Our own Caddy does it; in Caddy it is
+`@svg path /media/*.svg` and `header @svg Content-Security-Policy "sandbox; default-src 'none'; style-src 'unsafe-inline'"`.
+Without the header the cleaned file is still safe, but the second layer is missing.
 
 ## Client addresses and the rate limit
 

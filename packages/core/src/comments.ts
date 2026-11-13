@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { plainExcerpt } from './excerpt.ts';
 import { renderMarkdown } from './render.ts';
 
 /** A comment as Remark42 returns it (only the fields we use). */
@@ -266,4 +267,63 @@ export function forPage(
       ? pathOf(c.locator.url) === pathOf(key)
       : normalizeAddress(c.locator.url) === wanted,
   );
+}
+
+/** What the page "new comments" shows: one comment, replies keep a reference to what they answer. */
+export interface RecentComment {
+  id: string;
+  /** Plain text, to be escaped on output. */
+  author: string;
+  /** ISO time. */
+  time: string;
+  /** Sanitized HTML. */
+  html: string;
+  /** The page the comment is on. */
+  page: { url: string; title: string };
+  /** Set for a reply. `excerpt` is empty when the answered comment is gone. */
+  replyTo?: { id: string; author: string; excerpt: string };
+}
+
+const QUOTE_CHARS = 140;
+
+/** The answered comment as a short quote; a deleted or missing one gives an empty quote. */
+async function quoteOf(
+  parent: RemarkComment | undefined,
+): Promise<{ author: string; excerpt: string }> {
+  if (!parent || parent.delete) return { author: '', excerpt: '' };
+  return {
+    author: parent.user.name,
+    excerpt: plainExcerpt(await renderComment(parent.text), QUOTE_CHARS),
+  };
+}
+
+/**
+ * All comments of the site as one list, newest first, for the page "new
+ * comments". `locate` maps the address a comment was written on to the page
+ * (url and title); comments on pages that do not exist (any more) and deleted
+ * comments are left out. A reply names the comment it answers, so the thread
+ * stays understandable in a flat list.
+ */
+export async function recentComments(
+  comments: readonly RemarkComment[],
+  locate: (address: string) => { url: string; title: string } | undefined,
+): Promise<RecentComment[]> {
+  const byId = new Map(comments.map((c) => [c.id, c]));
+  const shown = comments.filter((c) => !c.delete).sort((a, b) => byTime(b, a));
+  const result: RecentComment[] = [];
+  for (const c of shown) {
+    const page = locate(c.locator.url);
+    if (!page) continue;
+    const entry: RecentComment = {
+      id: c.id,
+      author: c.user.name,
+      time: new Date(c.time).toISOString(),
+      html: await renderComment(c.text),
+      page,
+    };
+    if (c.pid)
+      entry.replyTo = { id: c.pid, ...(await quoteOf(byId.get(c.pid))) };
+    result.push(entry);
+  }
+  return result;
 }

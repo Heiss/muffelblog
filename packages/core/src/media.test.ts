@@ -155,14 +155,51 @@ describe('createLocalImageResolver', () => {
     });
   });
 
-  it('rejects SVG', async () => {
+  it('cleans an SVG and serves it as one file without a srcset, animation kept', async () => {
+    await writeFile(
+      path.join(root, 'bilder', 'spinner.svg'),
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 20">' +
+        '<script>alert(1)</script><circle r="5" onclick="x()"><animate attributeName="r" values="5;9;5" dur="1s" repeatCount="indefinite"/></circle></svg>',
+    );
     const resolver = createLocalImageResolver({
       root: root,
       urlPrefix: '/media/',
     });
-    expect(await resolver.resolve('bilder/logo.svg')).toMatchObject({
+    const result = await resolver.resolve('bilder/spinner.svg');
+    expect(result).toMatchObject({
+      ok: true,
+      image: { srcset: '', width: 40, height: 20 },
+    });
+    if (!result.ok) return;
+    expect(result.image.src).toMatch(/^\/media\/[0-9a-f]{16}\.svg$/);
+    const file = result.image.src.replace('/media/', '');
+    const text = resolver.files().get(file)?.toString('utf8') ?? '';
+    expect(text).toContain('<animate attributeName="r"');
+    expect(text).not.toMatch(/script|alert|onclick/);
+    // The same file gives the same address.
+    expect(await resolver.resolve('bilder/spinner.svg')).toEqual(result);
+  });
+
+  it('rejects an SVG file that is no SVG, and an SVG that is too deeply nested', async () => {
+    await writeFile(path.join(root, 'bilder', 'html.svg'), '<html>x</html>');
+    await writeFile(
+      path.join(root, 'bilder', 'tief.svg'),
+      '<svg xmlns="http://www.w3.org/2000/svg">' +
+        '<g>'.repeat(100) +
+        '</g>'.repeat(100) +
+        '</svg>',
+    );
+    const resolver = createLocalImageResolver({
+      root: root,
+      urlPrefix: '/media/',
+    });
+    expect(await resolver.resolve('bilder/html.svg')).toMatchObject({
       ok: false,
-      code: 'unsupported',
+      code: 'invalid',
+    });
+    expect(await resolver.resolve('bilder/tief.svg')).toMatchObject({
+      ok: false,
+      code: 'invalid',
     });
   });
 

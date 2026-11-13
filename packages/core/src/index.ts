@@ -31,6 +31,12 @@ export type {
   ProcessedImage,
 } from './media.ts';
 export { renderMarkdown } from './render.ts';
+export { createTermMatcher, linkGlossaryTerms } from './glossary-links.ts';
+export type {
+  GlossaryLinking,
+  GlossaryTerm,
+  TermMatcher,
+} from './glossary-links.ts';
 export type {
   ImageResolveResult,
   RenderOptions,
@@ -89,9 +95,10 @@ export {
   commentsFingerprint,
   forPage,
   parseComments,
+  recentComments,
   toTree,
 } from './comments.ts';
-export type { CommentNode, RemarkComment } from './comments.ts';
+export type { CommentNode, RecentComment, RemarkComment } from './comments.ts';
 export { createFixtureRemarkSource, createRemarkSource } from './remark42.ts';
 export type { RemarkOptions, RemarkSource } from './remark42.ts';
 export { NetError, isPublicAddress, safeFetch } from './webmention-net.ts';

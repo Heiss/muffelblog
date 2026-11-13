@@ -49,6 +49,26 @@ sources:
 * **[V]** The widget gets `host`, `site_id` and `url` (canonical URL of the
   page). The path of the page is the key of the comments.
 
+# Page "New comments" (decided 2026-11-13)
+
+* **[E]** `/comments/` and `/comments/page/N/` list all comments of the site as
+  **one flat list**, newest first, 50 per page (static pages with prev/next links,
+  `noindex` from page 2). It exists only with comments (`COMMENTS_URL`); the header
+  has an entry "Comments" then. `comments` is a reserved page slug.
+* **[E]** Replies are entries of their own (the thread is flattened by time) and
+  name what they answer: "Reply to Anna" with the first 140 characters of the
+  answered comment; if that comment is deleted or gone, only "Reply to a comment
+  that is gone" (the deleted text never appears).
+* **[E]** Source: the same single request `GET /api/v1/last/1000?site` as the
+  static copy, so at most the latest 1000 comments. Deleted comments and comments
+  on pages that are not published (any more) are left out. Webmentions are
+  comments in Remark42 and appear too. A new comment triggers a build through the
+  existing fingerprint.
+* **[E]** Every entry links to `<page>#remark42__comment-<id>`. The static copy
+  carries an anchor with that id per comment (for visitors without JavaScript).
+  **[U]** That the Remark42 widget scrolls to the comment for this hash is taken
+  from its documented permalink format and not checked against a running widget.
+
 # Implemented: static copy (W13, 2026-11-04)
 
 * **[E]** At build time the builder reads the comments through the public API

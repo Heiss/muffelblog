@@ -12,6 +12,7 @@ export const en = {
     tags: 'Tags',
     glossary: 'Glossary',
     graph: 'Graph',
+    comments: 'Comments',
     more: 'More',
     files: 'Files',
     search: 'Search',
@@ -21,6 +22,9 @@ export const en = {
     intro:
       'All published posts, terms and pages, in the folders where they are written.',
     none: 'No files yet.',
+    openAll: 'Open all folders',
+    closeAll: 'Close all folders',
+    controls: 'Folders',
     count: (count: number) => (count === 1 ? '1 file' : `${count} files`),
   },
   graph: {
@@ -58,6 +62,16 @@ export const en = {
       many: '{count} results for “{term}”.',
     },
     all: 'All',
+  },
+  recentComments: {
+    title: 'New comments',
+    intro: 'The latest comments on all posts, memos and terms, newest first.',
+    none: 'No comments yet.',
+    on: 'on',
+    replyTo: (author: string) => `Reply to ${author}`,
+    replyToGone: 'Reply to a comment that is gone',
+    jump: 'Go to the comment',
+    label: 'Comments',
   },
   comments: {
     title: 'Comments',

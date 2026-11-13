@@ -19,7 +19,21 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 | Memos Markdown | own | like articles |
 | Webmentions | foreign | text only, no HTML |
 | Comments (Remark42) | foreign | HTML only through an allowlist, even if Remark42 sanitizes itself |
-| Avatars and memo images | foreign or own | type and size check, remove EXIF, reject SVG |
+| Avatars and memo images | foreign or own | type and size check, remove EXIF; SVG only cleaned (see below) |
+
+**[E]** SVG images (decided 2026-11-13) of the own folder and memo attachments
+are cleaned by `packages/core/src/svg.ts`: parsed with the HTML parser, only
+allowlisted SVG elements and attributes are written again as XML. Removed:
+scripts, `foreignObject`, `image`, HTML elements, event handlers, `href` and
+`url()` that leave the file, `style` with `@import`, escapes or foreign `url()`,
+animations that would change a link or a handler, foreign namespaces. SMIL and
+CSS animations stay. Pages embed the file only through `<img>` (scripts never
+run there, nothing is loaded); Caddy additionally sends
+`Content-Security-Policy: sandbox` for `/media/*.svg`. **[U]** With a reverse
+proxy that serves the files itself the header is the operator's task (documented
+in the host-folder guide). **[U]** 25 MB and many nested `use` elements can make a
+browser slow (a denial of service for the visitor); depth and node count are
+limited, rendering cost is not.
 
 **[E]** Markdown is rendered through a fixed pipeline
 (`packages/core/src/render.ts`): Markdown (with GFM), raw HTML parsed, then an

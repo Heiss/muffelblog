@@ -5,6 +5,7 @@ title: Was ist ein Cache?
 term: Cache
 created: 2026-01-08
 tags: [Python]
+aliases: [Zwischenspeicher]
 description: Zwischenspeicher für Daten, die oft gebraucht werden.
 ---
 

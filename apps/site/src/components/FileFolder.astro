@@ -12,7 +12,7 @@ const { folder } = Astro.props;
 <ul class="file-tree">
   {folder.folders.map((sub) => (
     <li class="folder">
-      <details open>
+      <details>
         <summary>
           {sub.name}/{' '}
           <span class="count">{messages.files.count(sub.count)}</span>

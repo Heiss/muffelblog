@@ -3,6 +3,7 @@ import {
   commentsFingerprint,
   forPage,
   parseComments,
+  recentComments,
   toTree,
 } from './comments.ts';
 import type { RemarkComment } from './comments.ts';
@@ -160,5 +161,102 @@ describe('forPage', () => {
 
   it('finds nothing for an unknown page', () => {
     expect(forPage([a, b], 'https://blog.example/p/none/')).toEqual([]);
+  });
+});
+
+describe('recentComments', () => {
+  const pages: Record<string, { url: string; title: string }> = {
+    'https://blog.example/p/x/': { url: '/p/x/', title: 'Post X' },
+    'https://blog.example/p/y/': { url: '/p/y/', title: 'Post Y' },
+  };
+  const locate = (address: string) => pages[address];
+
+  it('lists all comments of the site, newest first, replies and roots mixed', async () => {
+    const list = await recentComments(
+      [
+        c({ id: 'a', time: '2026-11-01T10:00:00Z' }),
+        c({
+          id: 'b',
+          pid: 'a',
+          time: '2026-11-03T10:00:00Z',
+          user: { name: 'Bernd' },
+        }),
+        c({
+          id: 'c',
+          time: '2026-11-02T10:00:00Z',
+          locator: { url: 'https://blog.example/p/y/' },
+        }),
+      ],
+      locate,
+    );
+    expect(list.map((x) => x.id)).toEqual(['b', 'c', 'a']);
+    expect(list[1]?.page).toEqual({ url: '/p/y/', title: 'Post Y' });
+  });
+
+  it('names what a reply answers, with a short quote', async () => {
+    const long = '<p>' + 'Wort '.repeat(80) + '</p>';
+    const [reply] = await recentComments(
+      [
+        c({ id: 'a', text: long, user: { name: 'Anna' } }),
+        c({ id: 'b', pid: 'a', time: '2026-11-05T10:00:00Z' }),
+      ],
+      locate,
+    );
+    const quote = reply?.replyTo;
+    expect(quote).toMatchObject({ id: 'a', author: 'Anna' });
+    expect(quote?.excerpt).toMatch(/^Wort( Wort)*…$/);
+    expect(quote?.excerpt.length).toBeLessThanOrEqual(140);
+  });
+
+  it('leaves out deleted comments and comments on pages that do not exist', async () => {
+    const list = await recentComments(
+      [
+        c({ id: 'a', delete: true }),
+        c({ id: 'b', locator: { url: 'https://blog.example/p/weg/' } }),
+        c({ id: 'd' }),
+      ],
+      locate,
+    );
+    expect(list.map((x) => x.id)).toEqual(['d']);
+  });
+
+  it('keeps a reply to a deleted or missing comment, with an empty quote', async () => {
+    const list = await recentComments(
+      [
+        c({ id: 'a', delete: true, text: 'geheim', user: { name: 'Weg' } }),
+        c({ id: 'b', pid: 'a', time: '2026-11-05T10:00:00Z' }),
+        c({ id: 'd', pid: 'fehlt', time: '2026-11-06T10:00:00Z' }),
+      ],
+      locate,
+    );
+    expect(list.map((x) => [x.id, x.replyTo])).toEqual([
+      ['d', { id: 'fehlt', author: '', excerpt: '' }],
+      ['b', { id: 'a', author: '', excerpt: '' }],
+    ]);
+    expect(JSON.stringify(list)).not.toContain('geheim');
+  });
+
+  it('sanitizes the text like everywhere else and breaks ties by id', async () => {
+    const list = await recentComments(
+      [
+        c({
+          id: 'a',
+          text: '<p>x</p><script>alert(1)</script><img src="https://e/t.png">',
+        }),
+        c({ id: 'b' }),
+      ],
+      locate,
+    );
+    expect(list.map((x) => x.id)).toEqual(['b', 'a']);
+    expect(list[1]?.html).not.toMatch(/script|<img/);
+  });
+
+  it('does not change the list it gets', async () => {
+    const input = [
+      c({ id: 'a', time: '2026-11-01T10:00:00Z' }),
+      c({ id: 'b', time: '2026-11-02T10:00:00Z' }),
+    ];
+    await recentComments(input, locate);
+    expect(input.map((x) => x.id)).toEqual(['a', 'b']);
   });
 });

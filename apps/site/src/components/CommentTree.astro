@@ -17,6 +17,12 @@ const format = new Intl.DateTimeFormat(messages.locale, {
 <ol class="comment-list">
   {nodes.map((node) => (
     <li class="comment" id={`comment-${node.id}`}>
+      {/* Target of links from "new comments" without JavaScript; the widget uses the same name. */}
+      <a
+        id={`remark42__comment-${node.id}`}
+        class="comment-anchor"
+        aria-hidden="true"
+      ></a>
       {node.deleted ? (
         <p class="comment-deleted">{messages.comments.deleted}</p>
       ) : (

@@ -292,6 +292,20 @@ describe('Local images', () => {
     expect(warnings).toEqual([]);
   });
 
+  it('writes an image without variants (SVG) without srcset and sizes', async () => {
+    const { html } = await render(
+      '![Logo](logo.svg)\n',
+      optionen('a.md', [], () => ({
+        ok: true,
+        image: { src: '/media/abc.svg', srcset: '', width: 40, height: 20 },
+      })),
+    );
+    expect(html).toContain('src="/media/abc.svg"');
+    expect(html).toContain('width="40"');
+    expect(html).not.toContain('srcset');
+    expect(html).not.toContain('sizes');
+  });
+
   it('understands ./, ../ and encoded spaces', async () => {
     const called: string[] = [];
     await render(
