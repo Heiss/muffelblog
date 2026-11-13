@@ -13,6 +13,7 @@ import {
   safeFileName,
   sniffMatches,
 } from './media-files.ts';
+import type { GlossaryLinking } from './glossary-links.ts';
 import type { HeicConverter } from './heic.ts';
 import { processImage, storeSvg, toResolvedImage } from './media.ts';
 import { renderMarkdown } from './render.ts';
@@ -521,6 +522,8 @@ export interface BuildMemosOptions {
   lang?: Language;
   /** Turns HEIC photos into JPEG. Without it they are skipped with a hint. */
   convertHeic?: HeicConverter;
+  /** Links glossary terms in the memo texts. */
+  glossary?: GlossaryLinking;
 }
 
 function contentId(data: Buffer): string {
@@ -536,6 +539,7 @@ interface MemoBuild {
   prefix: string;
   lang: Language;
   convertHeic?: HeicConverter;
+  glossary?: GlossaryLinking;
 }
 
 /** Uid and date of a memo that is shown, or null (with a warning where useful). */
@@ -712,6 +716,7 @@ async function buildEntry(
     articlePath: `memos/${id.uid}.md`,
     remoteContent: 'none',
     lang: build.lang,
+    glossary: build.glossary,
     resolveImage: async () => ({
       ok: false,
       code: 'unsupported',
@@ -760,6 +765,7 @@ export async function buildMemoEntries(
     prefix: options.urlPrefix ?? '/media/',
     lang: options.lang ?? DEFAULT_SETTINGS.lang,
     convertHeic: options.convertHeic,
+    glossary: options.glossary,
   };
   const list = await source.listPublicMemos();
   const warnings = [...list.warnings];

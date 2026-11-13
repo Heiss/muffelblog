@@ -51,6 +51,8 @@ export interface Article {
   updatedSource: 'frontmatter' | 'mtime';
   tags: string[];
   description?: string;
+  /** Glossary only: other names of the term (`aliases:`), also linked automatically. */
+  aliases?: string[];
   /** Pages only: `nav: true` puts the page into the header menu instead of the footer. */
   nav?: true;
   body: string;
@@ -191,6 +193,21 @@ function readTags(data: Data, warn: Warn): string[] {
   return tags;
 }
 
+/** `aliases:` of a glossary entry: a list of names; entries that are no text are dropped with a warning. */
+function readAliases(data: Data, type: ArticleType, warn: Warn): string[] {
+  // Obsidian writes `aliases` on any note, so it is no news on other kinds.
+  if (type !== 'glossary' || data.aliases === undefined) return [];
+  const raw = Array.isArray(data.aliases) ? data.aliases : [data.aliases];
+  const names: string[] = [];
+  for (const entry of raw) {
+    const name = textOf(entry);
+    if (name === '')
+      warn(`alias ${JSON.stringify(entry)} is not text and is ignored`);
+    else if (!names.includes(name)) names.push(name);
+  }
+  return names;
+}
+
 /** `nav: true` on a page; anything else is no menu entry (and warns when it was meant). */
 function readNav(data: Data, type: ArticleType, warn: Warn): boolean {
   if (data.nav === undefined) return false;
@@ -244,6 +261,8 @@ function buildArticle(
     typeof data.description === 'string' ? data.description.trim() : '';
   if (description !== '') article.description = description;
   if (readNav(data, type, warn)) article.nav = true;
+  const aliases = readAliases(data, type, warn);
+  if (aliases.length > 0) article.aliases = aliases;
   const term = readTerm(data, type, warn);
   if (term !== undefined) article.term = term;
   return article;

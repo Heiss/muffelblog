@@ -8,6 +8,35 @@ test.describe('Links between files (W20)', () => {
     await expect(link).toHaveAttribute('href', '/g/cache/');
   });
 
+  test('glossary terms are linked automatically on their first mention, with the definition as tooltip', async ({
+    page,
+  }) => {
+    await page.goto('/p/rendering-demo/');
+    const auto = page.locator('.content a.glossary-link');
+    await expect(auto).toHaveCount(1);
+    await expect(auto).toHaveText('Äther');
+    await expect(auto).toHaveAttribute('href', '/g/aether/');
+    await expect(auto).toHaveAttribute('title', /Umlaut/);
+    // The alias "Zwischenspeicher" is text: the term Cache is already linked by hand above.
+    await expect(page.locator('.content a[href="/g/cache/"]')).toHaveCount(1);
+    // Not in code.
+    await expect(
+      page.locator('.content code', { hasText: 'Äther' }),
+    ).toBeVisible();
+    await expect(page.locator('.content code a')).toHaveCount(0);
+  });
+
+  test('a term does not link to itself, and the automatic link shows up in the link lists', async ({
+    page,
+  }) => {
+    await page.goto('/g/aether/');
+    await expect(page.locator('.content a[href="/g/aether/"]')).toHaveCount(0);
+    const section = page.locator('section.links');
+    await expect(
+      section.getByRole('link', { name: 'Rendering-Demo', exact: true }),
+    ).toBeVisible();
+  });
+
   test('a link to a draft is text, and its name does not appear', async ({
     request,
   }) => {

@@ -78,6 +78,17 @@ Every post, term and memo shows **Links of this page**: what it links to
 (external websites as one entry per domain) and what links to it, with a small
 graph of these neighbors. `/graph/` shows all of them.
 
+### Automatic links to terms
+
+The first mention of a glossary term in a post, a memo or another term is linked
+to its page automatically (a dotted underline; the mouse over it shows the short
+definition from `description`). The term is its `term:` (else the title); more
+names go into `aliases:` in the frontmatter of the term, for example
+`aliases: [Backups, Sicherung]`. Rules: whole words only, upper and lower case do
+not matter, the longest term wins, every term is linked once per page. A link you
+wrote by hand counts as that link. Nothing is linked inside links, code,
+headings or on the term's own page. Pages (`type: page`) are left alone.
+
 ### Static pages: `type: page`
 
 Address `/<slug>/`, for example `impressum` or `datenschutz`. Pages need no date,

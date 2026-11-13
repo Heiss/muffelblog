@@ -638,3 +638,9 @@ main > .file-tree {
 .graph-local.graph-active .graph-svg {
   outline: 1px solid var(--line);
 }
+
+/* Glossary terms linked automatically in the text: quiet, dotted underline. */
+a.glossary-link {
+  text-decoration-style: dotted;
+  text-underline-offset: 0.2em;
+}

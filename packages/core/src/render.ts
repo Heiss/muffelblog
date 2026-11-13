@@ -14,6 +14,8 @@ import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
 import { common, createLowlight } from 'lowlight';
 import { visit } from 'unist-util-visit';
+import { linkGlossaryTerms } from './glossary-links.ts';
+import type { GlossaryLinking } from './glossary-links.ts';
 import { isAllowedImageUrl, matchEmbed } from './policy.ts';
 
 export interface ResolvedImage {
@@ -49,6 +51,8 @@ export interface RenderOptions {
    * unknown or unpublished file. Without it, relative links stay as they are.
    */
   resolveLink?: (rootRelativePath: string) => string | undefined;
+  /** Links glossary terms in the text (see `glossary-links.ts`). */
+  glossary?: GlossaryLinking;
 }
 
 export interface RenderResult {
@@ -467,6 +471,12 @@ function rehypeContent(options: RenderOptions, warnings: string[]) {
   };
 }
 
+function rehypeGlossary(glossary: GlossaryLinking | undefined) {
+  return (tree: Root): void => {
+    if (glossary) linkGlossaryTerms(tree, glossary);
+  };
+}
+
 /**
  * Renders Markdown to sanitized HTML.
  * - Raw HTML is accepted only through an allowlist; scripts, event attributes,
@@ -487,6 +497,8 @@ export async function renderMarkdown(
     .use(rehypeRaw)
     .use(rehypeSanitize, schema)
     .use(rehypeContent, options, warnings)
+    // After the content step, so links written by hand are resolved and count.
+    .use(rehypeGlossary, options.glossary)
     .use(rehypeStringify)
     .process(markdown);
   return { html: String(file), warnings };

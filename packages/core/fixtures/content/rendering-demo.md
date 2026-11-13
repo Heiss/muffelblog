@@ -36,3 +36,6 @@ const x = 1;
 
 Ein Link auf einen Begriff im Ordner: [Cache](cache.md), und einer auf einen
 Entwurf, der Text bleibt: [Entwurf](ohne-publish.md).
+
+Der Zwischenspeicher bleibt Text, weil der Cache oben schon von Hand verlinkt
+ist. Der Äther dagegen wird automatisch verlinkt, im Code nicht: `Äther`.

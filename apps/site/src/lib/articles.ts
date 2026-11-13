@@ -1,12 +1,18 @@
 import {
   buildMemoEntries,
   createHeifConverter,
+  createTermMatcher,
   createLocalImageResolver,
   heifAvailable,
   loadArticles,
   renderMarkdown,
 } from '@muffelblog/core';
-import type { Article, MemoEntry } from '@muffelblog/core';
+import type {
+  Article,
+  GlossaryLinking,
+  MemoEntry,
+  TermMatcher,
+} from '@muffelblog/core';
 import { contentConfig } from './content';
 import { getSettings } from './settings';
 
@@ -19,6 +25,48 @@ interface Content {
   memos: MemoEntry[];
   /** Generated media files: file name to content (images, PDF, audio, video). */
   media: Map<string, Buffer>;
+}
+
+/** Links between files of the folder lead to the pages of published files (W20). */
+function pageAddresses(articles: Article[]): Map<string, string> {
+  return new Map(
+    articles.map((a) => [
+      a.path.normalize('NFC'),
+      a.type === 'glossary'
+        ? `/g/${a.slug}/`
+        : a.type === 'page'
+          ? `/${a.slug}/`
+          : `/p/${a.slug}/`,
+    ]),
+  );
+}
+
+/**
+ * Every glossary term (its `term:` or title, and `aliases:`) is linked on its
+ * first mention in posts, memos and other terms.
+ */
+function glossaryMatcher(articles: Article[]): TermMatcher | null {
+  return createTermMatcher(
+    articles
+      .filter((a) => a.type === 'glossary')
+      .map((a) => ({
+        slug: a.slug,
+        names: [a.term ?? a.title, ...(a.aliases ?? [])],
+        description: a.description,
+      })),
+  );
+}
+
+/** Pages (imprint and so on) are left alone; a term never links to itself. */
+function glossaryFor(
+  article: Article,
+  matcher: TermMatcher | null,
+): GlossaryLinking | undefined {
+  if (article.type === 'page') return undefined;
+  return {
+    matcher,
+    self: article.type === 'glossary' ? article.slug : undefined,
+  };
 }
 
 async function build(): Promise<Content> {
@@ -39,17 +87,8 @@ async function build(): Promise<Content> {
     store: media,
   });
 
-  // Links between files of the folder lead to the pages of published files (W20).
-  const pageOf = new Map(
-    articles.map((a) => [
-      a.path.normalize('NFC'),
-      a.type === 'glossary'
-        ? `/g/${a.slug}/`
-        : a.type === 'page'
-          ? `/${a.slug}/`
-          : `/p/${a.slug}/`,
-    ]),
-  );
+  const pageOf = pageAddresses(articles);
+  const matcher = glossaryMatcher(articles);
 
   const rendered: RenderedArticle[] = [];
   for (const article of articles) {
@@ -57,6 +96,7 @@ async function build(): Promise<Content> {
       articlePath: article.path,
       resolveImage: resolver.resolve,
       resolveLink: (p) => pageOf.get(p),
+      glossary: glossaryFor(article, matcher),
       lang: getSettings().lang,
     });
     warnings.push(...result.warnings);
@@ -69,6 +109,7 @@ async function build(): Promise<Content> {
     maxFileBytes: getSettings().memosMaxFileBytes,
     descriptionChars: getSettings().memosDescriptionChars,
     lang: getSettings().lang,
+    glossary: { matcher },
   });
   warnings.push(...memoResult.warnings);
 

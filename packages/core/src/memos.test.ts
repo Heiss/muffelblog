@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import sharp from 'sharp';
+import { createTermMatcher } from './glossary-links.ts';
 import { createHeifConverter } from './heic.ts';
 import { describe, expect, it, vi } from 'vitest';
 import {
@@ -333,6 +334,23 @@ describe('buildMemoEntries: basic data', () => {
     expect(memo?.title).toBe('Memo of 2 Nov 2026, 14:32');
     expect(memo?.path).toBe('memos/abc');
     expect(memo?.html).toContain('<p>Renovate eingerichtet.</p>');
+  });
+
+  it('links the first mention of a glossary term in the memo text', async () => {
+    const source = fakeSource([
+      rawMemo('g', { content: 'Das Backup läuft. Noch ein Backup.' }),
+    ]);
+    const { memos } = await buildMemoEntries(source, new Map(), {
+      glossary: {
+        matcher: createTermMatcher([
+          { slug: 'backup', names: ['Backup'], description: 'Eine Kopie.' },
+        ]),
+      },
+    });
+    const html = memos[0]?.html ?? '';
+    expect(html).toContain(
+      '<a href="/g/backup/" class="glossary-link" title="Eine Kopie.">Backup</a> läuft. Noch ein Backup.',
+    );
   });
 
   it('converts the time to summer time', async () => {

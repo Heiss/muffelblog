@@ -31,6 +31,12 @@ export type {
   ProcessedImage,
 } from './media.ts';
 export { renderMarkdown } from './render.ts';
+export { createTermMatcher, linkGlossaryTerms } from './glossary-links.ts';
+export type {
+  GlossaryLinking,
+  GlossaryTerm,
+  TermMatcher,
+} from './glossary-links.ts';
 export type {
   ImageResolveResult,
   RenderOptions,
