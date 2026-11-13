@@ -57,6 +57,7 @@ export default defineConfig({
             { slug: 'reference/urls' },
             { slug: 'reference/versions' },
             { slug: 'reference/architecture' },
+            { slug: 'reference/site-map' },
           ],
         },
       ],

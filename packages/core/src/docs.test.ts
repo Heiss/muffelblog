@@ -136,6 +136,37 @@ describe('documentation matches the code', () => {
     }
   });
 
+  it('lists every documentation page in the site map, rendered and as raw Markdown, and agent.md links to it', async () => {
+    const map = await read(
+      'apps',
+      'docs',
+      'src',
+      'content',
+      'docs',
+      'reference',
+      'site-map.md',
+    );
+    const pages = (await docFiles())
+      .map((f) => path.relative(docsDir, f).replace(/\.mdx?$/, ''))
+      // The start page and the map itself need no row.
+      .filter((slug) => slug !== 'index' && slug !== 'reference/site-map');
+    expect(pages.length).toBeGreaterThan(10);
+    for (const slug of pages) {
+      expect(map, `rendered link to ${slug}`).toContain(
+        `](/muffelblog/${slug}/)`,
+      );
+      expect(map, `raw link to ${slug}`).toMatch(
+        new RegExp(
+          `\\]\\(https://raw\\.githubusercontent\\.com/Heiss/muffelblog/main/apps/docs/src/content/docs/${slug}\\.md\\)`,
+        ),
+      );
+    }
+    const agent = await read('apps', 'docs', 'public', 'agent.md');
+    expect(agent).toContain(
+      'https://heiss.github.io/muffelblog/reference/site-map/',
+    );
+  });
+
   it('tells every proxy to revalidate /health.json and /entries.json like /build.json, as the Caddyfile does', async () => {
     const caddyfile = await read('docker', 'Caddyfile');
     expect(caddyfile).toMatch(
