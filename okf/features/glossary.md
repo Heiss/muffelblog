@@ -88,8 +88,14 @@ as nodes; a local graph under every page and the overall view `/graph/`.
 * **[E]** Drawing: own force layout (repulsion, springs, gravity, deterministic)
   in vanilla TS, SVG, no library, no foreign request; page nodes are links,
   domain nodes are focusable (`tabindex=0`) with a label.
-* **[U]** No size limit for `graph.json` and no zoom or pan; with many hundred
-  nodes the overall view gets dense.
+* **[E]** Zoom (decided 2026-11-13): the mouse wheel zooms at the pointer (up to
+  8x), dragging with the mouse moves the view, buttons +, minus and reset serve
+  keyboard and touch. On `/graph/` the wheel always zooms; on the small graphs
+  under a page only after a click into the graph, so the page keeps scrolling.
+  No pinch gesture. Implemented by changing the SVG `viewBox`
+  (`graph-logic.ts`: `zoomAt`, `panBy`, `wheelFactor`).
+* **[U]** No size limit for `graph.json`; with many hundred nodes the overall
+  view gets dense.
 
 # Earlier proposal: linking and graph
 

@@ -372,6 +372,7 @@ describe('loadArticles (Fixtures)', () => {
         'glossary:hallo-welt',
         'page:datenschutz',
         'page:impressum',
+        'page:ueber-uns',
         'post:gleich',
         'post:gleich-2',
         'post:groesse-und-masse',

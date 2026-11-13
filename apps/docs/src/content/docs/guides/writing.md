@@ -82,9 +82,11 @@ graph of these neighbors. `/graph/` shows all of them.
 
 Address `/<slug>/`, for example `impressum` or `datenschutz`. Pages need no date,
 are not part of the feed, RSS or search, and appear as links in the footer on
-every page. Names that belong to the site itself (`p`, `m`, `g`, `tag`, `page`,
+every page. With `nav: true` in the frontmatter a page appears instead in the
+header, in the dropdown "More" (and no longer in the footer); only the boolean
+`true` counts. Names that belong to the site itself (`p`, `m`, `g`, `tag`, `page`,
 `posts`, `memos`, `terms`, `glossary`, `search`, `media`, `pagefind`, `feed`,
-`sitemap`, `robots`, ...) are refused with a warning.
+`sitemap`, `robots`, `updated`, ...) are refused with a warning.
 
 ## Images
 

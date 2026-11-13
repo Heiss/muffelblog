@@ -1,5 +1,8 @@
 # Update log
 
+## 2026-11-13
+* **Update**: Header menu: pages with `nav: true` appear in a dropdown "More" in the header (and no longer in the footer); search shows the tag label only when there are tags; the link graph zooms with the mouse wheel, drag and buttons, also the small graphs under a page (wheel only after a click); see [Frontmatter](/content/frontmatter.md) and [Glossary and knowledge graph](/features/glossary.md).
+
 ## 2026-11-12
 * **Update**: Frontmatter `created` replaces `date` for all articles, `updated` is new (both with fallback to the modification date and a warning); the feed shows `created` and a changed `updated`, every filter sorts by created or updated (static series `/updated/`, `/posts/updated/`, `/memos/updated/`, `/terms/updated/`); memos use `createTime`/`updateTime`; see [Frontmatter](/content/frontmatter.md) and [Feed](/frontend/feed.md).
 

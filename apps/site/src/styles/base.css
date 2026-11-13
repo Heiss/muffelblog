@@ -53,7 +53,8 @@ select:focus-visible {
 
 .site-header nav {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0 1rem;
   flex: 1;
 }
 
@@ -67,6 +68,44 @@ select:focus-visible {
 .site-header nav a[aria-current='page'] {
   color: var(--fg);
   text-decoration: underline;
+}
+
+.nav-more {
+  position: relative;
+}
+
+.nav-more summary {
+  cursor: pointer;
+  color: var(--dim);
+  padding: 0.5rem 0;
+  list-style: none;
+}
+
+.nav-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-more summary::after {
+  content: ' \25BE';
+}
+
+.nav-more summary:hover,
+.nav-more[open] summary {
+  color: var(--fg);
+}
+
+.nav-more ul {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  min-width: 12rem;
+  max-width: calc(100vw - 2rem);
+  margin: 0;
+  padding: 0.5rem 1rem;
+  list-style: none;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
 }
 
 .theme-picker {
@@ -560,4 +599,34 @@ main > .file-tree {
 }
 .file-tree .file {
   padding: 0.1rem 0;
+}
+
+/* Zoom of the link graph: buttons below the drawing, grab cursor while dragging. */
+.graph {
+  position: relative;
+}
+.graph-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.graph-controls button {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--pill);
+  background: var(--panel);
+  color: var(--fg);
+  font-family: var(--font-meta);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.graph-svg {
+  cursor: grab;
+}
+.graph-svg.graph-dragging {
+  cursor: grabbing;
+}
+.graph-local.graph-active .graph-svg {
+  outline: 1px solid var(--line);
 }

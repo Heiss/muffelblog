@@ -75,6 +75,52 @@ test.describe('Graph (W21)', () => {
     await expect(svg.locator('a[href="/g/cache/"]')).toBeFocused();
   });
 
+  test('the overall view zooms with the wheel at the pointer, drags and resets', async ({
+    page,
+  }) => {
+    await page.goto('/graph/');
+    const svg = page.locator('figure.graph-all svg');
+    await expect(svg).toBeVisible();
+    const viewBox = async () =>
+      (await svg.getAttribute('viewBox'))?.split(' ').map(Number) ?? [];
+    const [, , whole] = await viewBox();
+    const box = (await svg.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, -400);
+    await expect.poll(async () => (await viewBox())[2]).toBeLessThan(whole!);
+    // Dragging an empty spot moves the view.
+    const before = await viewBox();
+    await page.mouse.move(box.x + 5, box.y + 5);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 80, box.y + 80, { steps: 4 });
+    await page.mouse.up();
+    const after = await viewBox();
+    expect(after[2]).toBe(before[2]);
+    expect(after[0] !== before[0] || after[1] !== before[1]).toBe(true);
+    await page.getByRole('button', { name: ui.graph.zoomReset }).click();
+    expect(await viewBox()).toEqual([0, 0, whole, whole]);
+    await page.getByRole('button', { name: ui.graph.zoomIn }).click();
+    await expect.poll(async () => (await viewBox())[2]).toBeLessThan(whole!);
+  });
+
+  test('the small graph under a page zooms with the wheel only after a click into it', async ({
+    page,
+  }) => {
+    await page.goto('/g/cache/');
+    const svg = page.locator('figure.graph-local svg');
+    await expect(svg).toBeVisible();
+    const width = async () =>
+      Number((await svg.getAttribute('viewBox'))?.split(' ')[2]);
+    const start = await width();
+    const box = (await svg.boundingBox())!;
+    await page.mouse.move(box.x + 10, box.y + 10);
+    await page.mouse.wheel(0, -400);
+    expect(await width()).toBe(start);
+    await page.mouse.click(box.x + 10, box.y + 10);
+    await page.mouse.wheel(0, -400);
+    await expect.poll(width).toBeLessThan(start);
+  });
+
   test('a page draws its neighbors, centered on itself', async ({ page }) => {
     await page.goto('/g/cache/');
     const svg = page.locator('figure.graph-local svg');

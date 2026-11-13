@@ -95,4 +95,19 @@ test.describe('Search index', () => {
       expect(html).not.toContain('data-pagefind-body');
     }
   });
+
+  test('shows the tag filter only when there are tags to choose', async ({
+    page,
+  }) => {
+    await page.goto('/search/');
+    const tags = page.locator('[data-search-tag-label]');
+    await expect(page.getByRole('searchbox')).toBeVisible();
+    await expect(page.getByText(ui.search.tag, { exact: true })).toBeHidden();
+    await expect(tags).toBeHidden();
+    await page.getByRole('searchbox').fill('Hallo');
+    await expect(tags).toBeVisible();
+    await expect(tags.getByRole('combobox')).toBeVisible();
+    await page.getByRole('searchbox').fill('');
+    await expect(tags).toBeHidden();
+  });
 });

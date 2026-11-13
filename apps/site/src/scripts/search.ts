@@ -98,6 +98,11 @@ function kindButtons(
   );
 }
 
+/** The tag filter (label and list) is shown only while there are tags to choose. */
+function showTags(ui: SearchUi, visible: boolean): void {
+  ui.tagSelect.closest('label')?.toggleAttribute('hidden', !visible);
+}
+
 /** The tag list, keeping the chosen tag when it still occurs. */
 function fillTags(ui: SearchUi, tagCounts: Record<string, number>): void {
   const tags = Object.keys(tagCounts).sort();
@@ -105,7 +110,7 @@ function fillTags(ui: SearchUi, tagCounts: Record<string, number>): void {
   ui.tagSelect.replaceChildren(new Option(ui.allLabel, ''));
   for (const tag of tags) ui.tagSelect.append(new Option(tag, tag));
   ui.tagSelect.value = tags.includes(chosen) ? chosen : '';
-  ui.tagSelect.hidden = tags.length === 0;
+  showTags(ui, tags.length > 0);
 }
 
 function excerptElement(excerpt: string): HTMLParagraphElement {
@@ -140,7 +145,7 @@ function resultList(
 function clear(ui: SearchUi): void {
   ui.summary.textContent = '';
   ui.kindBox.replaceChildren();
-  ui.tagSelect.hidden = true;
+  showTags(ui, false);
 }
 
 /** Searches as the visitor types; an older search never overwrites a newer one. */

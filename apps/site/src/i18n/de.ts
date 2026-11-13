@@ -10,6 +10,7 @@ export const de: Messages = {
     tags: 'Tags',
     glossary: 'Glossar',
     graph: 'Graph',
+    more: 'Mehr',
     files: 'Dateien',
     search: 'Suche',
   },
@@ -30,6 +31,10 @@ export const de: Messages = {
     needsJs:
       'Die Zeichnung braucht JavaScript; die Listen der Links funktionieren ohne.',
     empty: 'Noch keine Links.',
+    zoomIn: 'Vergrößern',
+    zoomOut: 'Verkleinern',
+    zoomReset: 'Ansicht zurücksetzen',
+    zoomHint: 'Mausrad zoomt, Ziehen verschiebt die Ansicht.',
     kinds: {
       post: 'Beitrag',
       glossary: 'Begriff',

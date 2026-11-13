@@ -51,6 +51,8 @@ export interface Article {
   updatedSource: 'frontmatter' | 'mtime';
   tags: string[];
   description?: string;
+  /** Pages only: `nav: true` puts the page into the header menu instead of the footer. */
+  nav?: true;
   body: string;
   /** Path relative to the content folder, with `/` as the separator. */
   path: string;
@@ -189,6 +191,15 @@ function readTags(data: Data, warn: Warn): string[] {
   return tags;
 }
 
+/** `nav: true` on a page; anything else is no menu entry (and warns when it was meant). */
+function readNav(data: Data, type: ArticleType, warn: Warn): boolean {
+  if (data.nav === undefined) return false;
+  if (type !== 'page') warn('nav is only used for pages (type: page), ignored');
+  else if (data.nav !== true) warn('nav must be the boolean true, ignored');
+  else return true;
+  return false;
+}
+
 function readTerm(
   data: Data,
   type: ArticleType,
@@ -232,6 +243,7 @@ function buildArticle(
   const description =
     typeof data.description === 'string' ? data.description.trim() : '';
   if (description !== '') article.description = description;
+  if (readNav(data, type, warn)) article.nav = true;
   const term = readTerm(data, type, warn);
   if (term !== undefined) article.term = term;
   return article;
