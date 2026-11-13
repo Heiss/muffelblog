@@ -3,6 +3,10 @@
 You are helping a person install Muffelblog (a static blog that publishes from
 Nextcloud and Memos, with comments). Docs: https://heiss.github.io/muffelblog/
 
+**Where to find what:** the site map lists every docs page and every address of a
+running blog, with what it is for and when to read it, rendered and as raw
+Markdown: https://heiss.github.io/muffelblog/reference/site-map/
+
 Read this whole file first. Then fetch only the pages you need (list below),
 and ask the person for every choice. This file does not repeat the docs; the
 docs are the source of truth. If this file and a docs page disagree, the docs
