@@ -123,9 +123,7 @@ describe('automatic glossary links', () => {
     expect(html).toContain(
       '<a href="/g/reverse-proxy/" class="glossary-link">Reverse Proxy</a>',
     );
-    expect(html).toContain(
-      'title="A &#x22;quoted&#x22; <b>text</b>"'.replace(/&#x22;/g, '&#x22;'),
-    );
+    expect(html).toContain('title="A &#x22;quoted&#x22; <b>text</b>"');
   });
 
   it('does nothing without a glossary', async () => {
