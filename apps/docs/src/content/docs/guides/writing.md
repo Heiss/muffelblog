@@ -93,7 +93,12 @@ header, in the dropdown "More" (and no longer in the footer); only the boolean
 Put images in the same folder and use normal Markdown links:
 `![A mortise](images/mortise.jpg)`.
 
-- PNG, JPEG, WebP, GIF and AVIF up to 25 MB. SVG is rejected.
+- PNG, JPEG, WebP, GIF and AVIF up to 25 MB.
+- SVG, also animated (SMIL and CSS animations), up to 25 MB. The builder cleans every SVG: scripts,
+  `foreignObject`, event handlers, embedded images and every link or `url()` that
+  leaves the file are removed. It is shown only through `<img>`, with the size of its `width`/`height` or `viewBox`.
+  Use it for diagrams and icons you made yourself. The same holds for SVG
+  attachments of memos.
 - HEIC photos (iPhone) are converted to JPEG by the builder image. If you run the builder without that image, convert them to JPEG first: HEIC files are skipped with a warning.
 - They are scaled to several widths (480 to 1920 px), served as WebP, and **all
   metadata (EXIF, GPS) is removed**.

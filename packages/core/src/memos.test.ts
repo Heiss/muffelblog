@@ -563,7 +563,6 @@ describe('buildMemoEntries: attachments', () => {
         rawMemo('o', {
           attachments: [
             attachmentRaw('h', 'seite.html'),
-            attachmentRaw('s', 'logo.svg'),
             attachmentRaw('z', 'archiv.zip'),
             attachmentRaw('e', 'prog.exe'),
             attachmentRaw('i', 'foto.heic'),
@@ -575,8 +574,41 @@ describe('buildMemoEntries: attachments', () => {
     const { memos, warnings } = await buildMemoEntries(source, new Map());
     expect(source.fetched).toEqual([]);
     expect(memos[0]?.html).not.toMatch(/<(a|img|audio|video)\b/);
-    expect(warnings).toHaveLength(5);
+    expect(warnings).toHaveLength(4);
     expect(warnings.find((w) => w.includes('foto.heic'))).toMatch(/HEIC/i);
+  });
+
+  it('cleans an SVG attachment and shows it as an <img> from one file', async () => {
+    const store = new Map<string, Buffer>();
+    const source = fakeSource(
+      [
+        rawMemo('v', {
+          attachments: [
+            attachmentRaw('s', 'logo-animiert.svg'),
+            attachmentRaw('k', 'kein-bild.svg'),
+          ],
+        }),
+      ],
+      {
+        'attachments/s': Buffer.from(
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 10"><script>alert(1)</script>' +
+            '<rect width="3" height="3"><animate attributeName="x" to="20" dur="2s"/></rect></svg>',
+        ),
+        'attachments/k': Buffer.from('<html><script>alert(1)</script></html>'),
+      },
+    );
+    const { memos, warnings } = await buildMemoEntries(source, store);
+    const html = memos[0]?.html ?? '';
+    expect(html).toMatch(
+      /<img src="[^"]*\/[0-9a-f]{16}\.svg" width="30" height="10" alt="logo animiert"/,
+    );
+    expect(html).not.toContain('srcset');
+    expect(html).not.toContain('kein-bild');
+    const file = [...store.keys()].find((k) => k.endsWith('.svg')) ?? '';
+    const text = store.get(file)?.toString('utf8') ?? '';
+    expect(text).toContain('<animate attributeName="x"');
+    expect(text).not.toMatch(/script|alert/);
+    expect(warnings.some((w) => w.includes('kein-bild.svg'))).toBe(true);
   });
 
   it('rejects files whose content does not match the extension', async () => {

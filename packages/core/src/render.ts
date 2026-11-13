@@ -427,8 +427,9 @@ async function localImage(
   const image = resolved.image;
   node.properties = {
     src: image.src,
-    srcSet: image.srcset,
-    sizes: IMAGE_SIZES,
+    // An SVG has one file and no variants.
+    srcSet: image.srcset === '' ? undefined : image.srcset,
+    sizes: image.srcset === '' ? undefined : IMAGE_SIZES,
     width: image.width,
     height: image.height,
     alt,

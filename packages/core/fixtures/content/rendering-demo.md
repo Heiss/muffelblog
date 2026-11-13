@@ -24,6 +24,8 @@ const x = 1;
 
 ![Mit Metadaten](bilder/mit-metadaten.jpg)
 
+![Pulsierender Punkt](bilder/spinner.svg)
+
 ![Wikimedia](https://upload.wikimedia.org/wikipedia/commons/a/a9/Example.jpg)
 
 ![Tracker](https://tracker.example/pixel.png)

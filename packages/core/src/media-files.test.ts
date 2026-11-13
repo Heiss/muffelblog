@@ -100,6 +100,7 @@ describe('contentTypeForMediaFile', () => {
     expect(contentTypeForMediaFile('abc-bericht.pdf')).toBe('application/pdf');
     expect(contentTypeForMediaFile('abc-lied.mp3')).toBe('audio/mpeg');
     expect(contentTypeForMediaFile('abc-film.mp4')).toBe('video/mp4');
+    expect(contentTypeForMediaFile('abcdef.svg')).toBe('image/svg+xml');
   });
 
   it('returns null for everything else', () => {

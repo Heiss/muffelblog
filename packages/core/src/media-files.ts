@@ -2,8 +2,8 @@ import { toSlug } from './slug.ts';
 
 /**
  * Files that may be mirrored to the own domain in addition to images: PDF,
- * audio and video. Everything else (HTML, SVG, scripts, archives, programs) is
- * not accepted, because the server could otherwise serve it under the own
+ * audio and video. SVG images are a special case: they are cleaned first (see
+ * `svg.ts`). Everything else (HTML, scripts, archives, programs) is not accepted, because the server could otherwise serve it under the own
  * address with an active content type.
  */
 export type FileKind = 'pdf' | 'audio' | 'video';
@@ -76,6 +76,8 @@ export function sniffMatches(kind: Sniff, data: Buffer): boolean {
 export function contentTypeForMediaFile(file: string): string | null {
   const ext = extensionOf(file);
   if (ext === 'webp') return 'image/webp';
+  // Cleaned by `sanitizeSvg` and shown only through <img>.
+  if (ext === 'svg') return 'image/svg+xml';
   return ALLOWED_FILES.find((rule) => rule.ext === ext)?.contentType ?? null;
 }
 

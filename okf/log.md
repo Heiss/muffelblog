@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-13
+* **Update**: SVG images are supported, also animated: cleaned by an allowlist (`svg.ts`), shown only through `<img>`, in notes and memo attachments, up to 25 MB; Caddy sends a sandbox policy for `/media/*.svg`; see [Media](/content/media.md) and [Sanitizing](/security/sanitization.md).
 * **Update**: Header menu: pages with `nav: true` appear in a dropdown "More" in the header (and no longer in the footer); search shows the tag label only when there are tags; the link graph zooms with the mouse wheel, drag and buttons, also the small graphs under a page (wheel only after a click); see [Frontmatter](/content/frontmatter.md) and [Glossary and knowledge graph](/features/glossary.md).
 
 ## 2026-11-12

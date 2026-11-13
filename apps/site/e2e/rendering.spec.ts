@@ -48,6 +48,34 @@ test.describe('Rendering demo (/p/rendering-demo/)', () => {
     expect(koerper.subarray(8, 12).toString('latin1')).toBe('WEBP');
   });
 
+  test('serves a cleaned SVG with its animation as one image, and runs nothing from it', async ({
+    page,
+    request,
+  }) => {
+    const foreign = await interceptForeign(page);
+    await page.goto('/p/rendering-demo/');
+    const svg = page.locator('.content img[alt="Pulsierender Punkt"]');
+    await expect(svg).toHaveAttribute('src', /^\/media\/[0-9a-f]{16}\.svg$/);
+    await expect(svg).toHaveAttribute('width', '60');
+    await expect(svg).toHaveAttribute('height', '30');
+    await expect(svg).not.toHaveAttribute('srcset');
+    await expect
+      .poll(() => svg.evaluate((el: HTMLImageElement) => el.naturalWidth))
+      .toBe(60);
+    // The script and the load handler of the file did not run.
+    await expect(page.locator('body')).not.toHaveAttribute('data-hacked', '1');
+    await expect(page).not.toHaveTitle('x');
+    expect(foreign.filter((u) => u.includes('tracker.example'))).toEqual([]);
+
+    const file = await request.get((await svg.getAttribute('src')) ?? '');
+    expect(file.status()).toBe(200);
+    expect(file.headers()['content-type']).toMatch(/^image\/svg\+xml/);
+    const text = await file.text();
+    expect(text).toContain('@keyframes pulse');
+    expect(text).toContain('<animate attributeName="r"');
+    expect(text).not.toMatch(/script|onload|foreignObject|<image|tracker/i);
+  });
+
   test('loads allowed remote images, removes others and reports missing ones', async ({
     page,
   }) => {

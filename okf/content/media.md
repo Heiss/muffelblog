@@ -29,7 +29,12 @@ the Content Security Policy. A new domain is a code change with a test.
 * **[V]** The path is relative to the note. If the file is not found there and
   the path does not start with `./` or `../`, it is then taken from the folder
   root (this is how Obsidian writes absolute vault paths).
-* Allowed are PNG, JPEG, WebP, GIF and AVIF up to 25 MB. SVG is rejected.
+* Allowed are PNG, JPEG, WebP, GIF and AVIF up to 25 MB.
+* **[E]** SVG (decided 2026-11-13) is allowed in notes and as memo attachment, up
+  to 25 MB, also animated (SMIL and CSS animations; scripts never). It is cleaned
+  by `packages/core/src/svg.ts` and shown only through `<img>` (no `srcset`, size
+  from `width`/`height` or `viewBox`, else 300 x 150). Remote SVG from the image
+  allowlist hosts is not changed by this. See [Sanitizing](/security/sanitization.md).
 * Output: WebP in the widths 480, 960, 1440 and 1920 (as far as the original
   is wide enough, never enlarged), `srcset`, width and height,
   `loading="lazy"`. An image narrower than 480 px is served at its original
@@ -101,7 +106,8 @@ the Content Security Policy. A new domain is a code change with a test.
 * **[V]** Only these extensions are allowed: `pdf`, `mp3`, `m4a`, `ogg`, `opus`,
   `wav`, `flac`, `mp4`, `m4v`, `webm`, `mov`. The start of the data must match
   the extension (file signature), otherwise the file is rejected.
-* **[V]** Everything else (HTML, SVG, scripts, archives, programs, office files)
+* **[V]** Everything else (HTML, scripts, archives, programs, office files; SVG
+  only as image, see above)
   is not accepted, because the server could otherwise serve such files under the
   own address with an active content type. The file name is made URL-safe
   (`<16 hex characters>-<name>.<extension>`).

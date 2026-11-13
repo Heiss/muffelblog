@@ -5,6 +5,7 @@ import sharp from 'sharp';
 import { isHeic } from './heic.ts';
 import type { HeicConverter } from './heic.ts';
 import type { ImageResolveResult, ResolvedImage } from './render.ts';
+import { sanitizeSvg } from './svg.ts';
 
 export interface ImageVariant {
   width: number;
@@ -24,7 +25,15 @@ export interface ProcessedImage {
 const WIDTHS = [480, 960, 1440, 1920] as const;
 const DISPLAY_WIDTH = 960;
 const MAX_BYTES = 25 * 1024 * 1024;
-const EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif']);
+const EXTENSIONS = new Set([
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.webp',
+  '.gif',
+  '.avif',
+  '.svg',
+]);
 
 /**
  * Scales an image to several widths and converts it to WebP.
@@ -127,7 +136,6 @@ function pathProblem(normal: string): string | null {
 }
 
 function unsupportedReason(extension: string, heic: boolean): string {
-  if (extension === '.svg') return 'SVG is not supported';
   if (heic) return HEIC_MISSING;
   return `File type ${extension || '(none)'} is not supported`;
 }
@@ -198,6 +206,33 @@ async function processOnce(
   return image;
 }
 
+/**
+ * An SVG is cleaned and kept as a file of its own (animations stay). It is
+ * shown only through <img>, so there is no srcset.
+ */
+export function storeSvg(
+  data: Buffer,
+  store: Map<string, Buffer>,
+  urlPrefix: string,
+):
+  | { ok: true; image: ResolvedImage; removed: string[] }
+  | { ok: false; reason: string } {
+  const result = sanitizeSvg(data);
+  if (!result.ok) return result;
+  const id = createHash('sha256').update(result.svg).digest('hex').slice(0, 16);
+  store.set(`${id}.svg`, Buffer.from(result.svg, 'utf8'));
+  return {
+    ok: true,
+    removed: result.removed,
+    image: {
+      src: `${urlPrefix}${id}.svg`,
+      srcset: '',
+      width: result.width,
+      height: result.height,
+    },
+  };
+}
+
 async function resolveImage(
   r: Resolver,
   rel: string,
@@ -206,6 +241,12 @@ async function resolveImage(
   if ('ok' in checked) return checked;
   const content = await readImageFile(r, checked.normal);
   if (!Buffer.isBuffer(content)) return content;
+  if (path.posix.extname(checked.normal).toLowerCase() === '.svg') {
+    const svg = storeSvg(content, r.files, r.options.urlPrefix);
+    return svg.ok
+      ? { ok: true, image: svg.image }
+      : failure('invalid', svg.reason);
+  }
   let image: ProcessedImage | null;
   try {
     image = await processOnce(r, content, checked.heic);

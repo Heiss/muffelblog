@@ -46,6 +46,11 @@ http://:2020 {
 	@hashed path /_astro/*
 	header @hashed Cache-Control "public, max-age=31536000, immutable"
 
+	# SVG images are cleaned by the builder and shown only through <img>. If
+	# someone opens the file itself, the sandbox keeps it from running anything.
+	@svg path /media/*.svg
+	header @svg Content-Security-Policy "sandbox; default-src 'none'; style-src 'unsafe-inline'"
+
 	file_server
 
 	handle_errors {
