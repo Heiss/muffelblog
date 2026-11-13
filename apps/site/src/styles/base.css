@@ -644,3 +644,36 @@ a.glossary-link {
   text-decoration-style: dotted;
   text-underline-offset: 0.2em;
 }
+
+/* Page "new comments": one card per comment, replies name what they answer. */
+.comment-entry {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--panel);
+}
+.comment-entry .comment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0 0 0.5rem;
+  color: var(--dim);
+  font-size: 0.9rem;
+}
+.comment-entry .comment-author {
+  color: var(--fg);
+  font-weight: 600;
+}
+.comment-entry .comment-reply {
+  margin: 0 0 0.5rem;
+  color: var(--dim);
+  font-size: 0.9rem;
+}
+.comment-entry .comment-reply q {
+  margin-left: 0.5rem;
+  font-style: italic;
+}
+.comment-anchor {
+  position: absolute;
+}

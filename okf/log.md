@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-13
+* **Update**: New page `/comments/` (header "Comments"): all comments as one flat list, newest first, replies name what they answer, each entry links to its comment (`#remark42__comment-<id>`); see [Comments](/community/comments.md).
 * **Update**: Glossary terms are linked automatically on their first mention in posts, memos and other terms (whole words, `aliases:`, a hand-written link counts, tooltip with the definition); see [Glossary](/features/glossary.md).
 * **Update**: SVG images are supported, also animated: cleaned by an allowlist (`svg.ts`), shown only through `<img>`, in notes and memo attachments, up to 25 MB; Caddy sends a sandbox policy for `/media/*.svg`; see [Media](/content/media.md) and [Sanitizing](/security/sanitization.md).
 * **Update**: Header menu: pages with `nav: true` appear in a dropdown "More" in the header (and no longer in the footer); search shows the tag label only when there are tags; the link graph zooms with the mouse wheel, drag and buttons, also the small graphs under a page (wheel only after a click); see [Frontmatter](/content/frontmatter.md) and [Glossary and knowledge graph](/features/glossary.md).

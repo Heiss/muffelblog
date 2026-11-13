@@ -95,9 +95,10 @@ export {
   commentsFingerprint,
   forPage,
   parseComments,
+  recentComments,
   toTree,
 } from './comments.ts';
-export type { CommentNode, RemarkComment } from './comments.ts';
+export type { CommentNode, RecentComment, RemarkComment } from './comments.ts';
 export { createFixtureRemarkSource, createRemarkSource } from './remark42.ts';
 export type { RemarkOptions, RemarkSource } from './remark42.ts';
 export { NetError, isPublicAddress, safeFetch } from './webmention-net.ts';

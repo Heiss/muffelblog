@@ -64,6 +64,12 @@ function loadEverything(src: RemarkSource) {
   return everything;
 }
 
+/** All comments of the site (the latest 1000), or `undefined` without a source. */
+export async function allComments(): Promise<RemarkComment[] | undefined> {
+  const src = getSource();
+  return src ? (await loadEverything(src)).comments : undefined;
+}
+
 /**
  * The comments of a page for the static copy, or `undefined` if there is no
  * source. The key is the canonical address (the one the widget uses); without a

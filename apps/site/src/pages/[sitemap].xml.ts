@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { groupByTag } from '@muffelblog/core';
 import { getContent } from '../lib/articles';
+import { commentsConfig } from '../lib/comments';
 import { getFeed, latestUpdate, siteUrl, sitemapXml } from '../lib/feed';
 
 // Without SITE_URL (domain still open, O9) there is no sitemap.
@@ -20,6 +21,7 @@ export const GET: APIRoute = async () => {
     { path: '/memos/' },
     { path: '/terms/' },
     { path: '/glossary/' },
+    ...(commentsConfig() ? [{ path: '/comments/' }] : []),
     { path: '/tag/' },
     ...groupByTag(feed).map((g) => ({
       path: `/tag/${g.slug}/`,

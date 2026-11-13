@@ -16,6 +16,7 @@ import { SITE_NAME, pageTitle } from '@muffelblog/core';
 import { canonicalUrl, siteUrl } from '../lib/feed';
 import { messages } from '../i18n/messages';
 import { getContent } from '../lib/articles';
+import { commentsConfig } from '../lib/comments';
 import { relMeLinks, webmentionEndpoint } from '../lib/indieweb';
 import { OG_HEIGHT, OG_WIDTH, ogImagePath } from '../lib/og';
 import { matomoConfig } from '../lib/matomo';
@@ -109,6 +110,7 @@ const legalPages = pages.filter((a) => !a.nav);
         <a href="/glossary/">{messages.nav.glossary}</a>
         <a href="/graph/">{messages.nav.graph}</a>
         <a href="/files/">{messages.nav.files}</a>
+        {commentsConfig() && <a href="/comments/">{messages.nav.comments}</a>}
         <a href="/search/">{messages.nav.search}</a>
         {menuPages.length > 0 && (
           <details class="nav-more">

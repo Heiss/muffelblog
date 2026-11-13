@@ -52,6 +52,7 @@ describe('reserved page names', () => {
         'memos',
         'terms',
         'updated',
+        'comments',
         'glossary',
         'graph',
         'files',

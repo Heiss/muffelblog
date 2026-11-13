@@ -63,6 +63,7 @@ Where things are on a blog that is online. The full list is in
 | `/glossary/`                           | All terms by letter                                                                                                                                 |
 | `/tag/`, `/tag/<tag>/`                 | Tag overview and the entries of one tag                                                                                                             |
 | `/search/`                             | Search (needs JavaScript)                                                                                                                           |
+| `/comments/`                           | New comments of the whole site as one list, newest first; replies name what they answer; each entry links to its comment on its page                |
 | `/graph/`                              | The link graph; the mouse wheel zooms, dragging moves it                                                                                            |
 | `/files/`                              | The published files as they lie in the Nextcloud folder                                                                                             |
 | `/<slug>/`                             | A static page (`type: page`); with `nav: true` it is in the header menu "More", otherwise in the footer                                             |
