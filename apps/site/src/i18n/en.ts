@@ -12,6 +12,7 @@ export const en = {
     tags: 'Tags',
     glossary: 'Glossary',
     graph: 'Graph',
+    more: 'More',
     files: 'Files',
     search: 'Search',
   },
@@ -32,6 +33,10 @@ export const en = {
     needsJs:
       'The drawing needs JavaScript; the lists of links work without it.',
     empty: 'No links yet.',
+    zoomIn: 'Zoom in',
+    zoomOut: 'Zoom out',
+    zoomReset: 'Reset view',
+    zoomHint: 'Mouse wheel zooms, drag moves the view.',
     kinds: {
       post: 'Post',
       glossary: 'Term',

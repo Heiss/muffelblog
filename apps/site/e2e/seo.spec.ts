@@ -33,6 +33,23 @@ test.describe('Static pages', () => {
     }
   });
 
+  test('pages with nav: true are in the header menu "More" and not in the footer', async ({
+    page,
+  }) => {
+    for (const path of ['/', '/p/hallo-welt/', '/glossary/']) {
+      await page.goto(path);
+      const menu = page.locator('.site-header details.nav-more');
+      await expect(menu.locator('summary')).toHaveText(ui.nav.more);
+      await menu.locator('summary').click();
+      await expect(
+        menu.getByRole('link', { name: 'Über uns' }),
+      ).toHaveAttribute('href', '/ueber-uns/');
+      await expect(
+        page.getByRole('contentinfo').getByRole('link', { name: 'Über uns' }),
+      ).toHaveCount(0);
+    }
+  });
+
   test('pages are not part of the series, tags or search', async ({
     request,
   }) => {

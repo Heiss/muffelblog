@@ -161,6 +161,23 @@ describe('parseArticle: fields', () => {
     });
   });
 
+  it('reads nav: true on a page, ignores and warns everywhere else', () => {
+    expect(article(doc('type: page\nnav: true')).nav).toBe(true);
+    expect(article(doc('type: page')).nav).toBeUndefined();
+    const notTrue = parse(doc('type: page\nnav: "yes"'));
+    expect(notTrue).toMatchObject({
+      warnings: ['dir/My Post.md: nav must be the boolean true, ignored'],
+    });
+    expect((notTrue as { article: Article }).article.nav).toBeUndefined();
+    const post = parse(doc('nav: true\ncreated: 2026-01-02'));
+    expect(post).toMatchObject({
+      warnings: [
+        'dir/My Post.md: nav is only used for pages (type: page), ignored',
+      ],
+    });
+    expect((post as { article: Article }).article.nav).toBeUndefined();
+  });
+
   it('reads created and updated separately and no longer reads date', () => {
     const a = article(doc('created: 2026-01-02\nupdated: 2026-03-04 10:00'));
     expect(a.created.toISOString()).toBe('2026-01-02T11:00:00.000Z');

@@ -29,9 +29,9 @@ const t = messages.search;
       autocomplete="off"
     />
     <div data-search-kind role="group" aria-label={t.kind}></div>
-    <label>
+    <label data-search-tag-label hidden>
       <span>{t.tag}</span>
-      <select data-search-tag hidden></select>
+      <select data-search-tag></select>
     </label>
     <p data-search-summary role="status"></p>
     <div data-search-results></div>

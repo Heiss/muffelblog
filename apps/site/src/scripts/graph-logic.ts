@@ -151,3 +151,60 @@ export function layout(
   }
   return fit(graph, pos, options.size ?? 600);
 }
+
+/** The visible part of the square drawing, in drawing units (the SVG `viewBox`). */
+export interface View {
+  x: number;
+  y: number;
+  /** Width = height; `size / w` is the zoom factor. */
+  w: number;
+}
+
+/** Furthest zoom: the visible part is a 1/MAX_ZOOM of the drawing. */
+export const MAX_ZOOM = 8;
+
+/** The whole drawing. */
+export const fullView = (size: number): View => ({ x: 0, y: 0, w: size });
+
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
+
+/** Keeps the view inside the drawing. */
+function inside(view: View, size: number): View {
+  const w = clamp(view.w, size / MAX_ZOOM, size);
+  return {
+    w,
+    x: clamp(view.x, 0, size - w),
+    y: clamp(view.y, 0, size - w),
+  };
+}
+
+/**
+ * Zooms by `factor` (> 1 in, < 1 out) and keeps the point (`px`, `py`, in
+ * drawing units) where it is on the screen.
+ */
+export function zoomAt(
+  view: View,
+  size: number,
+  factor: number,
+  px: number,
+  py: number,
+): View {
+  const w = clamp(view.w / factor, size / MAX_ZOOM, size);
+  const ratio = w / view.w;
+  return inside(
+    { w, x: px - (px - view.x) * ratio, y: py - (py - view.y) * ratio },
+    size,
+  );
+}
+
+/** Moves the view by `dx`, `dy` drawing units. */
+export function panBy(view: View, size: number, dx: number, dy: number): View {
+  return inside({ ...view, x: view.x + dx, y: view.y + dy }, size);
+}
+
+/** Zoom factor of a wheel turn; lines count as 16 pixels, pages as 100. */
+export function wheelFactor(deltaY: number, deltaMode: number): number {
+  const pixels = deltaY * (deltaMode === 1 ? 16 : deltaMode === 2 ? 100 : 1);
+  return Math.exp(clamp(-pixels, -300, 300) * 0.0015);
+}

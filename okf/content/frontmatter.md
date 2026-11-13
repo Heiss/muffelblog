@@ -18,6 +18,7 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 | `slug` | text | **[V]** no | If it is missing, it is derived from the file name. |
 | `description` | text | **[V]** no | Meta description, feed excerpt. |
 | `tags` | list | **[V]** no | Obsidian properties, lists of strings. That tags exist is **[E]**. |
+| `nav` | boolean | **[E]** no | Pages only: `nav: true` puts the page into the header menu "More" (dropdown) and removes it from the footer; all other pages stay in the footer. Only the boolean `true` counts; on a non-page it is ignored with a warning (decided 2026-11-13). |
 | `type` | text | **[E]** no | `glossary` marks a glossary entry (see [Glossary](/features/glossary.md)); planned in W19. Without it the file is an article. |
 
 Unknown fields (`aliases`, `cssclasses` and others) are ignored. `date` is **no

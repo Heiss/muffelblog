@@ -40,9 +40,12 @@ const ogPath = ogImagePath(Astro.url.pathname);
 const ogImage =
   ogPath && siteUrl() ? canonicalUrl(siteUrl(), ogPath) : undefined;
 const matomo = matomoConfig();
-const legalPages = articles
+const pages = articles
   .filter((a) => a.type === 'page')
   .sort((a, b) => a.title.localeCompare(b.title, messages.lang));
+// `nav: true` pages go to the header menu, all other pages stay in the footer.
+const menuPages = pages.filter((a) => a.nav);
+const legalPages = pages.filter((a) => !a.nav);
 ---
 
 <!doctype html>
@@ -107,6 +110,18 @@ const legalPages = articles
         <a href="/graph/">{messages.nav.graph}</a>
         <a href="/files/">{messages.nav.files}</a>
         <a href="/search/">{messages.nav.search}</a>
+        {menuPages.length > 0 && (
+          <details class="nav-more">
+            <summary>{messages.nav.more}</summary>
+            <ul>
+              {menuPages.map((p) => (
+                <li>
+                  <a href={`/${p.slug}/`}>{p.title}</a>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </nav>
       <label class="theme-picker" data-theme-switch hidden>
         <span>{messages.theme.label}</span>
