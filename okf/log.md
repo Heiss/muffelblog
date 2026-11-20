@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-20
+* **Update**: Docs: guide "Comments in Obsidian" with screenshots (set up the plugin, write a comment, what is public, footnotes), linked from the writing guide, the Nextcloud guide and the site map; see [Notes in the margin](/features/margin-notes.md).
 * **Update**: Notes in the margin: every open comment of the Obsidian plugin Document Comments and every footnote stands next to its paragraph (below it, closed, on narrow screens); resolved comments never; the list of footnotes stays; footnote links fixed; see [Notes in the margin](/features/margin-notes.md).
 * **Update**: The link graph is drawn with D3 (`d3-force`, `d3-zoom`, `d3-drag`, bundled): map-like buttons in the corner, wheel zoom at the pointer, semantic zoom of the labels, points can be dragged and stay put, much more distance between points; replaces the own layout without a library; see [Glossary and knowledge graph](/features/glossary.md).
 ## 2026-11-13

@@ -23,6 +23,11 @@ generated: { by: claude-code/web, at: 2026-11-20T12:30:00Z }
   closed ("Comment by Peter", "Footnote 1"), and open with a click. Without
   JavaScript they stay open there.
 
+* **[E]** User guide with pictures: `apps/docs/src/content/docs/guides/obsidian-comments.md`
+  (set up the plugin, write a comment, what is public, footnotes); the pictures
+  are screenshots of the fixture post in `apps/docs/src/assets/`. The plugin's own
+  screens are not shown (no permission to copy its screenshots).
+
 # Format of the plugin (what is read)
 
 The plugin stores a comment in the note as HTML comments:
