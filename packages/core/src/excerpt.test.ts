@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { plainExcerpt } from './excerpt.ts';
+import { plainExcerpt, withoutMarginNotes } from './excerpt.ts';
+
+describe('margin notes in excerpts and feeds', () => {
+  const html =
+    '<div class="annotated"><p>Text davor.</p><aside class="margin-note"><details open><summary>Kommentar</summary><p>Geheim?</p></details></aside></div><p>Danach.</p>';
+
+  it('are left out of the excerpt', () => {
+    expect(plainExcerpt(html)).toBe('Text davor. Danach.');
+  });
+
+  it('are cut out of the HTML for the feed, the text stays', () => {
+    expect(withoutMarginNotes(html)).toBe(
+      '<div class="annotated"><p>Text davor.</p></div><p>Danach.</p>',
+    );
+    expect(withoutMarginNotes('<p>nichts</p>')).toBe('<p>nichts</p>');
+  });
+});
 
 describe('plainExcerpt', () => {
   it('removes tags and collapses whitespace', () => {

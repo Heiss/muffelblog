@@ -37,8 +37,10 @@ export const de: Messages = {
     empty: 'Noch keine Links.',
     zoomIn: 'Vergrößern',
     zoomOut: 'Verkleinern',
-    zoomReset: 'Ansicht zurücksetzen',
-    zoomHint: 'Mausrad zoomt, Ziehen verschiebt die Ansicht.',
+    zoomReset: 'Alles zeigen',
+    arrange: 'Neu anordnen',
+    zoomHint:
+      'Mausrad zoomt, den Hintergrund ziehen verschiebt die Ansicht, einen Punkt ziehen verschiebt ihn.',
     kinds: {
       post: 'Beitrag',
       glossary: 'Begriff',

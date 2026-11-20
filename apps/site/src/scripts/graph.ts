@@ -1,20 +1,26 @@
-// Draws the link graph (/graph.json) as SVG: the neighbors of a page under the
-// page, all nodes on /graph/. No library, no foreign request. The lists of
-// links stay the access without JavaScript.
+// Draws the link graph (/graph.json) as SVG with d3-force (layout), d3-zoom
+// (zoom and pan like a map) and d3-drag (move a point): the neighbors of a page
+// under the page, all nodes on /graph/. The libraries are part of the own
+// bundle, nothing is loaded from elsewhere. The lists of links stay the access
+// without JavaScript.
+import { drag } from 'd3-drag';
+import { select } from 'd3-selection';
+import { zoom, zoomIdentity } from 'd3-zoom';
+import type { D3ZoomEvent, ZoomBehavior } from 'd3-zoom';
 import { messages } from '../i18n/messages';
 import {
-  fullView,
-  layout,
+  buildSimulation,
+  fitTransform,
+  labelVisible,
   neighborhood,
-  panBy,
-  wheelFactor,
-  zoomAt,
   type Graph,
-  type Placed,
-  type View,
+  type SimLink,
+  type SimNode,
+  type Simulated,
 } from './graph-logic';
 
 const SVG = 'http://www.w3.org/2000/svg';
+const MAX_ZOOM = 8;
 let loaded: Promise<Graph> | undefined;
 
 function load(): Promise<Graph> {
@@ -34,200 +40,249 @@ function el<K extends keyof SVGElementTagNameMap>(
   return node;
 }
 
-function draw(figure: HTMLElement, graph: Graph, center?: string): void {
-  const size = center ? 420 : 900;
-  const placed = layout(graph, { size, center });
-  const at = new Map(placed.map((p) => [p.id, p]));
+/** What is on the screen: the elements of the picture and how far it is zoomed. */
+interface Picture {
+  svg: SVGSVGElement;
+  root: SVGGElement;
+  center: string | undefined;
+  sim: Simulated;
+  /** The element of a node (moved to its position) and its body (kept at the same size). */
+  nodes: Map<
+    string,
+    { shell: SVGElement; body: SVGGElement; label: SVGElement }
+  >;
+  lines: Array<{ line: SVGLineElement; link: SimLink }>;
+  zoom: number;
+}
+
+const RADIUS: Record<SimNode['kind'], number> = {
+  post: 8,
+  glossary: 7,
+  memo: 5,
+  domain: 5,
+};
+
+function nodeElement(node: SimNode, isCenter: boolean) {
+  const kind = messages.graph.kinds[node.kind];
+  const label = `${kind}: ${node.title}`;
+  // Pages are links; a website is only a point (the page loads nothing from
+  // it), but it can be reached by keyboard and is read out.
+  const shell =
+    node.kind === 'domain'
+      ? el('g', { tabindex: 0, role: 'img', 'aria-label': label })
+      : el('a', { href: node.id, 'aria-label': label });
+  shell.setAttribute(
+    'class',
+    `node node-${node.kind}${isCenter ? ' node-center' : ''}`,
+  );
+  const body = el('g', { class: 'node-body' });
+  const title = el('title');
+  title.textContent = label;
+  const r = isCenter ? 11 : RADIUS[node.kind];
+  const text = el('text', {
+    y: -r - 5,
+    'text-anchor': 'middle',
+    class: 'node-label',
+  });
+  text.textContent =
+    node.title.length > 36 ? `${node.title.slice(0, 35)}…` : node.title;
+  body.append(el('circle', { r }), text);
+  shell.append(title, body);
+  return { shell, body, label: text };
+}
+
+function build(figure: HTMLElement, graph: Graph, center?: string): Picture {
   const svg = el('svg', {
-    viewBox: `0 0 ${size} ${size}`,
     class: 'graph-svg',
     role: 'group',
     'aria-label': figure.querySelector('figcaption')?.textContent ?? '',
   });
+  const root = el('g', { class: 'graph-root' });
   const edges = el('g', { class: 'edges' });
-  for (const e of graph.edges) {
-    const a = at.get(e.from);
-    const b = at.get(e.to);
-    if (!a || !b) continue;
-    edges.append(
-      el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, class: 'edge' }),
-    );
+  const nodesLayer = el('g', { class: 'nodes' });
+  root.append(edges, nodesLayer);
+  svg.append(root);
+  const sim = buildSimulation(graph, { center });
+  const picture: Picture = {
+    svg,
+    root,
+    center,
+    sim,
+    nodes: new Map(),
+    lines: [],
+    zoom: 1,
+  };
+  for (const link of sim.links) {
+    const line = el('line', { class: 'edge' });
+    edges.append(line);
+    picture.lines.push({ line, link });
   }
-  svg.append(edges);
-  for (const node of placed) svg.append(nodeElement(node, node.id === center));
-  figure.append(svg, zoomControls());
-  figure.hidden = false;
-  enableZoom(figure, svg, size, !center);
+  for (const node of sim.nodes) {
+    const parts = nodeElement(node, node.id === center);
+    nodesLayer.append(parts.shell);
+    picture.nodes.set(node.id, parts);
+  }
+  return picture;
 }
 
-type Button = { label: string; text: string; run: () => void };
+/** Puts every point and line where the simulation has it. */
+function place(p: Picture): void {
+  for (const node of p.sim.nodes)
+    p.nodes
+      .get(node.id)
+      ?.shell.setAttribute('transform', `translate(${node.x},${node.y})`);
+  for (const { line, link } of p.lines) {
+    const a = link.source as SimNode;
+    const b = link.target as SimNode;
+    line.setAttribute('x1', String(a.x));
+    line.setAttribute('y1', String(a.y));
+    line.setAttribute('x2', String(b.x));
+    line.setAttribute('y2', String(b.y));
+  }
+}
 
-/** The zoom buttons; filled with their actions by `enableZoom`. */
-function zoomControls(): HTMLElement {
+/** Points and text keep their size on the screen when zoomed; labels appear by zoom level. */
+function applyZoom(p: Picture, k: number): void {
+  p.zoom = k;
+  for (const node of p.sim.nodes) {
+    const parts = p.nodes.get(node.id);
+    if (!parts) continue;
+    parts.body.setAttribute('transform', `scale(${1 / k})`);
+    parts.label.classList.toggle(
+      'off',
+      !labelVisible(node, k, node.id === p.center),
+    );
+  }
+}
+
+function enableDrag(p: Picture): void {
+  const behavior = drag<SVGElement, SimNode>()
+    .container(p.root)
+    .on('start', (event, node) => {
+      if (!event.active) p.sim.simulation.alphaTarget(0.3).restart();
+      node.fx = node.x;
+      node.fy = node.y;
+    })
+    .on('drag', (event, node) => {
+      node.fx = event.x;
+      node.fy = event.y;
+    })
+    .on('end', (event, node) => {
+      if (!event.active) p.sim.simulation.alphaTarget(0);
+      // A point stays where it was put down; "arrange again" lets all go.
+      if (node.id !== p.center)
+        p.nodes.get(node.id)?.shell.classList.add('pinned');
+    });
+  for (const node of p.sim.nodes) {
+    const shell = p.nodes.get(node.id)?.shell;
+    if (shell) select<SVGElement, SimNode>(shell).datum(node).call(behavior);
+  }
+  p.sim.simulation.on('tick', () => place(p));
+}
+
+/** Lets every moved point go and lets the picture settle again. */
+function relayout(p: Picture): void {
+  for (const node of p.sim.nodes) {
+    if (node.id === p.center) continue;
+    node.fx = null;
+    node.fy = null;
+    p.nodes.get(node.id)?.shell.classList.remove('pinned');
+  }
+  p.sim.simulation.alpha(0.9).restart();
+}
+
+interface Controls {
+  zoomBy: (factor: number) => void;
+  fit: () => void;
+  arrange: () => void;
+}
+
+/** The buttons like on a map, in the corner of the picture. */
+function addControls(figure: HTMLElement, controls: Controls): void {
   const box = document.createElement('div');
   box.className = 'graph-controls';
   box.setAttribute('role', 'group');
   box.setAttribute('aria-label', messages.graph.zoomHint);
-  return box;
-}
-
-function addButton(box: HTMLElement, { label, text, run }: Button): void {
-  const b = document.createElement('button');
-  b.type = 'button';
-  b.textContent = text;
-  b.setAttribute('aria-label', label);
-  b.title = label;
-  b.addEventListener('click', run);
-  box.append(b);
-}
-
-/** The current view of a drawing and the ways to change it. */
-interface Zoom {
-  size: number;
-  svg: SVGSVGElement;
-  view: () => View;
-  apply: (next: View) => void;
-  /** Pointer position in drawing units. */
-  point: (event: { clientX: number; clientY: number }) => {
-    x: number;
-    y: number;
-  };
-}
-
-function newZoom(svg: SVGSVGElement, size: number): Zoom {
-  let view: View = fullView(size);
-  return {
-    size,
-    svg,
-    view: () => view,
-    apply: (next) => {
-      view = next;
-      svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.w}`);
-    },
-    point: (event) => {
-      const box = svg.getBoundingClientRect();
-      return {
-        x: view.x + ((event.clientX - box.left) / box.width) * view.w,
-        y: view.y + ((event.clientY - box.top) / box.height) * view.w,
-      };
-    },
-  };
-}
-
-/** Buttons: zoom around the middle of the visible part, and reset. */
-function addZoomButtons(controls: HTMLElement, zoom: Zoom): void {
-  const step = (factor: number) => () => {
-    const v = zoom.view();
-    zoom.apply(zoomAt(v, zoom.size, factor, v.x + v.w / 2, v.y + v.w / 2));
-  };
   const g = messages.graph;
-  addButton(controls, { label: g.zoomIn, text: '+', run: step(1.5) });
-  addButton(controls, { label: g.zoomOut, text: '−', run: step(1 / 1.5) });
-  addButton(controls, {
-    label: g.zoomReset,
-    text: '⟲',
-    run: () => zoom.apply(fullView(zoom.size)),
-  });
-}
-
-/** The wheel zooms at the pointer while `isActive()` says so. */
-function addWheelZoom(zoom: Zoom, isActive: () => boolean): void {
-  zoom.svg.addEventListener(
-    'wheel',
-    (event) => {
-      if (!isActive()) return;
-      event.preventDefault();
-      const at = zoom.point(event);
-      const factor = wheelFactor(event.deltaY, event.deltaMode);
-      zoom.apply(zoomAt(zoom.view(), zoom.size, factor, at.x, at.y));
-    },
-    { passive: false },
-  );
-}
-
-/** Drag with the mouse; links and points keep their click. */
-function addDrag(zoom: Zoom, onPress: () => void): void {
-  const { svg } = zoom;
-  let drag: { x: number; y: number } | null = null;
-  svg.addEventListener('pointerdown', (event) => {
-    onPress();
-    if (event.pointerType !== 'mouse' || event.button !== 0) return;
-    if ((event.target as Element).closest('.node')) return;
-    drag = { x: event.clientX, y: event.clientY };
-    svg.setPointerCapture(event.pointerId);
-    svg.classList.add('graph-dragging');
-  });
-  svg.addEventListener('pointermove', (event) => {
-    if (!drag) return;
-    const scale = zoom.view().w / svg.getBoundingClientRect().width;
-    const dx = (drag.x - event.clientX) * scale;
-    const dy = (drag.y - event.clientY) * scale;
-    zoom.apply(panBy(zoom.view(), zoom.size, dx, dy));
-    drag = { x: event.clientX, y: event.clientY };
-  });
-  const stop = () => {
-    drag = null;
-    svg.classList.remove('graph-dragging');
-  };
-  svg.addEventListener('pointerup', stop);
-  svg.addEventListener('pointercancel', stop);
+  const buttons: Array<[string, string, () => void]> = [
+    ['+', g.zoomIn, () => controls.zoomBy(1.6)],
+    ['−', g.zoomOut, () => controls.zoomBy(1 / 1.6)],
+    ['⤢', g.zoomReset, () => controls.fit()],
+    ['⟲', g.arrange, () => controls.arrange()],
+  ];
+  for (const [text, label, run] of buttons) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = text;
+    b.setAttribute('aria-label', label);
+    b.title = label;
+    b.addEventListener('click', run);
+    box.append(b);
+  }
+  figure.append(box);
 }
 
 /**
- * Zoom with the mouse wheel (at the pointer), move by dragging, buttons for
- * keyboard and touch. On the overall view the wheel always zooms; on the small
- * graphs under a page it zooms only after a click into the graph, so scrolling
- * the page is not blocked.
+ * Zoom with the mouse wheel at the pointer, pan by dragging the background,
+ * pinch on touch screens. On the overall view the wheel always zooms; on the
+ * small graphs under a page it zooms only after a click into the graph (and
+ * touch is left to the page), so scrolling the page is not blocked.
  */
-function enableZoom(
-  figure: HTMLElement,
-  svg: SVGSVGElement,
-  size: number,
-  always: boolean,
-): void {
-  const zoom = newZoom(svg, size);
+function enableZoom(figure: HTMLElement, p: Picture, always: boolean): void {
   let active = always;
-  const controls = figure.querySelector<HTMLElement>('.graph-controls');
-  if (controls) addZoomButtons(controls, zoom);
-  addWheelZoom(zoom, () => active);
-  addDrag(zoom, () => {
+  const behavior: ZoomBehavior<SVGSVGElement, unknown> = zoom<
+    SVGSVGElement,
+    unknown
+  >()
+    .scaleExtent([0.15, MAX_ZOOM])
+    .filter((event: Event) => {
+      if (event.type === 'wheel') return active;
+      if (event.type.startsWith('touch')) return always;
+      return !(event as MouseEvent).button;
+    })
+    .on('zoom', (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
+      const t = event.transform;
+      p.root.setAttribute(
+        'transform',
+        `translate(${t.x},${t.y}) scale(${t.k})`,
+      );
+      applyZoom(p, t.k);
+    });
+  const view = select(p.svg);
+  view.call(behavior);
+  const fit = () => {
+    const box = p.svg.getBoundingClientRect();
+    const t = fitTransform(p.sim.nodes, box.width, box.height, {
+      maxZoom: always ? 1.4 : 2,
+    });
+    view.call(behavior.transform, zoomIdentity.translate(t.x, t.y).scale(t.k));
+  };
+  addControls(figure, {
+    zoomBy: (factor) => view.call(behavior.scaleBy, factor),
+    fit,
+    arrange: () => relayout(p),
+  });
+  p.svg.addEventListener('pointerdown', () => {
     active = true;
     figure.classList.add('graph-active');
   });
-  // A small graph under a page stops capturing the wheel when the visitor leaves it.
   if (!always)
     document.addEventListener('pointerdown', (event) => {
       if (figure.contains(event.target as Node)) return;
       active = false;
       figure.classList.remove('graph-active');
     });
+  fit();
 }
 
-function nodeElement(node: Placed, isCenter: boolean): SVGElement {
-  const kind = messages.graph.kinds[node.kind];
-  const label = `${kind}: ${node.title}`;
-  // Pages are links; a website is only a point (the page loads nothing from
-  // it), but it can be reached by keyboard and is read out.
-  const group =
-    node.kind === 'domain'
-      ? el('g', { tabindex: 0, role: 'img', 'aria-label': label })
-      : el('a', { href: node.id, 'aria-label': label });
-  group.setAttribute(
-    'class',
-    `node node-${node.kind}${isCenter ? ' node-center' : ''}`,
-  );
-  const title = el('title');
-  title.textContent = label;
-  const r = isCenter ? 9 : node.kind === 'domain' ? 5 : 7;
-  const text = el('text', {
-    x: node.x,
-    y: node.y - r - 4,
-    'text-anchor': 'middle',
-  });
-  text.textContent =
-    node.title.length > 32 ? `${node.title.slice(0, 31)}…` : node.title;
-  group.append(title, el('circle', { cx: node.x, cy: node.y, r }), text);
-  return group;
+function draw(figure: HTMLElement, graph: Graph, center?: string): void {
+  const p = build(figure, graph, center);
+  figure.append(p.svg);
+  // Visible before it is measured, so the picture knows its size.
+  figure.hidden = false;
+  place(p);
+  enableDrag(p);
+  enableZoom(figure, p, !center);
 }
 
 for (const figure of document.querySelectorAll<HTMLElement>('[data-graph]')) {

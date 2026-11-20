@@ -39,8 +39,10 @@ export const en = {
     empty: 'No links yet.',
     zoomIn: 'Zoom in',
     zoomOut: 'Zoom out',
-    zoomReset: 'Reset view',
-    zoomHint: 'Mouse wheel zooms, drag moves the view.',
+    zoomReset: 'Show everything',
+    arrange: 'Arrange again',
+    zoomHint:
+      'Mouse wheel zooms, drag the background to move, drag a point to move it.',
     kinds: {
       post: 'Post',
       glossary: 'Term',

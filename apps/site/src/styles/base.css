@@ -527,6 +527,7 @@ article > ul.tags {
   font-size: 0.875rem;
 }
 .graph {
+  position: relative;
   margin: 1rem 0;
 }
 .graph figcaption {
@@ -536,21 +537,42 @@ article > ul.tags {
   overflow: hidden;
   clip-path: inset(50%);
 }
+/* The overall view uses the height of the window, the small graphs under a page are low. */
 .graph-svg {
-  width: 100%;
-  max-width: 900px;
-  height: auto;
   display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--panel);
+  cursor: grab;
+  user-select: none;
+}
+.graph-all .graph-svg {
+  height: clamp(360px, calc(100vh - 19rem), 860px);
+  /* Touch moves and zooms the picture, not the page. */
+  touch-action: none;
 }
 .graph-local .graph-svg {
-  max-width: 420px;
+  height: 340px;
 }
+.graph-svg:active {
+  cursor: grabbing;
+}
+.graph-local.graph-active .graph-svg {
+  border-color: var(--ac);
+}
+/* Lines keep their width when zoomed. */
 .graph-svg .edge {
   stroke: var(--line);
-  stroke-width: 1;
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
 }
 .graph-svg .node circle {
   fill: var(--ac);
+  vector-effect: non-scaling-stroke;
+}
+.graph-svg .node {
+  cursor: pointer;
 }
 .graph-svg .node-glossary circle {
   fill: var(--panel);
@@ -569,10 +591,31 @@ article > ul.tags {
   stroke: var(--fg);
   stroke-width: 2;
 }
+/* A halo in the color of the ground keeps the text readable on lines. */
 .graph-svg text {
   fill: var(--fg);
   font-size: 12px;
   font-family: var(--font-meta);
+  paint-order: stroke;
+  stroke: var(--panel);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+/* Labels by zoom level; under the pointer or on focus a label is always shown. */
+.graph-svg .node-label.off {
+  display: none;
+}
+.graph-svg .node:hover .node-label.off,
+.graph-svg .node:focus .node-label.off {
+  display: inline;
+}
+.graph-svg .node.pinned circle {
+  stroke: var(--fg);
+}
+.graph-svg .node:hover circle {
+  stroke: var(--fg);
+  stroke-width: 2.5;
 }
 .graph-svg .node:focus-visible circle {
   stroke: var(--fg);
@@ -601,15 +644,7 @@ main > .file-tree {
   padding: 0.1rem 0;
 }
 
-/* Zoom of the link graph: buttons below the drawing, grab cursor while dragging. */
-.graph {
-  position: relative;
-}
-.graph-controls {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
+/* Buttons of the file tree and of the link graph. */
 .tree-controls {
   display: flex;
   flex-wrap: wrap;
@@ -629,14 +664,21 @@ main > .file-tree {
   font-size: 1rem;
   cursor: pointer;
 }
-.graph-svg {
-  cursor: grab;
+/* Like on a map: a column of buttons in the top right corner of the picture. */
+.graph-controls {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
-.graph-svg.graph-dragging {
-  cursor: grabbing;
-}
-.graph-local.graph-active .graph-svg {
-  outline: 1px solid var(--line);
+.graph-controls button {
+  padding: 0;
+  width: 2.5rem;
+  border-radius: 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
 }
 
 /* Glossary terms linked automatically in the text: quiet, dotted underline. */
@@ -676,4 +718,70 @@ a.glossary-link {
 }
 .comment-anchor {
   position: absolute;
+}
+
+/* Notes in the margin: comments of the Obsidian plugin "Document Comments" and footnotes. */
+mark.doc-comment {
+  background: color-mix(in srgb, #f2c200 38%, transparent);
+  color: inherit;
+  padding: 0 0.15em;
+  border-radius: 0.2em;
+}
+aside.margin-note {
+  margin: 0 0 1rem;
+  padding: 0.1rem 0.75rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--ac);
+  border-radius: 0.4rem;
+  background: var(--panel);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+aside.margin-footnote {
+  border-left-color: var(--dim);
+}
+aside.margin-note summary {
+  padding: 0.4rem 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+aside.margin-note p {
+  margin: 0.3rem 0;
+}
+aside.margin-note .mn-meta {
+  color: var(--dim);
+  font-size: 0.8rem;
+}
+aside.margin-note .mn-reply {
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px dashed var(--line);
+}
+/* In lists of entries (the feed) a memo shows no notes. */
+.entry aside.margin-note {
+  display: none;
+}
+/* Wide screen: the paragraph and its notes are one row, the notes stand to the right of the text. */
+@media (min-width: 1100px) {
+  main:has(.h-entry .annotated) {
+    margin-left: max(0px, calc((100vw - 67rem) / 2));
+    margin-right: 0;
+  }
+  .h-entry .annotated {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 19rem;
+    column-gap: 2rem;
+    align-items: start;
+    margin-right: -21rem;
+  }
+  .h-entry .annotated > :first-child {
+    grid-column: 1;
+    grid-row: 1 / span 20;
+  }
+  .h-entry .annotated > aside {
+    grid-column: 2;
+  }
+  .h-entry aside.margin-note summary {
+    display: none;
+  }
 }

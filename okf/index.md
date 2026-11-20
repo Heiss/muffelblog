@@ -34,6 +34,7 @@ okf_version: "0.2"
 
 * [Search](/features/search.md) - Pagefind
 * [RSS](/features/rss.md) - combined feed
+* [Notes in the margin](/features/margin-notes.md) - Document Comments and footnotes next to the paragraph
 * [Glossary and knowledge graph](/features/glossary.md) - terms, letter view, linking, graph
 
 # Community

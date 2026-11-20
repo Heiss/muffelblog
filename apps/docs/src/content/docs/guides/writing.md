@@ -76,7 +76,7 @@ its name never appears on the site.
 
 Every post, term and memo shows **Links of this page**: what it links to
 (external websites as one entry per domain) and what links to it, with a small
-graph of these neighbors. `/graph/` shows all of them.
+graph of these neighbors. `/graph/` shows all of them like a map: zoom with the mouse wheel or the buttons, move it by dragging the background, drag a point to place it; labels appear as you zoom in.
 
 ### Automatic links to terms
 
@@ -88,6 +88,20 @@ names go into `aliases:` in the frontmatter of the term, for example
 not matter, the longest term wins, every term is linked once per page. A link you
 wrote by hand counts as that link. Nothing is linked inside links, code,
 headings or on the term's own page. Pages (`type: page`) are left alone.
+
+### Notes in the margin
+
+Two things stand to the right of the paragraph they belong to, below it on a
+narrow screen (closed, opened with a click):
+
+- **Comments of the Obsidian plugin
+  [Document Comments](https://github.com/kylemcd/obsidian-document-comments).**
+  The plugin stores them in the note as HTML comments. **Every open comment is
+  published, with its whole thread and the names of the authors**, without any
+  marker; mark a comment as resolved in the plugin to keep it off the site.
+  Comments on code blocks and inside tables are not shown (the text stays).
+- **Footnotes** (`[^1]`) stand in the margin next to their reference. The list of
+  footnotes at the end of the post stays.
 
 ### Static pages: `type: page`
 
