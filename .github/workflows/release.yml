@@ -61,7 +61,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push the builder image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: builder
@@ -76,7 +76,7 @@ jobs:
       # The same image for CPUs without AVX (Celeron, Atom): the search index
       # runs the older Pagefind. Only amd64, AVX is an x86 matter.
       - name: Build and push the builder image without AVX (noavx)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: builder
