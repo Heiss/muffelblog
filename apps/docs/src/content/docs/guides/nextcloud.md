@@ -63,6 +63,10 @@ content by accident.
 
 ## Good to know
 
+- Comments and footnotes you write in Obsidian (plugin Document Comments) are part
+  of the note and appear in the margin of the post, see
+  [Comments in Obsidian](/muffelblog/guides/obsidian-comments/). **Every open
+  comment is published.**
 - Over WebDAV only the _modification_ date exists, no creation date. Put a
   `created:` and `updated:` in the frontmatter, otherwise a post moves in the timeline whenever
   you edit it.

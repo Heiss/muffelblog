@@ -95,7 +95,8 @@ Two things stand to the right of the paragraph they belong to, below it on a
 narrow screen (closed, opened with a click):
 
 - **Comments of the Obsidian plugin
-  [Document Comments](https://github.com/kylemcd/obsidian-document-comments).**
+  [Document Comments](https://github.com/kylemcd/obsidian-document-comments)**
+  (set up and use: [Comments in Obsidian](/muffelblog/guides/obsidian-comments/)).
   The plugin stores them in the note as HTML comments. **Every open comment is
   published, with its whole thread and the names of the authors**, without any
   marker; mark a comment as resolved in the plugin to keep it off the site.

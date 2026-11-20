@@ -34,6 +34,7 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { slug: 'guides/writing' },
+            { slug: 'guides/obsidian-comments' },
             { slug: 'guides/nextcloud' },
             { slug: 'guides/memos' },
             { slug: 'guides/comments' },
