@@ -39,7 +39,7 @@ limited, rendering cost is not.
 (`packages/core/src/render.ts`): Markdown (with GFM), raw HTML parsed, then an
 allowlist (`rehype-sanitize`), then the check of images, links and embeds. Raw
 HTML stays only within the allowlist: scripts, event attributes, `javascript:`
-and `data:` links, forms, styles, SVG, objects and comments are dropped
+and `data:` links, forms, styles, SVG, objects and comments are dropped (the comments of the Obsidian plugin "Document Comments" become margin notes, see [Notes in the margin](/features/margin-notes.md); every other comment is removed)
 together with their content. After that `lowlight` colors code blocks with a
 known language through classes (`hljs-*`), not through styles; the classes come
 only from the coloring. External links get `rel="noopener noreferrer"`,

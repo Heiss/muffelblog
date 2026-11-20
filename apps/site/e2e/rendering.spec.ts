@@ -11,7 +11,7 @@ test.describe('Rendering demo (/p/rendering-demo/)', () => {
       'Rendering-Demo',
     );
     await expect(page.locator('.content h2')).toHaveText('Abschnitt');
-    await expect(page.locator('.content li')).toHaveText([
+    await expect(page.locator('.content ul li')).toHaveText([
       'Punkt eins',
       'Punkt zwei',
     ]);

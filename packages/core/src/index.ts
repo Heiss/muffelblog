@@ -69,7 +69,7 @@ export type {
   MemosSource,
 } from './memos.ts';
 export { toResolvedImage } from './media.ts';
-export { plainExcerpt } from './excerpt.ts';
+export { plainExcerpt, withoutMarginNotes } from './excerpt.ts';
 export {
   buildFeed,
   differentDay,

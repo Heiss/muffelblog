@@ -719,3 +719,69 @@ a.glossary-link {
 .comment-anchor {
   position: absolute;
 }
+
+/* Notes in the margin: comments of the Obsidian plugin "Document Comments" and footnotes. */
+mark.doc-comment {
+  background: color-mix(in srgb, #f2c200 38%, transparent);
+  color: inherit;
+  padding: 0 0.15em;
+  border-radius: 0.2em;
+}
+aside.margin-note {
+  margin: 0 0 1rem;
+  padding: 0.1rem 0.75rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--ac);
+  border-radius: 0.4rem;
+  background: var(--panel);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+aside.margin-footnote {
+  border-left-color: var(--dim);
+}
+aside.margin-note summary {
+  padding: 0.4rem 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+aside.margin-note p {
+  margin: 0.3rem 0;
+}
+aside.margin-note .mn-meta {
+  color: var(--dim);
+  font-size: 0.8rem;
+}
+aside.margin-note .mn-reply {
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px dashed var(--line);
+}
+/* In lists of entries (the feed) a memo shows no notes. */
+.entry aside.margin-note {
+  display: none;
+}
+/* Wide screen: the paragraph and its notes are one row, the notes stand to the right of the text. */
+@media (min-width: 1100px) {
+  main:has(.h-entry .annotated) {
+    margin-left: max(0px, calc((100vw - 67rem) / 2));
+    margin-right: 0;
+  }
+  .h-entry .annotated {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 19rem;
+    column-gap: 2rem;
+    align-items: start;
+    margin-right: -21rem;
+  }
+  .h-entry .annotated > :first-child {
+    grid-column: 1;
+    grid-row: 1 / span 20;
+  }
+  .h-entry .annotated > aside {
+    grid-column: 2;
+  }
+  .h-entry aside.margin-note summary {
+    display: none;
+  }
+}

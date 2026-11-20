@@ -15,6 +15,7 @@ import { unified } from 'unified';
 import { common, createLowlight } from 'lowlight';
 import { visit } from 'unist-util-visit';
 import { linkGlossaryTerms } from './glossary-links.ts';
+import { addMarginNotes } from './margin-notes.ts';
 import type { GlossaryLinking } from './glossary-links.ts';
 import { isAllowedImageUrl, matchEmbed } from './policy.ts';
 
@@ -66,6 +67,9 @@ const IMAGE_SIZES = '(min-width: 760px) 720px, 100vw';
 
 const schema: SanitizeOptions = {
   ...defaultSchema,
+  // Kept for one step: the comments of the Obsidian plugin "Document Comments"
+  // become margin notes there; the step removes every HTML comment.
+  allowComments: true,
   tagNames: [...(defaultSchema.tagNames ?? []), 'iframe'],
   strip: ['script', 'style', 'noscript', 'template', 'title'],
   attributes: {
@@ -171,6 +175,9 @@ const UI: Record<
     embedLoad: string;
     embedOpen: (label: string) => string;
     imageMissing: (alt: string) => string;
+    noteComment: (author: string) => string;
+    noteFootnote: (number: string) => string;
+    locale: string;
   }
 > = {
   en: {
@@ -179,6 +186,9 @@ const UI: Record<
     embedLoad: 'Load content',
     embedOpen: (label) => `Open on ${label}`,
     imageMissing: (alt) => `[Image missing${alt === '' ? '' : `: ${alt}`}]`,
+    noteComment: (author) => (author ? `Comment by ${author}` : 'Comment'),
+    noteFootnote: (number) => `Footnote ${number}`,
+    locale: 'en-GB',
   },
   de: {
     embedNotice: (label) =>
@@ -186,6 +196,9 @@ const UI: Record<
     embedLoad: 'Inhalt laden',
     embedOpen: (label) => `Auf ${label} öffnen`,
     imageMissing: (alt) => `[Bild fehlt${alt === '' ? '' : `: ${alt}`}]`,
+    noteComment: (author) => (author ? `Kommentar von ${author}` : 'Kommentar'),
+    noteFootnote: (number) => `Fußnote ${number}`,
+    locale: 'de-DE',
   },
 };
 
@@ -471,6 +484,48 @@ function rehypeContent(options: RenderOptions, warnings: string[]) {
   };
 }
 
+const DOUBLE_PREFIX = 'user-content-user-content-';
+
+/**
+ * remark-rehype already puts `user-content-` in front of the footnote ids and
+ * the sanitizer does it again for the ids, but not for the links to them: the
+ * jump from the reference to the footnote and back led nowhere. The ids get the
+ * prefix once.
+ */
+function rehypeFootnoteIds() {
+  return (tree: Root): void => {
+    visit(tree, 'element', (node: Element) => {
+      const id = node.properties?.id;
+      if (typeof id === 'string' && id.startsWith(DOUBLE_PREFIX))
+        node.properties.id = id.slice('user-content-'.length);
+    });
+  };
+}
+
+/** The Markdown of a comment as sanitized nodes; raw HTML in it is dropped. */
+async function commentNodes(markdown: string): Promise<ElementContent[]> {
+  const processor = unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkRehype)
+    .use(rehypeSanitize, schema);
+  const tree = (await processor.run(processor.parse(markdown))) as Root;
+  return tree.children.filter(
+    (c): c is ElementContent => c.type === 'element' || c.type === 'text',
+  );
+}
+
+function rehypeMarginNotes(lang: Language | undefined) {
+  const ui = UI[lang ?? DEFAULT_LANG];
+  return async (tree: Root): Promise<void> => {
+    await addMarginNotes(tree, {
+      locale: ui.locale,
+      labels: { comment: ui.noteComment, footnote: ui.noteFootnote },
+      render: commentNodes,
+    });
+  };
+}
+
 function rehypeGlossary(glossary: GlossaryLinking | undefined) {
   return (tree: Root): void => {
     if (glossary) linkGlossaryTerms(tree, glossary);
@@ -496,9 +551,12 @@ export async function renderMarkdown(
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeSanitize, schema)
+    .use(rehypeFootnoteIds)
     .use(rehypeContent, options, warnings)
     // After the content step, so links written by hand are resolved and count.
     .use(rehypeGlossary, options.glossary)
+    // Last: the notes are built from the finished text and must not be linked or sanitized again.
+    .use(rehypeMarginNotes, options.lang)
     .use(rehypeStringify)
     .process(markdown);
   return { html: String(file), warnings };

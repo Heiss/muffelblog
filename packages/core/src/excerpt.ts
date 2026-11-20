@@ -9,6 +9,11 @@ const NAMED: Record<string, string> = {
   amp: '&',
 };
 
+/** The margin notes (comments, footnotes) are no part of the text of a page for feeds and excerpts. */
+export function withoutMarginNotes(html: string): string {
+  return html.replace(/<aside\b[^>]*>[\s\S]*?<\/aside\s*>/gi, '');
+}
+
 function decodeEntities(text: string): string {
   return text.replace(
     /&(?:#x([0-9a-f]+)|#(\d+)|([a-z]+));/gi,
@@ -32,7 +37,7 @@ export function plainExcerpt(
 ): string {
   const text = decodeEntities(
     html
-      .replace(/<(script|style|pre)\b[\s\S]*?<\/\1\s*>/gi, ' ')
+      .replace(/<(script|style|pre|aside)\b[\s\S]*?<\/\1\s*>/gi, ' ')
       .replace(/<[^>]*>/g, ' '),
   )
     .replace(/\s+/g, ' ')

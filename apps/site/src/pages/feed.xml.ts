@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { SITE_NAME } from '@muffelblog/core';
+import { SITE_NAME, withoutMarginNotes } from '@muffelblog/core';
 import { getContent } from '../lib/articles';
 import { getFeed, siteUrl } from '../lib/feed';
 import { messages } from '../i18n/messages';
@@ -27,9 +27,9 @@ export const GET: APIRoute = async () => {
     // Posts and memos in full, terms with their short definition only.
     html:
       entry.kind === 'memo'
-        ? entry.html
+        ? withoutMarginNotes(entry.html ?? '')
         : entry.kind === 'post'
-          ? posts.get(entry.id)?.html
+          ? withoutMarginNotes(posts.get(entry.id)?.html ?? '')
           : undefined,
   }));
   const xml = rssXml(base, items, {

@@ -89,6 +89,20 @@ not matter, the longest term wins, every term is linked once per page. A link yo
 wrote by hand counts as that link. Nothing is linked inside links, code,
 headings or on the term's own page. Pages (`type: page`) are left alone.
 
+### Notes in the margin
+
+Two things stand to the right of the paragraph they belong to, below it on a
+narrow screen (closed, opened with a click):
+
+- **Comments of the Obsidian plugin
+  [Document Comments](https://github.com/kylemcd/obsidian-document-comments).**
+  The plugin stores them in the note as HTML comments. **Every open comment is
+  published, with its whole thread and the names of the authors**, without any
+  marker; mark a comment as resolved in the plugin to keep it off the site.
+  Comments on code blocks and inside tables are not shown (the text stays).
+- **Footnotes** (`[^1]`) stand in the margin next to their reference. The list of
+  footnotes at the end of the post stays.
+
 ### Static pages: `type: page`
 
 Address `/<slug>/`, for example `impressum` or `datenschutz`. Pages need no date,
