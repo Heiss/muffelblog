@@ -85,15 +85,29 @@ as nodes; a local graph under every page and the overall view `/graph/`.
   from) as HTML lists, the access without JavaScript; a domain is text, never a
   link. Below it a local SVG graph of the neighbors; `/graph/` draws all nodes
   and lists every page with its links.
-* **[E]** Drawing: own force layout (repulsion, springs, gravity, deterministic)
-  in vanilla TS, SVG, no library, no foreign request; page nodes are links,
-  domain nodes are focusable (`tabindex=0`) with a label.
-* **[E]** Zoom (decided 2026-11-13): the mouse wheel zooms at the pointer (up to
-  8x), dragging with the mouse moves the view, buttons +, minus and reset serve
-  keyboard and touch. On `/graph/` the wheel always zooms; on the small graphs
-  under a page only after a click into the graph, so the page keeps scrolling.
-  No pinch gesture. Implemented by changing the SVG `viewBox`
-  (`graph-logic.ts`: `zoomAt`, `panBy`, `wheelFactor`).
+* **[E]** Drawing (decided 2026-11-20, replaces "own layout, no library"): D3 in
+  small parts, `d3-force` (layout), `d3-zoom` (zoom and pan) and `d3-drag`
+  (moving points), bundled into the own JavaScript, no foreign request. SVG;
+  page nodes are links, domain nodes are focusable (`tabindex=0`) with a label.
+  The layout is warmed up before the first picture, so it is settled and always
+  the same for the same graph (`graph-logic.ts`, testable in Node); the points
+  keep a wide distance (about 120 between linked points).
+* **[E]** Map-like control: buttons in a column in the top right corner of the
+  picture (+, minus, show everything, arrange again); the mouse wheel zooms at
+  the pointer, dragging the background moves the picture, pinch on touch screens
+  (overall view). Zoom 0.15x to 8x. Points and text keep their size on the
+  screen when zoomed (the picture scales, the points are scaled back).
+* **[E]** Semantic zoom: labels appear by zoom level. At first only the hubs
+  (three links or more) are named, from 1.15x every post and term, from 1.8x
+  websites, from 2.4x memos; the label of the point under the pointer or with
+  focus is always shown. The center of a page's local graph is always named.
+* **[E]** A point can be dragged (the page is not opened by it). It stays where it
+  was put down (marked); "arrange again" lets all go and the picture settles
+  anew. Not saved between visits.
+* **[E]** On `/graph/` the wheel always zooms and touch belongs to the picture;
+  on the small graphs under a page the wheel zooms only after a click into the
+  graph and touch is left to the page, so the page keeps scrolling. The overall
+  view uses the height of the window (at least 360 px).
 * **[U]** No size limit for `graph.json`; with many hundred nodes the overall
   view gets dense.
 

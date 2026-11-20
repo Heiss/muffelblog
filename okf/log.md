@@ -1,5 +1,7 @@
 # Update log
 
+## 2026-11-20
+* **Update**: The link graph is drawn with D3 (`d3-force`, `d3-zoom`, `d3-drag`, bundled): map-like buttons in the corner, wheel zoom at the pointer, semantic zoom of the labels, points can be dragged and stay put, much more distance between points; replaces the own layout without a library; see [Glossary and knowledge graph](/features/glossary.md).
 ## 2026-11-13
 * **Update**: New page `/comments/` (header "Comments"): all comments as one flat list, newest first, replies name what they answer, each entry links to its comment (`#remark42__comment-<id>`); see [Comments](/community/comments.md).
 * **Update**: Glossary terms are linked automatically on their first mention in posts, memos and other terms (whole words, `aliases:`, a hand-written link counts, tooltip with the definition); see [Glossary](/features/glossary.md).

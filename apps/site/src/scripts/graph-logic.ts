@@ -1,3 +1,13 @@
+import {
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  forceX,
+  forceY,
+} from 'd3-force';
+import type { Simulation, SimulationLinkDatum } from 'd3-force';
+
 export interface GNode {
   id: string;
   kind: 'post' | 'glossary' | 'memo' | 'domain';
@@ -11,13 +21,18 @@ export interface Graph {
   nodes: GNode[];
   edges: GEdge[];
 }
-const REPULSION = 4;
-const GRAVITY = 0.6;
 
-export interface Placed extends GNode {
+/** A node in the simulation: position and the number of links. */
+export interface SimNode extends GNode {
   x: number;
   y: number;
+  vx?: number;
+  vy?: number;
+  fx?: number | null;
+  fy?: number | null;
+  degree: number;
 }
+export type SimLink = SimulationLinkDatum<SimNode>;
 
 /** The node, its direct neighbors (both directions) and the edges between them. */
 export function neighborhood(graph: Graph, id: string): Graph {
@@ -32,179 +47,126 @@ export function neighborhood(graph: Graph, id: string): Graph {
   };
 }
 
-type Point = { x: number; y: number };
+// Distances are in drawing units (one unit is one pixel at zoom 1).
+const LINK_DISTANCE = 120;
+const CHARGE = 520;
+const COLLIDE = 34;
+const GRAVITY = 0.035;
+const WARM_UP_TICKS = 400;
 
-/** Every pair of nodes pushes apart. */
-function repel(pos: Point[], disp: Point[], k: number): void {
-  for (let i = 0; i < pos.length; i++) {
-    for (let j = i + 1; j < pos.length; j++) {
-      const a = pos[i] as Point;
-      const b = pos[j] as Point;
-      let dx = a.x - b.x;
-      let dy = a.y - b.y;
-      if (Math.hypot(dx, dy) < 1e-6) {
-        dx = 1e-3 * (i - j);
-        dy = 1e-3;
-      }
-      const dist = Math.hypot(dx, dy);
-      const force = (REPULSION * k * k) / dist;
-      shift(disp[i] as Point, dx, dy, dist, force);
-      shift(disp[j] as Point, dx, dy, dist, -force);
-    }
-  }
+export interface Simulated {
+  nodes: SimNode[];
+  links: SimLink[];
+  simulation: Simulation<SimNode, SimLink>;
 }
 
-/** Every edge pulls its two nodes together. */
-function attract(graph: Graph, pos: Point[], disp: Point[], k: number): void {
-  const index = new Map(graph.nodes.map((node, i) => [node.id, i]));
+function degrees(graph: Graph): Map<string, number> {
+  const count = new Map<string, number>();
   for (const e of graph.edges) {
-    const i = index.get(e.from);
-    const j = index.get(e.to);
-    if (i === undefined || j === undefined) continue;
-    const a = pos[i] as Point;
-    const b = pos[j] as Point;
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-    const dist = Math.max(Math.hypot(dx, dy), 1e-6);
-    const force = (dist * dist) / k;
-    shift(disp[i] as Point, dx, dy, dist, -force);
-    shift(disp[j] as Point, dx, dy, dist, force);
+    count.set(e.from, (count.get(e.from) ?? 0) + 1);
+    count.set(e.to, (count.get(e.to) ?? 0) + 1);
   }
-}
-
-function shift(d: Point, dx: number, dy: number, dist: number, force: number) {
-  d.x += (dx / dist) * force;
-  d.y += (dy / dist) * force;
+  return count;
 }
 
 /**
- * Moves every node (not the center) by its displacement, at most
- * `temperature`. Gravity keeps unlinked nodes near the middle instead of
- * drifting away and squeezing the linked groups together.
+ * The force layout: nodes repel each other and keep a distance, edges are
+ * springs, a weak pull to the middle keeps separate groups together. It is
+ * warmed up here, so the first picture is settled, and returned stopped; the
+ * caller restarts it when a node is dragged. The same graph gives the same
+ * picture (d3-force uses its own deterministic random numbers). `center` is
+ * fixed in the middle.
  */
-function move(
+export function buildSimulation(
   graph: Graph,
-  pos: Point[],
-  disp: Point[],
-  temperature: number,
-  center?: string,
-): void {
-  pos.forEach((p, i) => {
-    if (graph.nodes[i]?.id === center) return;
-    const d = disp[i] as Point;
-    d.x -= p.x * GRAVITY;
-    d.y -= p.y * GRAVITY;
-    const len = Math.max(Math.hypot(d.x, d.y), 1e-9);
-    p.x += (d.x / len) * Math.min(len, temperature);
-    p.y += (d.y / len) * Math.min(len, temperature);
+  options: { center?: string } = {},
+): Simulated {
+  const degree = degrees(graph);
+  const nodes: SimNode[] = graph.nodes.map((n, i) => {
+    // The start position on a spiral; d3 would use the same, this is explicit.
+    const angle = i * 2.399963;
+    const radius = 30 * Math.sqrt(i + 1);
+    const fixed = n.id === options.center;
+    return {
+      ...n,
+      x: fixed ? 0 : radius * Math.cos(angle),
+      y: fixed ? 0 : radius * Math.sin(angle),
+      ...(fixed ? { fx: 0, fy: 0 } : {}),
+      degree: degree.get(n.id) ?? 0,
+    };
   });
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const links: SimLink[] = graph.edges.flatMap((e) => {
+    const source = byId.get(e.from);
+    const target = byId.get(e.to);
+    return source && target ? [{ source, target }] : [];
+  });
+  const simulation = forceSimulation<SimNode>(nodes)
+    .force(
+      'link',
+      forceLink<SimNode, SimLink>(links)
+        .id((n) => n.id)
+        .distance(LINK_DISTANCE),
+    )
+    .force('charge', forceManyBody<SimNode>().strength(-CHARGE))
+    .force('collide', forceCollide<SimNode>(COLLIDE))
+    .force('x', forceX<SimNode>(0).strength(GRAVITY))
+    .force('y', forceY<SimNode>(0).strength(GRAVITY))
+    .stop();
+  simulation.tick(WARM_UP_TICKS);
+  return { nodes, links, simulation };
 }
 
-/** Scales the positions into the square, with a margin for the labels. */
-function fit(graph: Graph, pos: Point[], size: number): Placed[] {
-  if (pos.length === 1)
-    return graph.nodes.map((node) => ({ ...node, x: size / 2, y: size / 2 }));
-  const minX = Math.min(...pos.map((p) => p.x));
-  const minY = Math.min(...pos.map((p) => p.y));
-  const span = Math.max(
-    Math.max(...pos.map((p) => p.x)) - minX,
-    Math.max(...pos.map((p) => p.y)) - minY,
-    1e-6,
-  );
-  const margin = size * 0.12;
-  const scale = (size - 2 * margin) / span;
-  return graph.nodes.map((node, i) => ({
-    ...node,
-    x: margin + ((pos[i] as Point).x - minX) * scale,
-    y: margin + ((pos[i] as Point).y - minY) * scale,
-  }));
+/** The zoom level from which a node's label is shown (semantic zoom). */
+export function labelThreshold(node: SimNode, isCenter: boolean): number {
+  if (isCenter) return 0;
+  if (node.kind === 'memo') return 2.4;
+  if (node.kind === 'domain') return 1.8;
+  // Hubs first, then every other post and term.
+  return node.degree >= 3 ? 0 : 1.15;
 }
 
-/**
- * A small force layout (repulsion between all nodes, springs along edges,
- * gravity), deterministic: the same graph gives the same picture. Coordinates
- * in a square of `size`.
- */
-export function layout(
-  graph: Graph,
-  options: { size?: number; iterations?: number; center?: string } = {},
-): Placed[] {
-  const n = graph.nodes.length;
-  if (n === 0) return [];
-  // Start on a circle; the center (if any) in the middle.
-  const pos: Point[] = graph.nodes.map((node, i) =>
-    node.id === options.center
-      ? { x: 0, y: 0 }
-      : {
-          x: Math.cos((2 * Math.PI * i) / n),
-          y: Math.sin((2 * Math.PI * i) / n),
-        },
-  );
-  const k = Math.sqrt(1 / n);
-  let temperature = 0.1;
-  for (let step = 0; step < (options.iterations ?? 300); step++) {
-    const disp = pos.map(() => ({ x: 0, y: 0 }));
-    repel(pos, disp, k);
-    attract(graph, pos, disp, k);
-    move(graph, pos, disp, temperature, options.center);
-    temperature *= 0.985;
-  }
-  return fit(graph, pos, options.size ?? 600);
-}
+export const labelVisible = (
+  node: SimNode,
+  zoom: number,
+  isCenter: boolean,
+): boolean => zoom >= labelThreshold(node, isCenter);
 
-/** The visible part of the square drawing, in drawing units (the SVG `viewBox`). */
-export interface View {
+export interface Transform {
   x: number;
   y: number;
-  /** Width = height; `size / w` is the zoom factor. */
-  w: number;
-}
-
-/** Furthest zoom: the visible part is a 1/MAX_ZOOM of the drawing. */
-export const MAX_ZOOM = 8;
-
-/** The whole drawing. */
-export const fullView = (size: number): View => ({ x: 0, y: 0, w: size });
-
-const clamp = (value: number, min: number, max: number): number =>
-  Math.min(max, Math.max(min, value));
-
-/** Keeps the view inside the drawing. */
-function inside(view: View, size: number): View {
-  const w = clamp(view.w, size / MAX_ZOOM, size);
-  return {
-    w,
-    x: clamp(view.x, 0, size - w),
-    y: clamp(view.y, 0, size - w),
-  };
+  k: number;
 }
 
 /**
- * Zooms by `factor` (> 1 in, < 1 out) and keeps the point (`px`, `py`, in
- * drawing units) where it is on the screen.
+ * The zoom and shift that show all nodes inside `width` x `height` with a
+ * margin. It zooms in at most to `maxZoom`, so a small graph is not blown up.
  */
-export function zoomAt(
-  view: View,
-  size: number,
-  factor: number,
-  px: number,
-  py: number,
-): View {
-  const w = clamp(view.w / factor, size / MAX_ZOOM, size);
-  const ratio = w / view.w;
-  return inside(
-    { w, x: px - (px - view.x) * ratio, y: py - (py - view.y) * ratio },
-    size,
+export function fitTransform(
+  nodes: ReadonlyArray<{ x: number; y: number }>,
+  width: number,
+  height: number,
+  options: { padding?: number; maxZoom?: number } = {},
+): Transform {
+  const padding = options.padding ?? 48;
+  const maxZoom = options.maxZoom ?? 1.6;
+  if (nodes.length === 0) return { x: width / 2, y: height / 2, k: 1 };
+  const xs = nodes.map((n) => n.x);
+  const ys = nodes.map((n) => n.y);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const boxW = Math.max(maxX - minX, 1);
+  const boxH = Math.max(maxY - minY, 1);
+  const k = Math.min(
+    maxZoom,
+    (width - 2 * padding) / boxW,
+    (height - 2 * padding) / boxH,
   );
-}
-
-/** Moves the view by `dx`, `dy` drawing units. */
-export function panBy(view: View, size: number, dx: number, dy: number): View {
-  return inside({ ...view, x: view.x + dx, y: view.y + dy }, size);
-}
-
-/** Zoom factor of a wheel turn; lines count as 16 pixels, pages as 100. */
-export function wheelFactor(deltaY: number, deltaMode: number): number {
-  const pixels = deltaY * (deltaMode === 1 ? 16 : deltaMode === 2 ? 100 : 1);
-  return Math.exp(clamp(-pixels, -300, 300) * 0.0015);
+  return {
+    k,
+    x: width / 2 - ((minX + maxX) / 2) * k,
+    y: height / 2 - ((minY + maxY) / 2) * k,
+  };
 }

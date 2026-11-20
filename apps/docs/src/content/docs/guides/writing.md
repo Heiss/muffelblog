@@ -76,7 +76,7 @@ its name never appears on the site.
 
 Every post, term and memo shows **Links of this page**: what it links to
 (external websites as one entry per domain) and what links to it, with a small
-graph of these neighbors. `/graph/` shows all of them.
+graph of these neighbors. `/graph/` shows all of them like a map: zoom with the mouse wheel or the buttons, move it by dragging the background, drag a point to place it; labels appear as you zoom in.
 
 ### Automatic links to terms
 

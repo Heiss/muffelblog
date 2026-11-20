@@ -104,32 +104,116 @@ test.describe('Graph (W21)', () => {
     await expect(svg.locator('a[href="/g/cache/"]')).toBeFocused();
   });
 
-  test('the overall view zooms with the wheel at the pointer, drags and resets', async ({
+  test('the overall view has map controls in the corner, inside the picture and visible at once', async ({
+    page,
+  }) => {
+    await page.goto('/graph/');
+    const figure = page.locator('figure.graph-all');
+    const svg = figure.locator('svg');
+    await expect(svg).toBeVisible();
+    const controls = figure.locator('.graph-controls');
+    await expect(controls.getByRole('button')).toHaveCount(4);
+    const picture = (await svg.boundingBox())!;
+    const bar = (await controls.boundingBox())!;
+    // In the top right corner of the picture, and on the first screen without scrolling.
+    expect(bar.x).toBeGreaterThan(picture.x + picture.width / 2);
+    expect(bar.y).toBeLessThan(picture.y + 60);
+    expect(bar.y + bar.height).toBeLessThan(page.viewportSize()!.height);
+  });
+
+  test('the wheel zooms at the pointer, text and points keep their size, more labels appear', async ({
     page,
   }) => {
     await page.goto('/graph/');
     const svg = page.locator('figure.graph-all svg');
-    await expect(svg).toBeVisible();
-    const viewBox = async () =>
-      (await svg.getAttribute('viewBox'))?.split(' ').map(Number) ?? [];
-    const [, , whole] = await viewBox();
+    await expect(svg.locator('.node').first()).toBeVisible();
+    const scale = async () =>
+      Number(
+        /scale\(([\d.]+)\)/.exec(
+          (await svg.locator('.graph-root').getAttribute('transform')) ?? '',
+        )?.[1],
+      );
+    const labels = () => svg.locator('.node-label:not(.off)').count();
+    const start = await scale();
+    const labelsAtStart = await labels();
     const box = (await svg.boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.wheel(0, -400);
-    await expect.poll(async () => (await viewBox())[2]).toBeLessThan(whole!);
-    // Dragging an empty spot moves the view.
-    const before = await viewBox();
-    await page.mouse.move(box.x + 5, box.y + 5);
-    await page.mouse.down();
-    await page.mouse.move(box.x + 80, box.y + 80, { steps: 4 });
-    await page.mouse.up();
-    const after = await viewBox();
-    expect(after[2]).toBe(before[2]);
-    expect(after[0] !== before[0] || after[1] !== before[1]).toBe(true);
-    await page.getByRole('button', { name: ui.graph.zoomReset }).click();
-    expect(await viewBox()).toEqual([0, 0, whole, whole]);
+    await page.mouse.wheel(0, -1200);
+    await expect.poll(scale).toBeGreaterThan(start * 1.5);
+    // More detail when zoomed in.
+    await expect.poll(labels).toBeGreaterThan(labelsAtStart);
+    // A point is drawn at the same size on the screen, whatever the zoom.
+    const body = await svg
+      .locator('.node-body')
+      .first()
+      .getAttribute('transform');
+    expect(Number(/scale\(([\d.]+)\)/.exec(body ?? '')?.[1])).toBeCloseTo(
+      1 / (await scale()),
+      3,
+    );
+  });
+
+  test('the buttons zoom in and out and show everything again', async ({
+    page,
+  }) => {
+    await page.goto('/graph/');
+    const svg = page.locator('figure.graph-all svg');
+    await expect(svg.locator('.node').first()).toBeVisible();
+    const scale = async () =>
+      Number(
+        /scale\(([\d.]+)\)/.exec(
+          (await svg.locator('.graph-root').getAttribute('transform')) ?? '',
+        )?.[1],
+      );
+    const start = await scale();
     await page.getByRole('button', { name: ui.graph.zoomIn }).click();
-    await expect.poll(async () => (await viewBox())[2]).toBeLessThan(whole!);
+    await expect.poll(scale).toBeGreaterThan(start);
+    await page.getByRole('button', { name: ui.graph.zoomOut }).click();
+    await page.getByRole('button', { name: ui.graph.zoomOut }).click();
+    await expect.poll(scale).toBeLessThan(start);
+    await page.getByRole('button', { name: ui.graph.zoomReset }).click();
+    await expect.poll(scale).toBeCloseTo(start, 3);
+  });
+
+  test('a point can be dragged, stays where it was put, and "arrange again" lets it go', async ({
+    page,
+  }) => {
+    await page.goto('/graph/');
+    const svg = page.locator('figure.graph-all svg');
+    const node = svg.locator('.node-post').nth(2);
+    await expect(node).toBeVisible();
+    const circle = node.locator('circle');
+    const at = (await circle.boundingBox())!;
+    const before = await node.getAttribute('transform');
+    await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(at.x + 120, at.y + 90, { steps: 8 });
+    await page.mouse.up();
+    await expect(node).toHaveClass(/pinned/);
+    const after = await node.getAttribute('transform');
+    expect(after).not.toBe(before);
+    // It stays there while the rest settles.
+    await page.waitForTimeout(600);
+    expect(await node.getAttribute('transform')).toBe(after);
+    // Dragging a point did not take the page along or open the page of the point.
+    await expect(page).toHaveURL(/\/graph\/$/);
+    await page.getByRole('button', { name: ui.graph.arrange }).click();
+    await expect(node).not.toHaveClass(/pinned/);
+  });
+
+  test('dragging the background moves the whole picture', async ({ page }) => {
+    await page.goto('/graph/');
+    const svg = page.locator('figure.graph-all svg');
+    await expect(svg.locator('.node').first()).toBeVisible();
+    const root = svg.locator('.graph-root');
+    const before = await root.getAttribute('transform');
+    const box = (await svg.boundingBox())!;
+    // A corner of the picture is empty.
+    await page.mouse.move(box.x + 12, box.y + box.height - 12);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 90, box.y + box.height - 60, { steps: 6 });
+    await page.mouse.up();
+    expect(await root.getAttribute('transform')).not.toBe(before);
   });
 
   test('the small graph under a page zooms with the wheel only after a click into it', async ({
@@ -137,17 +221,17 @@ test.describe('Graph (W21)', () => {
   }) => {
     await page.goto('/g/cache/');
     const svg = page.locator('figure.graph-local svg');
-    await expect(svg).toBeVisible();
-    const width = async () =>
-      Number((await svg.getAttribute('viewBox'))?.split(' ')[2]);
-    const start = await width();
+    await expect(svg.locator('.node').first()).toBeVisible();
+    const transform = () =>
+      svg.locator('.graph-root').getAttribute('transform');
+    const start = await transform();
     const box = (await svg.boundingBox())!;
     await page.mouse.move(box.x + 10, box.y + 10);
     await page.mouse.wheel(0, -400);
-    expect(await width()).toBe(start);
+    expect(await transform()).toBe(start);
     await page.mouse.click(box.x + 10, box.y + 10);
     await page.mouse.wheel(0, -400);
-    await expect.poll(width).toBeLessThan(start);
+    await expect.poll(transform).not.toBe(start);
   });
 
   test('a page draws its neighbors, centered on itself', async ({ page }) => {
