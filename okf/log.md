@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-26
+* **Update**: Final review on the layout board: start page (E1) and the post with Document Comments (E2) are favourites; footnotes stand open in the margin on desktop like comments, and both are closed by default on phones; see [Notes in the margin](/features/margin-notes.md).
 * **Update**: Layout board round 7: the timeline with tinted day zones and a sticky date (N1) and the foldable memo band (N2) are favourites; a ring per day (L1) is rejected. A final set of all pages with the phone bottom bar and a post with Document Comments is on the board; see [Layout](/frontend/layout.md).
 * **Update**: Layout board rounds 5 and 6: days in the timeline are alternating tinted zones with a sticky date (O48 settled); search on phones slides in from the right (O46 settled); the memo band holds related memos and the memo's links and can be folded (O40 narrowed); see [Layout](/frontend/layout.md).
 * **Update**: Timeline: the horizontal rule between days (J1) is rejected by the owner; the line stays continuous, how days are told apart is open (O48); see [Layout](/frontend/layout.md).

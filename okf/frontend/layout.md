@@ -101,6 +101,9 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
   paragraph (answer: "the margin note on the right" is what the owner liked);
   local graph, "Linked from" and "Links to" as a band below the text, before the
   comments. Matches [Notes in the margin](/features/margin-notes.md).
+* **[E]** Desktop: comments and footnotes stand open in the margin; phones:
+  both closed below their paragraph, a tap opens them (E2, favourite, owner's
+  comment 2026-11-26).
 
 ## Term page (G3)
 
