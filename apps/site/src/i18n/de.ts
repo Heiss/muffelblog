@@ -14,6 +14,12 @@ export const de: Messages = {
     more: 'Mehr',
     files: 'Dateien',
     search: 'Suche',
+    menu: 'Menü',
+    close: 'Schließen',
+    quick: 'Schnellnavigation',
+    skip: 'Zum Inhalt springen',
+    counts: (posts: number, memos: number, terms: number) =>
+      `${posts} ${posts === 1 ? 'Beitrag' : 'Beiträge'} · ${memos} ${memos === 1 ? 'Memo' : 'Memos'} · ${terms} ${terms === 1 ? 'Begriff' : 'Begriffe'}`,
   },
   files: {
     title: 'Dateien',
@@ -41,6 +47,12 @@ export const de: Messages = {
     arrange: 'Neu anordnen',
     zoomHint:
       'Mausrad zoomt, den Hintergrund ziehen verschiebt die Ansicht, einen Punkt ziehen verschiebt ihn.',
+    find: 'Punkt suchen',
+    show: 'Zeigen',
+    focus: 'Fokus',
+    neighbours: 'Nachbarn',
+    showAll: 'Gesamten Graph zeigen',
+    showFocus: 'Zurück zum Fokus',
     kinds: {
       post: 'Beitrag',
       glossary: 'Begriff',
@@ -120,6 +132,8 @@ export const de: Messages = {
     lettersLabel: 'Buchstaben',
     none: 'Noch keine Begriffe.',
     term: 'Begriff',
+    filter: 'Begriffe filtern',
+    count: (count: number) => (count === 1 ? '1 Begriff' : `${count} Begriffe`),
   },
   feed: {
     empty: 'Noch keine Einträge.',
@@ -129,6 +143,19 @@ export const de: Messages = {
     pageOf: (page: number, pages: number) => `Seite ${page} von ${pages}`,
     pageTitle: (title: string, page: number) => `${title}, Seite ${page}`,
     loadFailed: 'Nachladen fehlgeschlagen. ',
+    continueWith: (heading: string) => `Weiter mit „${heading}“`,
+    read: 'Weiterlesen',
+    newTerms: (count: number) => `${count} neue Begriffe:`,
+    showAllTerms: (count: number) => `Alle ${count} zeigen`,
+  },
+  page: {
+    contents: 'Inhalt',
+    more: 'Mehr zu dieser Seite',
+    links: (count: number) => (count === 1 ? '1 Link' : `${count} Links`),
+    related: (tag: string) => `Mehr mit #${tag}`,
+    relatedCount: (count: number) =>
+      count === 1 ? '1 Memo' : `${count} Memos`,
+    showAll: (count: number) => `Alle ${count} zeigen`,
   },
   live: {
     one: '1 neuer Eintrag',
@@ -144,5 +171,9 @@ export const de: Messages = {
     none: 'Noch keine Tags.',
     title: (name: string) => `Tag ${name}`,
     heading: (name: string) => `Tag: ${name}`,
+    view: 'Ansicht',
+    cloud: 'Wolke',
+    list: 'Liste',
+    count: (count: number) => (count === 1 ? '1 Tag' : `${count} Tags`),
   },
 };

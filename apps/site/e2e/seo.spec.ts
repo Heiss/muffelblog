@@ -23,7 +23,7 @@ test.describe('Static pages', () => {
   }) => {
     for (const path of ['/', '/p/hallo-welt/', '/glossary/']) {
       await page.goto(path);
-      const footer = page.getByRole('contentinfo');
+      const footer = page.locator('.site-footer');
       await expect(
         footer.getByRole('link', { name: 'Impressum' }),
       ).toHaveAttribute('href', '/impressum/');
@@ -33,19 +33,18 @@ test.describe('Static pages', () => {
     }
   });
 
-  test('pages with nav: true are in the header menu "More" and not in the footer', async ({
+  test('pages with nav: true are in the navigation of the sidebar and not in the footer', async ({
     page,
   }) => {
     for (const path of ['/', '/p/hallo-welt/', '/glossary/']) {
       await page.goto(path);
-      const menu = page.locator('.site-header details.nav-more');
-      await expect(menu.locator('summary')).toHaveText(ui.nav.more);
-      await menu.locator('summary').click();
+      const nav = page.getByRole('navigation', { name: ui.nav.label });
+      await expect(nav.getByRole('link', { name: 'Über uns' })).toHaveAttribute(
+        'href',
+        '/ueber-uns/',
+      );
       await expect(
-        menu.getByRole('link', { name: 'Über uns' }),
-      ).toHaveAttribute('href', '/ueber-uns/');
-      await expect(
-        page.getByRole('contentinfo').getByRole('link', { name: 'Über uns' }),
+        page.locator('.site-footer').getByRole('link', { name: 'Über uns' }),
       ).toHaveCount(0);
     }
   });

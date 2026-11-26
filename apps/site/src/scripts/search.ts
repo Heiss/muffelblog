@@ -26,7 +26,6 @@ interface Pagefind {
 const MAX_RESULTS = 20;
 // A variable keeps TypeScript and the bundler from resolving the build output.
 const PAGEFIND_URL: string = '/pagefind/pagefind.js';
-const root = document.querySelector<HTMLElement>('[data-search]');
 
 function el<T extends HTMLElement>(host: HTMLElement, name: string): T {
   const found = host.querySelector<T>(`[data-search-${name}]`);
@@ -201,10 +200,27 @@ async function start(host: HTMLElement): Promise<void> {
   });
   ui.tagSelect.addEventListener('change', () => void render());
   host.hidden = false;
+  // The search field of the sidebar sends its words as `?q=` to the search page.
+  const query = new URLSearchParams(location.search).get('q')?.trim();
+  if (query && host.dataset.searchPage !== undefined) ui.input.value = query;
+  // Words typed while the index was still loading are searched now.
+  if (ui.input.value.trim()) void render();
 }
 
-if (root) {
+const started = new WeakSet<HTMLElement>();
+
+/** Starts a search box once; the panel on phones calls this when it opens. */
+export function startSearch(host: HTMLElement): void {
+  if (started.has(host)) return;
+  started.add(host);
+  void start(host);
+}
+
+const page = document.querySelector<HTMLElement>(
+  '[data-search][data-search-page]',
+);
+if (page) {
   // The hint for visitors without JavaScript is plain text, scripts remove it.
   document.querySelector<HTMLElement>('[data-search-nojs]')?.remove();
-  void start(root);
+  startSearch(page);
 }

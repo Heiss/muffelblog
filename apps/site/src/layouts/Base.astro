@@ -21,6 +21,8 @@ import { relMeLinks, webmentionEndpoint } from '../lib/indieweb';
 import { OG_HEIGHT, OG_WIDTH, ogImagePath } from '../lib/og';
 import { matomoConfig } from '../lib/matomo';
 import { DEFAULT_LIGHT, THEMES } from '../lib/themes';
+import { ICONS, navState } from '../lib/nav';
+import SearchBox from '../components/SearchBox.astro';
 
 interface Props {
   title?: string;
@@ -29,11 +31,20 @@ interface Props {
   noindex?: boolean;
   /** Open Graph type: posts, memos and terms are articles. */
   ogType?: 'website' | 'article';
+  /** Wide content area (graph, glossary, posts with notes in the margin). */
+  wide?: boolean;
 }
 
-const { title, description, noindex, ogType = 'website' } = Astro.props;
+const {
+  title,
+  description,
+  noindex,
+  ogType = 'website',
+  wide = false,
+} = Astro.props;
+const path = Astro.url.pathname;
 const canonical = canonicalUrl(siteUrl(), Astro.url.pathname);
-const { articles } = await getContent();
+const { articles, memos } = await getContent();
 const webmention = webmentionEndpoint();
 const relMe = relMeLinks();
 // Social preview image: posts, memos and terms, only with SITE_URL (absolute URL).
@@ -44,9 +55,19 @@ const matomo = matomoConfig();
 const pages = articles
   .filter((a) => a.type === 'page')
   .sort((a, b) => a.title.localeCompare(b.title, messages.lang));
-// `nav: true` pages go to the header menu, all other pages stay in the footer.
+// `nav: true` pages go into the navigation, all other pages stay in the footer.
 const menuPages = pages.filter((a) => a.nav);
 const legalPages = pages.filter((a) => !a.nav);
+const counts = {
+  posts: articles.filter((a) => a.type === 'post').length,
+  memos: memos.length,
+  terms: articles.filter((a) => a.type === 'glossary').length,
+};
+const { mainLinks, quickLinks } = navState(path, {
+  comments: commentsConfig() !== undefined,
+  labels: messages.nav,
+});
+const onSearchPage = path === '/search/';
 ---
 
 <!doctype html>
@@ -98,56 +119,126 @@ const legalPages = pages.filter((a) => !a.nav);
     <script is:inline src="/theme-init.js"></script>
   </head>
   <body>
-    <header class="site-header">
-      <div class="h-card">
-        <a href="/" class="site-name u-url p-name">
-          {SITE_NAME}
-        </a>
-      </div>
-      <nav aria-label={messages.nav.label}>
-        <a href="/">{messages.nav.home}</a>
-        <a href="/tag/">{messages.nav.tags}</a>
-        <a href="/glossary/">{messages.nav.glossary}</a>
-        <a href="/graph/">{messages.nav.graph}</a>
-        <a href="/files/">{messages.nav.files}</a>
-        {commentsConfig() && <a href="/comments/">{messages.nav.comments}</a>}
-        <a href="/search/">{messages.nav.search}</a>
-        {menuPages.length > 0 && (
-          <details class="nav-more">
-            <summary>{messages.nav.more}</summary>
-            <ul>
-              {menuPages.map((p) => (
-                <li>
-                  <a href={`/${p.slug}/`}>{p.title}</a>
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
-      </nav>
-      <label class="theme-picker" data-theme-switch hidden>
-        <span>{messages.theme.label}</span>
-        <select data-theme-select>
-          {THEMES.map((t) => (
-            <option value={t.id}>
-              {messages.theme.names[t.id] ?? t.label}
-            </option>
-          ))}
-        </select>
-      </label>
+    <a class="skip-link" href="#main">
+      {messages.nav.skip}
+    </a>
+    <header class="topbar">
+      <a href="/" class="site-name">
+        <span class="logo" aria-hidden="true">
+          M
+        </span>
+        {SITE_NAME}
+      </a>
     </header>
-    <main>
-      <slot />
-    </main>
-    <footer class="site-footer" aria-label={messages.footer.label}>
-      <nav>
-        {legalPages.map((p) => (
-          <a href={`/${p.slug}/`}>{p.title}</a>
-        ))}
-        <a href="/glossary/">{messages.footer.glossary}</a>
-        {siteUrl() && <a href="/feed.xml">{messages.footer.rss}</a>}
-      </nav>
-    </footer>
+    <div class="frame">
+      <aside class="sidebar" id="site-menu" aria-label={messages.nav.menu}>
+        <div class="sidebar-head">
+          <div class="h-card">
+            <a href="/" class="site-name u-url">
+              <span class="logo" aria-hidden="true">
+                M
+              </span>
+              <span class="p-name">{SITE_NAME}</span>
+            </a>
+          </div>
+          <a href="#" class="menu-close" data-menu-close>
+            {messages.nav.close}
+          </a>
+        </div>
+        <p class="counts">
+          {messages.nav.counts(counts.posts, counts.memos, counts.terms)}
+        </p>
+        {!onSearchPage && (
+          <form
+            class="side-search"
+            action="/search/"
+            method="get"
+            role="search"
+          >
+            <input
+              type="search"
+              name="q"
+              placeholder={messages.search.placeholder}
+              aria-label={messages.nav.search}
+            />
+          </form>
+        )}
+        <nav aria-label={messages.nav.label} class="side-nav">
+          {mainLinks.map((l) => (
+            <a href={l.href} aria-current={l.current ? 'page' : undefined}>
+              {l.label}
+            </a>
+          ))}
+          {menuPages.map((p) => (
+            <a
+              href={`/${p.slug}/`}
+              class="nav-page"
+              aria-current={path === `/${p.slug}/` ? 'page' : undefined}
+            >
+              {p.title}
+            </a>
+          ))}
+        </nav>
+        <div class="side-tools">
+          <slot name="tools" />
+        </div>
+        <footer class="site-footer">
+          <label class="theme-picker" data-theme-switch hidden>
+            <span>{messages.theme.label}</span>
+            <select data-theme-select>
+              {THEMES.map((t) => (
+                <option value={t.id}>
+                  {messages.theme.names[t.id] ?? t.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <nav aria-label={messages.footer.label}>
+            {legalPages.map((p) => (
+              <a href={`/${p.slug}/`}>{p.title}</a>
+            ))}
+            <a href="/glossary/">{messages.footer.glossary}</a>
+            {siteUrl() && <a href="/feed.xml">{messages.footer.rss}</a>}
+          </nav>
+        </footer>
+      </aside>
+      <a href="#" class="menu-backdrop" tabindex="-1" aria-hidden="true"></a>
+      <main id="main" class={wide ? 'wide' : undefined}>
+        <slot />
+      </main>
+    </div>
+    <nav aria-label={messages.nav.quick} class="bottombar">
+      {quickLinks.map((l) => (
+        <a
+          href={l.href}
+          aria-current={l.current ? 'page' : undefined}
+          data-quick={l.id}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d={ICONS[l.id]} />
+          </svg>
+          <span>{l.label}</span>
+        </a>
+      ))}
+    </nav>
+    {!onSearchPage && (
+      <div
+        class="search-panel"
+        id="search-panel"
+        role="dialog"
+        aria-label={messages.search.title}
+        data-search-panel
+        hidden
+      >
+        <div class="panel-head">
+          <strong>{messages.search.title}</strong>
+          <button type="button" data-search-close>
+            {messages.nav.close}
+          </button>
+        </div>
+        <SearchBox />
+      </div>
+    )}
     {matomo && (
       <span
         hidden
@@ -162,5 +253,6 @@ const legalPages = pages.filter((a) => !a.nav);
 <script>
   import '../scripts/theme-switch';
   import '../scripts/margin-notes';
+  import '../scripts/menu';
   import '../scripts/matomo';
 </script>

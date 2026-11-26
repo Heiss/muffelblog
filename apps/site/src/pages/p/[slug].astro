@@ -1,7 +1,8 @@
 ---
 import { messages } from '../../i18n/messages';
 import Comments from '../../components/Comments.astro';
-import LinkLists from '../../components/LinkLists.astro';
+import PageBand from '../../components/PageBand.astro';
+import Toc from '../../components/Toc.astro';
 import Base from '../../layouts/Base.astro';
 import { getContent } from '../../lib/articles';
 import type { RenderedArticle } from '../../lib/articles';
@@ -24,17 +25,20 @@ const { article } = Astro.props;
 const date = new Intl.DateTimeFormat(messages.locale, {
   dateStyle: 'long',
   timeZone: 'Europe/Berlin',
-}).format(article.created);
+});
+const url = `/p/${article.slug}/`;
 ---
 
 <Base title={article.title} description={article.description} ogType="article">
-  <article class="h-entry" data-pagefind-body>
+  <Toc slot="tools" toc={article.toc} />
+  <article class="h-entry kind-post" data-pagefind-body>
     <meta data-pagefind-filter="kind[content]" content={messages.filter.long} />
+    <p class="page-kind">{messages.filter.long}</p>
     <h1 class="p-name">{article.title}</h1>
     <p class="meta">
-      <a class="u-url" href={`/p/${article.slug}/`}>
+      <a class="u-url" href={url}>
         <time class="dt-published" datetime={article.created.toISOString()}>
-          {date}
+          {date.format(article.created)}
         </time>
       </a>
     </p>
@@ -49,7 +53,7 @@ const date = new Intl.DateTimeFormat(messages.locale, {
     )}
     <div class="content e-content" set:html={article.html} />
   </article>
-  <LinkLists url={`/p/${article.slug}/`} />
+  <PageBand url={url} />
   <Comments />
 </Base>
 

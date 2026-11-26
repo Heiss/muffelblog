@@ -1,0 +1,130 @@
+---
+import { linksOf } from '@muffelblog/core';
+import type { MemoEntry } from '@muffelblog/core';
+import { messages } from '../i18n/messages';
+import { getGraph } from '../lib/graph';
+import type { Related } from '../lib/timeline';
+
+interface Props {
+  /** Address of the page, for example `/p/hello/`. */
+  url: string;
+  /** Memo pages: the memos that share a tag (O40). */
+  related?: Related;
+}
+
+// The band below the text (layout W24): the links of the page with the local
+// graph, on memo pages also the memos with the same tags. It is a <details>:
+// open on a wide screen and without JavaScript, closed on a phone.
+const { url, related } = Astro.props;
+const graph = await getGraph();
+const { to, from } = linksOf(graph, url);
+const t = messages.graph;
+// A memo shows the graph only when it links somewhere.
+const showLinks = related ? to.length > 0 : to.length > 0 || from.length > 0;
+const showRelated = related !== undefined && related.total > 0;
+const linkCount = to.length + from.length;
+const zone = { timeZone: 'Europe/Berlin' } as const;
+const when = new Intl.DateTimeFormat(messages.locale, {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+  ...zone,
+});
+const firstTag = related?.tags[0];
+const memoText = (m: MemoEntry) => m.description || m.title;
+---
+
+{(showLinks || showRelated) && (
+  <details class="band" open data-pagefind-ignore>
+    <summary>
+      <strong>{messages.page.more}</strong>
+      <span>
+        {[
+          showRelated && firstTag
+            ? `${messages.page.relatedCount(related.total)} #${firstTag.name}`
+            : '',
+          showLinks ? messages.page.links(linkCount) : '',
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      </span>
+    </summary>
+    <div class="band-body">
+      {showRelated && firstTag && (
+        <section>
+          <h3>{messages.page.related(firstTag.name)}</h3>
+          <ul class="related-list">
+            {related.memos.map((m) => (
+              <li>
+                <time datetime={m.created.toISOString()}>
+                  {when.format(m.created)}
+                </time>
+                <a href={`/m/${m.uid}/`}>{memoText(m)}</a>
+              </li>
+            ))}
+          </ul>
+          <p class="related-tags">
+            {related.tags.map((tag) => (
+              <a href={`/tag/${tag.slug}/`}>
+                {messages.page.showAll(tag.count)} #{tag.name}
+              </a>
+            ))}
+          </p>
+        </section>
+      )}
+      {showLinks && (
+        <section class="links" aria-label={t.local}>
+          <h3 class="links-title">{t.local}</h3>
+          <figure
+            class="graph graph-local"
+            data-graph
+            data-graph-node={url}
+            hidden
+          >
+            <figcaption>{t.local}</figcaption>
+          </figure>
+          <div class="link-lists">
+            {from.length > 0 && (
+              <>
+                <h3>{t.linkedFrom}</h3>
+                <ul class="link-list">
+                  {from.map((n) => (
+                    <li>
+                      <a href={n.id}>{n.title}</a>
+                      <span class="link-kind">
+                        {' '}
+                        {t.kinds[n.kind as 'post']}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {to.length > 0 && (
+              <>
+                <h3>{t.linksTo}</h3>
+                <ul class="link-list">
+                  {to.map((n) =>
+                    n.kind === 'domain' ? (
+                      <li class="link-domain">{n.title}</li>
+                    ) : (
+                      <li>
+                        <a href={n.id}>{n.title}</a>
+                        <span class="link-kind"> {t.kinds[n.kind]}</span>
+                      </li>
+                    ),
+                  )}
+                </ul>
+              </>
+            )}
+          </div>
+        </section>
+      )}
+    </div>
+  </details>
+)}
+
+<script>
+  import '../scripts/graph';
+</script>

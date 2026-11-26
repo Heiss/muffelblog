@@ -126,6 +126,14 @@ describe('outlineOf', () => {
     ]);
   });
 
+  it('leaves out the list of footnotes, notes and headings for screen readers', () => {
+    const out = outlineOf(
+      '<h2>Real</h2><aside><h3>note</h3></aside><h2 class="sr-only">Hidden</h2>' +
+        '<section class="footnotes"><h2 id="footnote-label">Footnotes</h2></section>',
+    );
+    expect(out.toc).toEqual([{ id: 'real', text: 'Real', depth: 1 }]);
+  });
+
   it('keeps an id a heading already has', () => {
     const out = outlineOf('<h2 id="mine">Title</h2>');
     expect(out.toc).toEqual([{ id: 'mine', text: 'Title', depth: 1 }]);

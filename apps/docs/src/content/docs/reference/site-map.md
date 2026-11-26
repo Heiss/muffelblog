@@ -67,7 +67,7 @@ Where things are on a blog that is online. The full list is in
 | `/comments/`                           | New comments of the whole site as one list, newest first; replies name what they answer; each entry links to its comment on its page                         |
 | `/graph/`                              | The link graph like a map: buttons in the corner, the mouse wheel zooms, drag the background to move, drag a point to place it; labels appear as you zoom in |
 | `/files/`                              | The published files as they lie in the Nextcloud folder                                                                                                      |
-| `/<slug>/`                             | A static page (`type: page`); with `nav: true` it is in the header menu "More", otherwise in the footer                                                      |
+| `/<slug>/`                             | A static page (`type: page`); with `nav: true` it is in the sidebar navigation and the phone menu, otherwise in the footer                                   |
 | `/feed.xml`, `/sitemap.xml`            | RSS and sitemap, only when `SITE_URL` is set                                                                                                                 |
 | `/health.json`, `/build.json`          | State of the builder and the release that is online                                                                                                          |
 

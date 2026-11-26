@@ -135,12 +135,17 @@ export interface Outline {
   toc: TocEntry[];
 }
 
+/** The list of footnotes and headings only for screen readers are no part of the table. */
+function isOutside(node: Node): boolean {
+  return isDropped(node) || hasClass(node, 'sr-only');
+}
+
 function collect(node: Node, out: { headings: Node[]; ids: Set<string> }) {
   for (const child of node.childNodes ?? []) {
     const id = attr(child, 'id');
     if (id) out.ids.add(id);
-    if (levelOf(child) >= 2) out.headings.push(child);
-    collect(child, out);
+    if (levelOf(child) >= 2 && !isOutside(child)) out.headings.push(child);
+    if (!isOutside(child)) collect(child, out);
   }
 }
 

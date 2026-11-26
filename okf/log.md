@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-26
+* **Update**: W24 built: sidebar frame with phone top and bottom bar, menu and search sliding in from the right; timeline with day zones, sticky dates, bundled terms and posts up to the first heading; one template for post, term and memo with table of contents and foldable band; glossary filter, tag cloud, graph focus; 18 new E2E tests; see [Layout](/frontend/layout.md) and W24 in the [Roadmap](/roadmap.md).
 * **Update**: The owner accepted Claude's proposals for the last open layout points (O40 to O45, O47): foldable band on memo, term and post pages, 18 px body text in a 40rem column, bundles only under "All" counting as one entry, `nav: true` pages in the sidebar, sidebar from 900 px, phone menu from the right, graph focused on the newest post; see [Layout](/frontend/layout.md).
 * **Update**: Final review on the layout board: start page (E1) and the post with Document Comments (E2) are favourites; footnotes stand open in the margin on desktop like comments, and both are closed by default on phones; see [Notes in the margin](/features/margin-notes.md).
 * **Update**: Layout board round 7: the timeline with tinted day zones and a sticky date (N1) and the foldable memo band (N2) are favourites; a ring per day (L1) is rejected. A final set of all pages with the phone bottom bar and a post with Document Comments is on the board; see [Layout](/frontend/layout.md).

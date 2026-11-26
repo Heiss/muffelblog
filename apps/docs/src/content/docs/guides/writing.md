@@ -29,7 +29,7 @@ The text starts here.
 | `created`     | no       | Creation date. Missing or invalid: the modification date of the file, with a warning. Replaces `date`. |
 | `updated`     | no       | Date of the last edit. Missing or invalid: the modification date of the file, with a warning.          |
 | `tags`        | no       | A list. Tags are lowercased, a leading `#` is dropped.                                                 |
-| `description` | no       | Used as meta description and feed excerpt.                                                             |
+| `description` | no       | Used as meta description, and as the feed excerpt of terms and of posts that start with a heading.     |
 | `slug`        | no       | The last part of the address. Missing: derived from the file name.                                     |
 | `type`        | no       | `glossary` or `page`. Missing: a post.                                                                 |
 | `term`        | no       | Glossary only: the term, when the title is a question.                                                 |
@@ -54,7 +54,10 @@ address** unless you set `slug:`.
 ### Posts (default)
 
 Address `/p/<slug>/`. They appear in the feed filter _Lang_, in the RSS feed, in
-search and in the sitemap.
+search and in the sitemap. In the feed a post shows its text up to the first
+heading, followed by a link that names that heading; a post without headings
+shows its whole text. The headings of a post form its table of contents in the
+sidebar.
 
 ### Glossary terms: `type: glossary`
 
@@ -62,7 +65,7 @@ Address `/g/<slug>/`. The title is the term, the description is the short
 definition shown in lists. The title may also be a question ("Was ist ein
 Cache?"): then set `term: Cache`, and the letter view shows and sorts the term.
 Terms have a comment section, like posts and memos. Terms appear in the feed under _Begriffe_ (and in
-_Alle_, marked as terms), never under _Lang_. `/glossary/` lists all terms by
+_Alle_, where the terms of one day are bundled into one entry), never under _Lang_. `/glossary/` lists all terms by
 first letter; umlauts count under their base letter, digits under `#`. A term and
 a post may share a slug, because the addresses are separate.
 
@@ -109,8 +112,8 @@ narrow screen (closed, opened with a click):
 Address `/<slug>/`, for example `impressum` or `datenschutz`. Pages need no date,
 are not part of the feed, RSS or search, and appear as links in the footer on
 every page. With `nav: true` in the frontmatter a page appears instead in the
-header, in the dropdown "More" (and no longer in the footer); only the boolean
-`true` counts. Names that belong to the site itself (`p`, `m`, `g`, `tag`, `page`,
+navigation of the sidebar, below the main links, and in the menu on phones (and
+no longer in the footer); only the boolean `true` counts. Names that belong to the site itself (`p`, `m`, `g`, `tag`, `page`,
 `posts`, `memos`, `terms`, `glossary`, `search`, `media`, `pagefind`, `feed`,
 `sitemap`, `robots`, `updated`, ...) are refused with a warning.
 

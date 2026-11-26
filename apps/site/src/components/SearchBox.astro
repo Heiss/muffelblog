@@ -1,0 +1,46 @@
+---
+import { messages } from '../i18n/messages';
+
+interface Props {
+  /**
+   * The search page starts at once and reads `?q=`; it stays hidden until the
+   * script runs. The panel starts when it opens, only ever with JavaScript.
+   */
+  page?: boolean;
+}
+
+const { page = false } = Astro.props;
+const t = messages.search;
+---
+
+<div
+  data-search
+  data-search-page={page ? '' : undefined}
+  data-label-all={t.all}
+  data-kind-order={JSON.stringify([
+    messages.filter.long,
+    messages.filter.short,
+    messages.filter.terms,
+  ])}
+  data-unavailable={t.unavailable}
+  data-summary-none={t.summary.none}
+  data-summary-one={t.summary.one}
+  data-summary-many={t.summary.many}
+  hidden={page}
+>
+  <input
+    type="search"
+    data-search-input
+    placeholder={t.placeholder}
+    aria-label={t.title}
+    autocomplete="off"
+  />
+  <div data-search-kind role="group" aria-label={t.kind}></div>
+  <label data-search-tag-label hidden>
+    <span>{t.tag}</span>
+    <select data-search-tag></select>
+  </label>
+  <p data-search-summary role="status"></p>
+  <div data-search-results></div>
+  <p data-search-error role="alert" hidden></p>
+</div>

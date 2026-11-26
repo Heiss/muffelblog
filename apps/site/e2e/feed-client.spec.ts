@@ -7,7 +7,9 @@ const TOTAL = 18;
 const MEMOS = 6;
 const POSTS = 9;
 
-const entries = (page: Page) => page.locator('[data-feed-list] > article');
+// Entries are grouped by day (layout W24): `section[data-day] > .day-entries > article`.
+const entries = (page: Page) =>
+  page.locator('[data-feed-list] article[data-id]');
 
 async function ids(page: Page): Promise<string[]> {
   return entries(page).evaluateAll((els) =>
@@ -34,7 +36,8 @@ test.describe('Endless Scroll', () => {
     page,
   }) => {
     await page.goto('/');
-    await expect(entries(page)).toHaveCount(4);
+    // The first block is there; the timeline is compact, so the next block may follow at once.
+    await expect.poll(() => entries(page).count()).toBeGreaterThanOrEqual(4);
     await scrollToEnd(page, TOTAL);
     const alle = await ids(page);
     expect(new Set(alle).size).toBe(TOTAL);
@@ -47,7 +50,7 @@ test.describe('Endless Scroll', () => {
     await page.goto('/');
     await scrollToEnd(page, TOTAL);
     const zeiten = await page
-      .locator('[data-feed-list] > article > p > time')
+      .locator('[data-feed-list] article[data-id] .entry-kind time')
       .evaluateAll((els) =>
         els.map((el) => Date.parse(el.getAttribute('datetime') ?? '')),
       );
@@ -81,7 +84,8 @@ test.describe('Endless Scroll', () => {
       'Loading more failed',
     );
     await expect(page.getByRole('link', { name: ui.feed.older })).toBeVisible();
-    await expect(entries(page)).toHaveCount(4);
+    // The first block is there; the timeline is compact, so the next block may follow at once.
+    await expect.poll(() => entries(page).count()).toBeGreaterThanOrEqual(4);
   });
 
   test('loads more on tag pages without a filter there', async ({ page }) => {
@@ -130,7 +134,7 @@ test.describe('Filter in the unified mode', () => {
     await filter.getByRole('link', { name: ui.filter.short }).click();
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     await expect(
-      page.locator('[data-feed-list] > article[data-kind="post"]'),
+      page.locator('[data-feed-list] article[data-kind="post"]'),
     ).toHaveCount(0);
   });
 
@@ -142,7 +146,7 @@ test.describe('Filter in the unified mode', () => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/memos\/$/);
     await expect(
-      page.locator('[data-feed-list] > article[data-kind="post"]'),
+      page.locator('[data-feed-list] article[data-kind="post"]'),
     ).toHaveCount(0);
     await filter.getByRole('link', { name: ui.filter.all }).click();
     await page.goto('/');
@@ -173,7 +177,8 @@ test.describe('Filter in the unified mode', () => {
       });
     });
     await page.goto('/');
-    await expect(entries(page)).toHaveCount(4);
+    // The first block is there; the timeline is compact, so the next block may follow at once.
+    await expect.poll(() => entries(page).count()).toBeGreaterThanOrEqual(4);
     await page
       .getByRole('navigation', { name: ui.filter.label })
       .getByRole('link', { name: ui.filter.short })
@@ -203,8 +208,8 @@ test.describe('Going back', () => {
     const entry = entries(page).nth(10);
     await entry.scrollIntoViewIfNeeded();
     const before = await page.evaluate(() => window.scrollY);
-    const href = await entry.locator('h2 a').getAttribute('href');
-    await entry.locator('h2 a').click();
+    const href = await entry.locator('[data-entry-link]').getAttribute('href');
+    await entry.locator('[data-entry-link]').click();
     await expect(page).toHaveURL(new RegExp(`${href}$`));
     await page.goBack();
     await expect(entries(page)).toHaveCount(TOTAL);
@@ -280,7 +285,7 @@ test.describe('Sorting', () => {
     await expect(page).toHaveURL(/localhost:\d+\/$/);
     await scrollToEnd(page, TOTAL);
     const zeiten = await page
-      .locator('[data-feed-list] > article > p > time')
+      .locator('[data-feed-list] article[data-id] .entry-kind time')
       .evaluateAll((els) =>
         els.map((el) => Date.parse(el.getAttribute('datetime') ?? '')),
       );

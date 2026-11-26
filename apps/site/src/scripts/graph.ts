@@ -13,6 +13,7 @@ import {
   fitTransform,
   labelVisible,
   neighborhood,
+  type GNode,
   type Graph,
   type SimLink,
   type SimNode,
@@ -275,7 +276,7 @@ function enableZoom(figure: HTMLElement, p: Picture, always: boolean): void {
   fit();
 }
 
-function draw(figure: HTMLElement, graph: Graph, center?: string): void {
+function draw(figure: HTMLElement, graph: Graph, center?: string): Picture {
   const p = build(figure, graph, center);
   figure.append(p.svg);
   // Visible before it is measured, so the picture knows its size.
@@ -283,6 +284,134 @@ function draw(figure: HTMLElement, graph: Graph, center?: string): void {
   place(p);
   enableDrag(p);
   enableZoom(figure, p, !center);
+  return p;
+}
+
+/** The controls of the overall view in the sidebar (layout W24). */
+interface FocusTools {
+  box: HTMLElement;
+  find: HTMLInputElement | null;
+  name: HTMLElement | null;
+  list: HTMLElement | null;
+  all: HTMLButtonElement | null;
+}
+
+function focusTools(): FocusTools | null {
+  const box = document.querySelector<HTMLElement>('[data-graph-tools]');
+  if (!box) return null;
+  return {
+    box,
+    find: box.querySelector('[data-graph-find]'),
+    name: box.querySelector('[data-graph-focus-name]'),
+    list: box.querySelector('[data-graph-neighbours]'),
+    all: box.querySelector('[data-graph-all]'),
+  };
+}
+
+const endsOf = (link: SimLink) => [
+  (link.source as SimNode).id,
+  (link.target as SimNode).id,
+];
+
+/** Fades everything but the focus and its neighbours; null shows all again. */
+function markFocus(p: Picture, graph: Graph, id: string | null): GNode[] {
+  const near = id ? neighborhood(graph, id).nodes : [];
+  const keep = new Set(near.map((n) => n.id));
+  for (const [nodeId, parts] of p.nodes) {
+    parts.shell.classList.toggle('faded', id !== null && !keep.has(nodeId));
+    parts.shell.classList.toggle('in-focus', keep.has(nodeId));
+  }
+  for (const { line, link } of p.lines) {
+    const [a, b] = endsOf(link);
+    const touches = a === id || b === id;
+    line.classList.toggle('faded', id !== null && !touches);
+  }
+  return near.filter((n) => n.id !== id);
+}
+
+function listItem(node: GNode): HTMLLIElement {
+  const li = document.createElement('li');
+  if (node.kind === 'domain') li.textContent = node.title;
+  else {
+    const a = document.createElement('a');
+    a.href = node.id;
+    a.textContent = node.title;
+    li.append(a);
+  }
+  return li;
+}
+
+function showFocus(
+  p: Picture,
+  graph: Graph,
+  tools: FocusTools,
+  id: string | null,
+): void {
+  const neighbours = markFocus(p, graph, id);
+  const node = graph.nodes.find((n) => n.id === id);
+  if (tools.name) tools.name.textContent = node?.title ?? '–';
+  tools.list?.replaceChildren(...neighbours.map(listItem));
+  if (tools.all)
+    tools.all.textContent =
+      (id ? tools.all.dataset.labelAll : tools.all.dataset.labelFocus) ?? '';
+}
+
+/** Hides the points of a kind (and their lines) when its box is unticked. */
+function filterKinds(p: Picture, box: HTMLElement): void {
+  const hidden = new Set(
+    [...box.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')]
+      .filter((c) => !c.checked)
+      .map((c) => c.value),
+  );
+  const kindOf = new Map(p.sim.nodes.map((n) => [n.id, n.kind]));
+  for (const [nodeId, parts] of p.nodes)
+    parts.shell.classList.toggle(
+      'hidden-kind',
+      hidden.has(kindOf.get(nodeId) ?? ''),
+    );
+  for (const { line, link } of p.lines)
+    line.classList.toggle(
+      'hidden-kind',
+      endsOf(link).some((end) => hidden.has(kindOf.get(end) ?? '')),
+    );
+}
+
+function enableFocus(p: Picture, graph: Graph, start: string): void {
+  const tools = focusTools();
+  if (!tools) return;
+  tools.box.hidden = false;
+  let focus: string | null = start;
+  let last = start;
+  showFocus(p, graph, tools, focus);
+  tools.all?.addEventListener('click', () => {
+    focus = focus ? null : last;
+    showFocus(p, graph, tools, focus);
+  });
+  tools.find?.addEventListener('change', () => {
+    const word = tools.find?.value.trim().toLocaleLowerCase() ?? '';
+    const node = graph.nodes.find((n) => n.title.toLocaleLowerCase() === word);
+    if (!node) return;
+    focus = last = node.id;
+    showFocus(p, graph, tools, focus);
+  });
+  const kinds = tools.box.querySelector<HTMLElement>('[data-graph-kinds]');
+  kinds?.addEventListener('change', () => filterKinds(p, kinds));
+}
+
+/**
+ * Draws once the figure can be seen: the picture measures itself, so a graph
+ * in a folded band (layout W24) waits until the band is opened.
+ */
+function drawWhenShown(figure: HTMLElement, show: () => void): void {
+  const details = figure.closest('details');
+  let done = false;
+  const run = () => {
+    if (done || (details && !details.open)) return;
+    done = true;
+    show();
+  };
+  details?.addEventListener('toggle', run);
+  run();
 }
 
 for (const figure of document.querySelectorAll<HTMLElement>('[data-graph]')) {
@@ -290,7 +419,12 @@ for (const figure of document.querySelectorAll<HTMLElement>('[data-graph]')) {
     .then((graph) => {
       const center = figure.dataset.graphNode;
       const part = center ? neighborhood(graph, center) : graph;
-      if (part.nodes.length > (center ? 1 : 0)) draw(figure, part, center);
+      const focus = figure.dataset.graphFocus;
+      if (part.nodes.length > (center ? 1 : 0))
+        drawWhenShown(figure, () => {
+          const p = draw(figure, part, center);
+          if (!center && focus) enableFocus(p, part, focus);
+        });
     })
     .catch(() => {
       // The lists of links are there without the drawing.

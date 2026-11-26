@@ -31,7 +31,8 @@ function write(storage: 'local' | 'session', key: string, value: string) {
 }
 
 interface Block {
-  entries: Element[];
+  /** The days of the block (`section[data-day]`) with their entries. */
+  days: Element[];
   next: string | null;
   title: string;
 }
@@ -49,14 +50,12 @@ async function fetchBlock(path: string): Promise<Block> {
     await response.text(),
     'text/html',
   );
-  const entries = [
-    ...doc.querySelectorAll('[data-feed-list] > article[data-id]'),
-  ];
+  const days = [...doc.querySelectorAll('[data-feed-list] > [data-day]')];
   const href = doc
     .querySelector('[data-pager] a[rel="next"]')
     ?.getAttribute('href');
   return {
-    entries,
+    days,
     next: href ? blockPath(href, ORIGIN) : null,
     title: doc.title,
   };
@@ -89,13 +88,30 @@ function readNext(f: Feed): string | null {
   return href ? blockPath(href, ORIGIN) : null;
 }
 
-/** Appends the entries that are not in the list yet. */
-function append(f: Feed, entries: Element[]): void {
+/** A copy of a day of a block with only the entries that are new. */
+function freshDay(day: Element, fresh: Set<string>): HTMLElement | null {
+  const copy = document.importNode(day, true) as HTMLElement;
+  for (const el of copy.querySelectorAll('article[data-id]'))
+    if (!fresh.delete(idOf(el))) el.remove();
+  return copy.querySelector('article[data-id]') ? copy : null;
+}
+
+/**
+ * Appends the entries that are not in the list yet. A day that continues from
+ * the last day of the list joins it, so every day stays one zone.
+ */
+function append(f: Feed, days: Element[]): void {
   const existing = new Set([...f.list.querySelectorAll('[data-id]')].map(idOf));
-  const fresh = new Set(freshIds(existing, entries.map(idOf)));
-  for (const el of entries) {
-    if (!fresh.delete(idOf(el))) continue;
-    f.list.append(document.importNode(el, true));
+  const all = days.flatMap((d) => [...d.querySelectorAll('article[data-id]')]);
+  const fresh = new Set(freshIds(existing, all.map(idOf)));
+  for (const day of days) {
+    const copy = freshDay(day, fresh);
+    if (!copy) continue;
+    const last = f.list.lastElementChild as HTMLElement | null;
+    const sameDay = last?.dataset.day === copy.dataset.day;
+    const target = sameDay ? last?.querySelector('.day-entries') : null;
+    if (target) target.append(...copy.querySelectorAll('article[data-id]'));
+    else f.list.append(copy);
   }
 }
 
@@ -123,7 +139,7 @@ async function loadNext(f: Feed): Promise<void> {
   try {
     const block = await fetchBlock(path);
     if (mine !== f.generation) return;
-    append(f, block.entries);
+    append(f, block.days);
     f.loaded.push(path);
     f.next = block.next;
     f.status.hidden = true;
@@ -161,7 +177,7 @@ async function replaceWith(f: Feed, path: string): Promise<boolean> {
   try {
     const block = await fetchBlock(path);
     f.list.replaceChildren(
-      ...block.entries.map((el) => document.importNode(el, true)),
+      ...block.days.map((el) => document.importNode(el, true)),
     );
     f.next = block.next;
     f.loaded = [];
@@ -278,8 +294,9 @@ function newFeed(
     list,
     status,
     pager: feed.querySelector<HTMLElement>('[data-pager]'),
-    filterNav: feed.querySelector<HTMLElement>('[data-filter]'),
-    sortNav: feed.querySelector<HTMLElement>('[data-sort]'),
+    // Filter and sort stand in the sidebar (layout W24).
+    filterNav: document.querySelector<HTMLElement>('[data-filter]'),
+    sortNav: document.querySelector<HTMLElement>('[data-sort]'),
     filter: parseFilter(feed.dataset.series),
     sort: parseSort(feed.dataset.sortBy),
     sentinel,

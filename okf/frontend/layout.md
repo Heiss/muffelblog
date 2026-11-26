@@ -181,6 +181,33 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
   J1 (full-width rule between days), L1 (ring per day on the line), L2 (short
   tick whose sticky date broke the line).
 
+# Implementation (W24, 2026-11-26)
+
+* Frame: `layouts/Base.astro` (sidebar `#site-menu` with a slot `tools` for the
+  page's own tools, top bar, bottom bar, search panel), links and the current
+  section in `lib/nav.ts`, the phone menu and the search panel in
+  `scripts/menu.ts`. Without JavaScript the menu opens through `#site-menu`
+  (CSS `:target`) and the search tab leads to `/search/`; the sidebar field
+  sends `?q=` to the search page, which searches at once.
+* Feed: `components/FeedPage.astro` groups rows by day (`lib/timeline.ts`,
+  `groupByDay`) into `section.day[data-day]`; endless scroll merges a day that
+  continues in the next block (`scripts/feed.ts`). Bundles come from
+  `bundleTerms` in the core, leads from `leadOf` (notes, footnotes and ids
+  removed, jumps inside the page point at the page).
+* **[V]** A day with a single term keeps the term as a normal entry; only two or
+  more terms of a day form a bundle. The link "Continue with …" leads to the
+  post, not to the heading.
+* Pages: one template with `.h-entry.kind-*`; the table of contents comes from
+  `outlineOf` (the two highest heading levels, not the footnotes), shown when it
+  has at least two entries; the band is `components/PageBand.astro`, related
+  memos from `relatedMemos`.
+* Overviews: glossary filter `scripts/glossary.ts`; tag cloud steps from
+  `tagCloud` (logarithmic, 1 to 6), list as the second view (radio switch, no
+  JavaScript); graph focus and kind filter in `scripts/graph.ts`, a graph in a
+  closed band is drawn when it opens.
+* The CSP allows no inline styles: the bars of the tag list use classes in
+  tenths.
+
 # Research behind the proposals
 
 * Line length 50 to 75 characters, text from 16 px, line height about 1.5

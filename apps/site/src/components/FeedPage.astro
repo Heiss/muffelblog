@@ -1,14 +1,15 @@
 ---
-import type { FeedItem, FeedSort, Page } from '@muffelblog/core';
+import type { FeedRow, FeedSort, Page } from '@muffelblog/core';
 import { messages } from '../i18n/messages';
 import Base from '../layouts/Base.astro';
+import { groupByDay } from '../lib/timeline';
 import { seriesPath } from '../scripts/feed-logic';
 import FeedEntry from './FeedEntry.astro';
 
 interface Props {
   title?: string;
   heading: string;
-  page: Page<FeedItem>;
+  page: Page<FeedRow>;
   /** Series the page belongs to. Only there the filter is shown. */
   series?: 'all' | 'post' | 'memo' | 'glossary';
   /** Date the series is sorted by. */
@@ -39,15 +40,23 @@ const sorts = [
   { id: 'created', name: messages.sort.created },
   { id: 'updated', name: messages.sort.updated },
 ] as const;
+const days = groupByDay(page.items, sort);
+const zone = { timeZone: 'Europe/Berlin' } as const;
+const dayFormat = new Intl.DateTimeFormat(messages.locale, {
+  day: 'numeric',
+  month: 'short',
+  ...zone,
+});
+const yearFormat = new Intl.DateTimeFormat(messages.locale, {
+  year: 'numeric',
+  ...zone,
+});
 ---
 
 <Base title={pageTitle} noindex={page.page > 1 || sort === 'updated'}>
-  <h1>{heading}</h1>
-  <div data-feed data-series={series} data-sort-by={sort}>
-    <div class="live-banner" data-live-banner role="status" hidden>
-      <button type="button"></button>
-    </div>
-    {series && (
+  {series && (
+    <Fragment slot="tools">
+      <h2>{messages.filter.label}</h2>
       <nav aria-label={messages.filter.label} class="filter" data-filter>
         {filters.map((f) => (
           <a
@@ -59,8 +68,7 @@ const sorts = [
           </a>
         ))}
       </nav>
-    )}
-    {series && (
+      <h2>{messages.sort.label}</h2>
       <nav aria-label={messages.sort.label} class="sort" data-sort>
         {sorts.map((o) => (
           <a
@@ -72,11 +80,27 @@ const sorts = [
           </a>
         ))}
       </nav>
-    )}
-    <div data-feed-list>
-      {page.items.length === 0 && <p>{empty}</p>}
-      {page.items.map((item) => (
-        <FeedEntry item={item} />
+    </Fragment>
+  )}
+  <h1 class={series ? 'visually-hidden' : undefined}>{heading}</h1>
+  <div data-feed data-series={series} data-sort-by={sort}>
+    <div class="live-banner" data-live-banner role="status" hidden>
+      <button type="button"></button>
+    </div>
+    {page.items.length === 0 && <p>{empty}</p>}
+    <div class="timeline" data-feed-list>
+      {days.map((d) => (
+        <section class="day" data-day={d.day}>
+          <h2 class="day-date">
+            <time datetime={d.day}>{dayFormat.format(d.date)}</time>
+            <small>{yearFormat.format(d.date)}</small>
+          </h2>
+          <div class="day-entries">
+            {d.rows.map((row) => (
+              <FeedEntry row={row} />
+            ))}
+          </div>
+        </section>
       ))}
     </div>
     <p data-feed-status role="status" hidden></p>
