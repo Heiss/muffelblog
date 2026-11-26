@@ -6,3 +6,6 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - sharp
+
+# engines.node in package.json is binding: an older Node stops the install.
+engineStrict: true

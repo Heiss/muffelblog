@@ -68,10 +68,11 @@ regenerated with `pnpm screenshots` (needs a browser, see below).
 ## Requirements
 
 - Node 26 (see `.node-version`)
-- pnpm 10 (version in `package.json`)
+- pnpm 12 (version in `package.json`, field `packageManager`)
 
-Corepack has not been part of Node since version 25. Install pnpm for example
-with `npm install --global pnpm@10.28.0`.
+Corepack has not been part of Node since version 25. Install pnpm in the
+version from `package.json`, for example with
+`npm install --global "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1]")"`.
 
 ## Commands
 
