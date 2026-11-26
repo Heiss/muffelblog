@@ -6,6 +6,8 @@ export interface LiveEntry {
   date: string;
   /** Tag addresses (slugs), as in `/tag/<slug>/`. */
   tags: string[];
+  /** Terms that the home page shows as one bundle: the id of the bundle. */
+  bundle?: string;
 }
 
 export interface LiveList {
@@ -28,11 +30,13 @@ const isTextList = (v: unknown): v is string[] =>
 /** One entry of the list, or null when it is not what the site writes. */
 function toEntry(raw: unknown): LiveEntry | null {
   if (!isRecord(raw)) return null;
-  const { id, kind, date, tags } = raw;
+  const { id, kind, date, tags, bundle } = raw;
   if (typeof id !== 'string' || typeof kind !== 'string' || !KINDS.has(kind))
     return null;
   if (!isDateText(date) || !isTextList(tags)) return null;
-  return { id, kind: kind as LiveEntry['kind'], date, tags };
+  if (bundle !== undefined && typeof bundle !== 'string') return null;
+  const entry = { id, kind: kind as LiveEntry['kind'], date, tags };
+  return bundle === undefined ? entry : { ...entry, bundle };
 }
 
 /** Reads `/entries.json`. Anything that is not what the site writes gives null. */
@@ -52,6 +56,8 @@ export interface Scope {
   kind: 'all' | LiveEntry['kind'];
   /** Set on a tag page: only entries with this tag count. */
   tag?: string;
+  /** The home page: the terms of a bundle count as one entry (O44). */
+  bundles?: boolean;
 }
 
 const SERIES: Record<string, Scope['kind']> = {
@@ -70,6 +76,7 @@ const SERIES: Record<string, Scope['kind']> = {
  * the first block of a series or of a tag page shows the newest entries.
  */
 export function scopeFor(path: string): Scope | null {
+  if (path === '/') return { kind: 'all', bundles: true };
   const series = SERIES[path];
   if (series !== undefined) return { kind: series };
   const tag = /^\/tag\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/.exec(path);
@@ -93,12 +100,17 @@ export function countNew(
     Number.NEGATIVE_INFINITY,
   );
   const have = new Set(loaded.map((l) => l.id));
+  // On the home page the terms of a bundle are one entry of the list.
+  const keyOf = (entry: LiveEntry) =>
+    (scope.bundles && entry.bundle) || entry.id;
   const isNew = (entry: LiveEntry) =>
-    Date.parse(entry.date) > newest && !have.has(entry.id);
+    Date.parse(entry.date) > newest && !have.has(keyOf(entry));
   const inScope = (entry: LiveEntry) =>
     (scope.kind === 'all' || entry.kind === scope.kind) &&
     (scope.tag === undefined || entry.tags.includes(scope.tag));
-  const count = entries.filter((e) => inScope(e) && isNew(e)).length;
+  const count = new Set(
+    entries.filter((e) => inScope(e) && isNew(e)).map(keyOf),
+  ).size;
   const oldest = entries[entries.length - 1];
   const more = entries.length >= limit && oldest !== undefined && isNew(oldest);
   return { count, more: count > 0 && more };

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  berlinDay,
   buildFeed,
+  bundleTerms,
   differentDay,
   filterKind,
   groupByTag,
@@ -398,5 +400,123 @@ describe('differentDay', () => {
         new Date('2026-01-10T22:30:00Z'),
       ),
     ).toBe(false);
+  });
+});
+
+describe('leads of posts (W24)', () => {
+  it('gives posts the text up to the first heading, terms and memos none', () => {
+    const feed = buildFeed(
+      [
+        artikel({
+          slug: 'p',
+          html: '<p>Intro <a href="#user-content-fn-1">1</a></p><h3>Part A</h3><p>x</p>',
+        }),
+        artikel({ slug: 'g', type: 'glossary', html: '<p>Term</p><h3>H</h3>' }),
+      ],
+      [memo({ uid: 'm' })],
+    );
+    const byId = new Map(feed.map((i) => [i.id, i]));
+    expect(byId.get('post:p')?.lead).toEqual({
+      html: '<p>Intro <a href="/p/p/#user-content-fn-1">1</a></p>',
+      next: 'Part A',
+    });
+    expect(byId.get('glossary:g')).not.toHaveProperty('lead');
+    expect(byId.get('memo:m')).not.toHaveProperty('lead');
+  });
+});
+
+describe('berlinDay', () => {
+  it('is the calendar day in Berlin time', () => {
+    expect(berlinDay(new Date('2026-11-13T22:59:59Z'))).toBe('2026-11-13');
+    expect(berlinDay(new Date('2026-11-13T23:00:00Z'))).toBe('2026-11-14');
+    expect(berlinDay(new Date('2026-07-01T21:59:59Z'))).toBe('2026-07-01');
+    expect(berlinDay(new Date('2026-07-01T22:00:00Z'))).toBe('2026-07-02');
+  });
+});
+
+describe('bundleTerms (W24, O44)', () => {
+  const day = (iso: string) => new Date(iso);
+  const feed = buildFeed(
+    [
+      artikel({ slug: 'post', date: day('2026-11-17T11:00:00Z') }),
+      artikel({
+        slug: 'a',
+        type: 'glossary',
+        date: day('2026-11-13T12:00:00Z'),
+      }),
+      artikel({
+        slug: 'b',
+        type: 'glossary',
+        date: day('2026-11-13T11:00:00Z'),
+      }),
+      artikel({
+        slug: 'lone',
+        type: 'glossary',
+        date: day('2026-11-10T11:00:00Z'),
+      }),
+      artikel({
+        slug: 'c',
+        type: 'glossary',
+        date: day('2026-11-13T09:00:00Z'),
+        updated: day('2026-11-20T09:00:00Z'),
+      }),
+    ],
+    [memo({ uid: 'm', date: day('2026-11-13T10:00:00Z') })],
+  );
+
+  it('puts all terms of a day into one bundle at the place of the first, keeps the rest', () => {
+    const rows = bundleTerms(feed);
+    expect(rows.map((r) => r.id)).toEqual([
+      'post:post',
+      'bundle:2026-11-13',
+      'memo:m',
+      'glossary:lone',
+    ]);
+    const bundle = rows[1];
+    expect(bundle).toEqual({
+      kind: 'bundle',
+      id: 'bundle:2026-11-13',
+      day: '2026-11-13',
+      created: day('2026-11-13T12:00:00Z'),
+      updated: day('2026-11-20T09:00:00Z'),
+      terms: feed.filter((i) =>
+        ['glossary:a', 'glossary:b', 'glossary:c'].includes(i.id),
+      ),
+    });
+  });
+
+  it('keeps a day with a single term as a normal entry', () => {
+    const rows = bundleTerms(
+      feed.filter((i) => i.id !== 'glossary:b' && i.id !== 'glossary:c'),
+    );
+    expect(rows.map((r) => r.id)).toEqual([
+      'post:post',
+      'glossary:a',
+      'memo:m',
+      'glossary:lone',
+    ]);
+  });
+
+  it('groups by the day of the date the list is sorted by', () => {
+    const rows = bundleTerms(sortFeed(feed, 'updated'), 'updated');
+    expect(rows.map((r) => r.id)).toEqual([
+      'glossary:c',
+      'post:post',
+      'bundle:2026-11-13',
+      'memo:m',
+      'glossary:lone',
+    ]);
+    const bundle = rows.find((r) => r.kind === 'bundle');
+    expect(bundle?.kind === 'bundle' && bundle.terms.map((t) => t.id)).toEqual([
+      'glossary:a',
+      'glossary:b',
+    ]);
+  });
+
+  it('defaults to the creation date and leaves an empty list empty', () => {
+    expect(bundleTerms(feed).map((r) => r.id)).toEqual(
+      bundleTerms(feed, 'created').map((r) => r.id),
+    );
+    expect(bundleTerms([])).toEqual([]);
   });
 });

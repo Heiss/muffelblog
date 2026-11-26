@@ -41,6 +41,20 @@ describe('parseLive', () => {
     });
   });
 
+  it('keeps the bundle of a term', () => {
+    const entry = {
+      id: 'glossary:a',
+      kind: 'glossary',
+      date: '2026-11-13T12:00:00.000Z',
+      tags: [],
+      bundle: 'bundle:2026-11-13',
+    };
+    expect(parseLive({ limit: 5, entries: [entry] })).toEqual({
+      limit: 5,
+      entries: [entry],
+    });
+  });
+
   it('refuses anything that is not what the site writes', () => {
     for (const bad of [
       null,
@@ -72,6 +86,18 @@ describe('parseLive', () => {
           { id: 'x', kind: 'post', date: '2026-11-04T10:00:00Z', tags: [1] },
         ],
       },
+      {
+        limit: 20,
+        entries: [
+          {
+            id: 'x',
+            kind: 'glossary',
+            date: '2026-11-04T10:00:00Z',
+            tags: [],
+            bundle: 3,
+          },
+        ],
+      },
     ]) {
       expect(parseLive(bad), JSON.stringify(bad)).toBeNull();
     }
@@ -80,7 +106,7 @@ describe('parseLive', () => {
 
 describe('scopeFor', () => {
   it('knows the series and the tag pages', () => {
-    expect(scopeFor('/')).toEqual({ kind: 'all' });
+    expect(scopeFor('/')).toEqual({ kind: 'all', bundles: true });
     expect(scopeFor('/posts/')).toEqual({ kind: 'post' });
     expect(scopeFor('/updated/')).toEqual({ kind: 'all' });
     expect(scopeFor('/posts/updated/')).toEqual({ kind: 'post' });
@@ -181,6 +207,37 @@ describe('countNew', () => {
       count: 3,
       more: false,
     });
+  });
+
+  it('counts the terms of a bundle as one entry on the home page only', () => {
+    const entries = [
+      {
+        ...e('glossary:a', '2026-11-13T12:00:00.000Z', 'glossary'),
+        bundle: 'bundle:2026-11-13',
+      },
+      {
+        ...e('glossary:b', '2026-11-13T11:00:00.000Z', 'glossary'),
+        bundle: 'bundle:2026-11-13',
+      },
+      e('post:p', '2026-11-13T10:00:00.000Z'),
+    ];
+    expect(
+      countNew(entries, loaded, { kind: 'all', bundles: true }, 20),
+    ).toEqual({ count: 2, more: false });
+    expect(countNew(entries, loaded, { kind: 'all' }, 20).count).toBe(3);
+    expect(countNew(entries, loaded, { kind: 'glossary' }, 20).count).toBe(2);
+    // A bundle that is already in the list is not new.
+    expect(
+      countNew(
+        entries,
+        [
+          ...loaded,
+          { id: 'bundle:2026-11-13', date: '2026-11-13T09:00:00.000Z' },
+        ],
+        { kind: 'all', bundles: true },
+        20,
+      ).count,
+    ).toBe(1);
   });
 
   it('counts every entry when nothing is loaded yet', () => {

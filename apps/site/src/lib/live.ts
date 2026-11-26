@@ -1,4 +1,4 @@
-import { tagSlug } from '@muffelblog/core';
+import { bundleTerms, tagSlug } from '@muffelblog/core';
 import type { FeedItem } from '@muffelblog/core';
 import type { LiveEntry, LiveList } from '../scripts/live-logic';
 
@@ -13,13 +13,22 @@ export function liveEntries(
   items: readonly FeedItem[],
   limit: number = LIVE_LIMIT,
 ): LiveList {
-  const entries: LiveEntry[] = items.slice(0, limit).map((item) => ({
-    id: item.id,
-    kind: item.kind,
-    date: item.created.toISOString(),
-    tags: item.tags
-      .map((tag) => tagSlug(tag))
-      .filter((slug): slug is string => slug !== null && slug !== ''),
-  }));
+  const bundleOf = new Map<string, string>();
+  for (const row of bundleTerms(items)) {
+    if (row.kind === 'bundle')
+      for (const term of row.terms) bundleOf.set(term.id, row.id);
+  }
+  const entries: LiveEntry[] = items.slice(0, limit).map((item) => {
+    const bundle = bundleOf.get(item.id);
+    return {
+      id: item.id,
+      kind: item.kind,
+      date: item.created.toISOString(),
+      tags: item.tags
+        .map((tag) => tagSlug(tag))
+        .filter((slug): slug is string => slug !== null && slug !== ''),
+      ...(bundle ? { bundle } : {}),
+    };
+  });
   return { limit, entries };
 }

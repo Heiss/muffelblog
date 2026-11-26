@@ -58,6 +58,30 @@ describe('liveEntries', () => {
     expect(live.entries[19]?.id).toBe('post:p20');
   });
 
+  it('names the bundle of terms that the home page shows as one entry', () => {
+    const day = (h: number) => new Date(Date.UTC(2026, 10, 13, h));
+    const live = liveEntries(
+      [
+        item(1, { kind: 'glossary', id: 'glossary:a', created: day(12) }),
+        item(2, { kind: 'glossary', id: 'glossary:b', created: day(11) }),
+        item(3, { created: day(10) }),
+        item(4, {
+          kind: 'glossary',
+          id: 'glossary:c',
+          created: new Date(Date.UTC(2026, 10, 10, 12)),
+        }),
+      ],
+      20,
+    );
+    expect(live.entries.map((e) => [e.id, e.bundle])).toEqual([
+      ['glossary:a', 'bundle:2026-11-13'],
+      ['glossary:b', 'bundle:2026-11-13'],
+      ['post:p3', undefined],
+      ['glossary:c', undefined],
+    ]);
+    expect(live.entries[2]).not.toHaveProperty('bundle');
+  });
+
   it('is empty for an empty feed', () => {
     expect(liveEntries([], 20)).toEqual({ limit: 20, entries: [] });
   });
