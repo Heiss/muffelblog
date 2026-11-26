@@ -22,6 +22,9 @@ structure stays unchanged, only the CSS files differ.
 * **[E]** All ten themes of the preview stay on offer, so every visitor can use
   what they like: Hell (the former look), Dracula, Matrix, Solarized Dark,
   Solarized Light, Nord, Gruvbox, Monokai, Tokyo Night, Catppuccin Mocha.
+* **[E]** The structure changed once for all themes on 2026-11-26 (sidebar,
+  timeline, see [Layout](/frontend/layout.md)); themes still differ only in
+  CSS, and all ten stay.
 * **[E]** The default theme is Solarized Light. With a dark system setting and
   no stored choice, Solarized Dark applies. A stored choice wins.
 * **[E]** Switcher: a select field (`select`) in the header, visible only with

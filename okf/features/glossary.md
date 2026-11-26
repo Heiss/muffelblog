@@ -25,7 +25,8 @@ generated: { by: claude-code/web, at: 2026-11-03T12:30:00Z }
 * **[E]** Filters in the feed: All, **Lang** (blog posts), **Kurz** (memos) and
   **Begriffe** (glossary terms). Terms are kept separate from blog posts:
   `Lang` never contains terms. In **All** the terms appear in the chronological
-  stream, marked as a term. The series is `/terms/` and `/terms/page/N/`.
+  stream, marked as a term. Since 2026-11-26 the terms of one day are bundled
+  into one entry ([Layout](/frontend/layout.md), O44). The series is `/terms/` and `/terms/page/N/`.
 * **[E]** The split view is dropped. The unified mode with a filter stays the
   only view of the feed (see [Feed](/frontend/feed.md)).
 
@@ -67,6 +68,17 @@ generated: { by: claude-code/web, at: 2026-11-03T12:30:00Z }
   expected amount (a few hundred terms) one page is enough.
 * **[V]** Search finds terms through Pagefind, with a filter by kind. RSS and the
   sitemap contain terms.
+
+# Layout of glossary and graph (layout board, 2026-11-26)
+
+* **[E]** Glossary: letters and a term filter in the sidebar, the list in two
+  columns with the short definition (mockup G4).
+* **[E]** Term page: the same template as a post, below the text a band with the
+  local graph, "Linked from" and "Links to" (G3).
+* **[E]** `/graph/`: the graph takes the whole area, search, kind filters, focus
+  and neighbours in the sidebar; it opens focused on one entry, the other nodes
+  faded, with a button for the whole graph (G5).
+* Details in [Layout](/frontend/layout.md).
 
 # Linking and graph (built 2026-11-05, W20 and W21)
 

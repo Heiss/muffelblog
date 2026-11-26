@@ -19,6 +19,9 @@ generated: { by: claude-code/web, at: 2026-11-20T12:30:00Z }
 * **[E]** Footnotes also stand in the margin, next to their reference; the list
   at the end of the page stays (print, feeds, no JavaScript).
 * **[E]** No special admonition (callout) as margin note.
+* **[E]** The layout board (2026-11-26) confirmed the notes on the right of the
+  text column; the local graph and the link lists move into a band below the
+  text (mockup K3, see [Layout](/frontend/layout.md)).
 * **[E]** Narrow screens (under 1100 px): the notes stand below their paragraph,
   closed ("Comment by Peter", "Footnote 1"), and open with a click. Without
   JavaScript they stay open there.

@@ -48,7 +48,7 @@ listed with their result, so those references keep working. Cleaned up on
 | O17 | Social preview images | Done 2026-11-05: one generated image per post, memo and term ([URLs and SEO](/frontend/urls-seo.md)). |
 | O18 | Backup, alerting | `docker/backup.sh`, `docker/restore.sh`, alert webhook `MUFFEL_ALERT_WEBHOOK` (W12, W16). |
 | O19 | Statistics | Decided by the owner 2026-11-05: no counter of our own (a static site would need a service of its own); optional Matomo of the operator through `MATOMO_URL` and `MATOMO_SITE_ID`, without cookies, off by default. |
-| O20 | Feed and RSS | Excerpt at most 200 characters; RSS with full text, 50 entries (`MUFFEL_RSS_ITEMS`, W09). |
+| O20 | Feed and RSS | Feed: full text up to the first heading (layout board 2026-11-26, [Layout](/frontend/layout.md)); before: excerpt at most 200 characters. RSS with full text, 50 entries (`MUFFEL_RSS_ITEMS`, W09). |
 | O21 | Withdrawn articles | Gone (404); a removed entry or link is reported once more through webmention (W15). |
 | O22 | Moderation | Administrator by email, mail on every comment, command line tools. No anti-spam beyond the email login (owner: not wanted for now). |
 | O23 | Development workflow | `astro dev` with the sample sets, tests, frontmatter schema checks. |
@@ -79,6 +79,21 @@ listed with their result, so those references keep working. Cleaned up on
 Proven since the review: Memos API and anonymous reading (contract test
 26.11.0), Nextcloud public share over WebDAV (contract test), German search
 interface (own search UI), umlauts in slugs (own slug function with tests).
+
+# E. Open from the layout board (2026-11-26)
+
+The layout itself is decided, see [Layout](/frontend/layout.md). Open:
+
+| ID | Topic | State |
+|---|---|---|
+| O40 | Memo page: graph and links | Owner on H1: the band "needs more space, and the graph etc. is missing and also needs space". Open whether memo pages also get the graph and link band of the term page, and when (always, or only when the memo links somewhere). |
+| O41 | Parts of F1 in the timeline | F1 and F2 were both favourites. Which parts of F1 join the timeline (larger memo text, a line at memos, tinted box for bundled terms, kind word) is not answered; G1 already has the larger memo text and the kind word. |
+| O42 | Endless scroll | Keep loading automatically, a "load more" button, or automatic first and a button later? With the sidebar the footer argument is gone. Not answered. |
+| O43 | Size of the body text | 17 px today, about 81 characters per line (advice: 50 to 75). Not answered. |
+| O44 | Bundled terms and counting | How a bundle counts in the blocks of 20 (`/page/N/`), in `entries.json` and in the banner "N new entries", and whether the Terms filter bundles too. **[V]** Bundle only under "All"; a bundle counts as one entry. |
+| O45 | Pages with `nav: true` | Today in the header menu "More"; the sidebar and the phone menu need a place for them. Not on the board. |
+| O46 | Search on phones | Search is in the bottom bar (decided). How it opens is open: a panel from the bottom, or a panel sliding in from the right (owner's suggestion on H3). |
+| O47 | Widths between phone and sidebar | The mockups switch at 600 px (phone) and at 1000 to 1100 px (margin column, band under the text). Breakpoints for tablets and narrow windows are not decided. |
 
 # Corrections to earlier statements
 

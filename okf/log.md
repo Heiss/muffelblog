@@ -1,5 +1,8 @@
 # Update log
 
+## 2026-11-26
+* **Update**: Layout decided on the layout board (owner, four rounds of mockups with the live content of netzmuffel.de): sidebar instead of header, timeline feed with a continuous line and terms bundled per day, long posts in the feed up to the first heading (O20 changed), post page with the table of contents in the sidebar, margin notes on the right and a band with graph and links below, one template for post, term and memo, glossary letters and graph controls in the sidebar, weighted tag cloud, bottom bar on phones (Start, Glossary, Tags, Search, Menu); open points O40 to O47; see [Layout](/frontend/layout.md).
+
 ## 2026-11-20
 * **Update**: Docs: guide "Comments in Obsidian" with screenshots (set up the plugin, write a comment, what is public, footnotes), linked from the writing guide, the Nextcloud guide and the site map; see [Notes in the margin](/features/margin-notes.md).
 * **Update**: Notes in the margin: every open comment of the Obsidian plugin Document Comments and every footnote stands next to its paragraph (below it, closed, on narrow screens); resolved comments never; the list of footnotes stays; footnote links fixed; see [Notes in the margin](/features/margin-notes.md).
