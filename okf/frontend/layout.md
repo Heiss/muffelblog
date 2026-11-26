@@ -77,7 +77,8 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
 * **[E]** The date stays at the top while its day scrolls by (owner's wish on
   L3, liked in L2). The line is drawn above the sticky date, so it never
   breaks; in L2 the date covered the line and left a gap, which the owner
-  rejected. Mockup N1 shows the combination (not rated yet).
+  rejected. The combination is mockup N1 (favourite); a ring per day on the
+  line (L1) was rejected.
 * **[E]** The terms of one day are bundled into one entry: "413 new terms:
   Accelerate (Buch), …, show all" (answers 2026-11-25). This changes
   "purely chronological, one stream", see [Feed](/frontend/feed.md).
@@ -117,7 +118,8 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
 * **[E]** Beside it the links of the memo: local graph and "Links to" (J2,
   favourite).
 * **[E]** The band can be folded behind one line that says what is in it
-  ("More: 8 memos with #selfhost · 1 link"; owner's wish on J2). The default
+  ("More: 8 memos with #selfhost · 1 link"; owner's wish on J2, shown as N2,
+  favourite). The default
   state, and whether term and post pages fold the same way, are open (O40).
 
 ## Overviews
@@ -142,11 +144,21 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
 * **[E]** All ten themes stay. The structure above is the same in every theme;
   themes still differ only in CSS ([Themes](/frontend/themes.md)).
 
+## Final set on the board
+
+* The board's last round (E1 to E9) shows every page in the chosen form with
+  the phone bottom bar, and a post with an open Document Comments thread and a
+  footnote (E2). The owner's verdict after round 7: "I think we have it."
+* **[V]** The phone menu (Graph, Files, Comments, FAQ, theme, RSS) slides in
+  from the right like the search; not rated yet.
+
 ## Rejected on the board
 
 * R1 (one header line with "More"), F3 (compact one-line index: "you have to
   open everything to read it"), M1 (separate templates: memo card and lexicon
-  entry), H2 (memo inside an excerpt of the timeline: "nice, but useful?").
+  entry), H2 (memo inside an excerpt of the timeline: "nice, but useful?"),
+  J1 (full-width rule between days), L1 (ring per day on the line), L2 (short
+  tick whose sticky date broke the line).
 
 # Research behind the proposals
 

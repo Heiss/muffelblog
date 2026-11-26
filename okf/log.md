@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-26
+* **Update**: Layout board round 7: the timeline with tinted day zones and a sticky date (N1) and the foldable memo band (N2) are favourites; a ring per day (L1) is rejected. A final set of all pages with the phone bottom bar and a post with Document Comments is on the board; see [Layout](/frontend/layout.md).
 * **Update**: Layout board rounds 5 and 6: days in the timeline are alternating tinted zones with a sticky date (O48 settled); search on phones slides in from the right (O46 settled); the memo band holds related memos and the memo's links and can be folded (O40 narrowed); see [Layout](/frontend/layout.md).
 * **Update**: Timeline: the horizontal rule between days (J1) is rejected by the owner; the line stays continuous, how days are told apart is open (O48); see [Layout](/frontend/layout.md).
 * **Update**: Layout decided on the layout board (owner, four rounds of mockups with the live content of netzmuffel.de): sidebar instead of header, timeline feed with a continuous line and terms bundled per day, long posts in the feed up to the first heading (O20 changed), post page with the table of contents in the sidebar, margin notes on the right and a band with graph and links below, one template for post, term and memo, glossary letters and graph controls in the sidebar, weighted tag cloud, bottom bar on phones (Start, Glossary, Tags, Search, Menu); open points O40 to O47; see [Layout](/frontend/layout.md).
