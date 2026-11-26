@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-26
+* **Fix**: Astro 7.4.13 (Renovate #80): its new Rolldown brings `@emnapi/runtime` 2.0.0-beta.2, and pnpm handed this beta to `@astrojs/astro2tsx` as a peer next to `@emnapi/core` 1.x, so `astro check` of the docs stopped with "this.bridge.setLastError is not a function". `apps/docs` now declares `@emnapi/runtime` `^1.11.3` itself, so the peer resolves to 1.x; the beta stays only in the optional Wasm binding of Rolldown, which is not installed on x64 and arm64.
 * **Update**: W24 built: sidebar frame with phone top and bottom bar, menu and search sliding in from the right; timeline with day zones, sticky dates, bundled terms and posts up to the first heading; one template for post, term and memo with table of contents and foldable band; glossary filter, tag cloud, graph focus; 18 new E2E tests; see [Layout](/frontend/layout.md) and W24 in the [Roadmap](/roadmap.md).
 * **Update**: The owner accepted Claude's proposals for the last open layout points (O40 to O45, O47): foldable band on memo, term and post pages, 18 px body text in a 40rem column, bundles only under "All" counting as one entry, `nav: true` pages in the sidebar, sidebar from 900 px, phone menu from the right, graph focused on the newest post; see [Layout](/frontend/layout.md).
 * **Update**: Final review on the layout board: start page (E1) and the post with Document Comments (E2) are favourites; footnotes stand open in the margin on desktop like comments, and both are closed by default on phones; see [Notes in the margin](/features/margin-notes.md).
