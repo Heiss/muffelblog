@@ -5,6 +5,7 @@ import {
   createLocalImageResolver,
   heifAvailable,
   loadArticles,
+  outlineOf,
   renderMarkdown,
 } from '@muffelblog/core';
 import type {
@@ -12,12 +13,15 @@ import type {
   GlossaryLinking,
   MemoEntry,
   TermMatcher,
+  TocEntry,
 } from '@muffelblog/core';
 import { contentConfig } from './content';
 import { getSettings } from './settings';
 
 export interface RenderedArticle extends Article {
   html: string;
+  /** Table of contents (posts and terms); the headings of it carry ids. */
+  toc: TocEntry[];
 }
 
 interface Content {
@@ -100,7 +104,11 @@ async function build(): Promise<Content> {
       lang: getSettings().lang,
     });
     warnings.push(...result.warnings);
-    rendered.push({ ...article, html: result.html });
+    const outline =
+      article.type === 'page'
+        ? { html: result.html, toc: [] }
+        : outlineOf(result.html);
+    rendered.push({ ...article, html: outline.html, toc: outline.toc });
   }
 
   // If fetching the memos fails, the build stops and the last good version stays online.

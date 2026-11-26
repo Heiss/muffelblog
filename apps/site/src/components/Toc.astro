@@ -1,0 +1,26 @@
+---
+import type { TocEntry } from '@muffelblog/core';
+import { messages } from '../i18n/messages';
+
+interface Props {
+  toc: TocEntry[];
+}
+
+// The table of contents of a post or term, in the sidebar (layout W24).
+const { toc } = Astro.props;
+---
+
+{toc.length > 1 && (
+  <>
+    <h2 id="toc-title">{messages.page.contents}</h2>
+    <nav class="toc" aria-labelledby="toc-title">
+      <ol>
+        {toc.map((entry) => (
+          <li class={`toc-${entry.depth}`}>
+            <a href={`#${entry.id}`}>{entry.text}</a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  </>
+)}

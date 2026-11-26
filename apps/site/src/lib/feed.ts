@@ -1,5 +1,5 @@
-import { buildFeed } from '@muffelblog/core';
-import type { FeedItem } from '@muffelblog/core';
+import { buildFeed, bundleTerms, sortFeed } from '@muffelblog/core';
+import type { FeedItem, FeedRow, FeedSort } from '@muffelblog/core';
 import { getContent } from './articles';
 import { getSettings } from './settings';
 
@@ -9,6 +9,14 @@ export async function getFeed(): Promise<FeedItem[]> {
   return buildFeed(articles, memos, {
     excerptChars: getSettings().feedExcerptChars,
   });
+}
+
+/**
+ * The rows of the series "All": the feed sorted by `sort`, the terms of one day
+ * bundled (layout W24, O44).
+ */
+export async function getRows(sort: FeedSort = 'created'): Promise<FeedRow[]> {
+  return bundleTerms(sortFeed(await getFeed(), sort), sort);
 }
 
 /** The most recent `updated` of the entries, undefined for none. */

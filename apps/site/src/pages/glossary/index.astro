@@ -5,25 +5,50 @@ import Base from '../../layouts/Base.astro';
 import { getContent } from '../../lib/articles';
 
 const { articles } = await getContent();
-const groups = groupByLetter(articles.filter((a) => a.type === 'glossary'));
+const terms = articles.filter((a) => a.type === 'glossary');
+const groups = groupByLetter(terms);
 const title = messages.glossary.title;
+const anchor = (letter: string) =>
+  `letter-${letter === '#' ? 'other' : letter}`;
 ---
 
-<Base {title}>
-  <h1>{title}</h1>
+<Base {title} wide>
+  {groups.length > 0 && (
+    <Fragment slot="tools">
+      <h2>{messages.glossary.lettersLabel}</h2>
+      <nav aria-label={messages.glossary.lettersLabel} class="letters">
+        {groups.map((g) => (
+          <a href={`#${anchor(g.letter)}`}>{g.letter}</a>
+        ))}
+      </nav>
+      <label class="term-filter" data-term-filter hidden>
+        <span class="visually-hidden">{messages.glossary.filter}</span>
+        <input
+          type="search"
+          placeholder={messages.glossary.filter}
+          autocomplete="off"
+        />
+      </label>
+    </Fragment>
+  )}
+  <div class="glossary-head">
+    <h1>{title}</h1>
+    {terms.length > 0 && <p>{messages.glossary.count(terms.length)}</p>}
+  </div>
   {groups.length === 0 && <p>{messages.glossary.none}</p>}
   {groups.length > 0 && (
-    <nav aria-label={messages.glossary.lettersLabel} class="letters">
+    <nav
+      aria-label={messages.glossary.lettersLabel}
+      class="letters letters-row"
+    >
       {groups.map((g) => (
-        <a href={`#letter-${g.letter === '#' ? 'other' : g.letter}`}>
-          {g.letter}
-        </a>
+        <a href={`#${anchor(g.letter)}`}>{g.letter}</a>
       ))}
     </nav>
   )}
   {groups.map((g) => (
     <section class="letter-group">
-      <h2 id={`letter-${g.letter === '#' ? 'other' : g.letter}`}>{g.letter}</h2>
+      <h2 id={anchor(g.letter)}>{g.letter}</h2>
       <ul>
         {g.items.map((term) => (
           <li>
@@ -37,3 +62,7 @@ const title = messages.glossary.title;
     </section>
   ))}
 </Base>
+
+<script>
+  import '../../scripts/glossary';
+</script>

@@ -1,10 +1,10 @@
 ---
 import { SITE_NAME, paginate } from '@muffelblog/core';
 import FeedPage from '../components/FeedPage.astro';
-import { getFeed } from '../lib/feed';
+import { getRows } from '../lib/feed';
 import { getSettings } from '../lib/settings';
 
-const page = paginate(await getFeed(), 1, '/', getSettings().feedPageSize);
+const page = paginate(await getRows(), 1, '/', getSettings().feedPageSize);
 ---
 
 <FeedPage series="all" heading={SITE_NAME} {page} />

@@ -1,6 +1,7 @@
 ---
 import { messages } from '../../i18n/messages';
 import Base from '../../layouts/Base.astro';
+import { getFeed } from '../../lib/feed';
 import { getGraph } from '../../lib/graph';
 
 // The whole graph. Without JavaScript the page lists every page with its links.
@@ -17,12 +18,63 @@ const pages = graph.nodes
       .filter((x) => x !== undefined),
   }))
   .filter((p) => p.to.length > 0);
+// The picture opens on the newest post that is part of the graph (layout W24).
+const linked = new Set(graph.edges.flatMap((e) => [e.from, e.to]));
+const focus = (await getFeed()).find(
+  (i) => i.kind === 'post' && linked.has(i.url),
+)?.url;
+const kinds = ['post', 'glossary', 'memo', 'domain'] as const;
+const names = graph.nodes
+  .filter((n) => n.kind !== 'domain')
+  .map((n) => n.title)
+  .sort((a, b) => a.localeCompare(b, messages.lang));
 ---
 
-<Base title={t.title}>
+<Base title={t.title} wide>
+  <Fragment slot="tools">
+    <div class="graph-tools" data-graph-tools hidden>
+      <h2>{t.find}</h2>
+      <label>
+        <span class="visually-hidden">{t.find}</span>
+        <input
+          type="search"
+          list="graph-names"
+          placeholder={t.find}
+          autocomplete="off"
+          data-graph-find
+        />
+      </label>
+      <datalist id="graph-names">
+        {names.map((name) => (
+          <option value={name} />
+        ))}
+      </datalist>
+      <h2>{t.show}</h2>
+      <fieldset class="graph-kinds" data-graph-kinds>
+        <legend class="visually-hidden">{t.show}</legend>
+        {kinds.map((kind) => (
+          <label>
+            <input type="checkbox" value={kind} checked /> {t.kinds[kind]}
+          </label>
+        ))}
+      </fieldset>
+      <h2>{t.focus}</h2>
+      <p class="graph-focus" data-graph-focus-name></p>
+      <h2>{t.neighbours}</h2>
+      <ol class="graph-neighbours" data-graph-neighbours></ol>
+      <button
+        type="button"
+        data-graph-all
+        data-label-all={t.showAll}
+        data-label-focus={t.showFocus}
+      >
+        {t.showAll}
+      </button>
+    </div>
+  </Fragment>
   <h1>{t.title}</h1>
   <p>{t.intro}</p>
-  <figure class="graph graph-all" data-graph hidden>
+  <figure class="graph graph-all" data-graph data-graph-focus={focus} hidden>
     <figcaption>{t.title}</figcaption>
   </figure>
   <noscript>

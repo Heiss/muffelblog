@@ -48,7 +48,7 @@ listed with their result, so those references keep working. Cleaned up on
 | O17 | Social preview images | Done 2026-11-05: one generated image per post, memo and term ([URLs and SEO](/frontend/urls-seo.md)). |
 | O18 | Backup, alerting | `docker/backup.sh`, `docker/restore.sh`, alert webhook `MUFFEL_ALERT_WEBHOOK` (W12, W16). |
 | O19 | Statistics | Decided by the owner 2026-11-05: no counter of our own (a static site would need a service of its own); optional Matomo of the operator through `MATOMO_URL` and `MATOMO_SITE_ID`, without cookies, off by default. |
-| O20 | Feed and RSS | Excerpt at most 200 characters; RSS with full text, 50 entries (`MUFFEL_RSS_ITEMS`, W09). |
+| O20 | Feed and RSS | Feed: full text up to the first heading (layout board 2026-11-26, [Layout](/frontend/layout.md)); before: excerpt at most 200 characters. RSS with full text, 50 entries (`MUFFEL_RSS_ITEMS`, W09). |
 | O21 | Withdrawn articles | Gone (404); a removed entry or link is reported once more through webmention (W15). |
 | O22 | Moderation | Administrator by email, mail on every comment, command line tools. No anti-spam beyond the email login (owner: not wanted for now). |
 | O23 | Development workflow | `astro dev` with the sample sets, tests, frontmatter schema checks. |
@@ -64,6 +64,15 @@ listed with their result, so those references keep working. Cleaned up on
 | O37 | Code quality, mutation tests | Decided by the owner 2026-11-05, before the release: strict complexity limits, coverage gate, Stryker from 80 %, security gates ([Test strategy](/ops/testing.md)). |
 | O38 | Glossary details | Done 2026-11-05: optional field `term:` (title may be a question, letter view sorts by the term), comments on terms, umlauts under the base letter (collator `de`). |
 | O39 | Languages | Development in English, `MUFFEL_LANG` with default `en`, feeds and search follow the build language. |
+| O40 | Memo page: band | Settled 2026-11-26: related memos plus graph and "Links to" (graph only when the memo links somewhere); the band folds on memo, term and post pages, open on wide screens, closed on phones ([Layout](/frontend/layout.md)). |
+| O41 | Parts of F1 in the timeline | Settled 2026-11-26: nothing more, N1 stays as rated. |
+| O42 | Endless scroll | Settled 2026-11-26: stays. |
+| O43 | Size of the body text | Settled 2026-11-26: 18 px in a text column of 40rem (about 70 characters). |
+| O44 | Bundled terms and counting | Settled 2026-11-26: bundled only under "All"; a bundle counts as one entry in the blocks of 20 and in the banner; the Terms filter lists terms one by one. |
+| O45 | Pages with `nav: true` | Settled 2026-11-26: in the sidebar navigation below the main links, in the menu on phones. |
+| O47 | Widths between phone and sidebar | Settled 2026-11-26: sidebar from 900 px, phone layout below; margin notes beside the text from 1100 px. |
+| O46 | Search on phones | Settled 2026-11-26: a panel slides in from the right, field at its top, results below, the bottom bar stays (J4, favourite; [Layout](/frontend/layout.md)). |
+| O48 | Telling days apart in the timeline | Settled 2026-11-26: alternating tinted zones per day (L3, favourite), the date stays at the top while its day scrolls, the line is drawn above it and never breaks; a full-width rule (J1) and a rule with a gap (L2) were rejected ([Layout](/frontend/layout.md)). |
 
 # D. Unverified facts
 

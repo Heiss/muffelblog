@@ -1,51 +1,126 @@
 ---
 import { differentDay, tagSlug } from '@muffelblog/core';
-import type { FeedItem } from '@muffelblog/core';
+import type { FeedRow } from '@muffelblog/core';
 import { messages } from '../i18n/messages';
 
 interface Props {
-  item: FeedItem;
+  row: FeedRow;
 }
 
-const { item } = Astro.props;
-const format = new Intl.DateTimeFormat(messages.locale, {
+const { row } = Astro.props;
+const zone = { timeZone: 'Europe/Berlin' } as const;
+const dateFormat = new Intl.DateTimeFormat(messages.locale, {
   dateStyle: 'long',
-  ...(item.kind === 'memo' ? { timeStyle: 'short' } : {}),
-  timeZone: 'Europe/Berlin',
+  ...zone,
 });
-const created = format.format(item.created);
+const timeFormat = new Intl.DateTimeFormat(messages.locale, {
+  timeStyle: 'short',
+  ...zone,
+});
+const created = row.created.toISOString();
+const dateText = dateFormat.format(row.created);
 // Only when the edit happened on another day than the creation.
-const showUpdated = differentDay(item.created, item.updated);
+const showUpdated =
+  row.kind !== 'bundle' && differentDay(row.created, row.updated);
+const kindLabel = {
+  post: messages.filter.long,
+  memo: messages.filter.short,
+  glossary: messages.glossary.term,
+  bundle: messages.filter.terms,
+}[row.kind];
+// A bundle names its first terms, all of them behind "show all".
+const firstTerms = row.kind === 'bundle' ? row.terms.slice(0, 4) : [];
+const tags = row.kind === 'bundle' ? [] : row.tags;
+const lead = row.kind === 'post' ? row.lead : undefined;
+const pageUrl = row.kind === 'bundle' ? '' : row.url;
 ---
 
 <article
-  class={`entry entry-${item.kind}`}
-  data-kind={item.kind}
-  data-id={item.id}
+  class={`entry entry-${row.kind}`}
+  data-kind={row.kind}
+  data-id={row.id}
 >
-  {item.kind === 'glossary' && <p class="kind">{messages.glossary.term}</p>}
-  <h2>
-    <a href={item.url}>{item.title}</a>
-  </h2>
-  <p>
-    <time datetime={item.created.toISOString()}>{created}</time>
-    {showUpdated && (
-      <span class="updated">
-        ·
-        <time datetime={item.updated.toISOString()}>
-          {messages.sort.updatedOn(format.format(item.updated))}
-        </time>
-      </span>
+  <p class="entry-kind">
+    {kindLabel}{' '}
+    {row.kind === 'memo' ? (
+      <>
+        ·{' '}
+        <a href={row.url} aria-label={row.title} data-entry-link>
+          <time datetime={created} title={dateText}>
+            {timeFormat.format(row.created)}
+          </time>
+        </a>
+      </>
+    ) : (
+      <time class="visually-hidden" datetime={created}>
+        {dateText}
+      </time>
     )}
+    {
+      // A bundle also carries the newest change of its terms.
+      row.kind === 'bundle' && (
+        <time class="visually-hidden" datetime={row.updated.toISOString()}>
+          {dateFormat.format(row.updated)}
+        </time>
+      )
+    }
   </p>
-  {item.html !== undefined ? (
-    <div class="content" set:html={item.html} />
-  ) : (
-    item.excerpt && <p class="excerpt">{item.excerpt}</p>
+  {row.kind === 'bundle' && (
+    <>
+      <p>
+        <strong>{messages.feed.newTerms(row.terms.length)}</strong>{' '}
+        {firstTerms.map((term, i) => (
+          <>
+            {i > 0 && ', '}
+            <a href={term.url}>{term.title}</a>
+          </>
+        ))}
+        {row.terms.length > firstTerms.length && ' …'}
+      </p>
+      <details>
+        <summary>{messages.feed.showAllTerms(row.terms.length)}</summary>
+        <ul class="term-list">
+          {row.terms.map((term) => (
+            <li>
+              <a href={term.url}>{term.title}</a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </>
   )}
-  {item.tags.length > 0 && (
+  {row.kind === 'post' || row.kind === 'glossary' ? (
+    <h3>
+      <a href={row.url} data-entry-link>
+        {row.title}
+      </a>
+    </h3>
+  ) : null}
+  {showUpdated && (
+    <p class="updated">
+      <time datetime={row.updated.toISOString()}>
+        {messages.sort.updatedOn(dateFormat.format(row.updated))}
+      </time>
+    </p>
+  )}
+  {row.kind === 'memo' && <div class="content" set:html={row.html ?? ''} />}
+  {row.kind === 'post' &&
+    (lead?.html ? (
+      <div class="lead content" set:html={lead.html} />
+    ) : (
+      row.excerpt && <p class="excerpt">{row.excerpt}</p>
+    ))}
+  {lead?.next && (
+    <a class="continue" href={pageUrl}>
+      {messages.feed.continueWith(lead.next)} →
+    </a>
+  )}
+  {row.kind === 'glossary' && row.excerpt && (
+    <p class="excerpt">{row.excerpt}</p>
+  )}
+  {tags.length > 0 && (
     <ul aria-label={messages.tags.label} class="tags">
-      {item.tags.map((tag) => {
+      {tags.map((tag) => {
         const slug = tagSlug(tag);
         return <li>{slug ? <a href={`/tag/${slug}/`}>{tag}</a> : tag}</li>;
       })}

@@ -16,6 +16,12 @@ export const en = {
     more: 'More',
     files: 'Files',
     search: 'Search',
+    menu: 'Menu',
+    close: 'Close',
+    quick: 'Quick navigation',
+    skip: 'Skip to the content',
+    counts: (posts: number, memos: number, terms: number) =>
+      `${posts} ${posts === 1 ? 'post' : 'posts'} · ${memos} ${memos === 1 ? 'memo' : 'memos'} · ${terms} ${terms === 1 ? 'term' : 'terms'}`,
   },
   files: {
     title: 'Files',
@@ -43,6 +49,12 @@ export const en = {
     arrange: 'Arrange again',
     zoomHint:
       'Mouse wheel zooms, drag the background to move, drag a point to move it.',
+    find: 'Find a point',
+    show: 'Show',
+    focus: 'Focus',
+    neighbours: 'Neighbours',
+    showAll: 'Show the whole graph',
+    showFocus: 'Back to the focus',
     kinds: {
       post: 'Post',
       glossary: 'Term',
@@ -123,6 +135,8 @@ export const en = {
     lettersLabel: 'Letters',
     none: 'No terms yet.',
     term: 'Term',
+    filter: 'Filter terms',
+    count: (count: number) => (count === 1 ? '1 term' : `${count} terms`),
   },
   feed: {
     empty: 'No entries yet.',
@@ -132,6 +146,19 @@ export const en = {
     pageOf: (page: number, pages: number) => `Page ${page} of ${pages}`,
     pageTitle: (title: string, page: number) => `${title}, page ${page}`,
     loadFailed: 'Loading more failed. ',
+    continueWith: (heading: string) => `Continue with “${heading}”`,
+    read: 'Read on',
+    newTerms: (count: number) => `${count} new terms:`,
+    showAllTerms: (count: number) => `Show all ${count}`,
+  },
+  page: {
+    contents: 'Contents',
+    more: 'More on this page',
+    links: (count: number) => (count === 1 ? '1 link' : `${count} links`),
+    related: (tag: string) => `More with #${tag}`,
+    relatedCount: (count: number) =>
+      count === 1 ? '1 memo' : `${count} memos`,
+    showAll: (count: number) => `Show all ${count}`,
   },
   live: {
     one: '1 new entry',
@@ -147,6 +174,10 @@ export const en = {
     none: 'No tags yet.',
     title: (name: string) => `Tag ${name}`,
     heading: (name: string) => `Tag: ${name}`,
+    view: 'View',
+    cloud: 'Cloud',
+    list: 'List',
+    count: (count: number) => (count === 1 ? '1 tag' : `${count} tags`),
   },
 } as const;
 

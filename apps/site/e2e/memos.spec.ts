@@ -8,7 +8,12 @@ test.describe('Memo pages under /m/<uid>/', () => {
     await page.goto('/m/memo-text/');
     await expect(page.locator('html')).toHaveAttribute('lang', ui.lang);
     await expect(page).toHaveTitle('Memo of 2 Nov 2026, 14:32 – Muffelblog');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    // Layout W24: date and time are the visible heading, the title is its name.
+    const heading = page.getByRole('heading', { level: 1 });
+    await expect(heading.locator('time')).toHaveText(
+      '2 November 2026 at 14:32',
+    );
+    await expect(heading.locator('.p-name')).toHaveText(
       'Memo of 2 Nov 2026, 14:32',
     );
     await expect(page.locator('h1 time')).toHaveAttribute(

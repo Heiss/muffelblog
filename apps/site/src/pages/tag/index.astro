@@ -3,19 +3,57 @@ import { groupByTag } from '@muffelblog/core';
 import { messages } from '../../i18n/messages';
 import Base from '../../layouts/Base.astro';
 import { getFeed } from '../../lib/feed';
+import { tagCloud } from '../../lib/timeline';
 
 const groups = groupByTag(await getFeed());
+const cloud = tagCloud(groups);
+const byCount = [...cloud].sort((a, b) => b.count - a.count);
+const max = Math.max(1, ...cloud.map((t) => t.count));
+const t = messages.tags;
 ---
 
-<Base title={messages.tags.label}>
-  <h1>{messages.tags.label}</h1>
-  {groups.length === 0 && <p>{messages.tags.none}</p>}
-  <ul aria-label={messages.tags.all} class="tag-index">
-    {groups.map((g) => (
-      <li>
-        <a href={`/tag/${g.slug}/`}>{g.names[0]}</a>
-        <span> ({g.count})</span>
-      </li>
-    ))}
-  </ul>
+<Base title={t.label}>
+  <div class="tags-page">
+    <div class="glossary-head">
+      <h1>{t.label}</h1>
+      {groups.length > 0 && <p>{t.count(groups.length)}</p>}
+    </div>
+    {groups.length === 0 && <p>{t.none}</p>}
+    {groups.length > 0 && (
+      <fieldset class="tag-views">
+        <legend class="visually-hidden">{t.view}</legend>
+        <label>
+          <input type="radio" name="tag-view" id="view-cloud" checked />
+          {t.cloud}
+        </label>
+        <label>
+          <input type="radio" name="tag-view" id="view-list" />
+          {t.list}
+        </label>
+      </fieldset>
+    )}
+    <ul aria-label={t.all} class="tag-cloud">
+      {cloud.map((tag) => (
+        <li class={`step-${tag.step}`}>
+          <a href={`/tag/${tag.slug}/`}>
+            {tag.name}
+            <small>{tag.count}</small>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <ul aria-label={t.all} class="tag-index">
+      {byCount.map((tag) => (
+        <li>
+          <a href={`/tag/${tag.slug}/`}>{tag.name}</a>
+          <span class="tag-bar" aria-hidden="true">
+            <span
+              class={`bar-${Math.max(1, Math.round((tag.count / max) * 10))}`}
+            />
+          </span>
+          <span class="count"> ({tag.count})</span>
+        </li>
+      ))}
+    </ul>
+  </div>
 </Base>

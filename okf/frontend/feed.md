@@ -10,7 +10,9 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 # Decisions
 
 * **[E]** One home page (`/`) shows posts and memos together, purely
-  chronological, newest first.
+  chronological, newest first. Changed 2026-11-26: the terms of one day are
+  bundled into one entry, and the feed is drawn as a timeline (see
+  [Layout](/frontend/layout.md)).
 * **[E]** Endless scroll instead of visible pagination.
 * **[E]** The feed is a single stream (unified mode) with a filter (All / Long
   / Short, later also Terms). The filter is kept in the browser storage.
@@ -57,11 +59,26 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   block. Duplicate entries are discarded by their id (implemented in W06a).
 * **[E]** Scroll position and loaded blocks are restored when going back from
   an article (implemented in W06a, a note in `sessionStorage`).
-* **[V]** The footer is hard to reach with endless scroll. Important links
-  (imprint, privacy policy, RSS) therefore belong in the fixed header or
-  sidebar.
+* **[E]** The footer is hard to reach with endless scroll. Settled 2026-11-26:
+  the footer links (and the theme picker) stand at the bottom of the sidebar
+  (see [Layout](/frontend/layout.md)).
 * **[E]** The browser storage (`localStorage`) is optional. If it is missing,
   the default filter "All" applies.
+
+# Layout (layout board, 2026-11-26)
+
+* **[E]** Timeline with a date column (the date once per day) and a vertical
+  line without gaps; no horizontal rule between days (rejected). Each day is a
+  zone in alternating tints, its date stays at the top while the day scrolls
+  by (O48 settled). Filter and sort move into the sidebar. Details in [Layout](/frontend/layout.md).
+* **[E]** In the feed a long post shows its full text up to the first heading,
+  however long; this replaces the excerpt of at most 200 characters (O20). The
+  `description` stays for search, social previews and meta tags.
+* **[E]** The terms of one day are bundled into one entry ("413 new terms: …,
+  show all").
+* **[E]** Terms are bundled only under "All"; a bundle counts as one entry in
+  the blocks of 20, in `entries.json` and in the banner "N new entries"; the
+  Terms filter lists terms one by one (O44). Endless scroll stays (O42).
 
 # Accessibility
 

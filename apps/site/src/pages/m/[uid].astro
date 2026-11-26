@@ -1,24 +1,33 @@
 ---
 import type { MemoEntry } from '@muffelblog/core';
+import { differentDay } from '@muffelblog/core';
 import { messages } from '../../i18n/messages';
 import Comments from '../../components/Comments.astro';
-import LinkLists from '../../components/LinkLists.astro';
+import PageBand from '../../components/PageBand.astro';
 import Base from '../../layouts/Base.astro';
 import { getContent } from '../../lib/articles';
+import { relatedMemos } from '../../lib/timeline';
 
 export async function getStaticPaths() {
   const { memos } = await getContent();
   return memos.map((memo) => ({
     params: { uid: memo.uid },
-    props: { memo },
+    props: { memo, related: relatedMemos(memo, memos) },
   }));
 }
 
 interface Props {
   memo: MemoEntry;
+  related: ReturnType<typeof relatedMemos>;
 }
 
-const { memo } = Astro.props;
+const { memo, related } = Astro.props;
+const when = new Intl.DateTimeFormat(messages.locale, {
+  dateStyle: 'long',
+  timeStyle: 'short',
+  timeZone: 'Europe/Berlin',
+});
+const url = `/m/${memo.uid}/`;
 ---
 
 <Base
@@ -26,18 +35,27 @@ const { memo } = Astro.props;
   description={memo.description || undefined}
   ogType="article"
 >
-  <article class="h-entry" data-pagefind-body>
+  <article class="h-entry kind-memo" data-pagefind-body>
     <meta
       data-pagefind-filter="kind[content]"
       content={messages.filter.short}
     />
-    <h1 class="p-name">
-      <a class="u-url" href={`/m/${memo.uid}/`}>
+    <p class="page-kind">{messages.filter.short}</p>
+    <h1>
+      <a class="u-url" href={url}>
         <time class="dt-published" datetime={memo.created.toISOString()}>
-          {memo.title}
+          {when.format(memo.created)}
         </time>
       </a>
+      <span class="p-name visually-hidden">{memo.title}</span>
     </h1>
+    {differentDay(memo.created, memo.updated) && (
+      <p class="meta">
+        <time datetime={memo.updated.toISOString()}>
+          {messages.sort.updatedOn(when.format(memo.updated))}
+        </time>
+      </p>
+    )}
     {memo.tags.length > 0 && (
       <ul aria-label={messages.tags.label} class="tags">
         {memo.tags.map((tag) => (
@@ -49,6 +67,6 @@ const { memo } = Astro.props;
     )}
     <div class="content e-content" set:html={memo.html} />
   </article>
-  <LinkLists url={`/m/${memo.uid}/`} />
+  <PageBand url={url} related={related} />
   <Comments />
 </Base>

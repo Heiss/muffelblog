@@ -29,6 +29,7 @@ okf_version: "0.2"
 * [Live update](/frontend/live-update.md) - build.json and the banner "N new entries"
 * [URLs and SEO](/frontend/urls-seo.md) - URL scheme, canonical, sitemap
 * [Themes](/frontend/themes.md) - color schemes in the style of well-known editor themes
+* [Layout](/frontend/layout.md) - sidebar frame, timeline feed, page templates, phone bottom bar (layout board 2026-11-26)
 
 # Features
 

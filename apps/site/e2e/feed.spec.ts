@@ -17,13 +17,26 @@ interface Zeile {
   datum: string;
 }
 
+// A bundle of terms (layout W24) stands for each of its terms.
 async function rows(page: Page): Promise<Zeile[]> {
   return page.locator('article.entry').evaluateAll((els) =>
-    els.map((el) => ({
-      href: el.querySelector('h2 a')?.getAttribute('href') ?? '',
-      kind: el.getAttribute('data-kind'),
-      datum: el.querySelector('time')?.getAttribute('datetime') ?? '',
-    })),
+    els.flatMap((el) => {
+      const datum = el.querySelector('time')?.getAttribute('datetime') ?? '';
+      if (el.getAttribute('data-kind') === 'bundle')
+        return [...el.querySelectorAll('.term-list a')].map((a) => ({
+          href: a.getAttribute('href') ?? '',
+          kind: 'glossary',
+          datum,
+        }));
+      return [
+        {
+          href:
+            el.querySelector('[data-entry-link]')?.getAttribute('href') ?? '',
+          kind: el.getAttribute('data-kind'),
+          datum,
+        },
+      ];
+    }),
   );
 }
 
@@ -90,15 +103,37 @@ test.describe('Shared feed', () => {
     expect((await request.get('/page/1/')).status()).toBe(404);
   });
 
-  test('memos appear in full, articles only with an excerpt', async ({
+  test('memos appear in full, posts with their text up to the first heading', async ({
     page,
   }) => {
     await page.goto('/');
     const memo = page.locator('article[data-kind="memo"]').first();
     await expect(memo.locator('.content')).toBeVisible();
     const artikel = page.locator('article[data-kind="post"]').first();
-    await expect(artikel.locator('.content')).toHaveCount(0);
-    await expect(artikel.locator('.excerpt')).toBeVisible();
+    await expect(artikel.locator('.lead')).toBeVisible();
+    await expect(
+      artikel.locator('.lead h2, .lead h3, .lead aside'),
+    ).toHaveCount(0);
+  });
+
+  test('a post that starts with a heading shows its excerpt and the next heading', async ({
+    page,
+  }) => {
+    const slug = '/p/rendering-demo/';
+    for (let i = 1; i < 8; i++) {
+      await page.goto(i === 1 ? '/' : `/page/${i}/`);
+      const entry = page
+        .locator('article[data-kind="post"]')
+        .filter({ has: page.locator(`a[data-entry-link][href="${slug}"]`) });
+      if ((await entry.count()) === 0) continue;
+      await expect(
+        entry.getByRole('link', {
+          name: new RegExp(ui.feed.continueWith('Abschnitt')),
+        }),
+      ).toHaveAttribute('href', slug);
+      return;
+    }
+    throw new Error('the post is not in the feed');
   });
 
   test('titles lead to the own page of the entry', async ({ page }) => {
@@ -218,14 +253,20 @@ test.describe('Sorted by updated (static, without JavaScript)', () => {
     const updated: number[] = [];
     for (let i = 0; i < 20; i++) {
       const rowsHere = await page.locator('article.entry').evaluateAll((els) =>
-        els.map((el) => {
+        els.flatMap((el) => {
           const times = el.querySelectorAll('time');
-          return {
-            href: el.querySelector('h2 a')?.getAttribute('href') ?? '',
-            updated: Date.parse(
-              times[times.length - 1]?.getAttribute('datetime') ?? '',
-            ),
-          };
+          const updated = Date.parse(
+            times[times.length - 1]?.getAttribute('datetime') ?? '',
+          );
+          // A bundle of terms (layout W24) stands for each of its terms.
+          const links =
+            el.getAttribute('data-kind') === 'bundle'
+              ? [...el.querySelectorAll('.term-list a')]
+              : [el.querySelector('[data-entry-link]')];
+          return links.map((a) => ({
+            href: a?.getAttribute('href') ?? '',
+            updated,
+          }));
         }),
       );
       for (const r of rowsHere) {
@@ -265,21 +306,23 @@ test.describe('Sorted by updated (static, without JavaScript)', () => {
     page,
   }) => {
     await page.goto('/');
-    const days = await page.locator('article.entry').evaluateAll((els) => {
-      const day = (iso: string | null) =>
-        new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(
-          new Date(iso ?? ''),
-        );
-      return els.map((el) => {
-        const times = el.querySelectorAll('time');
-        return {
-          shown: el.querySelector('.updated') !== null,
-          differs:
-            day(times[0]?.getAttribute('datetime') ?? null) !==
-            day(times[times.length - 1]?.getAttribute('datetime') ?? null),
-        };
+    const days = await page
+      .locator('article.entry:not(.entry-bundle)')
+      .evaluateAll((els) => {
+        const day = (iso: string | null) =>
+          new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/Berlin',
+          }).format(new Date(iso ?? ''));
+        return els.map((el) => {
+          const times = el.querySelectorAll('time');
+          return {
+            shown: el.querySelector('.updated') !== null,
+            differs:
+              day(times[0]?.getAttribute('datetime') ?? null) !==
+              day(times[times.length - 1]?.getAttribute('datetime') ?? null),
+          };
+        });
       });
-    });
     expect(days.length).toBeGreaterThan(0);
     for (const d of days) expect(d.shown).toBe(d.differs);
   });

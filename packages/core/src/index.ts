@@ -71,7 +71,9 @@ export type {
 export { toResolvedImage } from './media.ts';
 export { plainExcerpt, withoutMarginNotes } from './excerpt.ts';
 export {
+  berlinDay,
   buildFeed,
+  bundleTerms,
   differentDay,
   filterKind,
   groupByTag,
@@ -79,7 +81,17 @@ export {
   paginate,
   sortFeed,
 } from './feed.ts';
-export type { FeedItem, FeedKind, FeedSort, Page, TagGroup } from './feed.ts';
+export type {
+  FeedItem,
+  FeedKind,
+  FeedRow,
+  FeedSort,
+  Page,
+  TagGroup,
+  TermBundle,
+} from './feed.ts';
+export { leadOf, outlineOf } from './html-parts.ts';
+export type { Lead, Outline, TocEntry } from './html-parts.ts';
 export {
   ConfigError,
   DEFAULT_LANG,
