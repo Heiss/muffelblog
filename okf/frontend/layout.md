@@ -56,6 +56,10 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
   Comments, FAQ, theme, RSS) is in the menu.
 * **[E]** Search belongs at the bottom, not in the top bar (owner's comment on
   H3: "search too far up").
+* **[E]** "Search" in the bottom bar opens a panel that slides in from the
+  right over the page: the field at its top, results below, the bottom bar
+  stays visible (J4, favourite; J3, a field rising from the bottom, was rated
+  unsure).
 
 ## Feed (G1, timeline)
 
@@ -66,9 +70,14 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
 * **[E]** The line runs through without gaps (owner's comment on H2,
   2026-11-26).
 * **[E]** No horizontal rule across the width between days: tried as J1 and
-  rejected by the owner (2026-11-26). How days are told apart instead is open
-  (O48; on the board: ring on the line, short tick with a sticky date, or
-  alternating tinted zones).
+  rejected by the owner (2026-11-26).
+* **[E]** Each day is a zone; the zones alternate between the background and
+  the light tint (`--tint`) and touch without a gap (L3, favourite: "good
+  highlighting").
+* **[E]** The date stays at the top while its day scrolls by (owner's wish on
+  L3, liked in L2). The line is drawn above the sticky date, so it never
+  breaks; in L2 the date covered the line and left a gap, which the owner
+  rejected. Mockup N1 shows the combination (not rated yet).
 * **[E]** The terms of one day are bundled into one entry: "413 new terms:
   Accelerate (Buch), …, show all" (answers 2026-11-25). This changes
   "purely chronological, one stream", see [Feed](/frontend/feed.md).
@@ -105,7 +114,11 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
   instead of "Memo vom …"; the text is a little larger.
 * **[E]** Below the text a band "More with #tag": the newest memos that share a
   tag with this memo, all tags mixed, newest first (answer 2026-11-26).
-* Open: graph and links on the memo page, see O40.
+* **[E]** Beside it the links of the memo: local graph and "Links to" (J2,
+  favourite).
+* **[E]** The band can be folded behind one line that says what is in it
+  ("More: 8 memos with #selfhost · 1 link"; owner's wish on J2). The default
+  state, and whether term and post pages fold the same way, are open (O40).
 
 ## Overviews
 
@@ -154,4 +167,5 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
 
 # Open points
 
-O40 to O48 in [Open points](/open-points.md), section E.
+O40 to O47 in [Open points](/open-points.md), section E; O46 and O48 settled
+(section C).
