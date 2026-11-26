@@ -122,8 +122,7 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
   favourite).
 * **[E]** The band can be folded behind one line that says what is in it
   ("More: 8 memos with #selfhost · 1 link"; owner's wish on J2, shown as N2,
-  favourite). The default
-  state, and whether term and post pages fold the same way, are open (O40).
+  favourite).
 
 ## Overviews
 
@@ -135,8 +134,6 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
   focus and the list of neighbours sit in the sidebar. It opens focused on one
   entry with its neighbours named, all other nodes faded, and a button "show the
   whole graph".
-* **[V]** Which entry is in focus when `/graph/` opens (last visited, searched,
-  or the newest post) is not decided.
 * **[E]** Tags: a weighted cloud, alphabetical, font size by count on a
   logarithmic scale, the count small behind each tag (U4, favourite).
 * **[V]** A switch to the list view (U3, rated good) stays, cloud first (the U4
@@ -152,8 +149,29 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
 * The board's last round (E1 to E9) shows every page in the chosen form with
   the phone bottom bar, and a post with an open Document Comments thread and a
   footnote (E2). The owner's verdict after round 7: "I think we have it."
-* **[V]** The phone menu (Graph, Files, Comments, FAQ, theme, RSS) slides in
-  from the right like the search; not rated yet.
+
+## Details settled on 2026-11-26 (owner accepted Claude's proposals)
+
+* **[E]** Bands (O40): the band below the text can be folded on memo, term and
+  post pages alike; open on wide screens, closed on phones. A memo's band shows
+  the graph and "Links to" only when the memo links somewhere.
+* **[E]** Timeline (O41): nothing more from F1; N1 stays as rated.
+* **[E]** Endless scroll stays (O42).
+* **[E]** Body text of posts, terms and memos 18 px in a text column of 40rem
+  (about 70 characters) (O43).
+* **[E]** Bundles (O44): terms are bundled only under "All"; a bundle counts as
+  one entry in the blocks of 20 and in the banner "N new entries". The Terms
+  filter lists terms one by one.
+* **[E]** Pages with `nav: true` (O45) go into the navigation of the sidebar,
+  below the main links, and into the menu on phones.
+* **[E]** Widths (O47): the sidebar from 900 px; below that the phone layout
+  with top and bottom bar; margin notes beside the text from 1100 px (as
+  before).
+* **[E]** The phone menu (Graph, Files, Comments, FAQ, pages with `nav: true`,
+  theme, RSS) slides in from the right like the search.
+* **[E]** `/graph/` opens focused on the newest post.
+* **[E]** Margin notes on narrow screens without JavaScript stay open (as
+  before; only the script closes them).
 
 ## Rejected on the board
 
@@ -182,5 +200,4 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
 
 # Open points
 
-O40 to O47 in [Open points](/open-points.md), section E; O46 and O48 settled
-(section C).
+None. O40 to O48 are settled ([Open points](/open-points.md), section C).

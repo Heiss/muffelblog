@@ -64,6 +64,13 @@ listed with their result, so those references keep working. Cleaned up on
 | O37 | Code quality, mutation tests | Decided by the owner 2026-11-05, before the release: strict complexity limits, coverage gate, Stryker from 80 %, security gates ([Test strategy](/ops/testing.md)). |
 | O38 | Glossary details | Done 2026-11-05: optional field `term:` (title may be a question, letter view sorts by the term), comments on terms, umlauts under the base letter (collator `de`). |
 | O39 | Languages | Development in English, `MUFFEL_LANG` with default `en`, feeds and search follow the build language. |
+| O40 | Memo page: band | Settled 2026-11-26: related memos plus graph and "Links to" (graph only when the memo links somewhere); the band folds on memo, term and post pages, open on wide screens, closed on phones ([Layout](/frontend/layout.md)). |
+| O41 | Parts of F1 in the timeline | Settled 2026-11-26: nothing more, N1 stays as rated. |
+| O42 | Endless scroll | Settled 2026-11-26: stays. |
+| O43 | Size of the body text | Settled 2026-11-26: 18 px in a text column of 40rem (about 70 characters). |
+| O44 | Bundled terms and counting | Settled 2026-11-26: bundled only under "All"; a bundle counts as one entry in the blocks of 20 and in the banner; the Terms filter lists terms one by one. |
+| O45 | Pages with `nav: true` | Settled 2026-11-26: in the sidebar navigation below the main links, in the menu on phones. |
+| O47 | Widths between phone and sidebar | Settled 2026-11-26: sidebar from 900 px, phone layout below; margin notes beside the text from 1100 px. |
 | O46 | Search on phones | Settled 2026-11-26: a panel slides in from the right, field at its top, results below, the bottom bar stays (J4, favourite; [Layout](/frontend/layout.md)). |
 | O48 | Telling days apart in the timeline | Settled 2026-11-26: alternating tinted zones per day (L3, favourite), the date stays at the top while its day scrolls, the line is drawn above it and never breaks; a full-width rule (J1) and a rule with a gap (L2) were rejected ([Layout](/frontend/layout.md)). |
 
@@ -81,20 +88,6 @@ listed with their result, so those references keep working. Cleaned up on
 Proven since the review: Memos API and anonymous reading (contract test
 26.11.0), Nextcloud public share over WebDAV (contract test), German search
 interface (own search UI), umlauts in slugs (own slug function with tests).
-
-# E. Open from the layout board (2026-11-26)
-
-The layout itself is decided, see [Layout](/frontend/layout.md). Open:
-
-| ID | Topic | State |
-|---|---|---|
-| O40 | Memo page: band | Decided (J2, favourite): related memos plus local graph and "Links to"; the band can be folded (owner's wish). Open: the default state (open or closed, per device), whether term and post pages fold the same way, and whether the graph shows when a memo links nowhere. |
-| O41 | Parts of F1 in the timeline | F1 and F2 were both favourites. Which parts of F1 join the timeline (larger memo text, a line at memos, tinted box for bundled terms, kind word) is not answered; G1 already has the larger memo text and the kind word. |
-| O42 | Endless scroll | Keep loading automatically, a "load more" button, or automatic first and a button later? With the sidebar the footer argument is gone. Not answered. |
-| O43 | Size of the body text | 17 px today, about 81 characters per line (advice: 50 to 75). Not answered. |
-| O44 | Bundled terms and counting | How a bundle counts in the blocks of 20 (`/page/N/`), in `entries.json` and in the banner "N new entries", and whether the Terms filter bundles too. **[V]** Bundle only under "All"; a bundle counts as one entry. |
-| O45 | Pages with `nav: true` | Today in the header menu "More"; the sidebar and the phone menu need a place for them. Not on the board. |
-| O47 | Widths between phone and sidebar | The mockups switch at 600 px (phone) and at 1000 to 1100 px (margin column, band under the text). Breakpoints for tablets and narrow windows are not decided. |
 
 # Corrections to earlier statements
 

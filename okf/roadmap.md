@@ -705,3 +705,26 @@ Applies to every work package in addition to its own criteria:
   * [x] E2E tests cover both languages: the whole suite in English, a small
     suite against a German build.
   * [ ] All CI checks green on the pull request.
+
+## W24 - Layout from the layout board
+
+* Branch: `claude/admiring-einstein-rhg3br` (pull request #88, specification and
+  code together, decided by the owner 2026-11-26)
+* Depends on: W06c (themes), W20/W21 (links, graph), margin notes
+* Decided **[E]**: everything in [Layout](/frontend/layout.md).
+* DoD:
+  * [ ] Frame: sidebar from 900 px (navigation, counts, search, page tools,
+    `nav: true` pages, theme, footer links); below 900 px a top bar and a bottom
+    bar (Start, Glossary, Tags, Search, Menu) with search and menu sliding in
+    from the right.
+  * [ ] Feed: timeline with tinted day zones, sticky date, continuous line,
+    markers by kind, terms bundled per day under "All" (one entry in blocks and
+    banner), long posts up to the first heading.
+  * [ ] Post, term and memo in one template with a kind stripe; table of
+    contents in the sidebar; margin notes open on wide screens, closed on
+    phones; foldable band with local graph and links (memo: related memos).
+  * [ ] Glossary with letters in the sidebar, graph focused on the newest post
+    with controls in the sidebar, tags as a weighted cloud with a list view.
+  * [ ] All ten themes keep the contrast test; no horizontal scrolling on a
+    phone; works without JavaScript (navigation, filters, bands).
+  * [ ] Unit and E2E tests updated, both languages; all CI checks green.

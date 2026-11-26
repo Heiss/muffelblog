@@ -76,10 +76,9 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
   `description` stays for search, social previews and meta tags.
 * **[E]** The terms of one day are bundled into one entry ("413 new terms: …,
   show all").
-* Open: how a bundle counts in the blocks of 20, in `entries.json` and in the
-  banner "N new entries", and whether the Terms filter bundles too (O44);
-  endless scroll or a "load more" button (O42); which parts of F1 join the
-  timeline (O41).
+* **[E]** Terms are bundled only under "All"; a bundle counts as one entry in
+  the blocks of 20, in `entries.json` and in the banner "N new entries"; the
+  Terms filter lists terms one by one (O44). Endless scroll stays (O42).
 
 # Accessibility
 
