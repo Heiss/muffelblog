@@ -94,6 +94,7 @@ The layout itself is decided, see [Layout](/frontend/layout.md). Open:
 | O45 | Pages with `nav: true` | Today in the header menu "More"; the sidebar and the phone menu need a place for them. Not on the board. |
 | O46 | Search on phones | Search is in the bottom bar (decided). How it opens is open: a panel from the bottom, or a panel sliding in from the right (owner's suggestion on H3). |
 | O47 | Widths between phone and sidebar | The mockups switch at 600 px (phone) and at 1000 to 1100 px (margin column, band under the text). Breakpoints for tablets and narrow windows are not decided. |
+| O48 | Telling days apart in the timeline | The line runs through without gaps; a horizontal rule across the width was rejected (J1, 2026-11-26). Proposals on the board: a ring on the line per day (L1), a short tick with a date that stays visible while scrolling (L2), alternating tinted zones per day (L3). |
 
 # Corrections to earlier statements
 

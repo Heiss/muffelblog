@@ -1,6 +1,7 @@
 # Update log
 
 ## 2026-11-26
+* **Update**: Timeline: the horizontal rule between days (J1) is rejected by the owner; the line stays continuous, how days are told apart is open (O48); see [Layout](/frontend/layout.md).
 * **Update**: Layout decided on the layout board (owner, four rounds of mockups with the live content of netzmuffel.de): sidebar instead of header, timeline feed with a continuous line and terms bundled per day, long posts in the feed up to the first heading (O20 changed), post page with the table of contents in the sidebar, margin notes on the right and a band with graph and links below, one template for post, term and memo, glossary letters and graph controls in the sidebar, weighted tag cloud, bottom bar on phones (Start, Glossary, Tags, Search, Menu); open points O40 to O47; see [Layout](/frontend/layout.md).
 
 ## 2026-11-20

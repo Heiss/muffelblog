@@ -63,8 +63,12 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
   entries hang on a vertical line; the kind is shown by the marker (diamond:
   Lang, circle: Kurz, square: Begriffe) and the kind word above the entry
   (F2 and G1, favourites).
-* **[E]** The line runs through without gaps; days are separated by a
-  horizontal rule (owner's comment on H2, 2026-11-26).
+* **[E]** The line runs through without gaps (owner's comment on H2,
+  2026-11-26).
+* **[E]** No horizontal rule across the width between days: tried as J1 and
+  rejected by the owner (2026-11-26). How days are told apart instead is open
+  (O48; on the board: ring on the line, short tick with a sticky date, or
+  alternating tinted zones).
 * **[E]** The terms of one day are bundled into one entry: "413 new terms:
   Accelerate (Buch), …, show all" (answers 2026-11-25). This changes
   "purely chronological, one stream", see [Feed](/frontend/feed.md).
@@ -150,4 +154,4 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
 
 # Open points
 
-O40 to O47 in [Open points](/open-points.md), section E.
+O40 to O48 in [Open points](/open-points.md), section E.

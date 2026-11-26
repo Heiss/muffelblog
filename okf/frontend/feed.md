@@ -67,9 +67,9 @@ generated: { by: claude-code/web, at: 2026-11-02T12:40:00Z }
 
 # Layout (layout board, 2026-11-26)
 
-* **[E]** Timeline with a date column (the date once per day), a vertical line
-  without gaps and a horizontal rule between days; filter and sort move into
-  the sidebar. Details in [Layout](/frontend/layout.md).
+* **[E]** Timeline with a date column (the date once per day) and a vertical
+  line without gaps; no horizontal rule between days (rejected); filter and
+  sort move into the sidebar. How days are told apart is open (O48). Details in [Layout](/frontend/layout.md).
 * **[E]** In the feed a long post shows its full text up to the first heading,
   however long; this replaces the excerpt of at most 200 characters (O20). The
   `description` stays for search, social previews and meta tags.
