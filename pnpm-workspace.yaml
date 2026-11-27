@@ -18,4 +18,4 @@ overrides:
   # astro 7.4.12 (the last version that allows ^0.5.2) and the rules in
   # renovate.json; all three go again with a fixed version.
   # scripts/build-without-avx.sh checks it in the CI.
-  '@astrojs/compiler-rs': 0.5.3
+  '@astrojs/compiler-rs': 0.5.2
