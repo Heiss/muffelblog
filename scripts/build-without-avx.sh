@@ -1,13 +1,16 @@
 #!/bin/sh
 # Builds the site from the fixtures with Astro on an emulated CPU without AVX
-# (Nehalem: SSE4.2, like the Celeron J4105 of a home server). The native Astro
+# (Denverton, a Goldmont Atom: SSE4.2, AES, SHA, MOVBE, no AVX, no BMI; close
+# to the Goldmont Plus Celeron J4105 of a home server). The native Astro
 # compiler @astrojs/compiler-rs 0.5.3 stopped there with "Illegal instruction"
 # (withastro/compiler-rs#220), the builder only logged "exited with null". All
 # native modules on the way of the build (compiler, Rolldown, sharp,
 # lightningcss) run under the emulation; the GitHub runners themselves have AVX2.
 # Needs qemu-user (qemu-x86_64) and installed dependencies.
 set -eu
-cpu=Nehalem-v1
+# Nehalem, as for Pagefind, does not do here: under qemu 10 node itself stops
+# on it, while the J4105 runs node.
+cpu=Denverton-v3
 # The Node executable itself, not a wrapper script that may come first in PATH.
 node=$(node -p 'process.execPath')
 echo "node  $node $("$node" -v), $(qemu-x86_64 --version | head -n 1)"
