@@ -18,9 +18,12 @@ echo "node  $node $("$node" -v), $(qemu-x86_64 --version | head -n 1)"
 # Node has to start on the emulated CPU, otherwise the build says nothing.
 qemu-x86_64 -cpu "$cpu" "$node" -e 'process.exit(0)'
 echo "ok    node starts on the emulated CPU ($cpu)"
-out=$(mktemp -d)
-trap 'rm -rf "$out"' EXIT
 cd apps/site
+# Inside the checkout: Astro moves files with rename, which fails across file
+# systems (EXDEV), as between a mounted checkout and /tmp of a container.
+out="$PWD/dist-noavx"
+rm -rf "$out"
+trap 'rm -rf "$out"' EXIT
 MUFFEL_FIXTURES=1 MUFFEL_FEED_PAGE_SIZE=4 COMMENTS_URL=http://localhost:4322 \
   qemu-x86_64 -cpu "$cpu" "$node" \
   node_modules/astro/bin/astro.mjs build --outDir "$out"
