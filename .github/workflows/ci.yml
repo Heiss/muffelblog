@@ -68,13 +68,19 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test:coverage
       - run: pnpm build
-      # Home servers often have CPUs without AVX (Celeron, Atom): Pagefind
-      # 1.6.0 crashed there. The noavx image uses pagefind-noavx; a raise of it
-      # that needs AVX fails here.
+      # Home servers often have CPUs without AVX (Celeron, Atom), the runners
+      # have AVX2: qemu-user emulates such a CPU for the next two steps.
+      - name: qemu-user for the checks on a CPU without AVX
+        run: sudo apt-get install -y -q qemu-user > /dev/null
+      # Pagefind 1.6.0 crashed there. The noavx image uses pagefind-noavx; a
+      # raise of it that needs AVX fails here.
       - name: The search index of the noavx image builds on a CPU without AVX
-        run: |
-          sudo apt-get install -y -q qemu-user > /dev/null
-          scripts/pagefind-without-avx.sh
+        run: scripts/pagefind-without-avx.sh
+      # The native Astro compiler 0.5.3 crashed there (withastro/compiler-rs#220).
+      # The whole Astro build runs on the emulated CPU, so a native module of a
+      # dependency update that needs AVX or BMI2 fails here.
+      - name: The site builds on a CPU without AVX
+        run: scripts/build-without-avx.sh
       - name: Build the documentation site
         run: pnpm --filter @muffelblog/docs build
 

@@ -19,6 +19,7 @@ import {
   alerter,
   buildEnv,
   builderDirs,
+  exitMessage,
   writableDirs,
   noAvxHint,
   optionalSearch,
@@ -32,7 +33,7 @@ import {
   statusWriter,
 } from './wiring.ts';
 
-/** Runs a command and fails with its exit code. Output goes to the container log. */
+/** Runs a command and fails with its exit code or signal. Output goes to the container log. */
 function run(
   command: string,
   args: string[],
@@ -42,10 +43,12 @@ function run(
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { cwd, env, stdio: 'inherit' });
     child.on('error', reject);
-    child.on('exit', (code) =>
+    child.on('exit', (code, signal) =>
       code === 0
         ? resolve()
-        : reject(new Error(`${command} ${args.join(' ')} exited with ${code}`)),
+        : reject(
+            new Error(exitMessage(`${command} ${args.join(' ')}`, code, signal)),
+          ),
     );
   });
 }
