@@ -6,10 +6,11 @@
 # (withastro/compiler-rs#220), the builder only logged "exited with null". All
 # native modules on the way of the build (compiler, Rolldown, sharp,
 # lightningcss) run under the emulation; the GitHub runners themselves have AVX2.
-# Needs qemu-user (qemu-x86_64) and installed dependencies.
+# Needs qemu-user (qemu-x86_64) and installed dependencies. The CI runs it in
+# node:26-slim, the base image of the builder (see ci.yml).
 set -eu
-# Nehalem, as for Pagefind, does not do here: under qemu 10 node itself stops
-# on it, while the J4105 runs node.
+# The Atom generation of the J4105; Nehalem (as for Pagefind) lacks instructions
+# the J4105 has (MOVBE, AES, SHA), and those are no reason to fail.
 cpu=Denverton-v3
 # The Node executable itself, not a wrapper script that may come first in PATH.
 node=$(node -p 'process.execPath')
