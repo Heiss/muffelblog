@@ -130,6 +130,12 @@ branch. Only after that can the session branch be deleted. State of
 * **[E]** TypeScript stays at version 6 (`allowedVersions: "<7"` in
   `renovate.json`), because `astro check` does not support TypeScript 7. The rule
   came from Renovate PR #7.
+* **[E]** (2026-11-27, owner) astro stays at 7.4.12 (`allowedVersions: "<7.4.13"`)
+  and a pnpm override in `pnpm-workspace.yaml` holds `@astrojs/compiler-rs` at
+  0.5.2 (Renovate skips 0.5.3): the native binding of 0.5.3 needs AVX and BMI2
+  and crashed the builder on the home server (withastro/compiler-rs#220). The
+  rules go again once a fixed compiler-rs exists; the CI step "The site builds
+  on a CPU without AVX" (`scripts/build-without-avx.sh`) checks it.
 * **[E]** After a version appears, Renovate waits 3 days before it merges
   (`minimumReleaseAge`). The validator `renovate-config-validator --strict`
   confirms that the option exists. Whether the waiting time is really kept with

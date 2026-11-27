@@ -47,7 +47,9 @@ function run(
       code === 0
         ? resolve()
         : reject(
-            new Error(exitMessage(`${command} ${args.join(' ')}`, code, signal)),
+            new Error(
+              exitMessage(`${command} ${args.join(' ')}`, code, signal),
+            ),
           ),
     );
   });
