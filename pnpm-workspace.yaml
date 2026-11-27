@@ -9,3 +9,13 @@ onlyBuiltDependencies:
 
 # engines.node in package.json is binding: an older Node stops the install.
 engineStrict: true
+
+overrides:
+  # The native binding of @astrojs/compiler-rs 0.5.3 contains AVX and BMI2
+  # instructions and stops with "Illegal instruction" on CPUs without them: the
+  # Celeron J4105 of the home server has neither, the Ivy Bridge of
+  # withastro/compiler-rs#220 has no BMI2. 0.5.2 runs there. Together with
+  # astro 7.4.12 (the last version that allows ^0.5.2) and the rules in
+  # renovate.json; all three go again with a fixed version.
+  # scripts/build-without-avx.sh checks it in the CI.
+  '@astrojs/compiler-rs': 0.5.2

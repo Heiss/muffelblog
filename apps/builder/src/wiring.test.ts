@@ -9,6 +9,7 @@ import {
   buildEnv,
   builderDirs,
   nextcloudSource,
+  exitMessage,
   noAvxHint,
   optionalSearch,
   pagefindCommand,
@@ -325,6 +326,26 @@ describe('pagefindCommand', () => {
     ]);
     expect(pagefindCommand('/site', 'other').args[0]).toContain(
       '/node_modules/pagefind/',
+    );
+  });
+});
+
+describe('exitMessage', () => {
+  const line = '/repo/apps/site/node_modules/.bin/astro build --outDir x';
+
+  it('names the exit code of a command that ended by itself', () => {
+    expect(exitMessage(line, 1, null)).toBe(`${line} exited with 1`);
+  });
+
+  it('names the signal instead of a missing exit code', () => {
+    expect(exitMessage(line, null, 'SIGKILL')).toBe(
+      `${line} was stopped by SIGKILL`,
+    );
+  });
+
+  it('explains SIGILL as an instruction the CPU does not have', () => {
+    expect(exitMessage(line, null, 'SIGILL')).toBe(
+      `${line} was stopped by SIGILL (illegal instruction: a native module uses an instruction this CPU does not have)`,
     );
   });
 });

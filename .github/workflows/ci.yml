@@ -68,15 +68,28 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test:coverage
       - run: pnpm build
-      # Home servers often have CPUs without AVX (Celeron, Atom): Pagefind
-      # 1.6.0 crashed there. The noavx image uses pagefind-noavx; a raise of it
-      # that needs AVX fails here.
+      # Home servers often have CPUs without AVX (Celeron, Atom), the runners
+      # have AVX2: qemu-user emulates such a CPU. Pagefind 1.6.0 crashed there.
+      # The noavx image uses pagefind-noavx; a raise of it that needs AVX fails
+      # here.
       - name: The search index of the noavx image builds on a CPU without AVX
         run: |
           sudo apt-get install -y -q qemu-user > /dev/null
           scripts/pagefind-without-avx.sh
       - name: Build the documentation site
         run: pnpm --filter @muffelblog/docs build
+      # The native Astro compiler 0.5.3 crashed there (withastro/compiler-rs#220).
+      # The whole Astro build runs on the emulated CPU, so a native module of a
+      # dependency update that needs AVX or BMI2 fails here. Node, unlike the
+      # static Pagefind, loads the system libraries around it, and on the runner
+      # it stopped with them before Astro started; so the check runs in the
+      # base image of the builder (node:26-slim), as on the home server. Last
+      # step: the container writes into the checkout as root.
+      - name: The site builds on a CPU without AVX
+        run: |
+          echo "runner: $(. /etc/os-release && echo "$PRETTY_NAME"), dpkg architecture $(dpkg --print-architecture)"
+          docker run --rm -v "$PWD:/repo" -w /repo node:26-slim sh -c \
+            'apt-get update -qq && apt-get install -y -qq qemu-user > /dev/null && scripts/build-without-avx.sh'
 
   e2e:
     name: E2E tests

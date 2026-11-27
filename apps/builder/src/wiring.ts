@@ -180,6 +180,25 @@ export function pagefindCommand(
 }
 
 /**
+ * The message for a command that did not end with 0. A process stopped by a
+ * signal has no exit code (Node reports null); the message then names the
+ * signal, and for SIGILL what it means: the CPU lacks an instruction that a
+ * native module uses (the Astro compiler 0.5.3 needs AVX and BMI2).
+ */
+export function exitMessage(
+  commandLine: string,
+  code: number | null,
+  signal: NodeJS.Signals | null,
+): string {
+  if (signal === null) return `${commandLine} exited with ${code}`;
+  const hint =
+    signal === 'SIGILL'
+      ? ' (illegal instruction: a native module uses an instruction this CPU does not have)'
+      : '';
+  return `${commandLine} was stopped by ${signal}${hint}`;
+}
+
+/**
  * A hint for the log when the search index failed on an x86 CPU without AVX
  * in the image that needs it; empty otherwise (other CPUs, the noavx image).
  */

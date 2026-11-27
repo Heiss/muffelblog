@@ -1,6 +1,7 @@
 node_modules/
 dist/
 dist-de/
+dist-noavx/
 .astro/
 playwright-report/
 test-results/

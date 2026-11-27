@@ -11,6 +11,16 @@
       "description": "astro check does not support TypeScript 7, so TypeScript stays at version 6.",
       "matchPackageNames": ["typescript"],
       "allowedVersions": "<7"
+    },
+    {
+      "description": "astro 7.4.13 and newer require @astrojs/compiler-rs ^0.5.3, whose native binding stops on CPUs without AVX or BMI2 (withastro/compiler-rs#220). astro stays at 7.4.12 until a fixed compiler-rs exists; see the override in pnpm-workspace.yaml.",
+      "matchPackageNames": ["astro"],
+      "allowedVersions": "<7.4.13"
+    },
+    {
+      "description": "@astrojs/compiler-rs 0.5.3 stops on CPUs without AVX or BMI2 (withastro/compiler-rs#220); a later version is checked by scripts/build-without-avx.sh in the CI.",
+      "matchPackageNames": ["@astrojs/compiler-rs"],
+      "allowedVersions": "!/^0\\.5\\.3$/"
     }
   ],
   "customManagers": [
