@@ -13,6 +13,7 @@ import {
   fitTransform,
   labelVisible,
   neighborhood,
+  pointAction,
   type GNode,
   type Graph,
   type SimLink,
@@ -157,22 +158,30 @@ function applyZoom(p: Picture, k: number): void {
 }
 
 function enableDrag(p: Picture): void {
+  // A press without a move is a click (on /graph/ it sets the focus) and pins nothing.
+  let moved = false;
   const behavior = drag<SVGElement, SimNode>()
     .container(p.root)
     .on('start', (event, node) => {
+      moved = false;
       if (!event.active) p.sim.simulation.alphaTarget(0.3).restart();
       node.fx = node.x;
       node.fy = node.y;
     })
     .on('drag', (event, node) => {
+      moved = true;
       node.fx = event.x;
       node.fy = event.y;
     })
     .on('end', (event, node) => {
       if (!event.active) p.sim.simulation.alphaTarget(0);
+      if (node.id === p.center) return;
       // A point stays where it was put down; "arrange again" lets all go.
-      if (node.id !== p.center)
-        p.nodes.get(node.id)?.shell.classList.add('pinned');
+      if (moved) p.nodes.get(node.id)?.shell.classList.add('pinned');
+      else if (!p.nodes.get(node.id)?.shell.classList.contains('pinned')) {
+        node.fx = null;
+        node.fy = null;
+      }
     });
   for (const node of p.sim.nodes) {
     const shell = p.nodes.get(node.id)?.shell;
@@ -313,20 +322,35 @@ const endsOf = (link: SimLink) => [
   (link.target as SimNode).id,
 ];
 
-/** Fades everything but the focus and its neighbours; null shows all again. */
+/**
+ * Fades everything but the focus and its neighbours and marks the focus point
+ * and its lines (drawn larger and stronger); null shows all again.
+ */
 function markFocus(p: Picture, graph: Graph, id: string | null): GNode[] {
   const near = id ? neighborhood(graph, id).nodes : [];
   const keep = new Set(near.map((n) => n.id));
   for (const [nodeId, parts] of p.nodes) {
     parts.shell.classList.toggle('faded', id !== null && !keep.has(nodeId));
     parts.shell.classList.toggle('in-focus', keep.has(nodeId));
+    parts.shell.classList.toggle('focus-point', nodeId === id);
   }
   for (const { line, link } of p.lines) {
     const [a, b] = endsOf(link);
     const touches = a === id || b === id;
     line.classList.toggle('faded', id !== null && !touches);
+    line.classList.toggle('focus-edge', id !== null && touches);
   }
   return near.filter((n) => n.id !== id);
+}
+
+/** The name of the focus, a link to its page (a website has none). */
+function focusName(node: GNode | undefined): Node {
+  if (!node) return document.createTextNode('–');
+  if (node.kind === 'domain') return document.createTextNode(node.title);
+  const a = document.createElement('a');
+  a.href = node.id;
+  a.textContent = node.title;
+  return a;
 }
 
 function listItem(node: GNode): HTMLLIElement {
@@ -349,7 +373,7 @@ function showFocus(
 ): void {
   const neighbours = markFocus(p, graph, id);
   const node = graph.nodes.find((n) => n.id === id);
-  if (tools.name) tools.name.textContent = node?.title ?? '–';
+  tools.name?.replaceChildren(focusName(node));
   tools.list?.replaceChildren(...neighbours.map(listItem));
   if (tools.all)
     tools.all.textContent =
@@ -376,12 +400,37 @@ function filterKinds(p: Picture, box: HTMLElement): void {
     );
 }
 
+/**
+ * On the overall view a click on a point makes it the focus, the second click
+ * of a double click opens its page, a click with Ctrl, Cmd, Shift or Alt is
+ * left to the browser (owner, 2026-11-28). Enter on a point makes it the focus; the
+ * name of the focus in the sidebar is a link to its page.
+ */
+function focusOnClick(p: Picture, setFocus: (id: string) => void): void {
+  for (const [nodeId, parts] of p.nodes) {
+    parts.shell.addEventListener('click', (event) => {
+      if (pointAction(event) !== 'focus') return;
+      event.preventDefault();
+      setFocus(nodeId);
+    });
+    // A website is no link, so Enter does not click it.
+    if (parts.shell.tagName === 'g')
+      parts.shell.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') setFocus(nodeId);
+      });
+  }
+}
+
 function enableFocus(p: Picture, graph: Graph, start: string): void {
   const tools = focusTools();
   if (!tools) return;
   tools.box.hidden = false;
   let focus: string | null = start;
   let last = start;
+  const setFocus = (id: string) => {
+    focus = last = id;
+    showFocus(p, graph, tools, focus);
+  };
   showFocus(p, graph, tools, focus);
   tools.all?.addEventListener('click', () => {
     focus = focus ? null : last;
@@ -390,10 +439,9 @@ function enableFocus(p: Picture, graph: Graph, start: string): void {
   tools.find?.addEventListener('change', () => {
     const word = tools.find?.value.trim().toLocaleLowerCase() ?? '';
     const node = graph.nodes.find((n) => n.title.toLocaleLowerCase() === word);
-    if (!node) return;
-    focus = last = node.id;
-    showFocus(p, graph, tools, focus);
+    if (node) setFocus(node.id);
   });
+  focusOnClick(p, setFocus);
   const kinds = tools.box.querySelector<HTMLElement>('[data-graph-kinds]');
   kinds?.addEventListener('change', () => filterKinds(p, kinds));
 }

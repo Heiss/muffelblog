@@ -1,5 +1,8 @@
 # Update log
 
+## 2026-11-28
+* **Update**: Graph on `/graph/` (owner, after the release 26.11.6): a click on a point makes it the focus, a double click opens its page, Ctrl or Cmd with a click opens it in a new tab; the focus point is drawn larger in the accent colour with a ring, its lines stronger; the focus name in the sidebar is a link; a click no longer pins a point; see [Layout](/frontend/layout.md).
+
 ## 2026-11-27
 * **Fix** (home server, Celeron J4105 without AVX, release 26.11.5): `astro build` in the builder stopped with SIGILL (kernel: "trap invalid opcode in astro.linux-x64-gnu.node"), the builder only logged "exited with null". Cause: the native binding of `@astrojs/compiler-rs` 0.5.3, which astro 7.4.13 brought in (#90), contains AVX and BMI2 instructions (withastro/compiler-rs#220, not fixed yet); 0.5.2 runs there. Owner's decision: astro pinned to 7.4.12, pnpm override `@astrojs/compiler-rs: 0.5.2`, Renovate keeps astro below 7.4.13 and skips compiler-rs 0.5.3; all three go again with a fixed compiler-rs. The CI builds the whole site on an emulated CPU without AVX (`scripts/build-without-avx.sh`, qemu `Denverton-v3`, a Goldmont Atom close to the J4105, in the base image `node:26-slim` of the builder: on the runner, Node stopped together with its system libraries under the emulation before Astro started); the builder names the signal of a stopped command and explains SIGILL; see [Branching and release](/ops/branching-release.md).
 

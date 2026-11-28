@@ -307,4 +307,61 @@ test.describe('Overviews', () => {
       tools.getByRole('button', { name: ui.graph.showFocus }),
     ).toBeVisible();
   });
+
+  // Owner, 2026-11-28: a click focuses, a double click opens the page,
+  // Ctrl or Cmd with a click opens it in a new tab.
+  test('a click on a point makes it the focus, a double click opens its page', async ({
+    page,
+  }) => {
+    await page.goto('/graph/');
+    const tools = page.locator('[data-graph-tools]');
+    const svg = page.locator('figure.graph-all svg');
+    const cache = svg.locator('a[href="/g/cache/"]');
+    await expect(cache).toBeVisible();
+    await cache.locator('circle').click();
+    await expect(page).toHaveURL(/\/graph\/$/);
+    const name = tools.locator('[data-graph-focus-name]');
+    await expect(name).toHaveText('Cache');
+    await expect(cache).toHaveClass(/focus-point/);
+    await expect(svg.locator('.node.focus-point')).toHaveCount(1);
+    await expect(svg.locator('.edge.focus-edge').first()).toBeAttached();
+    // A click without a move pins nothing.
+    await expect(cache).not.toHaveClass(/pinned/);
+    // The name of the focus leads to its page.
+    await expect(name.getByRole('link', { name: 'Cache' })).toHaveAttribute(
+      'href',
+      '/g/cache/',
+    );
+    await cache.locator('circle').dblclick();
+    await expect(page).toHaveURL(/\/g\/cache\/$/);
+  });
+
+  test('Ctrl or Cmd with a click opens the page in a new tab and keeps the focus', async ({
+    page,
+    context,
+  }) => {
+    await page.goto('/graph/');
+    const name = page.locator('[data-graph-focus-name]');
+    await expect(name).toHaveText('Rendering-Demo');
+    const cache = page.locator('figure.graph-all svg a[href="/g/cache/"]');
+    await expect(cache).toBeVisible();
+    const [tab] = await Promise.all([
+      context.waitForEvent('page'),
+      cache.locator('circle').click({ modifiers: ['ControlOrMeta'] }),
+    ]);
+    await tab.waitForLoadState();
+    expect(tab.url()).toMatch(/\/g\/cache\/$/);
+    await expect(page).toHaveURL(/\/graph\/$/);
+    await expect(name).toHaveText('Rendering-Demo');
+  });
+
+  test('Enter on a point makes it the focus', async ({ page }) => {
+    await page.goto('/graph/');
+    const cache = page.locator('figure.graph-all svg a[href="/g/cache/"]');
+    await expect(cache).toBeVisible();
+    await cache.focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/graph\/$/);
+    await expect(page.locator('[data-graph-focus-name]')).toHaveText('Cache');
+  });
 });

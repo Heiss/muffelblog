@@ -170,6 +170,15 @@ records the result. Codes such as R2, G1 or K3 name the mockups on the board.
 * **[E]** The phone menu (Graph, Files, Comments, FAQ, pages with `nav: true`,
   theme, RSS) slides in from the right like the search.
 * **[E]** `/graph/` opens focused on the newest post.
+* **[E]** (2026-11-28, owner) On `/graph/` a click on a point makes it the
+  focus; a fast double click opens its page, Ctrl or Cmd with a click opens it
+  in a new tab. Before, the focus could only change through the search field,
+  and a click opened the page at once. Enter on a point makes it the focus; the
+  name of the focus in the sidebar links to its page, a short hint below it
+  explains click and double click. The focus point stands out more: larger, in
+  the accent colour with a ring, its name bold, its lines stronger (no zoom to
+  the focus, the labels of faded points stay). A click without a move no longer
+  pins a point. The small graphs under a page keep the click as a link.
 * **[E]** Margin notes on narrow screens without JavaScript stay open (as
   before; only the script closes them).
 
