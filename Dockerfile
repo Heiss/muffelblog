@@ -27,7 +27,7 @@ COPY --from=site-build /repo/apps/site/dist/ /
 # `current`. Run with `docker build --target builder .`
 FROM deps AS builder
 # rclone fetches the Nextcloud share (WebDAV); pinned like every other image.
-COPY --from=rclone/rclone:1.75.2 /usr/local/bin/rclone /usr/local/bin/rclone
+COPY --from=rclone/rclone:1.76.0 /usr/local/bin/rclone /usr/local/bin/rclone
 # Image variant: empty (default) or `noavx`, the image for CPUs without AVX
 # (Celeron, Atom): its search index uses the older Pagefind (pagefind-noavx).
 ARG VARIANT=
