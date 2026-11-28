@@ -5,9 +5,40 @@ import {
   labelThreshold,
   labelVisible,
   neighborhood,
+  pointAction,
   type Graph,
+  type PointClick,
   type SimNode,
 } from './graph-logic';
+
+describe('pointAction', () => {
+  const click = (part: Partial<PointClick> = {}): PointClick => ({
+    button: 0,
+    detail: 1,
+    ctrlKey: false,
+    metaKey: false,
+    shiftKey: false,
+    altKey: false,
+    ...part,
+  });
+
+  it('makes a point the focus with a click or with Enter', () => {
+    expect(pointAction(click())).toBe('focus');
+    expect(pointAction(click({ detail: 0 }))).toBe('focus');
+  });
+
+  it('opens the page with the second click of a double click', () => {
+    expect(pointAction(click({ detail: 2 }))).toBe('open');
+    expect(pointAction(click({ detail: 3 }))).toBe('open');
+  });
+
+  it('leaves clicks with a modifier key or another button to the browser', () => {
+    for (const key of ['ctrlKey', 'metaKey', 'shiftKey', 'altKey'] as const)
+      expect(pointAction(click({ [key]: true })), key).toBe('browser');
+    expect(pointAction(click({ ctrlKey: true, detail: 2 }))).toBe('browser');
+    expect(pointAction(click({ button: 1 }))).toBe('browser');
+  });
+});
 
 const graph: Graph = {
   nodes: [

@@ -52,6 +52,7 @@ export const en = {
     find: 'Find a point',
     show: 'Show',
     focus: 'Focus',
+    focusHint: 'Click a point to focus it, double-click to open its page.',
     neighbours: 'Neighbours',
     showAll: 'Show the whole graph',
     showFocus: 'Back to the focus',

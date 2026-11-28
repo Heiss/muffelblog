@@ -47,6 +47,30 @@ export function neighborhood(graph: Graph, id: string): Graph {
   };
 }
 
+/** The parts of a click that decide what it does with a point. */
+export interface PointClick {
+  button: number;
+  detail: number;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  shiftKey: boolean;
+  altKey: boolean;
+}
+
+/**
+ * What a click on a point of the overall view does (owner, 2026-11-28): a
+ * click makes the point the focus, the second click of a double click opens
+ * its page, and a click with Ctrl, Cmd, Shift or Alt or another button stays
+ * with the browser (a new tab or window). Enter on a point is a click with
+ * detail 0 and makes it the focus too.
+ */
+export function pointAction(click: PointClick): 'focus' | 'open' | 'browser' {
+  const modified =
+    click.ctrlKey || click.metaKey || click.shiftKey || click.altKey;
+  if (modified || click.button !== 0) return 'browser';
+  return click.detail >= 2 ? 'open' : 'focus';
+}
+
 // Distances are in drawing units (one unit is one pixel at zoom 1).
 const LINK_DISTANCE = 120;
 const CHARGE = 520;

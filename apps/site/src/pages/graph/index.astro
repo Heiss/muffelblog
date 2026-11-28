@@ -59,7 +59,8 @@ const names = graph.nodes
         ))}
       </fieldset>
       <h2>{t.focus}</h2>
-      <p class="graph-focus" data-graph-focus-name></p>
+      <p class="graph-focus" data-graph-focus-name aria-live="polite"></p>
+      <p class="graph-hint">{t.focusHint}</p>
       <h2>{t.neighbours}</h2>
       <ol class="graph-neighbours" data-graph-neighbours></ol>
       <button

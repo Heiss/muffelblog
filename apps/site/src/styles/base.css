@@ -1672,6 +1672,12 @@ aside.margin-note .mn-reply {
   line-height: 1.35;
 }
 
+.graph-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--dim);
+}
+
 .graph-neighbours {
   margin: 0;
   padding-left: 1.2rem;
@@ -1701,6 +1707,27 @@ aside.margin-note .mn-reply {
 
 .graph-svg .edge.faded {
   opacity: 0.15;
+}
+
+/* The focus point stands out (owner, 2026-11-28): larger, in the accent color
+   with a ring, its name bold, its lines stronger. */
+.graph-svg .node.focus-point circle {
+  fill: var(--ac);
+  stroke: var(--fg);
+  stroke-width: 3;
+  transform: scale(1.6);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.graph-svg .node.focus-point .node-label {
+  display: inline;
+  font-weight: 700;
+}
+
+.graph-svg .edge.focus-edge {
+  stroke: var(--ac);
+  stroke-width: 2.4;
 }
 
 .graph-svg .node.hidden-kind,

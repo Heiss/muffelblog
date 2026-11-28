@@ -50,6 +50,8 @@ export const de: Messages = {
     find: 'Punkt suchen',
     show: 'Zeigen',
     focus: 'Fokus',
+    focusHint:
+      'Ein Klick auf einen Punkt setzt den Fokus, ein Doppelklick öffnet seine Seite.',
     neighbours: 'Nachbarn',
     showAll: 'Gesamten Graph zeigen',
     showFocus: 'Zurück zum Fokus',
