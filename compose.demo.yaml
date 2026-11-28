@@ -36,7 +36,7 @@ services:
 
   # Login mails of Remark42 land here, none leave the machine.
   mailpit:
-    image: axllent/mailpit:v1.33
+    image: axllent/mailpit:v1.34
     restart: unless-stopped
     ports:
       - '127.0.0.1:${MUFFEL_MAIL_PORT:-8025}:8025'
